@@ -58,6 +58,18 @@ const transactionsTableSql = `
 	)
 `;
 
+const budgetsTableSql = `
+	CREATE TABLE budgets (
+		id TEXT NOT NULL PRIMARY KEY,
+		user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		category_id TEXT NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+		period_month TEXT NOT NULL,
+		limit_cents INTEGER NOT NULL,
+		created_at INTEGER NOT NULL,
+		updated_at INTEGER NOT NULL
+	)
+`;
+
 export interface TestDbHandle {
 	db: BetterSQLite3Database<typeof schema>;
 	userId: string;
@@ -66,7 +78,7 @@ export interface TestDbHandle {
 }
 
 export function createTestDb(opts: {
-	tables: ('accounts' | 'categories' | 'transactions')[];
+	tables: ('accounts' | 'categories' | 'transactions' | 'budgets')[];
 }): TestDbHandle {
 	const sqlite = new Database(':memory:');
 	const db = drizzle(sqlite, { schema });
@@ -75,6 +87,7 @@ export function createTestDb(opts: {
 	if (opts.tables.includes('accounts')) sqlite.prepare(accountsTableSql).run();
 	if (opts.tables.includes('categories')) sqlite.prepare(categoriesTableSql).run();
 	if (opts.tables.includes('transactions')) sqlite.prepare(transactionsTableSql).run();
+	if (opts.tables.includes('budgets')) sqlite.prepare(budgetsTableSql).run();
 
 	const now = Date.now();
 	const userId = 'user_test_1';
