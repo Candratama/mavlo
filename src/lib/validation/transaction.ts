@@ -1,21 +1,62 @@
 import { z } from 'zod';
 
-export const transactionKindEnum = z.enum(['income', 'expense']);
+export const transactionKindEnum = z.enum(['income', 'expense', 'transfer']);
 
 const emptyToUndefined = z.literal('').transform(() => undefined);
 
-export const transactionCreateSchema = z.object({
+const baseTransactionFields = {
 	accountId: z.string().min(1, 'Account required'),
 	categoryId: z.string().min(1).optional().or(emptyToUndefined),
+	transferToAccountId: z.string().min(1).optional().or(emptyToUndefined),
 	amountCents: z.coerce.number().int().positive('Amount must be positive'),
 	kind: transactionKindEnum,
 	note: z.string().trim().max(200).optional().or(emptyToUndefined),
 	occurredAt: z.coerce.number().int().positive('Date required')
-});
+};
 
-export const transactionUpdateSchema = transactionCreateSchema.extend({
-	id: z.string().min(1, 'Id required')
-});
+const refineTransfer = <
+	T extends { kind: string; accountId: string; transferToAccountId?: string }
+>(
+	val: T,
+	ctx: z.RefinementCtx
+) => {
+	if (val.kind === 'transfer') {
+		if (!val.transferToAccountId) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				path: ['transferToAccountId'],
+				message: 'Destination account required for transfer'
+			});
+			return;
+		}
+		if (val.transferToAccountId === val.accountId) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				path: ['transferToAccountId'],
+				message: 'Source and destination must differ'
+			});
+		}
+	}
+};
+
+const stripTransferTarget = <T extends { kind: string; transferToAccountId?: string }>(
+	val: T
+): T => {
+	if (val.kind !== 'transfer') {
+		return { ...val, transferToAccountId: undefined };
+	}
+	return val;
+};
+
+export const transactionCreateSchema = z
+	.object(baseTransactionFields)
+	.superRefine(refineTransfer)
+	.transform(stripTransferTarget);
+
+export const transactionUpdateSchema = z
+	.object({ ...baseTransactionFields, id: z.string().min(1, 'Id required') })
+	.superRefine(refineTransfer)
+	.transform(stripTransferTarget);
 
 export const transactionIdSchema = z.object({
 	id: z.string().min(1, 'Id required')
