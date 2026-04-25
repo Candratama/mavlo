@@ -1,38 +1,44 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import * as Card from '$lib/components/ui/card';
 	let { form } = $props();
 </script>
 
 <svelte:head><title>Forgot password — Mavlo</title></svelte:head>
 
-<h1 class="text-2xl font-semibold mb-6">Reset your password</h1>
+<Card.Header>
+	<Card.Title class="text-xl">Reset your password</Card.Title>
+	<Card.Description>Enter your email to receive a reset link.</Card.Description>
+</Card.Header>
 
-{#if form?.sent}
-	<p class="text-sm">If an account exists for that email, we've sent a reset link. Check your inbox.</p>
-	<p class="mt-4 text-sm"><a href="/sign-in" class="underline">Back to sign in</a></p>
-{:else}
-	<form method="POST" use:enhance class="space-y-4">
-		<label class="block">
-			<span class="text-sm font-medium">Email</span>
-			<input
-				name="email"
-				type="email"
-				required
-				autocomplete="email"
-				value={form?.email ?? ''}
-				class="mt-1 w-full rounded border px-3 py-2 dark:bg-zinc-800"
-			/>
-		</label>
+<Card.Content>
+	{#if form?.sent}
+		<p class="text-sm">If an account exists for that email, we've sent a reset link. Check your inbox.</p>
+		<p class="mt-4 text-sm">
+			<a href="/sign-in" class="text-muted-foreground hover:text-foreground underline">Back to sign in</a>
+		</p>
+	{:else}
+		<form method="POST" use:enhance class="space-y-4">
+			<div class="space-y-1.5">
+				<Label for="email">Email</Label>
+				<Input
+					id="email"
+					name="email"
+					type="email"
+					required
+					autocomplete="email"
+					value={form?.email ?? ''}
+				/>
+			</div>
 
-		{#if form?.message}
-			<p class="text-sm text-red-600">{form.message}</p>
-		{/if}
+			{#if form?.message}
+				<p class="text-sm text-destructive">{form.message}</p>
+			{/if}
 
-		<button
-			type="submit"
-			class="w-full rounded bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 text-white py-2 font-medium hover:opacity-90"
-		>
-			Send reset link
-		</button>
-	</form>
-{/if}
+			<Button type="submit" class="w-full">Send reset link</Button>
+		</form>
+	{/if}
+</Card.Content>

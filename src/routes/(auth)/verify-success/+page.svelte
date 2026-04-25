@@ -1,6 +1,19 @@
+<script lang="ts">
+	import * as Card from '$lib/components/ui/card';
+</script>
+
 <svelte:head><title>Email verified — Mavlo</title></svelte:head>
 
-<h1 class="text-2xl font-semibold mb-4">You're in</h1>
-<p class="text-sm text-zinc-600 dark:text-zinc-400">
-	Email verified. <a href="/dashboard" class="underline">Go to dashboard</a>
-</p>
+<Card.Header>
+	<Card.Title class="text-xl">You're in</Card.Title>
+	<Card.Description>Your email has been verified.</Card.Description>
+</Card.Header>
+
+<Card.Content>
+	<p class="text-sm text-muted-foreground">
+		You're all set. Head to your dashboard to get started.
+	</p>
+	<p class="mt-4 text-sm">
+		<a href="/dashboard" class="text-muted-foreground hover:text-foreground underline">Go to dashboard</a>
+	</p>
+</Card.Content>

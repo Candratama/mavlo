@@ -1,41 +1,45 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import * as Card from '$lib/components/ui/card';
 	let { data, form } = $props();
 </script>
 
 <svelte:head><title>Reset password — Mavlo</title></svelte:head>
 
-<h1 class="text-2xl font-semibold mb-6">Choose a new password</h1>
+<Card.Header>
+	<Card.Title class="text-xl">Choose a new password</Card.Title>
+	<Card.Description>Enter your new password below.</Card.Description>
+</Card.Header>
 
-{#if !data.token}
-	<p class="text-sm text-red-600">
-		Reset token missing.
-		<a href="/forgot-password" class="underline">Request a new link.</a>
-	</p>
-{:else}
-	<form method="POST" use:enhance class="space-y-4">
-		<input type="hidden" name="token" value={form?.token ?? data.token} />
-		<label class="block">
-			<span class="text-sm font-medium">New password</span>
-			<input
-				name="password"
-				type="password"
-				required
-				minlength="8"
-				autocomplete="new-password"
-				class="mt-1 w-full rounded border px-3 py-2 dark:bg-zinc-800"
-			/>
-		</label>
+<Card.Content>
+	{#if !data.token}
+		<p class="text-sm text-destructive">
+			Reset token missing.
+			<a href="/forgot-password" class="underline hover:opacity-80">Request a new link.</a>
+		</p>
+	{:else}
+		<form method="POST" use:enhance class="space-y-4">
+			<input type="hidden" name="token" value={form?.token ?? data.token} />
+			<div class="space-y-1.5">
+				<Label for="password">New password</Label>
+				<Input
+					id="password"
+					name="password"
+					type="password"
+					required
+					minlength={8}
+					autocomplete="new-password"
+				/>
+			</div>
 
-		{#if form?.message}
-			<p class="text-sm text-red-600">{form.message}</p>
-		{/if}
+			{#if form?.message}
+				<p class="text-sm text-destructive">{form.message}</p>
+			{/if}
 
-		<button
-			type="submit"
-			class="w-full rounded bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 text-white py-2 font-medium hover:opacity-90"
-		>
-			Set new password
-		</button>
-	</form>
-{/if}
+			<Button type="submit" class="w-full">Set new password</Button>
+		</form>
+	{/if}
+</Card.Content>

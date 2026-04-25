@@ -1,61 +1,66 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import * as Card from '$lib/components/ui/card';
 	let { form } = $props();
 </script>
 
 <svelte:head><title>Sign up — Mavlo</title></svelte:head>
 
-<h1 class="text-2xl font-semibold mb-6">Create your Mavlo account</h1>
+<Card.Header>
+	<Card.Title class="text-xl">Create your Mavlo account</Card.Title>
+	<Card.Description>Track your finances on Mavlo.</Card.Description>
+</Card.Header>
 
-<form method="POST" use:enhance class="space-y-4">
-	<label class="block">
-		<span class="text-sm font-medium">Name</span>
-		<input
-			name="name"
-			type="text"
-			required
-			maxlength="100"
-			autocomplete="name"
-			value={form?.name ?? ''}
-			class="mt-1 w-full rounded border px-3 py-2 dark:bg-zinc-800"
-		/>
-	</label>
-	<label class="block">
-		<span class="text-sm font-medium">Email</span>
-		<input
-			name="email"
-			type="email"
-			required
-			autocomplete="email"
-			value={form?.email ?? ''}
-			class="mt-1 w-full rounded border px-3 py-2 dark:bg-zinc-800"
-		/>
-	</label>
-	<label class="block">
-		<span class="text-sm font-medium">Password</span>
-		<input
-			name="password"
-			type="password"
-			required
-			minlength="8"
-			autocomplete="new-password"
-			class="mt-1 w-full rounded border px-3 py-2 dark:bg-zinc-800"
-		/>
-		<span class="text-xs text-zinc-500">Minimum 8 characters.</span>
-	</label>
+<Card.Content>
+	<form method="POST" use:enhance class="space-y-4">
+		<div class="space-y-1.5">
+			<Label for="name">Name</Label>
+			<Input
+				id="name"
+				name="name"
+				type="text"
+				required
+				maxlength={100}
+				autocomplete="name"
+				value={form?.name ?? ''}
+			/>
+		</div>
+		<div class="space-y-1.5">
+			<Label for="email">Email</Label>
+			<Input
+				id="email"
+				name="email"
+				type="email"
+				required
+				autocomplete="email"
+				value={form?.email ?? ''}
+			/>
+		</div>
+		<div class="space-y-1.5">
+			<Label for="password">Password</Label>
+			<Input
+				id="password"
+				name="password"
+				type="password"
+				required
+				minlength={8}
+				autocomplete="new-password"
+			/>
+			<p class="text-xs text-muted-foreground">Minimum 8 characters.</p>
+		</div>
 
-	{#if form?.message}
-		<p class="text-sm text-red-600">{form.message}</p>
-	{/if}
+		{#if form?.message}
+			<p class="text-sm text-destructive">{form.message}</p>
+		{/if}
 
-	<button
-		type="submit"
-		class="w-full rounded bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 text-white py-2 font-medium hover:opacity-90"
-	>
-		Sign up
-	</button>
-</form>
+		<Button type="submit" class="w-full">Sign up</Button>
+	</form>
+</Card.Content>
 
-<p class="mt-6 text-sm text-center text-zinc-600 dark:text-zinc-400">
-	Already have an account? <a href="/sign-in" class="underline">Sign in</a>
-</p>
+<Card.Footer class="justify-center text-sm">
+	<span class="text-muted-foreground">Already have an account?</span>
+	<a href="/sign-in" class="ml-1 text-muted-foreground hover:text-foreground underline">Sign in</a>
+</Card.Footer>

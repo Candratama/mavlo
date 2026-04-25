@@ -1,48 +1,52 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import * as Card from '$lib/components/ui/card';
 	let { form } = $props();
 </script>
 
 <svelte:head><title>Sign in — Mavlo</title></svelte:head>
 
-<h1 class="text-2xl font-semibold mb-6">Sign in to Mavlo</h1>
+<Card.Header>
+	<Card.Title class="text-xl">Sign in to Mavlo</Card.Title>
+	<Card.Description>Enter your credentials to access your account.</Card.Description>
+</Card.Header>
 
-<form method="POST" use:enhance class="space-y-4">
-	<label class="block">
-		<span class="text-sm font-medium">Email</span>
-		<input
-			name="email"
-			type="email"
-			required
-			autocomplete="email"
-			value={form?.email ?? ''}
-			class="mt-1 w-full rounded border px-3 py-2 dark:bg-zinc-800"
-		/>
-	</label>
-	<label class="block">
-		<span class="text-sm font-medium">Password</span>
-		<input
-			name="password"
-			type="password"
-			required
-			autocomplete="current-password"
-			class="mt-1 w-full rounded border px-3 py-2 dark:bg-zinc-800"
-		/>
-	</label>
+<Card.Content>
+	<form method="POST" use:enhance class="space-y-4">
+		<div class="space-y-1.5">
+			<Label for="email">Email</Label>
+			<Input
+				id="email"
+				name="email"
+				type="email"
+				required
+				autocomplete="email"
+				value={form?.email ?? ''}
+			/>
+		</div>
+		<div class="space-y-1.5">
+			<Label for="password">Password</Label>
+			<Input
+				id="password"
+				name="password"
+				type="password"
+				required
+				autocomplete="current-password"
+			/>
+		</div>
 
-	{#if form?.message}
-		<p class="text-sm text-red-600">{form.message}</p>
-	{/if}
+		{#if form?.message}
+			<p class="text-sm text-destructive">{form.message}</p>
+		{/if}
 
-	<button
-		type="submit"
-		class="w-full rounded bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 text-white py-2 font-medium hover:opacity-90"
-	>
-		Sign in
-	</button>
-</form>
+		<Button type="submit" class="w-full">Sign in</Button>
+	</form>
+</Card.Content>
 
-<div class="mt-6 flex justify-between text-sm text-zinc-600 dark:text-zinc-400">
-	<a href="/sign-up" class="underline">Create account</a>
-	<a href="/forgot-password" class="underline">Forgot password?</a>
-</div>
+<Card.Footer class="flex justify-between text-sm">
+	<a href="/sign-up" class="text-muted-foreground hover:text-foreground underline">Create account</a>
+	<a href="/forgot-password" class="text-muted-foreground hover:text-foreground underline">Forgot password?</a>
+</Card.Footer>
