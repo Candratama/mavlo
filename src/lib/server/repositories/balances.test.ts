@@ -21,7 +21,7 @@ const insertTx = (
 ) => {
 	const now = Date.now();
 	h.sqlite
-		.prepare('INSERT INTO transactions VALUES (?, ?, ?, NULL, ?, ?, NULL, ?, ?, ?)')
+		.prepare('INSERT INTO transactions VALUES (?, ?, ?, NULL, ?, ?, NULL, ?, ?, ?, NULL)')
 		.run(args.id, h.userId, args.accountId, args.amount, args.kind, now, now, now);
 };
 
@@ -53,7 +53,7 @@ describe('computeAccountBalances', () => {
 			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)')
 			.run('acc-other', h.otherUserId, 'Other', 'cash', 'IDR', 0, now, now);
 		h.sqlite
-			.prepare('INSERT INTO transactions VALUES (?, ?, ?, NULL, ?, ?, NULL, ?, ?, ?)')
+			.prepare('INSERT INTO transactions VALUES (?, ?, ?, NULL, ?, ?, NULL, ?, ?, ?, NULL)')
 			.run('tother', h.otherUserId, 'acc-other', 99999, 'expense', now, now, now);
 
 		const map = await computeAccountBalances(h.db, h.userId);
