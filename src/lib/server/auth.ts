@@ -9,6 +9,10 @@ const authConfig = {
 	baseURL: env.ORIGIN,
 	secret: env.BETTER_AUTH_SECRET,
 	emailAndPassword: { enabled: true },
+	user: { modelName: 'users' },
+	session: { modelName: 'sessions' },
+	account: { modelName: 'auth_accounts' },
+	verification: { modelName: 'verifications' },
 	plugins: [
 		sveltekitCookies(getRequestEvent) // make sure this is the last plugin in the array
 	]
