@@ -4,11 +4,41 @@ import { sveltekitCookies } from 'better-auth/svelte-kit';
 import { env } from '$env/dynamic/private';
 import { getRequestEvent } from '$app/server';
 import { getDb } from '$lib/server/db';
+import { sendEmail } from '$lib/server/email/resend';
+import { verifyEmailTemplate, resetPasswordTemplate } from '$lib/server/email/templates';
+
+const sendFromRequest = async (to: string, subject: string, text: string) => {
+	const event = getRequestEvent();
+	const platformEnv = event.platform?.env;
+	if (!platformEnv) throw new Error('platform.env unavailable in auth email callback');
+	await sendEmail({
+		apiKey: platformEnv.RESEND_API_KEY,
+		from: platformEnv.RESEND_FROM,
+		to,
+		subject,
+		text
+	});
+};
 
 const authConfig = {
 	baseURL: env.ORIGIN,
 	secret: env.BETTER_AUTH_SECRET,
-	emailAndPassword: { enabled: true },
+	emailAndPassword: {
+		enabled: true,
+		requireEmailVerification: true,
+		sendResetPassword: async ({ user, url }) => {
+			const tpl = resetPasswordTemplate(url, user.name);
+			await sendFromRequest(user.email, tpl.subject, tpl.text);
+		}
+	},
+	emailVerification: {
+		sendVerificationEmail: async ({ user, url }) => {
+			const tpl = verifyEmailTemplate(url, user.name);
+			await sendFromRequest(user.email, tpl.subject, tpl.text);
+		},
+		sendOnSignUp: true,
+		autoSignInAfterVerification: true
+	},
 	user: { modelName: 'users' },
 	session: { modelName: 'sessions' },
 	account: { modelName: 'auth_accounts' },
