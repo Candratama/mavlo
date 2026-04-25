@@ -42,19 +42,38 @@ const categoriesTableSql = `
 	)
 `;
 
+const transactionsTableSql = `
+	CREATE TABLE transactions (
+		id TEXT NOT NULL PRIMARY KEY,
+		user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		account_id TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+		category_id TEXT REFERENCES categories(id) ON DELETE SET NULL,
+		amount_cents INTEGER NOT NULL,
+		kind TEXT NOT NULL,
+		note TEXT,
+		occurred_at INTEGER NOT NULL,
+		created_at INTEGER NOT NULL,
+		updated_at INTEGER NOT NULL
+	)
+`;
+
 export interface TestDbHandle {
 	db: BetterSQLite3Database<typeof schema>;
 	userId: string;
 	otherUserId: string;
+	sqlite: Database.Database;
 }
 
-export function createTestDb(opts: { tables: ('accounts' | 'categories')[] }): TestDbHandle {
+export function createTestDb(opts: {
+	tables: ('accounts' | 'categories' | 'transactions')[];
+}): TestDbHandle {
 	const sqlite = new Database(':memory:');
 	const db = drizzle(sqlite, { schema });
 
 	sqlite.prepare(usersTableSql).run();
 	if (opts.tables.includes('accounts')) sqlite.prepare(accountsTableSql).run();
 	if (opts.tables.includes('categories')) sqlite.prepare(categoriesTableSql).run();
+	if (opts.tables.includes('transactions')) sqlite.prepare(transactionsTableSql).run();
 
 	const now = Date.now();
 	const userId = 'user_test_1';
@@ -66,5 +85,5 @@ export function createTestDb(opts: { tables: ('accounts' | 'categories')[] }): T
 		.prepare('INSERT INTO users VALUES (?, ?, ?, 0, NULL, ?, ?)')
 		.run(otherUserId, 'B', 'b@b.co', now, now);
 
-	return { db, userId, otherUserId };
+	return { db, userId, otherUserId, sqlite };
 }
