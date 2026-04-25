@@ -7,8 +7,8 @@ const userIdFk = () =>
 	text('user_id')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade' });
-const epochMsNow = () =>
-	integer({ mode: 'number' })
+const epochMsNow = (name: string) =>
+	integer(name, { mode: 'number' })
 		.notNull()
 		.$defaultFn(() => Date.now());
 
@@ -22,8 +22,8 @@ export const accounts = sqliteTable(
 		currency: text('currency').notNull().default('IDR'),
 		initialBalanceCents: integer('initial_balance_cents', { mode: 'number' }).notNull().default(0),
 		archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
-		createdAt: epochMsNow(),
-		updatedAt: epochMsNow()
+		createdAt: epochMsNow('created_at'),
+		updatedAt: epochMsNow('updated_at')
 	},
 	(t) => [index('accounts_user_idx').on(t.userId)]
 );
@@ -38,8 +38,8 @@ export const categories = sqliteTable(
 		color: text('color'),
 		icon: text('icon'),
 		archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
-		createdAt: epochMsNow(),
-		updatedAt: epochMsNow()
+		createdAt: epochMsNow('created_at'),
+		updatedAt: epochMsNow('updated_at')
 	},
 	(t) => [index('categories_user_idx').on(t.userId)]
 );
@@ -57,8 +57,8 @@ export const transactions = sqliteTable(
 		kind: text('kind', { enum: ['income', 'expense', 'transfer'] }).notNull(),
 		note: text('note'),
 		occurredAt: integer('occurred_at', { mode: 'number' }).notNull(),
-		createdAt: epochMsNow(),
-		updatedAt: epochMsNow()
+		createdAt: epochMsNow('created_at'),
+		updatedAt: epochMsNow('updated_at')
 	},
 	(t) => [
 		index('tx_user_idx').on(t.userId),
@@ -77,8 +77,8 @@ export const budgets = sqliteTable(
 			.references(() => categories.id, { onDelete: 'cascade' }),
 		periodMonth: text('period_month').notNull(), // 'YYYY-MM'
 		limitCents: integer('limit_cents', { mode: 'number' }).notNull(),
-		createdAt: epochMsNow(),
-		updatedAt: epochMsNow()
+		createdAt: epochMsNow('created_at'),
+		updatedAt: epochMsNow('updated_at')
 	},
 	(t) => [index('budgets_user_period_idx').on(t.userId, t.periodMonth)]
 );
@@ -92,8 +92,8 @@ export const userPreferences = sqliteTable('user_preferences', {
 	timezone: text('timezone').notNull().default('Asia/Jakarta'),
 	theme: text('theme', { enum: ['light', 'dark', 'system'] }).notNull().default('system'),
 	weekStartsOn: integer('week_starts_on', { mode: 'number' }).notNull().default(1),
-	createdAt: epochMsNow(),
-	updatedAt: epochMsNow()
+	createdAt: epochMsNow('created_at'),
+	updatedAt: epochMsNow('updated_at')
 });
 
 export * from './auth.schema';
