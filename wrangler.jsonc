@@ -2,9 +2,7 @@
 	"$schema": "./node_modules/wrangler/config-schema.json",
 	"name": "mavlo",
 	"compatibility_date": "2026-04-25",
-	"compatibility_flags": [
-		"nodejs_als"
-	],
+	"compatibility_flags": ["nodejs_als"],
 	"main": ".svelte-kit/cloudflare/_worker.js",
 	"assets": {
 		"binding": "ASSETS",
@@ -12,17 +10,21 @@
 	},
 	"workers_dev": true,
 	"preview_urls": true,
+	"vars": {
+		"ORIGIN": "http://localhost:4173",
+		"RESEND_FROM": "Mavlo <onboarding@resend.dev>"
+	},
 	"d1_databases": [
 		{
-			"binding": "mavlo",
+			"binding": "DB",
 			"database_name": "mavlo",
 			"database_id": "ebb62701-4f25-48e9-a687-9fa6724abb63"
 		}
 	],
 	"r2_buckets": [
 		{
-			"bucket_name": "mavlo-uploads",
-			"binding": "mavlo_uploads"
+			"binding": "UPLOADS",
+			"bucket_name": "mavlo-uploads"
 		}
 	]
 }
