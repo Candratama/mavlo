@@ -73,3 +73,28 @@
 		</form>
 	</Card.Content>
 </Card.Root>
+
+<Card.Root class="max-w-2xl mt-6">
+	<Card.Header>
+		<Card.Title>Avatar</Card.Title>
+		<Card.Description>Upload a profile picture (PNG, JPEG, WebP, or GIF; max 2 MB).</Card.Description>
+	</Card.Header>
+	<Card.Content>
+		{#if data.user.image}
+			<img
+				src={data.user.image}
+				alt="Current avatar"
+				class="size-20 rounded-full object-cover border mb-4"
+			/>
+		{/if}
+		<form
+			method="POST"
+			action="/settings/avatar"
+			enctype="multipart/form-data"
+			class="flex items-center gap-3"
+		>
+			<Input type="file" name="avatar" accept="image/png,image/jpeg,image/webp,image/gif" required />
+			<Button type="submit">Upload</Button>
+		</form>
+	</Card.Content>
+</Card.Root>

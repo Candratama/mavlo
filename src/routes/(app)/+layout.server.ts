@@ -26,7 +26,7 @@ export const load: LayoutServerLoad = async (event) => {
 	}
 
 	return {
-		user: { id: user.id, name: user.name, email: user.email },
+		user: { id: user.id, name: user.name, email: user.email, image: user.image },
 		preferences: prefs
 	};
 };
