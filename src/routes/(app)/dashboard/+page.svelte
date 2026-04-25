@@ -2,6 +2,9 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { ArrowRight } from 'lucide-svelte';
+	import SpendingByCategoryChart from '$lib/components/charts/SpendingByCategoryChart.svelte';
+	import DailySpendingChart from '$lib/components/charts/DailySpendingChart.svelte';
+	import IncomeExpenseChart from '$lib/components/charts/IncomeExpenseChart.svelte';
 
 	let { data } = $props();
 
@@ -57,6 +60,38 @@
 		</Card.Header>
 		<Card.Content class="text-xs text-muted-foreground">
 			Last {data.recent.length} transaction{data.recent.length === 1 ? '' : 's'}.
+		</Card.Content>
+	</Card.Root>
+</div>
+
+<div class="mt-8 grid gap-4 lg:grid-cols-2">
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>Spending by category</Card.Title>
+			<Card.Description>This month</Card.Description>
+		</Card.Header>
+		<Card.Content>
+			<SpendingByCategoryChart data={data.spendingByCategory} currency={data.displayCurrency} />
+		</Card.Content>
+	</Card.Root>
+
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>Daily spending</Card.Title>
+			<Card.Description>This month</Card.Description>
+		</Card.Header>
+		<Card.Content>
+			<DailySpendingChart data={data.dailySpending} currency={data.displayCurrency} />
+		</Card.Content>
+	</Card.Root>
+
+	<Card.Root class="lg:col-span-2">
+		<Card.Header>
+			<Card.Title>Income vs expense</Card.Title>
+			<Card.Description>Last 6 months</Card.Description>
+		</Card.Header>
+		<Card.Content>
+			<IncomeExpenseChart data={data.monthlyIncomeExpense} currency={data.displayCurrency} />
 		</Card.Content>
 	</Card.Root>
 </div>
