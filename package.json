@@ -67,6 +67,7 @@
 		"@paralleldrive/cuid2": "^3.3.0",
 		"bits-ui": "^2.18.0",
 		"formsnap": "^2.0.1",
+		"layerchart": "^1.0.13",
 		"lucide-svelte": "^1.0.1",
 		"mode-watcher": "^1.1.0",
 		"resend": "^6.12.2",
