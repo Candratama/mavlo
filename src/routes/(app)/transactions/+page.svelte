@@ -16,6 +16,8 @@
 	let createOpen = $state(false);
 	let editOpen = $state(false);
 	let editTarget = $state<TxRow | null>(null);
+	let createKind = $state<'income' | 'expense' | 'transfer'>('expense');
+	let editKind = $state<'income' | 'expense' | 'transfer'>('expense');
 
 	const expenseCategories = $derived(data.categories.filter((c) => c.kind === 'expense'));
 	const incomeCategories = $derived(data.categories.filter((c) => c.kind === 'income'));
@@ -36,6 +38,7 @@
 
 	const openEdit = (t: TxRow) => {
 		editTarget = t;
+		editKind = t.kind;
 		editOpen = true;
 	};
 </script>
@@ -47,7 +50,7 @@
 		<h1 class="text-2xl font-semibold">Transactions</h1>
 		<p class="text-sm text-muted-foreground mt-1">Track inflows and outflows.</p>
 	</div>
-	<Button onclick={() => (createOpen = true)}>
+	<Button onclick={() => { createKind = 'expense'; createOpen = true; }}>
 		<Plus class="size-4 mr-1" /> New transaction
 	</Button>
 </div>
@@ -105,6 +108,7 @@
 					<option value="">All</option>
 					<option value="income" selected={data.filter.kind === 'income'}>Income</option>
 					<option value="expense" selected={data.filter.kind === 'expense'}>Expense</option>
+					<option value="transfer" selected={data.filter.kind === 'transfer'}>Transfer</option>
 				</select>
 			</div>
 			<Button type="submit" class="w-full md:w-auto">Apply</Button>
@@ -129,24 +133,42 @@
 			<Table.Body>
 				{#each data.transactions as tx (tx.id)}
 					{@const acc = accountById.get(tx.accountId)}
+					{@const destAcc = tx.transferToAccountId ? accountById.get(tx.transferToAccountId) : null}
 					{@const cat = tx.categoryId ? categoryById.get(tx.categoryId) : null}
 					<Table.Row>
 						<Table.Cell>{formatDate(tx.occurredAt)}</Table.Cell>
 						<Table.Cell class="capitalize">
-							<span
-								class={tx.kind === 'income'
-									? 'text-emerald-600 dark:text-emerald-400'
-									: 'text-rose-600 dark:text-rose-400'}
-							>
-								{tx.kind}
-							</span>
+							{#if tx.kind === 'income'}
+								<span class="text-emerald-600 dark:text-emerald-400">income</span>
+							{:else if tx.kind === 'expense'}
+								<span class="text-rose-600 dark:text-rose-400">expense</span>
+							{:else}
+								<span class="text-blue-600 dark:text-blue-400">transfer</span>
+							{/if}
 						</Table.Cell>
-						<Table.Cell>{acc?.name ?? '—'}</Table.Cell>
-						<Table.Cell>{cat?.name ?? '—'}</Table.Cell>
+						<Table.Cell>
+							{#if tx.kind === 'transfer' && destAcc}
+								<span class="text-xs">{acc?.name ?? '—'} → {destAcc.name}</span>
+							{:else}
+								{acc?.name ?? '—'}
+							{/if}
+						</Table.Cell>
+						<Table.Cell>
+							{#if tx.kind === 'transfer'}
+								<span class="text-muted-foreground text-xs">—</span>
+							{:else}
+								{cat?.name ?? '—'}
+							{/if}
+						</Table.Cell>
 						<Table.Cell class="max-w-xs truncate">{tx.note ?? ''}</Table.Cell>
 						<Table.Cell class="text-right tabular-nums">
-							{tx.kind === 'expense' ? '−' : '+'}
-							{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}
+							{#if tx.kind === 'expense'}
+								<span class="text-rose-600 dark:text-rose-400">−{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}</span>
+							{:else if tx.kind === 'income'}
+								<span class="text-emerald-600 dark:text-emerald-400">+{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}</span>
+							{:else}
+								<span class="text-blue-600 dark:text-blue-400">{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}</span>
+							{/if}
 						</Table.Cell>
 						<Table.Cell>
 							<DropdownMenu.Root>
@@ -183,7 +205,7 @@
 					<Table.Row>
 						<Table.Cell colspan={7} class="text-center text-muted-foreground py-12">
 							No transactions in this range.
-							<Button variant="link" onclick={() => (createOpen = true)} class="px-1">
+							<Button variant="link" onclick={() => { createKind = 'expense'; createOpen = true; }} class="px-1">
 								Add the first one
 							</Button>.
 						</Table.Cell>
@@ -216,10 +238,12 @@
 						id="tx-c-kind"
 						name="kind"
 						required
+						bind:value={createKind}
 						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
 					>
 						<option value="expense">Expense</option>
 						<option value="income">Income</option>
+						<option value="transfer">Transfer</option>
 					</select>
 				</div>
 				<div class="space-y-1">
@@ -228,7 +252,7 @@
 				</div>
 			</div>
 			<div class="space-y-1">
-				<Label for="tx-c-account">Account</Label>
+				<Label for="tx-c-account">{createKind === 'transfer' ? 'From account' : 'Account'}</Label>
 				<select
 					id="tx-c-account"
 					name="accountId"
@@ -240,26 +264,42 @@
 					{/each}
 				</select>
 			</div>
-			<div class="space-y-1">
-				<Label for="tx-c-category">Category (optional)</Label>
-				<select
-					id="tx-c-category"
-					name="categoryId"
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-				>
-					<option value="">None</option>
-					<optgroup label="Expense">
-						{#each expenseCategories as c}
-							<option value={c.id}>{c.name}</option>
+			{#if createKind === 'transfer'}
+				<div class="space-y-1">
+					<Label for="tx-c-to">To account</Label>
+					<select
+						id="tx-c-to"
+						name="transferToAccountId"
+						required
+						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+					>
+						{#each data.accounts as a}
+							<option value={a.id}>{a.name} ({a.currency})</option>
 						{/each}
-					</optgroup>
-					<optgroup label="Income">
-						{#each incomeCategories as c}
-							<option value={c.id}>{c.name}</option>
-						{/each}
-					</optgroup>
-				</select>
-			</div>
+					</select>
+				</div>
+			{:else}
+				<div class="space-y-1">
+					<Label for="tx-c-category">Category (optional)</Label>
+					<select
+						id="tx-c-category"
+						name="categoryId"
+						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+					>
+						<option value="">None</option>
+						<optgroup label="Expense">
+							{#each expenseCategories as c}
+								<option value={c.id}>{c.name}</option>
+							{/each}
+						</optgroup>
+						<optgroup label="Income">
+							{#each incomeCategories as c}
+								<option value={c.id}>{c.name}</option>
+							{/each}
+						</optgroup>
+					</select>
+				</div>
+			{/if}
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-1">
 					<Label for="tx-c-date">Date</Label>
@@ -302,10 +342,12 @@
 							id="tx-e-kind"
 							name="kind"
 							required
+							bind:value={editKind}
 							class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
 						>
-							<option value="expense" selected={editTarget.kind === 'expense'}>Expense</option>
-							<option value="income" selected={editTarget.kind === 'income'}>Income</option>
+							<option value="expense">Expense</option>
+							<option value="income">Income</option>
+							<option value="transfer">Transfer</option>
 						</select>
 					</div>
 					<div class="space-y-1">
@@ -321,7 +363,7 @@
 					</div>
 				</div>
 				<div class="space-y-1">
-					<Label for="tx-e-account">Account</Label>
+					<Label for="tx-e-account">{editKind === 'transfer' ? 'From account' : 'Account'}</Label>
 					<select
 						id="tx-e-account"
 						name="accountId"
@@ -335,26 +377,44 @@
 						{/each}
 					</select>
 				</div>
-				<div class="space-y-1">
-					<Label for="tx-e-category">Category (optional)</Label>
-					<select
-						id="tx-e-category"
-						name="categoryId"
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-					>
-						<option value="" selected={!editTarget.categoryId}>None</option>
-						<optgroup label="Expense">
-							{#each expenseCategories as c}
-								<option value={c.id} selected={c.id === editTarget.categoryId}>{c.name}</option>
+				{#if editKind === 'transfer'}
+					<div class="space-y-1">
+						<Label for="tx-e-to">To account</Label>
+						<select
+							id="tx-e-to"
+							name="transferToAccountId"
+							required
+							class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+						>
+							{#each data.accounts as a}
+								<option value={a.id} selected={a.id === editTarget.transferToAccountId}>
+									{a.name} ({a.currency})
+								</option>
 							{/each}
-						</optgroup>
-						<optgroup label="Income">
-							{#each incomeCategories as c}
-								<option value={c.id} selected={c.id === editTarget.categoryId}>{c.name}</option>
-							{/each}
-						</optgroup>
-					</select>
-				</div>
+						</select>
+					</div>
+				{:else}
+					<div class="space-y-1">
+						<Label for="tx-e-category">Category (optional)</Label>
+						<select
+							id="tx-e-category"
+							name="categoryId"
+							class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+						>
+							<option value="" selected={!editTarget.categoryId}>None</option>
+							<optgroup label="Expense">
+								{#each expenseCategories as c}
+									<option value={c.id} selected={c.id === editTarget.categoryId}>{c.name}</option>
+								{/each}
+							</optgroup>
+							<optgroup label="Income">
+								{#each incomeCategories as c}
+									<option value={c.id} selected={c.id === editTarget.categoryId}>{c.name}</option>
+								{/each}
+							</optgroup>
+						</select>
+					</div>
+				{/if}
 				<div class="grid grid-cols-2 gap-3">
 					<div class="space-y-1">
 						<Label for="tx-e-date">Date</Label>
