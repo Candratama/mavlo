@@ -53,6 +53,9 @@ export const transactions = sqliteTable(
 			.notNull()
 			.references(() => accounts.id, { onDelete: 'cascade' }),
 		categoryId: text('category_id').references(() => categories.id, { onDelete: 'set null' }),
+		transferToAccountId: text('transfer_to_account_id').references(() => accounts.id, {
+			onDelete: 'restrict'
+		}),
 		amountCents: integer('amount_cents', { mode: 'number' }).notNull(),
 		kind: text('kind', { enum: ['income', 'expense', 'transfer'] }).notNull(),
 		note: text('note'),
@@ -63,7 +66,8 @@ export const transactions = sqliteTable(
 	(t) => [
 		index('tx_user_idx').on(t.userId),
 		index('tx_user_occurred_idx').on(t.userId, t.occurredAt),
-		index('tx_account_idx').on(t.accountId)
+		index('tx_account_idx').on(t.accountId),
+		index('tx_transfer_to_account_idx').on(t.transferToAccountId)
 	]
 );
 
