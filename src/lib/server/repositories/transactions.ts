@@ -51,6 +51,7 @@ export async function createTransaction(
 			userId,
 			accountId: input.accountId,
 			categoryId: input.categoryId ?? null,
+			transferToAccountId: input.transferToAccountId ?? null,
 			amountCents: input.amountCents,
 			kind: input.kind,
 			note: input.note ?? null,
@@ -70,6 +71,7 @@ export async function updateTransaction(
 		.set({
 			accountId: input.accountId,
 			categoryId: input.categoryId ?? null,
+			transferToAccountId: input.transferToAccountId ?? null,
 			amountCents: input.amountCents,
 			kind: input.kind,
 			note: input.note ?? null,

@@ -116,4 +116,52 @@ describe('transactions repository', () => {
 		expect(deleted?.id).toBe(t.id);
 		expect(await getTransaction(h.db, h.userId, t.id)).toBeNull();
 	});
+
+	it('createTransaction persists transferToAccountId for transfers', async () => {
+		const now = Date.now();
+		h.sqlite
+			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)')
+			.run('acc-bank', h.userId, 'Bank', 'bank', 'IDR', 0, now, now);
+
+		const t = await createTransaction(h.db, h.userId, {
+			accountId: 'acc1',
+			transferToAccountId: 'acc-bank',
+			amountCents: 5000,
+			kind: 'transfer',
+			occurredAt: Date.now()
+		});
+		expect(t.transferToAccountId).toBe('acc-bank');
+
+		const fetched = await getTransaction(h.db, h.userId, t.id);
+		expect(fetched?.transferToAccountId).toBe('acc-bank');
+		expect(fetched?.kind).toBe('transfer');
+	});
+
+	it('updateTransaction can change transferToAccountId', async () => {
+		const now = Date.now();
+		h.sqlite
+			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)')
+			.run('acc-bank', h.userId, 'Bank', 'bank', 'IDR', 0, now, now);
+		h.sqlite
+			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)')
+			.run('acc-wallet', h.userId, 'Wallet', 'wallet', 'IDR', 0, now, now);
+
+		const t = await createTransaction(h.db, h.userId, {
+			accountId: 'acc1',
+			transferToAccountId: 'acc-bank',
+			amountCents: 5000,
+			kind: 'transfer',
+			occurredAt: Date.now()
+		});
+
+		const updated = await updateTransaction(h.db, h.userId, {
+			id: t.id,
+			accountId: 'acc1',
+			transferToAccountId: 'acc-wallet',
+			amountCents: 5000,
+			kind: 'transfer',
+			occurredAt: Date.now()
+		});
+		expect(updated?.transferToAccountId).toBe('acc-wallet');
+	});
 });
