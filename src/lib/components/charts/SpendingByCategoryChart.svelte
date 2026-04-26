@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Chart, Pie, Svg } from 'layerchart';
+	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 
 	interface CategoryRow {
 		categoryId: string;
@@ -9,12 +10,7 @@
 
 	let { data, currency = 'IDR' }: { data: CategoryRow[]; currency?: string } = $props();
 
-	const formatCents = (cents: number) =>
-		new Intl.NumberFormat('id-ID', {
-			style: 'currency',
-			currency,
-			minimumFractionDigits: 0
-		}).format(cents / 100);
+	const formatCents = (cents: number) => formatCentsAsCurrency(cents, currency);
 
 	const total = $derived(data.reduce((sum, r) => sum + r.amountCents, 0));
 </script>

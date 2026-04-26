@@ -6,14 +6,9 @@
 	import DailySpendingChart from '$lib/components/charts/DailySpendingChart.svelte';
 	import IncomeExpenseChart from '$lib/components/charts/IncomeExpenseChart.svelte';
 
-	let { data } = $props();
+	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 
-	const formatCents = (cents: number, currency: string) =>
-		new Intl.NumberFormat('id-ID', {
-			style: 'currency',
-			currency,
-			minimumFractionDigits: 0
-		}).format(cents / 100);
+	let { data } = $props();
 
 	const formatDate = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 </script>
@@ -30,7 +25,7 @@
 		<Card.Header>
 			<Card.Description>Net worth</Card.Description>
 			<Card.Title class="text-2xl tabular-nums">
-				{formatCents(data.netWorthCents, data.displayCurrency)}
+				{formatCentsAsCurrency(data.netWorthCents, data.displayCurrency)}
 			</Card.Title>
 		</Card.Header>
 		<Card.Content class="text-xs text-muted-foreground">
@@ -42,13 +37,13 @@
 		<Card.Header>
 			<Card.Description>This month spending</Card.Description>
 			<Card.Title class="text-2xl tabular-nums text-rose-600 dark:text-rose-400">
-				{formatCents(data.monthExpenseCents, data.displayCurrency)}
+				{formatCentsAsCurrency(data.monthExpenseCents, data.displayCurrency)}
 			</Card.Title>
 		</Card.Header>
 		<Card.Content class="text-xs text-muted-foreground">
 			Income:
 			<span class="text-emerald-600 dark:text-emerald-400">
-				{formatCents(data.monthIncomeCents, data.displayCurrency)}
+				{formatCentsAsCurrency(data.monthIncomeCents, data.displayCurrency)}
 			</span>
 		</Card.Content>
 	</Card.Root>
@@ -126,7 +121,7 @@
 								? 'text-emerald-600 dark:text-emerald-400 tabular-nums'
 								: 'text-rose-600 dark:text-rose-400 tabular-nums'}
 						>
-							{r.kind === 'expense' ? '−' : '+'}{formatCents(r.amountCents, r.accountCurrency)}
+							{r.kind === 'expense' ? '−' : '+'}{formatCentsAsCurrency(r.amountCents, r.accountCurrency)}
 						</span>
 					</li>
 				{/each}

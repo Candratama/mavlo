@@ -9,6 +9,7 @@
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Plus, MoreHorizontal, Pencil, Trash2 } from 'lucide-svelte';
+	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 
 	let { data, form } = $props();
 
@@ -26,12 +27,7 @@
 	const accountById = $derived(new Map(data.accounts.map((a) => [a.id, a])));
 	const categoryById = $derived(new Map(data.categories.map((c) => [c.id, c])));
 
-	const formatAmount = (cents: number, currency: string) =>
-		new Intl.NumberFormat('id-ID', {
-			style: 'currency',
-			currency,
-			minimumFractionDigits: 0
-		}).format(cents / 100);
+	const formatAmount = (cents: number, currency: string) => formatCentsAsCurrency(cents, currency);
 
 	const formatDate = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 

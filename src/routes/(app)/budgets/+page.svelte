@@ -8,6 +8,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Plus, MoreHorizontal, Pencil, Trash2 } from 'lucide-svelte';
+	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 
 	let { data, form } = $props();
 
@@ -19,12 +20,7 @@
 
 	const categoryById = $derived(new Map(data.categories.map((c) => [c.id, c])));
 
-	const formatCents = (cents: number) =>
-		new Intl.NumberFormat('id-ID', {
-			style: 'currency',
-			currency: 'IDR',
-			minimumFractionDigits: 0
-		}).format(cents / 100);
+	const formatCents = (cents: number) => formatCentsAsCurrency(cents, 'IDR');
 
 	const openEdit = (b: BudgetRow) => {
 		editTarget = b;

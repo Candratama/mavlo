@@ -9,6 +9,7 @@
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil } from 'lucide-svelte';
+	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 
 	let { data, form } = $props();
 
@@ -26,10 +27,7 @@
 		{ value: 'other', label: 'Other' }
 	] as const;
 
-	const formatBalance = (cents: number, currency: string) =>
-		new Intl.NumberFormat('id-ID', { style: 'currency', currency, minimumFractionDigits: 0 }).format(
-			cents / 100
-		);
+	const formatBalance = (cents: number, currency: string) => formatCentsAsCurrency(cents, currency);
 
 	const openEdit = (a: AccountRow) => {
 		editTarget = a;
