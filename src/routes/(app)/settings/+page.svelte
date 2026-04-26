@@ -1,15 +1,31 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { setMode } from 'mode-watcher';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import SubmitButton from '$lib/components/forms/submit-button.svelte';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
+	import { Sun, Moon, Monitor } from 'lucide-svelte';
 	import { notify } from '$lib/utils/toast.js';
 
 	let { data, form } = $props();
 	const prefs = $derived(data.preferences);
 	let pending = $state(false);
+
+	type Theme = 'light' | 'dark' | 'system';
+	let selectedTheme = $state<Theme>(prefs.theme as Theme);
+
+	const themes = [
+		{ value: 'light', label: 'Light', icon: Sun },
+		{ value: 'dark', label: 'Dark', icon: Moon },
+		{ value: 'system', label: 'System', icon: Monitor }
+	] as const;
+
+	function pickTheme(value: Theme) {
+		selectedTheme = value;
+		setMode(value);
+	}
 </script>
 
 <svelte:head><title>Settings — Mavlo</title></svelte:head>
@@ -46,24 +62,27 @@
 					<Input id="pref-locale" name="locale" required maxlength={20} value={prefs.locale} />
 				</div>
 			</div>
-			<div class="grid grid-cols-2 gap-3">
-				<div class="space-y-1">
-					<Label for="pref-timezone">Timezone</Label>
-					<Input id="pref-timezone" name="timezone" required maxlength={60} value={prefs.timezone} />
+			<div class="space-y-1">
+				<Label for="pref-timezone">Timezone</Label>
+				<Input id="pref-timezone" name="timezone" required maxlength={60} value={prefs.timezone} />
+			</div>
+			<div class="space-y-1">
+				<Label>Theme</Label>
+				<div class="flex gap-2">
+					{#each themes as t}
+						<button
+							type="button"
+							onclick={() => pickTheme(t.value)}
+							class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border text-sm transition-colors {selectedTheme === t.value
+								? 'border-primary bg-primary/10 text-foreground'
+								: 'border-input bg-background text-muted-foreground hover:text-foreground'}"
+						>
+							<t.icon class="size-4" />
+							{t.label}
+						</button>
+					{/each}
 				</div>
-				<div class="space-y-1">
-					<Label for="pref-theme">Theme</Label>
-					<select
-						id="pref-theme"
-						name="theme"
-						required
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-					>
-						<option value="light" selected={prefs.theme === 'light'}>Light</option>
-						<option value="dark" selected={prefs.theme === 'dark'}>Dark</option>
-						<option value="system" selected={prefs.theme === 'system'}>System</option>
-					</select>
-				</div>
+				<input type="hidden" name="theme" value={selectedTheme} />
 			</div>
 			<div class="space-y-1">
 				<Label for="pref-week">Week starts on (0=Sun, 1=Mon, ..., 6=Sat)</Label>

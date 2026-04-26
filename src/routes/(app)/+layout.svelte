@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { setMode } from 'mode-watcher';
 	import { Button } from '$lib/components/ui/button';
 	import * as Sheet from '$lib/components/ui/sheet';
 	import {
@@ -15,6 +16,11 @@
 	} from 'lucide-svelte';
 
 	let { children, data } = $props();
+
+	$effect(() => {
+		const t = data.preferences?.theme;
+		if (t === 'light' || t === 'dark' || t === 'system') setMode(t);
+	});
 
 	let mobileNavOpen = $state(false);
 
