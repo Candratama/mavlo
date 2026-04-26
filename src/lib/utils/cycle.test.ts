@@ -49,6 +49,12 @@ describe('getCycleForPeriod', () => {
 		expect(c.start.toISOString()).toBe('2026-09-24T17:00:00.000Z');
 		expect(c.end.toISOString()).toBe('2026-10-24T17:00:00.000Z');
 	});
+
+	it('throws RangeError for malformed periodYYYYMM', () => {
+		expect(() => getCycleForPeriod('invalid', 1, TZ)).toThrow(RangeError);
+		expect(() => getCycleForPeriod('2026-13', 1, TZ)).toThrow(RangeError);
+		expect(() => getCycleForPeriod('2026-1', 1, TZ)).toThrow(RangeError);
+	});
 });
 
 describe('formatCycleLabel', () => {

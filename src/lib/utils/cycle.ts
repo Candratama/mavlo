@@ -21,6 +21,11 @@ function getZonedYearMonthDay(date: Date, timezone: string): { y: number; m: num
 	return { y: get('year'), m: get('month'), d: get('day') };
 }
 
+// Returns the UTC offset (ms) for the given timezone at the given UTC instant,
+// using a midday probe. For zones without DST (e.g. Asia/Jakarta — Mavlo's
+// primary target), this is exact. For DST zones, cycle boundaries that fall
+// exactly on the DST transition hour may be off by 1 hour. Documented per
+// the spec's DST concern; primary deployment timezone has no DST.
 function getUtcOffsetMs(date: Date, timezone: string): number {
 	// Use a noon-anchored date to avoid DST edge cases at midnight
 	const noon = new Date(
@@ -59,6 +64,9 @@ function addMonths(year: number, month1to12: number, delta: number): { y: number
 }
 
 export function getCycleForPeriod(periodYYYYMM: string, startDay: number, timezone: string): Cycle {
+	if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(periodYYYYMM)) {
+		throw new RangeError(`Invalid periodYYYYMM: "${periodYYYYMM}"`);
+	}
 	const sd = clampStartDay(startDay);
 	const [yStr, mStr] = periodYYYYMM.split('-');
 	const y = Number(yStr);
@@ -93,7 +101,8 @@ export function formatCycleLabel(cycle: Cycle, startDay: number, locale = 'en'):
 	}
 	// For non-1 startDay: show "Sep 25 – Oct 24" style.
 	// cycle.start/end are UTC instants of the zoned day boundaries (half-open).
-	// Shift ±12h to land at local midday of the boundary days for stable display.
+	// ±12h: safe for any UTC offset within [-12, +14]; shifts UTC
+	// instants to local midday for stable Intl date formatting.
 	const halfDay = 12 * 60 * 60 * 1000;
 	const startMidday = new Date(cycle.start.getTime() + halfDay);
 	const endMidday = new Date(cycle.end.getTime() - halfDay);

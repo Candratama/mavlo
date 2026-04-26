@@ -189,7 +189,7 @@ URL params unchanged (`?from=&to=&account=&category=&kind=`, `?period=`). All fi
 ### Helper — `src/lib/utils/cycle.ts`
 
 ```ts
-export interface Cycle { start: Date; end: Date; label: string; periodMonth: string; }
+export interface Cycle { start: Date; end: Date; periodMonth: string; }
 
 // Cycle containing `now` for given startDay. UTC-based.
 export function getCurrentCycle(now: Date, startDay: number, timezone: string): Cycle;
