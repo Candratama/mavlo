@@ -13,7 +13,8 @@
 		Settings,
 		Coins,
 		LogOut,
-		Menu
+		Menu,
+		MoreHorizontal
 	} from 'lucide-svelte';
 
 	let { children, data } = $props();
@@ -28,12 +29,18 @@
 	let mobileNavOpen = $state(false);
 
 	const primaryNav = [
-		{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+		{ href: '/dashboard', label: 'Home', icon: LayoutDashboard },
 		{ href: '/transactions', label: 'Tx', icon: ArrowLeftRight },
 		{ href: '/accounts', label: 'Accounts', icon: Wallet },
-		{ href: '/budgets', label: 'Budgets', icon: PiggyBank },
+		{ href: '/budgets', label: 'Budgets', icon: PiggyBank }
+	];
+
+	const moreNav = [
+		{ href: '/categories', label: 'Categories', icon: Tag },
 		{ href: '/settings', label: 'Settings', icon: Settings }
 	];
+
+	let moreOpen = $state(false);
 
 	const allNav = [
 		{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -46,6 +53,8 @@
 
 	const isActive = (href: string) =>
 		page.url.pathname === href || page.url.pathname.startsWith(href + '/');
+
+	const isMoreActive = $derived(moreNav.some((item) => isActive(item.href)));
 </script>
 
 <svelte:head><title>Mavlo</title></svelte:head>
@@ -156,6 +165,44 @@
 					</a>
 				</li>
 			{/each}
+			<li>
+				<Sheet.Root bind:open={moreOpen}>
+					<Sheet.Trigger>
+						{#snippet child({ props })}
+							<button
+								{...props}
+								type="button"
+								class="w-full flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium relative transition-colors {isMoreActive
+									? 'text-primary after:absolute after:top-0 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:w-8 after:bg-primary after:rounded-b-full'
+									: 'text-muted-foreground hover:text-foreground'}"
+								aria-label="More navigation"
+							>
+								<MoreHorizontal class="h-5 w-5" />
+								<span>More</span>
+							</button>
+						{/snippet}
+					</Sheet.Trigger>
+					<Sheet.Content side="bottom" class="pb-[max(1rem,env(safe-area-inset-bottom))]">
+						<Sheet.Header class="text-left">
+							<Sheet.Title>More</Sheet.Title>
+						</Sheet.Header>
+						<nav class="space-y-1 text-sm mt-3">
+							{#each moreNav as item}
+								<a
+									href={item.href}
+									onclick={() => (moreOpen = false)}
+									class="flex items-center gap-2.5 px-3 py-3 rounded-md transition-colors {isActive(item.href)
+										? 'bg-accent text-accent-foreground font-medium'
+										: 'text-sidebar-foreground hover:bg-accent/50 hover:text-accent-foreground'}"
+								>
+									<item.icon class="h-4 w-4 shrink-0" />
+									{item.label}
+								</a>
+							{/each}
+						</nav>
+					</Sheet.Content>
+				</Sheet.Root>
+			</li>
 		</ul>
 	</nav>
 </div>
