@@ -24,3 +24,6 @@ vite.config.ts.timestamp-*
 
 # Wrangler dev secrets
 .dev.vars
+
+# Claude Code
+.claude/
