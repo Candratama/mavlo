@@ -6,8 +6,8 @@
 	import SubmitButton from '$lib/components/forms/submit-button.svelte';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
-	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Table from '$lib/components/ui/table';
+	import ResponsiveDialog from '$lib/components/forms/responsive-dialog.svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil, Wallet } from 'lucide-svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
@@ -167,130 +167,123 @@
 </ul>
 
 <!-- Create dialog -->
-<Dialog.Root bind:open={createOpen}>
-	<Dialog.Content>
-		<Dialog.Header>
-			<Dialog.Title>New account</Dialog.Title>
-			<Dialog.Description>Add a new financial account to track.</Dialog.Description>
-		</Dialog.Header>
+<ResponsiveDialog
+	bind:open={createOpen}
+	title="New account"
+	description="Add a new financial account to track."
+>
+	<form
+		method="POST"
+		action="?/create"
+		use:enhance={() => {
+			createPending = true;
+			return async ({ update, result }) => {
+				await update();
+				createPending = false;
+				if (result.type === 'success') {
+					createOpen = false;
+					notify.success('Account created');
+				} else if (result.type === 'failure') {
+					const message = (result.data as { message?: string } | undefined)?.message;
+					notify.error(message ?? 'Could not create account');
+				}
+			};
+		}}
+		class="space-y-4"
+	>
+		<div class="space-y-1">
+			<Label for="create-name">Name</Label>
+			<Input id="create-name" name="name" required maxlength={80} />
+		</div>
+		<div class="space-y-1">
+			<Label for="create-type">Type</Label>
+			<select
+				id="create-type"
+				name="type"
+				required
+				class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+			>
+				{#each accountTypeOptions as opt}
+					<option value={opt.value}>{opt.label}</option>
+				{/each}
+			</select>
+		</div>
+		<div class="grid grid-cols-2 gap-3">
+			<div class="space-y-1">
+				<Label for="create-currency">Currency</Label>
+				<Input id="create-currency" name="currency" required maxlength={8} value="IDR" />
+			</div>
+			<div class="space-y-1">
+				<Label for="create-balance">Initial balance</Label>
+				<MoneyInput id="create-balance" name="initialBalanceCents" min={0} />
+			</div>
+		</div>
+		<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end mt-2 pt-2">
+			<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
+			<SubmitButton pending={createPending}>Create</SubmitButton>
+		</div>
+	</form>
+</ResponsiveDialog>
+
+<!-- Edit dialog -->
+<ResponsiveDialog bind:open={editOpen} title="Edit account">
+	{#if editTarget}
 		<form
 			method="POST"
-			action="?/create"
+			action="?/update"
 			use:enhance={() => {
-				createPending = true;
+				editPending = true;
 				return async ({ update, result }) => {
 					await update();
-					createPending = false;
+					editPending = false;
 					if (result.type === 'success') {
-						createOpen = false;
-						notify.success('Account created');
+						editOpen = false;
+						notify.success('Account updated');
 					} else if (result.type === 'failure') {
 						const message = (result.data as { message?: string } | undefined)?.message;
-						notify.error(message ?? 'Could not create account');
+						notify.error(message ?? 'Could not save account');
 					}
 				};
 			}}
 			class="space-y-4"
 		>
+			<input type="hidden" name="id" value={editTarget.id} />
 			<div class="space-y-1">
-				<Label for="create-name">Name</Label>
-				<Input id="create-name" name="name" required maxlength={80} />
+				<Label for="edit-name">Name</Label>
+				<Input id="edit-name" name="name" required maxlength={80} value={editTarget.name} />
 			</div>
 			<div class="space-y-1">
-				<Label for="create-type">Type</Label>
+				<Label for="edit-type">Type</Label>
 				<select
-					id="create-type"
+					id="edit-type"
 					name="type"
 					required
 					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
 				>
 					{#each accountTypeOptions as opt}
-						<option value={opt.value}>{opt.label}</option>
+						<option value={opt.value} selected={opt.value === editTarget.type}>{opt.label}</option>
 					{/each}
 				</select>
 			</div>
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-1">
-					<Label for="create-currency">Currency</Label>
-					<Input id="create-currency" name="currency" required maxlength={8} value="IDR" />
+					<Label for="edit-currency">Currency</Label>
+					<Input id="edit-currency" name="currency" required maxlength={8} value={editTarget.currency} />
 				</div>
 				<div class="space-y-1">
-					<Label for="create-balance">Initial balance</Label>
-					<MoneyInput id="create-balance" name="initialBalanceCents" min={0} />
+					<Label for="edit-balance">Initial balance</Label>
+					<MoneyInput
+						id="edit-balance"
+						name="initialBalanceCents"
+						min={0}
+						value={editTarget.initialBalanceCents}
+					/>
 				</div>
 			</div>
-			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
-				<SubmitButton pending={createPending}>Create</SubmitButton>
-			</Dialog.Footer>
+			<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end mt-2 pt-2">
+				<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
+				<SubmitButton pending={editPending}>Save</SubmitButton>
+			</div>
 		</form>
-	</Dialog.Content>
-</Dialog.Root>
-
-<!-- Edit dialog -->
-<Dialog.Root bind:open={editOpen}>
-	<Dialog.Content>
-		<Dialog.Header>
-			<Dialog.Title>Edit account</Dialog.Title>
-		</Dialog.Header>
-		{#if editTarget}
-			<form
-				method="POST"
-				action="?/update"
-				use:enhance={() => {
-					editPending = true;
-					return async ({ update, result }) => {
-						await update();
-						editPending = false;
-						if (result.type === 'success') {
-							editOpen = false;
-							notify.success('Account updated');
-						} else if (result.type === 'failure') {
-							const message = (result.data as { message?: string } | undefined)?.message;
-							notify.error(message ?? 'Could not save account');
-						}
-					};
-				}}
-				class="space-y-4"
-			>
-				<input type="hidden" name="id" value={editTarget.id} />
-				<div class="space-y-1">
-					<Label for="edit-name">Name</Label>
-					<Input id="edit-name" name="name" required maxlength={80} value={editTarget.name} />
-				</div>
-				<div class="space-y-1">
-					<Label for="edit-type">Type</Label>
-					<select
-						id="edit-type"
-						name="type"
-						required
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-					>
-						{#each accountTypeOptions as opt}
-							<option value={opt.value} selected={opt.value === editTarget.type}>{opt.label}</option>
-						{/each}
-					</select>
-				</div>
-				<div class="grid grid-cols-2 gap-3">
-					<div class="space-y-1">
-						<Label for="edit-currency">Currency</Label>
-						<Input id="edit-currency" name="currency" required maxlength={8} value={editTarget.currency} />
-					</div>
-					<div class="space-y-1">
-						<Label for="edit-balance">Initial balance</Label>
-						<MoneyInput
-							id="edit-balance"
-							name="initialBalanceCents"
-							min={0}
-							value={editTarget.initialBalanceCents}
-						/>
-					</div>
-				</div>
-				<Dialog.Footer>
-					<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
-					<SubmitButton pending={editPending}>Save</SubmitButton>
-				</Dialog.Footer>
-			</form>
-		{/if}
-	</Dialog.Content>
-</Dialog.Root>
+	{/if}
+</ResponsiveDialog>
