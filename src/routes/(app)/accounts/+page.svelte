@@ -60,72 +60,102 @@
 	<p class="mb-4 text-sm text-destructive">{form.message}</p>
 {/if}
 
-<Card.Root>
-	<Card.Content class="p-0">
-		<Table.Root>
-			<Table.Header>
-				<Table.Row>
-					<Table.Head>Name</Table.Head>
-					<Table.Head>Type</Table.Head>
-					<Table.Head>Currency</Table.Head>
-					<Table.Head class="text-right">Initial balance</Table.Head>
-					<Table.Head class="w-12"></Table.Head>
-				</Table.Row>
-			</Table.Header>
-			<Table.Body>
-				{#each data.accounts as account (account.id)}
-					<Table.Row class={account.archived ? 'opacity-60' : ''}>
-						<Table.Cell class="font-medium">{account.name}</Table.Cell>
-						<Table.Cell class="capitalize">{account.type}</Table.Cell>
-						<Table.Cell>{account.currency}</Table.Cell>
-						<Table.Cell class="text-right tabular-nums">
-							{formatBalance(account.initialBalanceCents, account.currency)}
-						</Table.Cell>
-						<Table.Cell>
-							<DropdownMenu.Root>
-								<DropdownMenu.Trigger>
-									{#snippet child({ props })}
-										<Button {...props} variant="ghost" size="icon" class="size-8">
-											<MoreHorizontal class="size-4" />
-										</Button>
-									{/snippet}
-								</DropdownMenu.Trigger>
-								<DropdownMenu.Content align="end">
-									<DropdownMenu.Item onclick={() => openEdit(account)}>
-										<Pencil class="size-4 mr-2" /> Edit
-									</DropdownMenu.Item>
-									<form method="POST" action="?/{account.archived ? 'unarchive' : 'archive'}" use:enhance>
-										<input type="hidden" name="id" value={account.id} />
-										<DropdownMenu.Item>
-											{#snippet child({ props })}
-												<button {...props} type="submit" class="w-full text-left">
-													{#if account.archived}
-														<ArchiveRestore class="size-4 mr-2" /> Unarchive
-													{:else}
-														<Archive class="size-4 mr-2" /> Archive
-													{/if}
-												</button>
-											{/snippet}
-										</DropdownMenu.Item>
-									</form>
-								</DropdownMenu.Content>
-							</DropdownMenu.Root>
-						</Table.Cell>
-					</Table.Row>
-				{:else}
+{#snippet rowMenu(account: AccountRow)}
+	<DropdownMenu.Root>
+		<DropdownMenu.Trigger>
+			{#snippet child({ props })}
+				<Button {...props} variant="ghost" size="icon" class="size-11 md:size-8 shrink-0">
+					<MoreHorizontal class="size-4" />
+				</Button>
+			{/snippet}
+		</DropdownMenu.Trigger>
+		<DropdownMenu.Content align="end">
+			<DropdownMenu.Item onclick={() => openEdit(account)}>
+				<Pencil class="size-4 mr-2" /> Edit
+			</DropdownMenu.Item>
+			<form method="POST" action="?/{account.archived ? 'unarchive' : 'archive'}" use:enhance>
+				<input type="hidden" name="id" value={account.id} />
+				<DropdownMenu.Item>
+					{#snippet child({ props })}
+						<button {...props} type="submit" class="w-full text-left">
+							{#if account.archived}
+								<ArchiveRestore class="size-4 mr-2" /> Unarchive
+							{:else}
+								<Archive class="size-4 mr-2" /> Archive
+							{/if}
+						</button>
+					{/snippet}
+				</DropdownMenu.Item>
+			</form>
+		</DropdownMenu.Content>
+	</DropdownMenu.Root>
+{/snippet}
+
+<div class="hidden md:block">
+	<Card.Root>
+		<Card.Content class="p-0">
+			<Table.Root>
+				<Table.Header>
 					<Table.Row>
-						<Table.Cell colspan={5} class="text-center text-muted-foreground py-12">
-							No accounts yet.
-							<Button variant="link" onclick={() => (createOpen = true)} class="px-1">
-								Create the first one
-							</Button>.
-						</Table.Cell>
+						<Table.Head>Name</Table.Head>
+						<Table.Head>Type</Table.Head>
+						<Table.Head>Currency</Table.Head>
+						<Table.Head class="text-right">Initial balance</Table.Head>
+						<Table.Head class="w-12"></Table.Head>
 					</Table.Row>
-				{/each}
-			</Table.Body>
-		</Table.Root>
-	</Card.Content>
-</Card.Root>
+				</Table.Header>
+				<Table.Body>
+					{#each data.accounts as account (account.id)}
+						<Table.Row class={account.archived ? 'opacity-60' : ''}>
+							<Table.Cell class="font-medium">{account.name}</Table.Cell>
+							<Table.Cell class="capitalize">{account.type}</Table.Cell>
+							<Table.Cell>{account.currency}</Table.Cell>
+							<Table.Cell class="text-right tabular-nums">
+								{formatBalance(account.initialBalanceCents, account.currency)}
+							</Table.Cell>
+							<Table.Cell>
+								{@render rowMenu(account)}
+							</Table.Cell>
+						</Table.Row>
+					{:else}
+						<Table.Row>
+							<Table.Cell colspan={5} class="text-center text-muted-foreground py-12">
+								No accounts yet.
+								<Button variant="link" onclick={() => (createOpen = true)} class="px-1">
+									Create the first one
+								</Button>.
+							</Table.Cell>
+						</Table.Row>
+					{/each}
+				</Table.Body>
+			</Table.Root>
+		</Card.Content>
+	</Card.Root>
+</div>
+
+<ul class="md:hidden space-y-2">
+	{#each data.accounts as account (account.id)}
+		<li class="rounded-lg border bg-card p-3 flex items-start gap-3 {account.archived ? 'opacity-60' : ''}">
+			<div class="flex-1 min-w-0">
+				<div class="font-medium truncate">{account.name}</div>
+				<div class="text-xs text-muted-foreground capitalize mt-0.5">
+					{account.type} · {account.currency}
+				</div>
+				<div class="text-sm tabular-nums mt-1">
+					{formatBalance(account.initialBalanceCents, account.currency)}
+				</div>
+			</div>
+			{@render rowMenu(account)}
+		</li>
+	{:else}
+		<li class="text-center text-muted-foreground py-12">
+			No accounts yet.
+			<Button variant="link" onclick={() => (createOpen = true)} class="px-1">
+				Create the first one
+			</Button>.
+		</li>
+	{/each}
+</ul>
 
 <!-- Create dialog -->
 <Dialog.Root bind:open={createOpen}>

@@ -78,7 +78,7 @@
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger>
 						{#snippet child({ props })}
-							<Button {...props} variant="ghost" size="icon" class="size-8">
+							<Button {...props} variant="ghost" size="icon" class="size-11 md:size-8 shrink-0">
 								<MoreHorizontal class="size-4" />
 							</Button>
 						{/snippet}

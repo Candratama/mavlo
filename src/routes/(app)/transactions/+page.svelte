@@ -117,105 +117,147 @@
 	</Card.Content>
 </Card.Root>
 
-<Card.Root>
-	<Card.Content class="p-0">
-		<Table.Root>
-			<Table.Header>
-				<Table.Row>
-					<Table.Head>Date</Table.Head>
-					<Table.Head>Kind</Table.Head>
-					<Table.Head>Account</Table.Head>
-					<Table.Head>Category</Table.Head>
-					<Table.Head>Note</Table.Head>
-					<Table.Head class="text-right">Amount</Table.Head>
-					<Table.Head class="w-12"></Table.Head>
-				</Table.Row>
-			</Table.Header>
-			<Table.Body>
-				{#each data.transactions as tx (tx.id)}
-					{@const acc = accountById.get(tx.accountId)}
-					{@const destAcc = tx.transferToAccountId ? accountById.get(tx.transferToAccountId) : null}
-					{@const cat = tx.categoryId ? categoryById.get(tx.categoryId) : null}
+{#snippet rowMenu(tx: TxRow)}
+	<DropdownMenu.Root>
+		<DropdownMenu.Trigger>
+			{#snippet child({ props })}
+				<Button {...props} variant="ghost" size="icon" class="size-11 md:size-8 shrink-0">
+					<MoreHorizontal class="size-4" />
+				</Button>
+			{/snippet}
+		</DropdownMenu.Trigger>
+		<DropdownMenu.Content align="end">
+			<DropdownMenu.Item onclick={() => openEdit(tx)}>
+				<Pencil class="size-4 mr-2" /> Edit
+			</DropdownMenu.Item>
+			<form method="POST" action="?/delete" use:enhance>
+				<input type="hidden" name="id" value={tx.id} />
+				<DropdownMenu.Item>
+					{#snippet child({ props })}
+						<button
+							{...props}
+							type="submit"
+							class="w-full text-left text-destructive"
+						>
+							<Trash2 class="size-4 mr-2" /> Delete
+						</button>
+					{/snippet}
+				</DropdownMenu.Item>
+			</form>
+		</DropdownMenu.Content>
+	</DropdownMenu.Root>
+{/snippet}
+
+<div class="hidden md:block">
+	<Card.Root>
+		<Card.Content class="p-0">
+			<Table.Root>
+				<Table.Header>
 					<Table.Row>
-						<Table.Cell>{formatDate(tx.occurredAt)}</Table.Cell>
-						<Table.Cell class="capitalize">
-							{#if tx.kind === 'income'}
-								<span class="text-emerald-600 dark:text-emerald-400">income</span>
-							{:else if tx.kind === 'expense'}
-								<span class="text-rose-600 dark:text-rose-400">expense</span>
-							{:else}
-								<span class="text-blue-600 dark:text-blue-400">transfer</span>
-							{/if}
-						</Table.Cell>
-						<Table.Cell>
-							{#if tx.kind === 'transfer' && destAcc}
-								<span class="text-xs">{acc?.name ?? '—'} → {destAcc.name}</span>
-							{:else}
-								{acc?.name ?? '—'}
-							{/if}
-						</Table.Cell>
-						<Table.Cell>
-							{#if tx.kind === 'transfer'}
-								<span class="text-muted-foreground text-xs">—</span>
-							{:else}
-								{cat?.name ?? '—'}
-							{/if}
-						</Table.Cell>
-						<Table.Cell class="max-w-xs truncate">{tx.note ?? ''}</Table.Cell>
-						<Table.Cell class="text-right tabular-nums">
-							{#if tx.kind === 'expense'}
-								<span class="text-rose-600 dark:text-rose-400">−{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}</span>
-							{:else if tx.kind === 'income'}
-								<span class="text-emerald-600 dark:text-emerald-400">+{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}</span>
-							{:else}
-								<span class="text-blue-600 dark:text-blue-400">{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}</span>
-							{/if}
-						</Table.Cell>
-						<Table.Cell>
-							<DropdownMenu.Root>
-								<DropdownMenu.Trigger>
-									{#snippet child({ props })}
-										<Button {...props} variant="ghost" size="icon" class="size-8">
-											<MoreHorizontal class="size-4" />
-										</Button>
-									{/snippet}
-								</DropdownMenu.Trigger>
-								<DropdownMenu.Content align="end">
-									<DropdownMenu.Item onclick={() => openEdit(tx)}>
-										<Pencil class="size-4 mr-2" /> Edit
-									</DropdownMenu.Item>
-									<form method="POST" action="?/delete" use:enhance>
-										<input type="hidden" name="id" value={tx.id} />
-										<DropdownMenu.Item>
-											{#snippet child({ props })}
-												<button
-													{...props}
-													type="submit"
-													class="w-full text-left text-destructive"
-												>
-													<Trash2 class="size-4 mr-2" /> Delete
-												</button>
-											{/snippet}
-										</DropdownMenu.Item>
-									</form>
-								</DropdownMenu.Content>
-							</DropdownMenu.Root>
-						</Table.Cell>
+						<Table.Head>Date</Table.Head>
+						<Table.Head>Kind</Table.Head>
+						<Table.Head>Account</Table.Head>
+						<Table.Head>Category</Table.Head>
+						<Table.Head>Note</Table.Head>
+						<Table.Head class="text-right">Amount</Table.Head>
+						<Table.Head class="w-12"></Table.Head>
 					</Table.Row>
-				{:else}
-					<Table.Row>
-						<Table.Cell colspan={7} class="text-center text-muted-foreground py-12">
-							No transactions in this range.
-							<Button variant="link" onclick={() => { createKind = 'expense'; createOpen = true; }} class="px-1">
-								Add the first one
-							</Button>.
-						</Table.Cell>
-					</Table.Row>
-				{/each}
-			</Table.Body>
-		</Table.Root>
-	</Card.Content>
-</Card.Root>
+				</Table.Header>
+				<Table.Body>
+					{#each data.transactions as tx (tx.id)}
+						{@const acc = accountById.get(tx.accountId)}
+						{@const destAcc = tx.transferToAccountId ? accountById.get(tx.transferToAccountId) : null}
+						{@const cat = tx.categoryId ? categoryById.get(tx.categoryId) : null}
+						<Table.Row>
+							<Table.Cell>{formatDate(tx.occurredAt)}</Table.Cell>
+							<Table.Cell class="capitalize">
+								{#if tx.kind === 'income'}
+									<span class="text-emerald-600 dark:text-emerald-400">income</span>
+								{:else if tx.kind === 'expense'}
+									<span class="text-rose-600 dark:text-rose-400">expense</span>
+								{:else}
+									<span class="text-blue-600 dark:text-blue-400">transfer</span>
+								{/if}
+							</Table.Cell>
+							<Table.Cell>
+								{#if tx.kind === 'transfer' && destAcc}
+									<span class="text-xs">{acc?.name ?? '—'} → {destAcc.name}</span>
+								{:else}
+									{acc?.name ?? '—'}
+								{/if}
+							</Table.Cell>
+							<Table.Cell>
+								{#if tx.kind === 'transfer'}
+									<span class="text-muted-foreground text-xs">—</span>
+								{:else}
+									{cat?.name ?? '—'}
+								{/if}
+							</Table.Cell>
+							<Table.Cell class="max-w-xs truncate">{tx.note ?? ''}</Table.Cell>
+							<Table.Cell class="text-right tabular-nums">
+								{#if tx.kind === 'expense'}
+									<span class="text-rose-600 dark:text-rose-400">−{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}</span>
+								{:else if tx.kind === 'income'}
+									<span class="text-emerald-600 dark:text-emerald-400">+{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}</span>
+								{:else}
+									<span class="text-blue-600 dark:text-blue-400">{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}</span>
+								{/if}
+							</Table.Cell>
+							<Table.Cell>
+								{@render rowMenu(tx)}
+							</Table.Cell>
+						</Table.Row>
+					{:else}
+						<Table.Row>
+							<Table.Cell colspan={7} class="text-center text-muted-foreground py-12">
+								No transactions in this range.
+								<Button variant="link" onclick={() => { createKind = 'expense'; createOpen = true; }} class="px-1">
+									Add the first one
+								</Button>.
+							</Table.Cell>
+						</Table.Row>
+					{/each}
+				</Table.Body>
+			</Table.Root>
+		</Card.Content>
+	</Card.Root>
+</div>
+
+<ul class="md:hidden space-y-2">
+	{#each data.transactions as tx (tx.id)}
+		{@const acc = accountById.get(tx.accountId)}
+		{@const destAcc = tx.transferToAccountId ? accountById.get(tx.transferToAccountId) : null}
+		{@const cat = tx.categoryId ? categoryById.get(tx.categoryId) : null}
+		<li class="rounded-lg border bg-card p-3 flex items-start gap-3">
+			<div class="flex-1 min-w-0">
+				<div class="flex items-baseline justify-between gap-2 mb-0.5">
+					<span class="text-xs text-muted-foreground tabular-nums">{formatDate(tx.occurredAt)}</span>
+					<span class="text-sm font-medium tabular-nums whitespace-nowrap {tx.kind === 'expense' ? 'text-rose-600 dark:text-rose-400' : tx.kind === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-blue-600 dark:text-blue-400'}">
+						{tx.kind === 'expense' ? '−' : tx.kind === 'income' ? '+' : ''}{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}
+					</span>
+				</div>
+				<div class="text-xs text-muted-foreground truncate">
+					{#if tx.kind === 'transfer' && destAcc}
+						{acc?.name ?? '—'} → {destAcc.name}
+					{:else}
+						{acc?.name ?? '—'}{cat ? ` · ${cat.name}` : ''}
+					{/if}
+				</div>
+				{#if tx.note}
+					<div class="text-xs mt-0.5 truncate">{tx.note}</div>
+				{/if}
+			</div>
+			{@render rowMenu(tx)}
+		</li>
+	{:else}
+		<li class="text-center text-muted-foreground py-12">
+			No transactions in this range.
+			<Button variant="link" onclick={() => { createKind = 'expense'; createOpen = true; }} class="px-1">
+				Add the first one
+			</Button>.
+		</li>
+	{/each}
+</ul>
 
 <!-- Create dialog -->
 <Dialog.Root bind:open={createOpen}>

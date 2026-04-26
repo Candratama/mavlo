@@ -51,80 +51,113 @@
 	<p class="mb-4 text-sm text-destructive">{form.message}</p>
 {/if}
 
-<Card.Root>
-	<Card.Content class="p-0">
-		<Table.Root>
-			<Table.Header>
-				<Table.Row>
-					<Table.Head>Name</Table.Head>
-					<Table.Head>Kind</Table.Head>
-					<Table.Head>Color</Table.Head>
-					<Table.Head class="w-12"></Table.Head>
-				</Table.Row>
-			</Table.Header>
-			<Table.Body>
-				{#each data.categories as category (category.id)}
-					<Table.Row class={category.archived ? 'opacity-60' : ''}>
-						<Table.Cell class="font-medium">{category.name}</Table.Cell>
-						<Table.Cell class="capitalize">{category.kind}</Table.Cell>
-						<Table.Cell>
-							{#if category.color}
-								<div class="flex items-center gap-2">
-									<span
-										class="inline-block size-4 rounded border"
-										style="background: {category.color}"
-									></span>
-									<span class="font-mono text-xs">{category.color}</span>
-								</div>
+{#snippet rowMenu(category: CategoryRow)}
+	<DropdownMenu.Root>
+		<DropdownMenu.Trigger>
+			{#snippet child({ props })}
+				<Button {...props} variant="ghost" size="icon" class="size-11 md:size-8 shrink-0">
+					<MoreHorizontal class="size-4" />
+				</Button>
+			{/snippet}
+		</DropdownMenu.Trigger>
+		<DropdownMenu.Content align="end">
+			<DropdownMenu.Item onclick={() => openEdit(category)}>
+				<Pencil class="size-4 mr-2" /> Edit
+			</DropdownMenu.Item>
+			<form method="POST" action="?/{category.archived ? 'unarchive' : 'archive'}" use:enhance>
+				<input type="hidden" name="id" value={category.id} />
+				<DropdownMenu.Item>
+					{#snippet child({ props })}
+						<button {...props} type="submit" class="w-full text-left">
+							{#if category.archived}
+								<ArchiveRestore class="size-4 mr-2" /> Unarchive
 							{:else}
-								<span class="text-muted-foreground text-xs">—</span>
+								<Archive class="size-4 mr-2" /> Archive
 							{/if}
-						</Table.Cell>
-						<Table.Cell>
-							<DropdownMenu.Root>
-								<DropdownMenu.Trigger>
-									{#snippet child({ props })}
-										<Button {...props} variant="ghost" size="icon" class="size-8">
-											<MoreHorizontal class="size-4" />
-										</Button>
-									{/snippet}
-								</DropdownMenu.Trigger>
-								<DropdownMenu.Content align="end">
-									<DropdownMenu.Item onclick={() => openEdit(category)}>
-										<Pencil class="size-4 mr-2" /> Edit
-									</DropdownMenu.Item>
-									<form method="POST" action="?/{category.archived ? 'unarchive' : 'archive'}" use:enhance>
-										<input type="hidden" name="id" value={category.id} />
-										<DropdownMenu.Item>
-											{#snippet child({ props })}
-												<button {...props} type="submit" class="w-full text-left">
-													{#if category.archived}
-														<ArchiveRestore class="size-4 mr-2" /> Unarchive
-													{:else}
-														<Archive class="size-4 mr-2" /> Archive
-													{/if}
-												</button>
-											{/snippet}
-										</DropdownMenu.Item>
-									</form>
-								</DropdownMenu.Content>
-							</DropdownMenu.Root>
-						</Table.Cell>
-					</Table.Row>
-				{:else}
+						</button>
+					{/snippet}
+				</DropdownMenu.Item>
+			</form>
+		</DropdownMenu.Content>
+	</DropdownMenu.Root>
+{/snippet}
+
+<div class="hidden md:block">
+	<Card.Root>
+		<Card.Content class="p-0">
+			<Table.Root>
+				<Table.Header>
 					<Table.Row>
-						<Table.Cell colspan={4} class="text-center text-muted-foreground py-12">
-							No categories yet.
-							<Button variant="link" onclick={() => (createOpen = true)} class="px-1">
-								Create the first one
-							</Button>.
-						</Table.Cell>
+						<Table.Head>Name</Table.Head>
+						<Table.Head>Kind</Table.Head>
+						<Table.Head>Color</Table.Head>
+						<Table.Head class="w-12"></Table.Head>
 					</Table.Row>
-				{/each}
-			</Table.Body>
-		</Table.Root>
-	</Card.Content>
-</Card.Root>
+				</Table.Header>
+				<Table.Body>
+					{#each data.categories as category (category.id)}
+						<Table.Row class={category.archived ? 'opacity-60' : ''}>
+							<Table.Cell class="font-medium">{category.name}</Table.Cell>
+							<Table.Cell class="capitalize">{category.kind}</Table.Cell>
+							<Table.Cell>
+								{#if category.color}
+									<div class="flex items-center gap-2">
+										<span
+											class="inline-block size-4 rounded border"
+											style="background: {category.color}"
+										></span>
+										<span class="font-mono text-xs">{category.color}</span>
+									</div>
+								{:else}
+									<span class="text-muted-foreground text-xs">—</span>
+								{/if}
+							</Table.Cell>
+							<Table.Cell>
+								{@render rowMenu(category)}
+							</Table.Cell>
+						</Table.Row>
+					{:else}
+						<Table.Row>
+							<Table.Cell colspan={4} class="text-center text-muted-foreground py-12">
+								No categories yet.
+								<Button variant="link" onclick={() => (createOpen = true)} class="px-1">
+									Create the first one
+								</Button>.
+							</Table.Cell>
+						</Table.Row>
+					{/each}
+				</Table.Body>
+			</Table.Root>
+		</Card.Content>
+	</Card.Root>
+</div>
+
+<ul class="md:hidden space-y-2">
+	{#each data.categories as category (category.id)}
+		<li class="rounded-lg border bg-card p-3 flex items-start gap-3 {category.archived ? 'opacity-60' : ''}">
+			<div class="flex-1 min-w-0">
+				<div class="font-medium truncate">{category.name}</div>
+				<div class="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+					<span class="capitalize">{category.kind}</span>
+					{#if category.color}
+						<span class="flex items-center gap-1">
+							<span class="inline-block size-3 rounded border" style="background: {category.color}"></span>
+							<span class="font-mono">{category.color}</span>
+						</span>
+					{/if}
+				</div>
+			</div>
+			{@render rowMenu(category)}
+		</li>
+	{:else}
+		<li class="text-center text-muted-foreground py-12">
+			No categories yet.
+			<Button variant="link" onclick={() => (createOpen = true)} class="px-1">
+				Create the first one
+			</Button>.
+		</li>
+	{/each}
+</ul>
 
 <Dialog.Root bind:open={createOpen}>
 	<Dialog.Content>
