@@ -63,7 +63,7 @@
 
 <Card.Root class="mb-6">
 	<Card.Content class="p-4">
-		<form method="GET" class="grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
+		<form method="GET" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 items-end">
 			<div class="space-y-1">
 				<Label for="filter-from">From</Label>
 				<Input id="filter-from" type="date" name="from" value={data.filter.from} />
