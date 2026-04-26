@@ -6,8 +6,8 @@
 	import SubmitButton from '$lib/components/forms/submit-button.svelte';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
+	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Table from '$lib/components/ui/table';
-	import ResponsiveDialog from '$lib/components/forms/responsive-dialog.svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Plus, MoreHorizontal, Pencil, Trash2, ArrowLeftRight } from 'lucide-svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
@@ -267,143 +267,38 @@
 </ul>
 
 <!-- Create dialog -->
-<ResponsiveDialog bind:open={createOpen} title="New transaction">
-	<form
-		method="POST"
-		action="?/create"
-		use:enhance={() => {
-			createPending = true;
-			return async ({ update, result }) => {
-				await update();
-				createPending = false;
-				if (result.type === 'success') {
-					createOpen = false;
-					notify.success('Transaction added');
-				} else if (result.type === 'failure') {
-					const message = (result.data as { message?: string } | undefined)?.message;
-					notify.error(message ?? 'Could not add transaction');
-				}
-			};
-		}}
-		class="space-y-4"
-	>
-		<div class="grid grid-cols-2 gap-3">
-			<div class="space-y-1">
-				<Label for="tx-c-kind">Kind</Label>
-				<select
-					id="tx-c-kind"
-					name="kind"
-					required
-					bind:value={createKind}
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-				>
-					<option value="expense">Expense</option>
-					<option value="income">Income</option>
-					<option value="transfer">Transfer</option>
-				</select>
-			</div>
-			<div class="space-y-1">
-				<Label for="tx-c-amount">Amount</Label>
-				<MoneyInput id="tx-c-amount" name="amountCents" min={1} required />
-			</div>
-		</div>
-		<div class="space-y-1">
-			<Label for="tx-c-account">{createKind === 'transfer' ? 'From account' : 'Account'}</Label>
-			<select
-				id="tx-c-account"
-				name="accountId"
-				required
-				class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-			>
-				{#each data.accounts as a}
-					<option value={a.id}>{a.name} ({a.currency})</option>
-				{/each}
-			</select>
-		</div>
-		{#if createKind === 'transfer'}
-			<div class="space-y-1">
-				<Label for="tx-c-to">To account</Label>
-				<select
-					id="tx-c-to"
-					name="transferToAccountId"
-					required
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-				>
-					{#each data.accounts as a}
-						<option value={a.id}>{a.name} ({a.currency})</option>
-					{/each}
-				</select>
-			</div>
-		{:else}
-			<div class="space-y-1">
-				<Label for="tx-c-category">Category (optional)</Label>
-				<select
-					id="tx-c-category"
-					name="categoryId"
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-				>
-					<option value="">None</option>
-					<optgroup label="Expense">
-						{#each expenseCategories as c}
-							<option value={c.id}>{c.name}</option>
-						{/each}
-					</optgroup>
-					<optgroup label="Income">
-						{#each incomeCategories as c}
-							<option value={c.id}>{c.name}</option>
-						{/each}
-					</optgroup>
-				</select>
-			</div>
-		{/if}
-		<div class="grid grid-cols-2 gap-3">
-			<div class="space-y-1">
-				<Label for="tx-c-date">Date</Label>
-				<Input id="tx-c-date" type="date" name="occurredAt" required value={todayYmd} />
-			</div>
-			<div class="space-y-1">
-				<Label for="tx-c-note">Note</Label>
-				<Input id="tx-c-note" name="note" maxlength={200} placeholder="optional" />
-			</div>
-		</div>
-		<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end mt-2 pt-2">
-			<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
-			<SubmitButton pending={createPending}>Create</SubmitButton>
-		</div>
-	</form>
-</ResponsiveDialog>
-
-<!-- Edit dialog -->
-<ResponsiveDialog bind:open={editOpen} title="Edit transaction">
-	{#if editTarget}
+<Dialog.Root bind:open={createOpen}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>New transaction</Dialog.Title>
+		</Dialog.Header>
 		<form
 			method="POST"
-			action="?/update"
+			action="?/create"
 			use:enhance={() => {
-				editPending = true;
+				createPending = true;
 				return async ({ update, result }) => {
 					await update();
-					editPending = false;
+					createPending = false;
 					if (result.type === 'success') {
-						editOpen = false;
-						notify.success('Transaction updated');
+						createOpen = false;
+						notify.success('Transaction added');
 					} else if (result.type === 'failure') {
 						const message = (result.data as { message?: string } | undefined)?.message;
-						notify.error(message ?? 'Could not update transaction');
+						notify.error(message ?? 'Could not add transaction');
 					}
 				};
 			}}
 			class="space-y-4"
 		>
-			<input type="hidden" name="id" value={editTarget.id} />
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-1">
-					<Label for="tx-e-kind">Kind</Label>
+					<Label for="tx-c-kind">Kind</Label>
 					<select
-						id="tx-e-kind"
+						id="tx-c-kind"
 						name="kind"
 						required
-						bind:value={editKind}
+						bind:value={createKind}
 						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
 					>
 						<option value="expense">Expense</option>
@@ -412,64 +307,54 @@
 					</select>
 				</div>
 				<div class="space-y-1">
-					<Label for="tx-e-amount">Amount</Label>
-					<MoneyInput
-						id="tx-e-amount"
-						name="amountCents"
-						min={1}
-						required
-						value={editTarget.amountCents}
-					/>
+					<Label for="tx-c-amount">Amount</Label>
+					<MoneyInput id="tx-c-amount" name="amountCents" min={1} required />
 				</div>
 			</div>
 			<div class="space-y-1">
-				<Label for="tx-e-account">{editKind === 'transfer' ? 'From account' : 'Account'}</Label>
+				<Label for="tx-c-account">{createKind === 'transfer' ? 'From account' : 'Account'}</Label>
 				<select
-					id="tx-e-account"
+					id="tx-c-account"
 					name="accountId"
 					required
 					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
 				>
 					{#each data.accounts as a}
-						<option value={a.id} selected={a.id === editTarget.accountId}>
-							{a.name} ({a.currency})
-						</option>
+						<option value={a.id}>{a.name} ({a.currency})</option>
 					{/each}
 				</select>
 			</div>
-			{#if editKind === 'transfer'}
+			{#if createKind === 'transfer'}
 				<div class="space-y-1">
-					<Label for="tx-e-to">To account</Label>
+					<Label for="tx-c-to">To account</Label>
 					<select
-						id="tx-e-to"
+						id="tx-c-to"
 						name="transferToAccountId"
 						required
 						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
 					>
 						{#each data.accounts as a}
-							<option value={a.id} selected={a.id === editTarget.transferToAccountId}>
-								{a.name} ({a.currency})
-							</option>
+							<option value={a.id}>{a.name} ({a.currency})</option>
 						{/each}
 					</select>
 				</div>
 			{:else}
 				<div class="space-y-1">
-					<Label for="tx-e-category">Category (optional)</Label>
+					<Label for="tx-c-category">Category (optional)</Label>
 					<select
-						id="tx-e-category"
+						id="tx-c-category"
 						name="categoryId"
 						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
 					>
-						<option value="" selected={!editTarget.categoryId}>None</option>
+						<option value="">None</option>
 						<optgroup label="Expense">
 							{#each expenseCategories as c}
-								<option value={c.id} selected={c.id === editTarget.categoryId}>{c.name}</option>
+								<option value={c.id}>{c.name}</option>
 							{/each}
 						</optgroup>
 						<optgroup label="Income">
 							{#each incomeCategories as c}
-								<option value={c.id} selected={c.id === editTarget.categoryId}>{c.name}</option>
+								<option value={c.id}>{c.name}</option>
 							{/each}
 						</optgroup>
 					</select>
@@ -477,24 +362,149 @@
 			{/if}
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-1">
-					<Label for="tx-e-date">Date</Label>
-					<Input
-						id="tx-e-date"
-						type="date"
-						name="occurredAt"
-						required
-						value={formatDate(editTarget.occurredAt)}
-					/>
+					<Label for="tx-c-date">Date</Label>
+					<Input id="tx-c-date" type="date" name="occurredAt" required value={todayYmd} />
 				</div>
 				<div class="space-y-1">
-					<Label for="tx-e-note">Note</Label>
-					<Input id="tx-e-note" name="note" maxlength={200} value={editTarget.note ?? ''} />
+					<Label for="tx-c-note">Note</Label>
+					<Input id="tx-c-note" name="note" maxlength={200} placeholder="optional" />
 				</div>
 			</div>
-			<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end mt-2 pt-2">
-				<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
-				<SubmitButton pending={editPending}>Save</SubmitButton>
-			</div>
+			<Dialog.Footer>
+				<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
+				<SubmitButton pending={createPending}>Create</SubmitButton>
+			</Dialog.Footer>
 		</form>
-	{/if}
-</ResponsiveDialog>
+	</Dialog.Content>
+</Dialog.Root>
+
+<!-- Edit dialog -->
+<Dialog.Root bind:open={editOpen}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>Edit transaction</Dialog.Title>
+		</Dialog.Header>
+		{#if editTarget}
+			<form
+				method="POST"
+				action="?/update"
+				use:enhance={() => {
+					editPending = true;
+					return async ({ update, result }) => {
+						await update();
+						editPending = false;
+						if (result.type === 'success') {
+							editOpen = false;
+							notify.success('Transaction updated');
+						} else if (result.type === 'failure') {
+							const message = (result.data as { message?: string } | undefined)?.message;
+							notify.error(message ?? 'Could not update transaction');
+						}
+					};
+				}}
+				class="space-y-4"
+			>
+				<input type="hidden" name="id" value={editTarget.id} />
+				<div class="grid grid-cols-2 gap-3">
+					<div class="space-y-1">
+						<Label for="tx-e-kind">Kind</Label>
+						<select
+							id="tx-e-kind"
+							name="kind"
+							required
+							bind:value={editKind}
+							class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+						>
+							<option value="expense">Expense</option>
+							<option value="income">Income</option>
+							<option value="transfer">Transfer</option>
+						</select>
+					</div>
+					<div class="space-y-1">
+						<Label for="tx-e-amount">Amount</Label>
+						<MoneyInput
+							id="tx-e-amount"
+							name="amountCents"
+							min={1}
+							required
+							value={editTarget.amountCents}
+						/>
+					</div>
+				</div>
+				<div class="space-y-1">
+					<Label for="tx-e-account">{editKind === 'transfer' ? 'From account' : 'Account'}</Label>
+					<select
+						id="tx-e-account"
+						name="accountId"
+						required
+						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+					>
+						{#each data.accounts as a}
+							<option value={a.id} selected={a.id === editTarget.accountId}>
+								{a.name} ({a.currency})
+							</option>
+						{/each}
+					</select>
+				</div>
+				{#if editKind === 'transfer'}
+					<div class="space-y-1">
+						<Label for="tx-e-to">To account</Label>
+						<select
+							id="tx-e-to"
+							name="transferToAccountId"
+							required
+							class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+						>
+							{#each data.accounts as a}
+								<option value={a.id} selected={a.id === editTarget.transferToAccountId}>
+									{a.name} ({a.currency})
+								</option>
+							{/each}
+						</select>
+					</div>
+				{:else}
+					<div class="space-y-1">
+						<Label for="tx-e-category">Category (optional)</Label>
+						<select
+							id="tx-e-category"
+							name="categoryId"
+							class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+						>
+							<option value="" selected={!editTarget.categoryId}>None</option>
+							<optgroup label="Expense">
+								{#each expenseCategories as c}
+									<option value={c.id} selected={c.id === editTarget.categoryId}>{c.name}</option>
+								{/each}
+							</optgroup>
+							<optgroup label="Income">
+								{#each incomeCategories as c}
+									<option value={c.id} selected={c.id === editTarget.categoryId}>{c.name}</option>
+								{/each}
+							</optgroup>
+						</select>
+					</div>
+				{/if}
+				<div class="grid grid-cols-2 gap-3">
+					<div class="space-y-1">
+						<Label for="tx-e-date">Date</Label>
+						<Input
+							id="tx-e-date"
+							type="date"
+							name="occurredAt"
+							required
+							value={formatDate(editTarget.occurredAt)}
+						/>
+					</div>
+					<div class="space-y-1">
+						<Label for="tx-e-note">Note</Label>
+						<Input id="tx-e-note" name="note" maxlength={200} value={editTarget.note ?? ''} />
+					</div>
+				</div>
+				<Dialog.Footer>
+					<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
+					<SubmitButton pending={editPending}>Save</SubmitButton>
+				</Dialog.Footer>
+			</form>
+		{/if}
+	</Dialog.Content>
+</Dialog.Root>

@@ -5,8 +5,8 @@
 	import SubmitButton from '$lib/components/forms/submit-button.svelte';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
+	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Table from '$lib/components/ui/table';
-	import ResponsiveDialog from '$lib/components/forms/responsive-dialog.svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil, Tag } from 'lucide-svelte';
 	import { notify } from '$lib/utils/toast.js';
@@ -170,113 +170,123 @@
 	{/each}
 </ul>
 
-<ResponsiveDialog bind:open={createOpen} title="New category">
-	<form
-		method="POST"
-		action="?/create"
-		use:enhance={() => {
-			createPending = true;
-			return async ({ update, result }) => {
-				await update();
-				createPending = false;
-				if (result.type === 'success') {
-					createOpen = false;
-					notify.success('Category created');
-				} else if (result.type === 'failure') {
-					const message = (result.data as { message?: string } | undefined)?.message;
-					notify.error(message ?? 'Could not create category');
-				}
-			};
-		}}
-		class="space-y-4"
-	>
-		<div class="space-y-1">
-			<Label for="cat-c-name">Name</Label>
-			<Input id="cat-c-name" name="name" required maxlength={60} />
-		</div>
-		<div class="space-y-1">
-			<Label for="cat-c-kind">Kind</Label>
-			<select
-				id="cat-c-kind"
-				name="kind"
-				required
-				class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-			>
-				{#each kindOptions as opt}
-					<option value={opt.value}>{opt.label}</option>
-				{/each}
-			</select>
-		</div>
-		<div class="grid grid-cols-2 gap-3">
-			<div class="space-y-1">
-				<Label for="cat-c-color">Color (hex)</Label>
-				<Input id="cat-c-color" name="color" placeholder="#10b981" />
-			</div>
-			<div class="space-y-1">
-				<Label for="cat-c-icon">Icon</Label>
-				<Input id="cat-c-icon" name="icon" placeholder="utensils" />
-			</div>
-		</div>
-		<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end mt-2 pt-2">
-			<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
-			<SubmitButton pending={createPending}>Create</SubmitButton>
-		</div>
-	</form>
-</ResponsiveDialog>
-
-<ResponsiveDialog bind:open={editOpen} title="Edit category">
-	{#if editTarget}
+<Dialog.Root bind:open={createOpen}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>New category</Dialog.Title>
+		</Dialog.Header>
 		<form
 			method="POST"
-			action="?/update"
+			action="?/create"
 			use:enhance={() => {
-				editPending = true;
+				createPending = true;
 				return async ({ update, result }) => {
 					await update();
-					editPending = false;
+					createPending = false;
 					if (result.type === 'success') {
-						editOpen = false;
-						notify.success('Category updated');
+						createOpen = false;
+						notify.success('Category created');
 					} else if (result.type === 'failure') {
 						const message = (result.data as { message?: string } | undefined)?.message;
-						notify.error(message ?? 'Could not save category');
+						notify.error(message ?? 'Could not create category');
 					}
 				};
 			}}
 			class="space-y-4"
 		>
-			<input type="hidden" name="id" value={editTarget.id} />
 			<div class="space-y-1">
-				<Label for="cat-e-name">Name</Label>
-				<Input id="cat-e-name" name="name" required maxlength={60} value={editTarget.name} />
+				<Label for="cat-c-name">Name</Label>
+				<Input id="cat-c-name" name="name" required maxlength={60} />
 			</div>
 			<div class="space-y-1">
-				<Label for="cat-e-kind">Kind</Label>
+				<Label for="cat-c-kind">Kind</Label>
 				<select
-					id="cat-e-kind"
+					id="cat-c-kind"
 					name="kind"
 					required
 					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
 				>
 					{#each kindOptions as opt}
-						<option value={opt.value} selected={opt.value === editTarget.kind}>{opt.label}</option>
+						<option value={opt.value}>{opt.label}</option>
 					{/each}
 				</select>
 			</div>
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-1">
-					<Label for="cat-e-color">Color (hex)</Label>
-					<Input id="cat-e-color" name="color" value={editTarget.color ?? ''} placeholder="#10b981" />
+					<Label for="cat-c-color">Color (hex)</Label>
+					<Input id="cat-c-color" name="color" placeholder="#10b981" />
 				</div>
 				<div class="space-y-1">
-					<Label for="cat-e-icon">Icon</Label>
-					<Input id="cat-e-icon" name="icon" value={editTarget.icon ?? ''} placeholder="utensils" />
+					<Label for="cat-c-icon">Icon</Label>
+					<Input id="cat-c-icon" name="icon" placeholder="utensils" />
 				</div>
 			</div>
-			<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end mt-2 pt-2">
-				<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
-				<SubmitButton pending={editPending}>Save</SubmitButton>
-			</div>
+			<Dialog.Footer>
+				<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
+				<SubmitButton pending={createPending}>Create</SubmitButton>
+			</Dialog.Footer>
 		</form>
-	{/if}
-</ResponsiveDialog>
+	</Dialog.Content>
+</Dialog.Root>
+
+<Dialog.Root bind:open={editOpen}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>Edit category</Dialog.Title>
+		</Dialog.Header>
+		{#if editTarget}
+			<form
+				method="POST"
+				action="?/update"
+				use:enhance={() => {
+					editPending = true;
+					return async ({ update, result }) => {
+						await update();
+						editPending = false;
+						if (result.type === 'success') {
+							editOpen = false;
+							notify.success('Category updated');
+						} else if (result.type === 'failure') {
+							const message = (result.data as { message?: string } | undefined)?.message;
+							notify.error(message ?? 'Could not save category');
+						}
+					};
+				}}
+				class="space-y-4"
+			>
+				<input type="hidden" name="id" value={editTarget.id} />
+				<div class="space-y-1">
+					<Label for="cat-e-name">Name</Label>
+					<Input id="cat-e-name" name="name" required maxlength={60} value={editTarget.name} />
+				</div>
+				<div class="space-y-1">
+					<Label for="cat-e-kind">Kind</Label>
+					<select
+						id="cat-e-kind"
+						name="kind"
+						required
+						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+					>
+						{#each kindOptions as opt}
+							<option value={opt.value} selected={opt.value === editTarget.kind}>{opt.label}</option>
+						{/each}
+					</select>
+				</div>
+				<div class="grid grid-cols-2 gap-3">
+					<div class="space-y-1">
+						<Label for="cat-e-color">Color (hex)</Label>
+						<Input id="cat-e-color" name="color" value={editTarget.color ?? ''} placeholder="#10b981" />
+					</div>
+					<div class="space-y-1">
+						<Label for="cat-e-icon">Icon</Label>
+						<Input id="cat-e-icon" name="icon" value={editTarget.icon ?? ''} placeholder="utensils" />
+					</div>
+				</div>
+				<Dialog.Footer>
+					<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
+					<SubmitButton pending={editPending}>Save</SubmitButton>
+				</Dialog.Footer>
+			</form>
+		{/if}
+	</Dialog.Content>
+</Dialog.Root>

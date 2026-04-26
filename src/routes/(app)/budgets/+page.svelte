@@ -6,8 +6,8 @@
 	import SubmitButton from '$lib/components/forms/submit-button.svelte';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
+	import * as Dialog from '$lib/components/ui/dialog';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import ResponsiveDialog from '$lib/components/forms/responsive-dialog.svelte';
 	import { Plus, MoreHorizontal, Pencil, Trash2, PiggyBank } from 'lucide-svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
@@ -141,117 +141,127 @@
 </div>
 
 <!-- Create dialog -->
-<ResponsiveDialog bind:open={createOpen} title="New budget">
-	<form
-		method="POST"
-		action="?/create"
-		use:enhance={() => {
-			createPending = true;
-			return async ({ update, result }) => {
-				await update();
-				createPending = false;
-				if (result.type === 'success') {
-					createOpen = false;
-					notify.success('Budget created');
-				} else if (result.type === 'failure') {
-					const message = (result.data as { message?: string } | undefined)?.message;
-					notify.error(message ?? 'Could not create budget');
-				}
-			};
-		}}
-		class="space-y-4"
-	>
-		<div class="space-y-1">
-			<Label for="budget-c-category">Category</Label>
-			<select
-				id="budget-c-category"
-				name="categoryId"
-				required
-				class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-			>
-				{#each data.expenseCategories as c}
-					<option value={c.id}>{c.name}</option>
-				{/each}
-			</select>
-		</div>
-		<div class="grid grid-cols-2 gap-3">
-			<div class="space-y-1">
-				<Label for="budget-c-period">Period (YYYY-MM)</Label>
-				<Input id="budget-c-period" name="periodMonth" required value={data.periodMonth} />
-			</div>
-			<div class="space-y-1">
-				<Label for="budget-c-limit">Limit</Label>
-				<MoneyInput id="budget-c-limit" name="limitCents" min={1} required />
-			</div>
-		</div>
-		<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end mt-2 pt-2">
-			<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
-			<SubmitButton pending={createPending}>Create</SubmitButton>
-		</div>
-	</form>
-</ResponsiveDialog>
-
-<!-- Edit dialog -->
-<ResponsiveDialog bind:open={editOpen} title="Edit budget">
-	{#if editTarget}
+<Dialog.Root bind:open={createOpen}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>New budget</Dialog.Title>
+		</Dialog.Header>
 		<form
 			method="POST"
-			action="?/update"
+			action="?/create"
 			use:enhance={() => {
-				editPending = true;
+				createPending = true;
 				return async ({ update, result }) => {
 					await update();
-					editPending = false;
+					createPending = false;
 					if (result.type === 'success') {
-						editOpen = false;
-						notify.success('Budget updated');
+						createOpen = false;
+						notify.success('Budget created');
 					} else if (result.type === 'failure') {
 						const message = (result.data as { message?: string } | undefined)?.message;
-						notify.error(message ?? 'Could not update budget');
+						notify.error(message ?? 'Could not create budget');
 					}
 				};
 			}}
 			class="space-y-4"
 		>
-			<input type="hidden" name="id" value={editTarget.id} />
 			<div class="space-y-1">
-				<Label for="budget-e-category">Category</Label>
+				<Label for="budget-c-category">Category</Label>
 				<select
-					id="budget-e-category"
+					id="budget-c-category"
 					name="categoryId"
 					required
 					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
 				>
 					{#each data.expenseCategories as c}
-						<option value={c.id} selected={c.id === editTarget.categoryId}>{c.name}</option>
+						<option value={c.id}>{c.name}</option>
 					{/each}
 				</select>
 			</div>
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-1">
-					<Label for="budget-e-period">Period (YYYY-MM)</Label>
-					<Input
-						id="budget-e-period"
-						name="periodMonth"
-						required
-						value={editTarget.periodMonth}
-					/>
+					<Label for="budget-c-period">Period (YYYY-MM)</Label>
+					<Input id="budget-c-period" name="periodMonth" required value={data.periodMonth} />
 				</div>
 				<div class="space-y-1">
-					<Label for="budget-e-limit">Limit</Label>
-					<MoneyInput
-						id="budget-e-limit"
-						name="limitCents"
-						min={1}
-						required
-						value={editTarget.limitCents}
-					/>
+					<Label for="budget-c-limit">Limit</Label>
+					<MoneyInput id="budget-c-limit" name="limitCents" min={1} required />
 				</div>
 			</div>
-			<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end mt-2 pt-2">
-				<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
-				<SubmitButton pending={editPending}>Save</SubmitButton>
-			</div>
+			<Dialog.Footer>
+				<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
+				<SubmitButton pending={createPending}>Create</SubmitButton>
+			</Dialog.Footer>
 		</form>
-	{/if}
-</ResponsiveDialog>
+	</Dialog.Content>
+</Dialog.Root>
+
+<!-- Edit dialog -->
+<Dialog.Root bind:open={editOpen}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>Edit budget</Dialog.Title>
+		</Dialog.Header>
+		{#if editTarget}
+			<form
+				method="POST"
+				action="?/update"
+				use:enhance={() => {
+					editPending = true;
+					return async ({ update, result }) => {
+						await update();
+						editPending = false;
+						if (result.type === 'success') {
+							editOpen = false;
+							notify.success('Budget updated');
+						} else if (result.type === 'failure') {
+							const message = (result.data as { message?: string } | undefined)?.message;
+							notify.error(message ?? 'Could not update budget');
+						}
+					};
+				}}
+				class="space-y-4"
+			>
+				<input type="hidden" name="id" value={editTarget.id} />
+				<div class="space-y-1">
+					<Label for="budget-e-category">Category</Label>
+					<select
+						id="budget-e-category"
+						name="categoryId"
+						required
+						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+					>
+						{#each data.expenseCategories as c}
+							<option value={c.id} selected={c.id === editTarget.categoryId}>{c.name}</option>
+						{/each}
+					</select>
+				</div>
+				<div class="grid grid-cols-2 gap-3">
+					<div class="space-y-1">
+						<Label for="budget-e-period">Period (YYYY-MM)</Label>
+						<Input
+							id="budget-e-period"
+							name="periodMonth"
+							required
+							value={editTarget.periodMonth}
+						/>
+					</div>
+					<div class="space-y-1">
+						<Label for="budget-e-limit">Limit</Label>
+						<MoneyInput
+							id="budget-e-limit"
+							name="limitCents"
+							min={1}
+							required
+							value={editTarget.limitCents}
+						/>
+					</div>
+				</div>
+				<Dialog.Footer>
+					<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
+					<SubmitButton pending={editPending}>Save</SubmitButton>
+				</Dialog.Footer>
+			</form>
+		{/if}
+	</Dialog.Content>
+</Dialog.Root>
