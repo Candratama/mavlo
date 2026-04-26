@@ -34,12 +34,12 @@
 
 {#if !hasData}
 	<div
-		class="flex h-64 items-center justify-center text-sm text-muted-foreground"
+		class="flex h-48 sm:h-56 md:h-64 items-center justify-center text-sm text-muted-foreground"
 	>
 		No transaction history yet.
 	</div>
 {:else}
-	<div class="h-64">
+	<div class="h-48 sm:h-56 md:h-64">
 		<Chart
 			data={flat}
 			x="periodMonth"
