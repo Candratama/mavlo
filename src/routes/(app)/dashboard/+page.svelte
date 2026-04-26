@@ -8,10 +8,16 @@
 
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
+	import { setupPullToRefresh } from '$lib/actions/pull-to-refresh.js';
 
 	let { data } = $props();
 
 	const formatDate = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		return setupPullToRefresh(document.body, { threshold: 80 });
+	});
 </script>
 
 <svelte:head><title>Dashboard — Mavlo</title></svelte:head>
