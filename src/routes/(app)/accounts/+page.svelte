@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
+	import MoneyInput from '$lib/components/forms/money-input.svelte';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
@@ -165,8 +166,8 @@
 					<Input id="create-currency" name="currency" required maxlength={8} value="IDR" />
 				</div>
 				<div class="space-y-1">
-					<Label for="create-balance">Initial balance (cents)</Label>
-					<Input id="create-balance" name="initialBalanceCents" type="number" value="0" />
+					<Label for="create-balance">Initial balance</Label>
+					<MoneyInput id="create-balance" name="initialBalanceCents" min={0} />
 				</div>
 			</div>
 			<Dialog.Footer>
@@ -217,11 +218,11 @@
 						<Input id="edit-currency" name="currency" required maxlength={8} value={editTarget.currency} />
 					</div>
 					<div class="space-y-1">
-						<Label for="edit-balance">Initial balance (cents)</Label>
-						<Input
+						<Label for="edit-balance">Initial balance</Label>
+						<MoneyInput
 							id="edit-balance"
 							name="initialBalanceCents"
-							type="number"
+							min={0}
 							value={editTarget.initialBalanceCents}
 						/>
 					</div>

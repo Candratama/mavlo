@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
+	import MoneyInput from '$lib/components/forms/money-input.svelte';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
@@ -247,8 +248,8 @@
 					</select>
 				</div>
 				<div class="space-y-1">
-					<Label for="tx-c-amount">Amount (cents)</Label>
-					<Input id="tx-c-amount" type="number" name="amountCents" min="1" required />
+					<Label for="tx-c-amount">Amount</Label>
+					<MoneyInput id="tx-c-amount" name="amountCents" min={1} required />
 				</div>
 			</div>
 			<div class="space-y-1">
@@ -351,12 +352,11 @@
 						</select>
 					</div>
 					<div class="space-y-1">
-						<Label for="tx-e-amount">Amount (cents)</Label>
-						<Input
+						<Label for="tx-e-amount">Amount</Label>
+						<MoneyInput
 							id="tx-e-amount"
-							type="number"
 							name="amountCents"
-							min="1"
+							min={1}
 							required
 							value={editTarget.amountCents}
 						/>

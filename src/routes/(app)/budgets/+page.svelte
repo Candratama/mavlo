@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
+	import MoneyInput from '$lib/components/forms/money-input.svelte';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
@@ -167,8 +168,8 @@
 					<Input id="budget-c-period" name="periodMonth" required value={data.periodMonth} />
 				</div>
 				<div class="space-y-1">
-					<Label for="budget-c-limit">Limit (cents)</Label>
-					<Input id="budget-c-limit" type="number" name="limitCents" min="1" required />
+					<Label for="budget-c-limit">Limit</Label>
+					<MoneyInput id="budget-c-limit" name="limitCents" min={1} required />
 				</div>
 			</div>
 			<Dialog.Footer>
@@ -220,12 +221,11 @@
 						/>
 					</div>
 					<div class="space-y-1">
-						<Label for="budget-e-limit">Limit (cents)</Label>
-						<Input
+						<Label for="budget-e-limit">Limit</Label>
+						<MoneyInput
 							id="budget-e-limit"
-							type="number"
 							name="limitCents"
-							min="1"
+							min={1}
 							required
 							value={editTarget.limitCents}
 						/>
