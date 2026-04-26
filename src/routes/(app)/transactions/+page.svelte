@@ -77,7 +77,7 @@
 				<select
 					id="filter-account"
 					name="account"
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+					class="w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm h-9 md:h-8"
 				>
 					<option value="">All</option>
 					{#each data.accounts as a}
@@ -90,7 +90,7 @@
 				<select
 					id="filter-category"
 					name="category"
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+					class="w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm h-9 md:h-8"
 				>
 					<option value="">All</option>
 					{#each data.categories as c}
@@ -105,7 +105,7 @@
 				<select
 					id="filter-kind"
 					name="kind"
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+					class="w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm h-9 md:h-8"
 				>
 					<option value="">All</option>
 					<option value="income" selected={data.filter.kind === 'income'}>Income</option>
