@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import MoneyInput from '$lib/components/forms/money-input.svelte';
+	import SubmitButton from '$lib/components/forms/submit-button.svelte';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
@@ -21,6 +22,8 @@
 	let editTarget = $state<TxRow | null>(null);
 	let createKind = $state<'income' | 'expense' | 'transfer'>('expense');
 	let editKind = $state<'income' | 'expense' | 'transfer'>('expense');
+	let createPending = $state(false);
+	let editPending = $state(false);
 
 	const expenseCategories = $derived(data.categories.filter((c) => c.kind === 'expense'));
 	const incomeCategories = $derived(data.categories.filter((c) => c.kind === 'income'));
@@ -273,15 +276,19 @@
 		<form
 			method="POST"
 			action="?/create"
-			use:enhance={() => async ({ update, result }) => {
-				await update();
-				if (result.type === 'success') {
-					createOpen = false;
-					notify.success('Transaction added');
-				} else if (result.type === 'failure') {
-					const message = (result.data as { message?: string } | undefined)?.message;
-					notify.error(message ?? 'Could not add transaction');
-				}
+			use:enhance={() => {
+				createPending = true;
+				return async ({ update, result }) => {
+					await update();
+					createPending = false;
+					if (result.type === 'success') {
+						createOpen = false;
+						notify.success('Transaction added');
+					} else if (result.type === 'failure') {
+						const message = (result.data as { message?: string } | undefined)?.message;
+						notify.error(message ?? 'Could not add transaction');
+					}
+				};
 			}}
 			class="space-y-4"
 		>
@@ -366,7 +373,7 @@
 			</div>
 			<Dialog.Footer>
 				<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
-				<Button type="submit">Create</Button>
+				<SubmitButton pending={createPending}>Create</SubmitButton>
 			</Dialog.Footer>
 		</form>
 	</Dialog.Content>
@@ -382,15 +389,19 @@
 			<form
 				method="POST"
 				action="?/update"
-				use:enhance={() => async ({ update, result }) => {
-					await update();
-					if (result.type === 'success') {
-						editOpen = false;
-						notify.success('Transaction updated');
-					} else if (result.type === 'failure') {
-						const message = (result.data as { message?: string } | undefined)?.message;
-						notify.error(message ?? 'Could not update transaction');
-					}
+				use:enhance={() => {
+					editPending = true;
+					return async ({ update, result }) => {
+						await update();
+						editPending = false;
+						if (result.type === 'success') {
+							editOpen = false;
+							notify.success('Transaction updated');
+						} else if (result.type === 'failure') {
+							const message = (result.data as { message?: string } | undefined)?.message;
+							notify.error(message ?? 'Could not update transaction');
+						}
+					};
 				}}
 				class="space-y-4"
 			>
@@ -492,7 +503,7 @@
 				</div>
 				<Dialog.Footer>
 					<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
-					<Button type="submit">Save</Button>
+					<SubmitButton pending={editPending}>Save</SubmitButton>
 				</Dialog.Footer>
 			</form>
 		{/if}

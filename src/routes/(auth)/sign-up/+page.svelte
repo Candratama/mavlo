@@ -2,9 +2,11 @@
 	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
+	import SubmitButton from '$lib/components/forms/submit-button.svelte';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
 	let { form } = $props();
+	let pending = $state(false);
 </script>
 
 <svelte:head><title>Sign up — Mavlo</title></svelte:head>
@@ -15,7 +17,7 @@
 </Card.Header>
 
 <Card.Content>
-	<form method="POST" use:enhance class="space-y-4">
+	<form method="POST" use:enhance={() => { pending = true; return async ({ update }) => { await update(); pending = false; }; }} class="space-y-4">
 		<div class="space-y-1.5">
 			<Label for="name">Name</Label>
 			<Input
@@ -56,7 +58,7 @@
 			<p class="text-sm text-destructive">{form.message}</p>
 		{/if}
 
-		<Button type="submit" class="w-full">Sign up</Button>
+		<SubmitButton {pending} class="w-full">Sign up</SubmitButton>
 	</form>
 </Card.Content>
 

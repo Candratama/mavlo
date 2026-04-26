@@ -2,9 +2,11 @@
 	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
+	import SubmitButton from '$lib/components/forms/submit-button.svelte';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
 	let { form } = $props();
+	let pending = $state(false);
 </script>
 
 <svelte:head><title>Forgot password — Mavlo</title></svelte:head>
@@ -21,7 +23,7 @@
 			<a href="/sign-in" class="text-muted-foreground hover:text-foreground underline">Back to sign in</a>
 		</p>
 	{:else}
-		<form method="POST" use:enhance class="space-y-4">
+		<form method="POST" use:enhance={() => { pending = true; return async ({ update }) => { await update(); pending = false; }; }} class="space-y-4">
 			<div class="space-y-1.5">
 				<Label for="email">Email</Label>
 				<Input
@@ -38,7 +40,7 @@
 				<p class="text-sm text-destructive">{form.message}</p>
 			{/if}
 
-			<Button type="submit" class="w-full">Send reset link</Button>
+			<SubmitButton {pending} class="w-full">Send reset link</SubmitButton>
 		</form>
 	{/if}
 </Card.Content>

@@ -2,12 +2,14 @@
 	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
+	import SubmitButton from '$lib/components/forms/submit-button.svelte';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
 	import { notify } from '$lib/utils/toast.js';
 
 	let { data, form } = $props();
 	const prefs = $derived(data.preferences);
+	let pending = $state(false);
 </script>
 
 <svelte:head><title>Settings — Mavlo</title></svelte:head>
@@ -21,14 +23,18 @@
 		<Card.Description>Currency, locale, timezone, and display options.</Card.Description>
 	</Card.Header>
 	<Card.Content>
-		<form method="POST" use:enhance={() => async ({ update, result }) => {
-				await update();
-				if (result.type === 'success') {
-					notify.success('Preferences saved');
-				} else if (result.type === 'failure') {
-					const message = (result.data as { message?: string } | undefined)?.message;
-					notify.error(message ?? 'Could not save preferences');
-				}
+		<form method="POST" use:enhance={() => {
+				pending = true;
+				return async ({ update, result }) => {
+					await update();
+					pending = false;
+					if (result.type === 'success') {
+						notify.success('Preferences saved');
+					} else if (result.type === 'failure') {
+						const message = (result.data as { message?: string } | undefined)?.message;
+						notify.error(message ?? 'Could not save preferences');
+					}
+				};
 			}} class="space-y-4">
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-1">
@@ -72,7 +78,7 @@
 				/>
 			</div>
 
-			<Button type="submit">Save</Button>
+			<SubmitButton {pending}>Save</SubmitButton>
 		</form>
 	</Card.Content>
 </Card.Root>
