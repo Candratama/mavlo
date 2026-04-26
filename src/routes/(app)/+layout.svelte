@@ -147,9 +147,9 @@
 				<li>
 					<a
 						href={item.href}
-						class="flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium {isActive(item.href)
-							? 'text-primary'
-							: 'text-muted-foreground'}"
+						class="flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium relative transition-colors {isActive(item.href)
+							? 'text-primary after:absolute after:top-0 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:w-8 after:bg-primary after:rounded-b-full'
+							: 'text-muted-foreground hover:text-foreground'}"
 					>
 						<item.icon class="h-5 w-5" />
 						<span>{item.label}</span>
