@@ -1,14 +1,13 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
 	import MoneyInput from '$lib/components/forms/money-input.svelte';
 	import SubmitButton from '$lib/components/forms/submit-button.svelte';
-	import MonthPicker from '$lib/components/forms/month-picker.svelte';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import * as Select from '$lib/components/ui/select';
 	import { Plus, MoreHorizontal, Pencil, Trash2, PiggyBank } from 'lucide-svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
@@ -24,31 +23,17 @@
 	let createPending = $state(false);
 	let editPending = $state(false);
 
-	let filterPeriod = $state(data.periodMonth);
-	let createCategoryId = $state(data.expenseCategories[0]?.id ?? '');
-	let createPeriodMonth = $state(data.periodMonth);
-	let editCategoryId = $state('');
-	let editPeriodMonth = $state('');
-
 	const categoryById = $derived(new Map(data.categories.map((c) => [c.id, c])));
 
 	const formatCents = (cents: number) => formatCentsAsCurrency(cents, 'IDR');
 
 	const openEdit = (b: BudgetRow) => {
 		editTarget = b;
-		editCategoryId = b.categoryId;
-		editPeriodMonth = b.periodMonth;
 		editOpen = true;
 	};
 
 	const pct = (spent: number, limit: number) =>
 		limit === 0 ? 0 : Math.min(100, Math.round((spent / limit) * 100));
-
-	const categoryLabel = (id: string) => {
-		if (!id) return 'Select category';
-		const c = categoryById.get(id);
-		return c ? c.name : 'Select category';
-	};
 </script>
 
 <svelte:head><title>Budgets — Mavlo</title></svelte:head>
@@ -68,7 +53,7 @@
 		<form method="GET" class="flex items-end gap-3">
 			<div class="space-y-1 flex-1 max-w-xs">
 				<Label for="filter-period">Period</Label>
-				<MonthPicker id="filter-period" name="period" bind:value={filterPeriod} />
+				<Input id="filter-period" type="month" name="period" value={data.periodMonth} />
 			</div>
 			<Button type="submit">Apply</Button>
 		</form>
@@ -182,21 +167,21 @@
 		>
 			<div class="space-y-1">
 				<Label for="budget-c-category">Category</Label>
-				<Select.Root type="single" bind:value={createCategoryId} name="categoryId" required>
-					<Select.Trigger id="budget-c-category" class="w-full">
-						{categoryLabel(createCategoryId)}
-					</Select.Trigger>
-					<Select.Content>
-						{#each data.expenseCategories as c}
-							<Select.Item value={c.id} label={c.name}>{c.name}</Select.Item>
-						{/each}
-					</Select.Content>
-				</Select.Root>
+				<select
+					id="budget-c-category"
+					name="categoryId"
+					required
+					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+				>
+					{#each data.expenseCategories as c}
+						<option value={c.id}>{c.name}</option>
+					{/each}
+				</select>
 			</div>
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-1">
-					<Label for="budget-c-period">Period</Label>
-					<MonthPicker id="budget-c-period" name="periodMonth" required bind:value={createPeriodMonth} />
+					<Label for="budget-c-period">Period (YYYY-MM)</Label>
+					<Input id="budget-c-period" name="periodMonth" required value={data.periodMonth} />
 				</div>
 				<div class="space-y-1">
 					<Label for="budget-c-limit">Limit</Label>
@@ -240,21 +225,26 @@
 				<input type="hidden" name="id" value={editTarget.id} />
 				<div class="space-y-1">
 					<Label for="budget-e-category">Category</Label>
-					<Select.Root type="single" bind:value={editCategoryId} name="categoryId" required>
-						<Select.Trigger id="budget-e-category" class="w-full">
-							{categoryLabel(editCategoryId)}
-						</Select.Trigger>
-						<Select.Content>
-							{#each data.expenseCategories as c}
-								<Select.Item value={c.id} label={c.name}>{c.name}</Select.Item>
-							{/each}
-						</Select.Content>
-					</Select.Root>
+					<select
+						id="budget-e-category"
+						name="categoryId"
+						required
+						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+					>
+						{#each data.expenseCategories as c}
+							<option value={c.id} selected={c.id === editTarget.categoryId}>{c.name}</option>
+						{/each}
+					</select>
 				</div>
 				<div class="grid grid-cols-2 gap-3">
 					<div class="space-y-1">
-						<Label for="budget-e-period">Period</Label>
-						<MonthPicker id="budget-e-period" name="periodMonth" required bind:value={editPeriodMonth} />
+						<Label for="budget-e-period">Period (YYYY-MM)</Label>
+						<Input
+							id="budget-e-period"
+							name="periodMonth"
+							required
+							value={editTarget.periodMonth}
+						/>
 					</div>
 					<div class="space-y-1">
 						<Label for="budget-e-limit">Limit</Label>

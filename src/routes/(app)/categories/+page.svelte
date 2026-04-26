@@ -8,7 +8,6 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import * as Select from '$lib/components/ui/select';
 	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil, Tag } from 'lucide-svelte';
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
@@ -23,9 +22,6 @@
 	let createPending = $state(false);
 	let editPending = $state(false);
 
-	let createKind = $state('expense');
-	let editKind = $state('expense');
-
 	const kindOptions = [
 		{ value: 'income', label: 'Income' },
 		{ value: 'expense', label: 'Expense' }
@@ -33,12 +29,8 @@
 
 	const openEdit = (c: CategoryRow) => {
 		editTarget = c;
-		editKind = c.kind;
 		editOpen = true;
 	};
-
-	const kindLabel = (v: string) =>
-		kindOptions.find((o) => o.value === v)?.label ?? 'Select kind';
 </script>
 
 <svelte:head><title>Categories — Mavlo</title></svelte:head>
@@ -208,16 +200,16 @@
 			</div>
 			<div class="space-y-1">
 				<Label for="cat-c-kind">Kind</Label>
-				<Select.Root type="single" bind:value={createKind} name="kind" required>
-					<Select.Trigger id="cat-c-kind" class="w-full">
-						{kindLabel(createKind)}
-					</Select.Trigger>
-					<Select.Content>
-						{#each kindOptions as opt}
-							<Select.Item value={opt.value} label={opt.label}>{opt.label}</Select.Item>
-						{/each}
-					</Select.Content>
-				</Select.Root>
+				<select
+					id="cat-c-kind"
+					name="kind"
+					required
+					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+				>
+					{#each kindOptions as opt}
+						<option value={opt.value}>{opt.label}</option>
+					{/each}
+				</select>
 			</div>
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-1">
@@ -269,16 +261,16 @@
 				</div>
 				<div class="space-y-1">
 					<Label for="cat-e-kind">Kind</Label>
-					<Select.Root type="single" bind:value={editKind} name="kind" required>
-						<Select.Trigger id="cat-e-kind" class="w-full">
-							{kindLabel(editKind)}
-						</Select.Trigger>
-						<Select.Content>
-							{#each kindOptions as opt}
-								<Select.Item value={opt.value} label={opt.label}>{opt.label}</Select.Item>
-							{/each}
-						</Select.Content>
-					</Select.Root>
+					<select
+						id="cat-e-kind"
+						name="kind"
+						required
+						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+					>
+						{#each kindOptions as opt}
+							<option value={opt.value} selected={opt.value === editTarget.kind}>{opt.label}</option>
+						{/each}
+					</select>
 				</div>
 				<div class="grid grid-cols-2 gap-3">
 					<div class="space-y-1">
