@@ -142,7 +142,7 @@
 		</header>
 
 		<div
-			class="p-3 sm:p-4 md:p-6 flex-1 overflow-x-hidden pb-[max(5rem,calc(env(safe-area-inset-bottom)+5rem))] md:pb-6"
+			class="p-3 sm:p-4 md:p-6 flex-1 overflow-x-hidden pb-[max(var(--bottom-nav-h),calc(env(safe-area-inset-bottom)+var(--bottom-nav-h)))] md:pb-6"
 		>
 			{@render children()}
 		</div>
