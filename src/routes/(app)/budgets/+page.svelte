@@ -8,9 +8,10 @@
 	import * as Card from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Plus, MoreHorizontal, Pencil, Trash2 } from 'lucide-svelte';
+	import { Plus, MoreHorizontal, Pencil, Trash2, PiggyBank } from 'lucide-svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
+	import EmptyState from '$lib/components/empty-state.svelte';
 
 	let { data, form } = $props();
 
@@ -131,14 +132,11 @@
 			</Card.Content>
 		</Card.Root>
 	{:else}
-		<Card.Root class="md:col-span-2">
-			<Card.Content class="text-center text-muted-foreground py-12">
-				No budgets for {data.periodMonth}.
-				<Button variant="link" onclick={() => (createOpen = true)} class="px-1">
-					Create the first one
-				</Button>.
-			</Card.Content>
-		</Card.Root>
+		<div class="md:col-span-2">
+			<EmptyState icon={PiggyBank} title="No budgets for {data.periodMonth}" description="Set a monthly limit per expense category to track your spending.">
+				<Button onclick={() => (createOpen = true)}>Add budget</Button>
+			</EmptyState>
+		</div>
 	{/each}
 </div>
 

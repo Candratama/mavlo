@@ -9,9 +9,10 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Plus, MoreHorizontal, Pencil, Trash2 } from 'lucide-svelte';
+	import { Plus, MoreHorizontal, Pencil, Trash2, ArrowLeftRight } from 'lucide-svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
+	import EmptyState from '$lib/components/empty-state.svelte';
 
 	let { data, form } = $props();
 
@@ -217,11 +218,10 @@
 						</Table.Row>
 					{:else}
 						<Table.Row>
-							<Table.Cell colspan={7} class="text-center text-muted-foreground py-12">
-								No transactions in this range.
-								<Button variant="link" onclick={() => { createKind = 'expense'; createOpen = true; }} class="px-1">
-									Add the first one
-								</Button>.
+							<Table.Cell colspan={7} class="p-0">
+								<EmptyState icon={ArrowLeftRight} title="No transactions in this range" description="Try a different date range or add a new transaction.">
+									<Button onclick={() => { createKind = 'expense'; createOpen = true; }}>Add transaction</Button>
+								</EmptyState>
 							</Table.Cell>
 						</Table.Row>
 					{/each}
@@ -258,11 +258,10 @@
 			{@render rowMenu(tx)}
 		</li>
 	{:else}
-		<li class="text-center text-muted-foreground py-12">
-			No transactions in this range.
-			<Button variant="link" onclick={() => { createKind = 'expense'; createOpen = true; }} class="px-1">
-				Add the first one
-			</Button>.
+		<li>
+			<EmptyState icon={ArrowLeftRight} title="No transactions in this range" description="Try a different date range or add a new transaction.">
+				<Button onclick={() => { createKind = 'expense'; createOpen = true; }}>Add transaction</Button>
+			</EmptyState>
 		</li>
 	{/each}
 </ul>

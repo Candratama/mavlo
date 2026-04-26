@@ -9,9 +9,10 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil } from 'lucide-svelte';
+	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil, Wallet } from 'lucide-svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
+	import EmptyState from '$lib/components/empty-state.svelte';
 
 	let { data, form } = $props();
 
@@ -129,11 +130,10 @@
 						</Table.Row>
 					{:else}
 						<Table.Row>
-							<Table.Cell colspan={5} class="text-center text-muted-foreground py-12">
-								No accounts yet.
-								<Button variant="link" onclick={() => (createOpen = true)} class="px-1">
-									Create the first one
-								</Button>.
+							<Table.Cell colspan={5} class="p-0">
+								<EmptyState icon={Wallet} title="No accounts yet" description="Add your first account to start tracking your finances.">
+									<Button onclick={() => (createOpen = true)}>Add account</Button>
+								</EmptyState>
 							</Table.Cell>
 						</Table.Row>
 					{/each}
@@ -158,11 +158,10 @@
 			{@render rowMenu(account)}
 		</li>
 	{:else}
-		<li class="text-center text-muted-foreground py-12">
-			No accounts yet.
-			<Button variant="link" onclick={() => (createOpen = true)} class="px-1">
-				Create the first one
-			</Button>.
+		<li>
+			<EmptyState icon={Wallet} title="No accounts yet" description="Add your first account to start tracking your finances.">
+				<Button onclick={() => (createOpen = true)}>Add account</Button>
+			</EmptyState>
 		</li>
 	{/each}
 </ul>

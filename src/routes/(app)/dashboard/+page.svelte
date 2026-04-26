@@ -1,12 +1,13 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
-	import { ArrowRight } from 'lucide-svelte';
+	import { ArrowRight, ArrowLeftRight } from 'lucide-svelte';
 	import SpendingByCategoryChart from '$lib/components/charts/SpendingByCategoryChart.svelte';
 	import DailySpendingChart from '$lib/components/charts/DailySpendingChart.svelte';
 	import IncomeExpenseChart from '$lib/components/charts/IncomeExpenseChart.svelte';
 
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
+	import EmptyState from '$lib/components/empty-state.svelte';
 
 	let { data } = $props();
 
@@ -100,9 +101,9 @@
 	</Card.Header>
 	<Card.Content class="p-0">
 		{#if data.recent.length === 0}
-			<p class="text-sm text-muted-foreground p-6 text-center">
-				No transactions yet. <a href="/transactions" class="underline">Add one</a>.
-			</p>
+			<EmptyState icon={ArrowLeftRight} title="No transactions yet" description="Add a transaction to see it here.">
+				<Button href="/transactions">Add transaction</Button>
+			</EmptyState>
 		{:else}
 			<ul class="divide-y">
 				{#each data.recent as r}

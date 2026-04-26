@@ -8,8 +8,9 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil } from 'lucide-svelte';
+	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil, Tag } from 'lucide-svelte';
 	import { notify } from '$lib/utils/toast.js';
+	import EmptyState from '$lib/components/empty-state.svelte';
 
 	let { data, form } = $props();
 
@@ -130,11 +131,10 @@
 						</Table.Row>
 					{:else}
 						<Table.Row>
-							<Table.Cell colspan={4} class="text-center text-muted-foreground py-12">
-								No categories yet.
-								<Button variant="link" onclick={() => (createOpen = true)} class="px-1">
-									Create the first one
-								</Button>.
+							<Table.Cell colspan={4} class="p-0">
+								<EmptyState icon={Tag} title="No categories yet" description="Add your first category to classify income and expenses.">
+									<Button onclick={() => (createOpen = true)}>Add category</Button>
+								</EmptyState>
 							</Table.Cell>
 						</Table.Row>
 					{/each}
@@ -162,11 +162,10 @@
 			{@render rowMenu(category)}
 		</li>
 	{:else}
-		<li class="text-center text-muted-foreground py-12">
-			No categories yet.
-			<Button variant="link" onclick={() => (createOpen = true)} class="px-1">
-				Create the first one
-			</Button>.
+		<li>
+			<EmptyState icon={Tag} title="No categories yet" description="Add your first category to classify income and expenses.">
+				<Button onclick={() => (createOpen = true)}>Add category</Button>
+			</EmptyState>
 		</li>
 	{/each}
 </ul>
