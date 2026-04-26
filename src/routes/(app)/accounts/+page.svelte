@@ -10,6 +10,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil } from 'lucide-svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
+	import { notify } from '$lib/utils/toast.js';
 
 	let { data, form } = $props();
 
@@ -71,7 +72,15 @@
 			<DropdownMenu.Item onclick={() => openEdit(account)}>
 				<Pencil class="size-4 mr-2" /> Edit
 			</DropdownMenu.Item>
-			<form method="POST" action="?/{account.archived ? 'unarchive' : 'archive'}" use:enhance>
+			<form method="POST" action="?/{account.archived ? 'unarchive' : 'archive'}" use:enhance={() => async ({ update, result }) => {
+				await update();
+				if (result.type === 'success') {
+					notify.success(account.archived ? 'Account restored' : 'Account archived');
+				} else if (result.type === 'failure') {
+					const message = (result.data as { message?: string } | undefined)?.message;
+					notify.error(message ?? 'Could not save account');
+				}
+			}}>
 				<input type="hidden" name="id" value={account.id} />
 				<DropdownMenu.Item>
 					{#snippet child({ props })}
@@ -167,7 +176,13 @@
 			action="?/create"
 			use:enhance={() => async ({ update, result }) => {
 				await update();
-				if (result.type === 'success') createOpen = false;
+				if (result.type === 'success') {
+					createOpen = false;
+					notify.success('Account created');
+				} else if (result.type === 'failure') {
+					const message = (result.data as { message?: string } | undefined)?.message;
+					notify.error(message ?? 'Could not create account');
+				}
 			}}
 			class="space-y-4"
 		>
@@ -218,7 +233,13 @@
 				action="?/update"
 				use:enhance={() => async ({ update, result }) => {
 					await update();
-					if (result.type === 'success') editOpen = false;
+					if (result.type === 'success') {
+						editOpen = false;
+						notify.success('Account updated');
+					} else if (result.type === 'failure') {
+						const message = (result.data as { message?: string } | undefined)?.message;
+						notify.error(message ?? 'Could not save account');
+					}
 				}}
 				class="space-y-4"
 			>

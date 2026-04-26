@@ -4,6 +4,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
+	import { notify } from '$lib/utils/toast.js';
 
 	let { data, form } = $props();
 	const prefs = $derived(data.preferences);
@@ -20,7 +21,15 @@
 		<Card.Description>Currency, locale, timezone, and display options.</Card.Description>
 	</Card.Header>
 	<Card.Content>
-		<form method="POST" use:enhance class="space-y-4">
+		<form method="POST" use:enhance={() => async ({ update, result }) => {
+				await update();
+				if (result.type === 'success') {
+					notify.success('Preferences saved');
+				} else if (result.type === 'failure') {
+					const message = (result.data as { message?: string } | undefined)?.message;
+					notify.error(message ?? 'Could not save preferences');
+				}
+			}} class="space-y-4">
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-1">
 					<Label for="pref-currency">Default currency</Label>
@@ -62,12 +71,6 @@
 					value={prefs.weekStartsOn}
 				/>
 			</div>
-
-			{#if form?.success}
-				<p class="text-sm text-emerald-600 dark:text-emerald-400">Saved.</p>
-			{:else if form?.message}
-				<p class="text-sm text-destructive">{form.message}</p>
-			{/if}
 
 			<Button type="submit">Save</Button>
 		</form>

@@ -9,6 +9,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Plus, MoreHorizontal, Pencil, Trash2 } from 'lucide-svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
+	import { notify } from '$lib/utils/toast.js';
 
 	let { data, form } = $props();
 
@@ -83,7 +84,15 @@
 						<DropdownMenu.Item onclick={() => openEdit(budget)}>
 							<Pencil class="size-4 mr-2" /> Edit
 						</DropdownMenu.Item>
-						<form method="POST" action="?/delete" use:enhance>
+						<form method="POST" action="?/delete" use:enhance={() => async ({ update, result }) => {
+								await update();
+								if (result.type === 'success') {
+									notify.success('Budget deleted');
+								} else if (result.type === 'failure') {
+									const message = (result.data as { message?: string } | undefined)?.message;
+									notify.error(message ?? 'Could not delete budget');
+								}
+							}}>
 							<input type="hidden" name="id" value={budget.id} />
 							<DropdownMenu.Item>
 								{#snippet child({ props })}
@@ -141,7 +150,13 @@
 			action="?/create"
 			use:enhance={() => async ({ update, result }) => {
 				await update();
-				if (result.type === 'success') createOpen = false;
+				if (result.type === 'success') {
+					createOpen = false;
+					notify.success('Budget created');
+				} else if (result.type === 'failure') {
+					const message = (result.data as { message?: string } | undefined)?.message;
+					notify.error(message ?? 'Could not create budget');
+				}
 			}}
 			class="space-y-4"
 		>
@@ -188,7 +203,13 @@
 				action="?/update"
 				use:enhance={() => async ({ update, result }) => {
 					await update();
-					if (result.type === 'success') editOpen = false;
+					if (result.type === 'success') {
+						editOpen = false;
+						notify.success('Budget updated');
+					} else if (result.type === 'failure') {
+						const message = (result.data as { message?: string } | undefined)?.message;
+						notify.error(message ?? 'Could not update budget');
+					}
 				}}
 				class="space-y-4"
 			>

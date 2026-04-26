@@ -8,6 +8,7 @@
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil } from 'lucide-svelte';
+	import { notify } from '$lib/utils/toast.js';
 
 	let { data, form } = $props();
 
@@ -64,7 +65,15 @@
 			<DropdownMenu.Item onclick={() => openEdit(category)}>
 				<Pencil class="size-4 mr-2" /> Edit
 			</DropdownMenu.Item>
-			<form method="POST" action="?/{category.archived ? 'unarchive' : 'archive'}" use:enhance>
+			<form method="POST" action="?/{category.archived ? 'unarchive' : 'archive'}" use:enhance={() => async ({ update, result }) => {
+				await update();
+				if (result.type === 'success') {
+					notify.success(category.archived ? 'Category restored' : 'Category archived');
+				} else if (result.type === 'failure') {
+					const message = (result.data as { message?: string } | undefined)?.message;
+					notify.error(message ?? 'Could not save category');
+				}
+			}}>
 				<input type="hidden" name="id" value={category.id} />
 				<DropdownMenu.Item>
 					{#snippet child({ props })}
@@ -169,7 +178,13 @@
 			action="?/create"
 			use:enhance={() => async ({ update, result }) => {
 				await update();
-				if (result.type === 'success') createOpen = false;
+				if (result.type === 'success') {
+					createOpen = false;
+					notify.success('Category created');
+				} else if (result.type === 'failure') {
+					const message = (result.data as { message?: string } | undefined)?.message;
+					notify.error(message ?? 'Could not create category');
+				}
 			}}
 			class="space-y-4"
 		>
@@ -219,7 +234,13 @@
 				action="?/update"
 				use:enhance={() => async ({ update, result }) => {
 					await update();
-					if (result.type === 'success') editOpen = false;
+					if (result.type === 'success') {
+						editOpen = false;
+						notify.success('Category updated');
+					} else if (result.type === 'failure') {
+						const message = (result.data as { message?: string } | undefined)?.message;
+						notify.error(message ?? 'Could not save category');
+					}
 				}}
 				class="space-y-4"
 			>
