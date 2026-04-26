@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { untrack } from 'svelte';
 	import { setMode } from 'mode-watcher';
 	import { Button } from '$lib/components/ui/button';
 	import * as Sheet from '$lib/components/ui/sheet';
@@ -19,7 +20,9 @@
 
 	$effect(() => {
 		const t = data.preferences?.theme;
-		if (t === 'light' || t === 'dark' || t === 'system') setMode(t);
+		untrack(() => {
+			if (t === 'light' || t === 'dark' || t === 'system') setMode(t);
+		});
 	});
 
 	let mobileNavOpen = $state(false);
