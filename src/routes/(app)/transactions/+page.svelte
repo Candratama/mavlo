@@ -4,11 +4,13 @@
 	import { Input } from '$lib/components/ui/input';
 	import MoneyInput from '$lib/components/forms/money-input.svelte';
 	import SubmitButton from '$lib/components/forms/submit-button.svelte';
+	import DatePicker from '$lib/components/forms/date-picker.svelte';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import * as Select from '$lib/components/ui/select';
 	import { Plus, MoreHorizontal, Pencil, Trash2, ArrowLeftRight } from 'lucide-svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
@@ -26,6 +28,27 @@
 	let createPending = $state(false);
 	let editPending = $state(false);
 
+	const todayYmd = new Date().toISOString().slice(0, 10);
+
+	// Select-bound values for create dialog
+	let createAccountId = $state(data.accounts[0]?.id ?? '');
+	let createTransferToAccountId = $state(data.accounts[0]?.id ?? '');
+	let createCategoryId = $state('');
+	let createOccurredAt = $state(todayYmd);
+
+	// Select-bound values for edit dialog
+	let editAccountId = $state('');
+	let editTransferToAccountId = $state('');
+	let editCategoryId = $state('');
+	let editOccurredAt = $state('');
+
+	// Filter bound values
+	let filterAccountId = $state(data.filter.accountId ?? '');
+	let filterCategoryId = $state(data.filter.categoryId ?? '');
+	let filterKind = $state(data.filter.kind ?? '');
+	let filterFrom = $state(data.filter.from ?? '');
+	let filterTo = $state(data.filter.to ?? '');
+
 	const expenseCategories = $derived(data.categories.filter((c) => c.kind === 'expense'));
 	const incomeCategories = $derived(data.categories.filter((c) => c.kind === 'income'));
 
@@ -36,13 +59,39 @@
 
 	const formatDate = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
-	const todayYmd = new Date().toISOString().slice(0, 10);
-
 	const openEdit = (t: TxRow) => {
 		editTarget = t;
 		editKind = t.kind;
+		editAccountId = t.accountId;
+		editTransferToAccountId = t.transferToAccountId ?? '';
+		editCategoryId = t.categoryId ?? '';
+		editOccurredAt = formatDate(t.occurredAt);
 		editOpen = true;
 	};
+
+	const kindLabel = (v: string) =>
+		v === 'income' ? 'Income' : v === 'expense' ? 'Expense' : v === 'transfer' ? 'Transfer' : 'Select kind';
+
+	const accountLabel = (id: string) => {
+		const a = accountById.get(id);
+		return a ? `${a.name} (${a.currency})` : 'Select account';
+	};
+
+	const categoryLabel = (id: string) => {
+		if (!id) return 'None';
+		const c = categoryById.get(id);
+		return c ? c.name : 'Select category';
+	};
+
+	const filterAccountLabel = $derived(
+		filterAccountId ? (accountById.get(filterAccountId)?.name ?? 'All') : 'All'
+	);
+	const filterCategoryLabel = $derived(
+		filterCategoryId ? (categoryById.get(filterCategoryId)?.name ?? 'All') : 'All'
+	);
+	const filterKindLabel = $derived(
+		filterKind === 'income' ? 'Income' : filterKind === 'expense' ? 'Expense' : filterKind === 'transfer' ? 'Transfer' : 'All'
+	);
 </script>
 
 <svelte:head><title>Transactions — Mavlo</title></svelte:head>
@@ -66,52 +115,53 @@
 		<form method="GET" class="grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
 			<div class="space-y-1">
 				<Label for="filter-from">From</Label>
-				<Input id="filter-from" type="date" name="from" value={data.filter.from} />
+				<DatePicker id="filter-from" name="from" bind:value={filterFrom} />
 			</div>
 			<div class="space-y-1">
 				<Label for="filter-to">To</Label>
-				<Input id="filter-to" type="date" name="to" value={data.filter.to} />
+				<DatePicker id="filter-to" name="to" bind:value={filterTo} />
 			</div>
 			<div class="space-y-1">
 				<Label for="filter-account">Account</Label>
-				<select
-					id="filter-account"
-					name="account"
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-				>
-					<option value="">All</option>
-					{#each data.accounts as a}
-						<option value={a.id} selected={data.filter.accountId === a.id}>{a.name}</option>
-					{/each}
-				</select>
+				<Select.Root type="single" bind:value={filterAccountId} name="account">
+					<Select.Trigger id="filter-account" class="w-full">
+						{filterAccountLabel}
+					</Select.Trigger>
+					<Select.Content>
+						<Select.Item value="" label="All">All</Select.Item>
+						{#each data.accounts as a}
+							<Select.Item value={a.id} label={a.name}>{a.name}</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
 			</div>
 			<div class="space-y-1">
 				<Label for="filter-category">Category</Label>
-				<select
-					id="filter-category"
-					name="category"
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-				>
-					<option value="">All</option>
-					{#each data.categories as c}
-						<option value={c.id} selected={data.filter.categoryId === c.id}>
-							{c.name} ({c.kind})
-						</option>
-					{/each}
-				</select>
+				<Select.Root type="single" bind:value={filterCategoryId} name="category">
+					<Select.Trigger id="filter-category" class="w-full">
+						{filterCategoryLabel}
+					</Select.Trigger>
+					<Select.Content>
+						<Select.Item value="" label="All">All</Select.Item>
+						{#each data.categories as c}
+							<Select.Item value={c.id} label={c.name}>{c.name} ({c.kind})</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
 			</div>
 			<div class="space-y-1">
 				<Label for="filter-kind">Kind</Label>
-				<select
-					id="filter-kind"
-					name="kind"
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-				>
-					<option value="">All</option>
-					<option value="income" selected={data.filter.kind === 'income'}>Income</option>
-					<option value="expense" selected={data.filter.kind === 'expense'}>Expense</option>
-					<option value="transfer" selected={data.filter.kind === 'transfer'}>Transfer</option>
-				</select>
+				<Select.Root type="single" bind:value={filterKind} name="kind">
+					<Select.Trigger id="filter-kind" class="w-full">
+						{filterKindLabel}
+					</Select.Trigger>
+					<Select.Content>
+						<Select.Item value="" label="All">All</Select.Item>
+						<Select.Item value="income" label="Income">Income</Select.Item>
+						<Select.Item value="expense" label="Expense">Expense</Select.Item>
+						<Select.Item value="transfer" label="Transfer">Transfer</Select.Item>
+					</Select.Content>
+				</Select.Root>
 			</div>
 			<Button type="submit" class="w-full md:w-auto">Apply</Button>
 		</form>
@@ -294,17 +344,16 @@
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-1">
 					<Label for="tx-c-kind">Kind</Label>
-					<select
-						id="tx-c-kind"
-						name="kind"
-						required
-						bind:value={createKind}
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-					>
-						<option value="expense">Expense</option>
-						<option value="income">Income</option>
-						<option value="transfer">Transfer</option>
-					</select>
+					<Select.Root type="single" bind:value={createKind} name="kind" required>
+						<Select.Trigger id="tx-c-kind" class="w-full">
+							{kindLabel(createKind)}
+						</Select.Trigger>
+						<Select.Content>
+							<Select.Item value="expense" label="Expense">Expense</Select.Item>
+							<Select.Item value="income" label="Income">Income</Select.Item>
+							<Select.Item value="transfer" label="Transfer">Transfer</Select.Item>
+						</Select.Content>
+					</Select.Root>
 				</div>
 				<div class="space-y-1">
 					<Label for="tx-c-amount">Amount</Label>
@@ -313,57 +362,60 @@
 			</div>
 			<div class="space-y-1">
 				<Label for="tx-c-account">{createKind === 'transfer' ? 'From account' : 'Account'}</Label>
-				<select
-					id="tx-c-account"
-					name="accountId"
-					required
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-				>
-					{#each data.accounts as a}
-						<option value={a.id}>{a.name} ({a.currency})</option>
-					{/each}
-				</select>
+				<Select.Root type="single" bind:value={createAccountId} name="accountId" required>
+					<Select.Trigger id="tx-c-account" class="w-full">
+						{accountLabel(createAccountId)}
+					</Select.Trigger>
+					<Select.Content>
+						{#each data.accounts as a}
+							<Select.Item value={a.id} label={a.name}>{a.name} ({a.currency})</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
 			</div>
 			{#if createKind === 'transfer'}
 				<div class="space-y-1">
 					<Label for="tx-c-to">To account</Label>
-					<select
-						id="tx-c-to"
-						name="transferToAccountId"
-						required
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-					>
-						{#each data.accounts as a}
-							<option value={a.id}>{a.name} ({a.currency})</option>
-						{/each}
-					</select>
+					<Select.Root type="single" bind:value={createTransferToAccountId} name="transferToAccountId" required>
+						<Select.Trigger id="tx-c-to" class="w-full">
+							{accountLabel(createTransferToAccountId)}
+						</Select.Trigger>
+						<Select.Content>
+							{#each data.accounts as a}
+								<Select.Item value={a.id} label={a.name}>{a.name} ({a.currency})</Select.Item>
+							{/each}
+						</Select.Content>
+					</Select.Root>
 				</div>
 			{:else}
 				<div class="space-y-1">
 					<Label for="tx-c-category">Category (optional)</Label>
-					<select
-						id="tx-c-category"
-						name="categoryId"
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-					>
-						<option value="">None</option>
-						<optgroup label="Expense">
-							{#each expenseCategories as c}
-								<option value={c.id}>{c.name}</option>
-							{/each}
-						</optgroup>
-						<optgroup label="Income">
-							{#each incomeCategories as c}
-								<option value={c.id}>{c.name}</option>
-							{/each}
-						</optgroup>
-					</select>
+					<Select.Root type="single" bind:value={createCategoryId} name="categoryId">
+						<Select.Trigger id="tx-c-category" class="w-full">
+							{categoryLabel(createCategoryId)}
+						</Select.Trigger>
+						<Select.Content>
+							<Select.Item value="" label="None">None</Select.Item>
+							<Select.Group>
+								<Select.GroupHeading>Expense</Select.GroupHeading>
+								{#each expenseCategories as c}
+									<Select.Item value={c.id} label={c.name}>{c.name}</Select.Item>
+								{/each}
+							</Select.Group>
+							<Select.Group>
+								<Select.GroupHeading>Income</Select.GroupHeading>
+								{#each incomeCategories as c}
+									<Select.Item value={c.id} label={c.name}>{c.name}</Select.Item>
+								{/each}
+							</Select.Group>
+						</Select.Content>
+					</Select.Root>
 				</div>
 			{/if}
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-1">
 					<Label for="tx-c-date">Date</Label>
-					<Input id="tx-c-date" type="date" name="occurredAt" required value={todayYmd} />
+					<DatePicker id="tx-c-date" name="occurredAt" required bind:value={createOccurredAt} />
 				</div>
 				<div class="space-y-1">
 					<Label for="tx-c-note">Note</Label>
@@ -408,17 +460,16 @@
 				<div class="grid grid-cols-2 gap-3">
 					<div class="space-y-1">
 						<Label for="tx-e-kind">Kind</Label>
-						<select
-							id="tx-e-kind"
-							name="kind"
-							required
-							bind:value={editKind}
-							class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-						>
-							<option value="expense">Expense</option>
-							<option value="income">Income</option>
-							<option value="transfer">Transfer</option>
-						</select>
+						<Select.Root type="single" bind:value={editKind} name="kind" required>
+							<Select.Trigger id="tx-e-kind" class="w-full">
+								{kindLabel(editKind)}
+							</Select.Trigger>
+							<Select.Content>
+								<Select.Item value="expense" label="Expense">Expense</Select.Item>
+								<Select.Item value="income" label="Income">Income</Select.Item>
+								<Select.Item value="transfer" label="Transfer">Transfer</Select.Item>
+							</Select.Content>
+						</Select.Root>
 					</div>
 					<div class="space-y-1">
 						<Label for="tx-e-amount">Amount</Label>
@@ -433,67 +484,60 @@
 				</div>
 				<div class="space-y-1">
 					<Label for="tx-e-account">{editKind === 'transfer' ? 'From account' : 'Account'}</Label>
-					<select
-						id="tx-e-account"
-						name="accountId"
-						required
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-					>
-						{#each data.accounts as a}
-							<option value={a.id} selected={a.id === editTarget.accountId}>
-								{a.name} ({a.currency})
-							</option>
-						{/each}
-					</select>
+					<Select.Root type="single" bind:value={editAccountId} name="accountId" required>
+						<Select.Trigger id="tx-e-account" class="w-full">
+							{accountLabel(editAccountId)}
+						</Select.Trigger>
+						<Select.Content>
+							{#each data.accounts as a}
+								<Select.Item value={a.id} label={a.name}>{a.name} ({a.currency})</Select.Item>
+							{/each}
+						</Select.Content>
+					</Select.Root>
 				</div>
 				{#if editKind === 'transfer'}
 					<div class="space-y-1">
 						<Label for="tx-e-to">To account</Label>
-						<select
-							id="tx-e-to"
-							name="transferToAccountId"
-							required
-							class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-						>
-							{#each data.accounts as a}
-								<option value={a.id} selected={a.id === editTarget.transferToAccountId}>
-									{a.name} ({a.currency})
-								</option>
-							{/each}
-						</select>
+						<Select.Root type="single" bind:value={editTransferToAccountId} name="transferToAccountId" required>
+							<Select.Trigger id="tx-e-to" class="w-full">
+								{accountLabel(editTransferToAccountId)}
+							</Select.Trigger>
+							<Select.Content>
+								{#each data.accounts as a}
+									<Select.Item value={a.id} label={a.name}>{a.name} ({a.currency})</Select.Item>
+								{/each}
+							</Select.Content>
+						</Select.Root>
 					</div>
 				{:else}
 					<div class="space-y-1">
 						<Label for="tx-e-category">Category (optional)</Label>
-						<select
-							id="tx-e-category"
-							name="categoryId"
-							class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-						>
-							<option value="" selected={!editTarget.categoryId}>None</option>
-							<optgroup label="Expense">
-								{#each expenseCategories as c}
-									<option value={c.id} selected={c.id === editTarget.categoryId}>{c.name}</option>
-								{/each}
-							</optgroup>
-							<optgroup label="Income">
-								{#each incomeCategories as c}
-									<option value={c.id} selected={c.id === editTarget.categoryId}>{c.name}</option>
-								{/each}
-							</optgroup>
-						</select>
+						<Select.Root type="single" bind:value={editCategoryId} name="categoryId">
+							<Select.Trigger id="tx-e-category" class="w-full">
+								{categoryLabel(editCategoryId)}
+							</Select.Trigger>
+							<Select.Content>
+								<Select.Item value="" label="None">None</Select.Item>
+								<Select.Group>
+									<Select.GroupHeading>Expense</Select.GroupHeading>
+									{#each expenseCategories as c}
+										<Select.Item value={c.id} label={c.name}>{c.name}</Select.Item>
+									{/each}
+								</Select.Group>
+								<Select.Group>
+									<Select.GroupHeading>Income</Select.GroupHeading>
+									{#each incomeCategories as c}
+										<Select.Item value={c.id} label={c.name}>{c.name}</Select.Item>
+									{/each}
+								</Select.Group>
+							</Select.Content>
+						</Select.Root>
 					</div>
 				{/if}
 				<div class="grid grid-cols-2 gap-3">
 					<div class="space-y-1">
 						<Label for="tx-e-date">Date</Label>
-						<Input
-							id="tx-e-date"
-							type="date"
-							name="occurredAt"
-							required
-							value={formatDate(editTarget.occurredAt)}
-						/>
+						<DatePicker id="tx-e-date" name="occurredAt" required bind:value={editOccurredAt} />
 					</div>
 					<div class="space-y-1">
 						<Label for="tx-e-note">Note</Label>

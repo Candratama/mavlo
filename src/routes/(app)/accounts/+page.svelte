@@ -9,6 +9,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import * as Select from '$lib/components/ui/select';
 	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil, Wallet } from 'lucide-svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
@@ -24,6 +25,9 @@
 	let createPending = $state(false);
 	let editPending = $state(false);
 
+	let createType = $state('cash');
+	let editType = $state('cash');
+
 	const accountTypeOptions = [
 		{ value: 'cash', label: 'Cash' },
 		{ value: 'bank', label: 'Bank' },
@@ -36,8 +40,12 @@
 
 	const openEdit = (a: AccountRow) => {
 		editTarget = a;
+		editType = a.type;
 		editOpen = true;
 	};
+
+	const typeLabel = (v: string) =>
+		accountTypeOptions.find((o) => o.value === v)?.label ?? 'Select type';
 </script>
 
 <svelte:head><title>Accounts — Mavlo</title></svelte:head>
@@ -198,16 +206,16 @@
 			</div>
 			<div class="space-y-1">
 				<Label for="create-type">Type</Label>
-				<select
-					id="create-type"
-					name="type"
-					required
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-				>
-					{#each accountTypeOptions as opt}
-						<option value={opt.value}>{opt.label}</option>
-					{/each}
-				</select>
+				<Select.Root type="single" bind:value={createType} name="type" required>
+					<Select.Trigger id="create-type" class="w-full">
+						{typeLabel(createType)}
+					</Select.Trigger>
+					<Select.Content>
+						{#each accountTypeOptions as opt}
+							<Select.Item value={opt.value} label={opt.label}>{opt.label}</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
 			</div>
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-1">
@@ -260,16 +268,16 @@
 				</div>
 				<div class="space-y-1">
 					<Label for="edit-type">Type</Label>
-					<select
-						id="edit-type"
-						name="type"
-						required
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-					>
-						{#each accountTypeOptions as opt}
-							<option value={opt.value} selected={opt.value === editTarget.type}>{opt.label}</option>
-						{/each}
-					</select>
+					<Select.Root type="single" bind:value={editType} name="type" required>
+						<Select.Trigger id="edit-type" class="w-full">
+							{typeLabel(editType)}
+						</Select.Trigger>
+						<Select.Content>
+							{#each accountTypeOptions as opt}
+								<Select.Item value={opt.value} label={opt.label}>{opt.label}</Select.Item>
+							{/each}
+						</Select.Content>
+					</Select.Root>
 				</div>
 				<div class="grid grid-cols-2 gap-3">
 					<div class="space-y-1">
