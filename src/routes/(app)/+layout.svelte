@@ -102,7 +102,7 @@
 							</Button>
 						{/snippet}
 					</Sheet.Trigger>
-					<Sheet.Content side="left" class="w-64 p-4">
+					<Sheet.Content side="left" class="w-[min(20rem,85vw)] p-4">
 						<Sheet.Header class="text-left mb-4">
 							<Sheet.Title class="flex items-center gap-2">
 								<Coins class="h-5 w-5 text-primary" />
