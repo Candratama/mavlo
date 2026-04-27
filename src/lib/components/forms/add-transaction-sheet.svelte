@@ -14,9 +14,10 @@
 	import { CalendarDays, StickyNote, Trash2 } from 'lucide-svelte';
 	import { setLastUsed } from '$lib/utils/last-used.js';
 	import { notify } from '$lib/utils/toast.js';
+	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { MediaQuery } from 'svelte/reactivity';
 
-	type Account = { id: string; name: string; currency: string };
+	type Account = { id: string; name: string; currency: string; balanceCents?: number };
 	type Category = { id: string; name: string; kind: 'income' | 'expense' };
 	type EditTarget = {
 		id: string;
@@ -107,7 +108,14 @@
 	];
 
 	const accountItems = $derived<PickerItem[]>(
-		accounts.map((a) => ({ value: a.id, label: a.name, description: a.currency }))
+		accounts.map((a) => ({
+			value: a.id,
+			label: a.name,
+			description:
+				a.balanceCents !== undefined
+					? `${a.currency} · ${formatCentsAsCurrency(a.balanceCents, a.currency)}`
+					: a.currency
+		}))
 	);
 
 	const categoryItems = $derived<PickerItem[]>([
