@@ -6,7 +6,8 @@ import {
 	createCategory,
 	updateCategory,
 	archiveCategory,
-	unarchiveCategory
+	unarchiveCategory,
+	deleteCategory
 } from '$lib/server/repositories/categories';
 import {
 	categoryCreateSchema,
@@ -66,5 +67,14 @@ export const actions: Actions = {
 		if (!parsed.success) return fail(400, { action: 'unarchive', message: 'Invalid id' });
 		await unarchiveCategory(db, user.id, parsed.data.id);
 		return { success: true, action: 'unarchive' };
+	},
+	delete: async (event) => {
+		const user = requireUser(event);
+		const db = getDb(event.platform!.env.DB);
+		const fd = await event.request.formData();
+		const parsed = categoryIdSchema.safeParse(formObject(fd));
+		if (!parsed.success) return fail(400, { action: 'delete', message: 'Invalid id' });
+		await deleteCategory(db, user.id, parsed.data.id);
+		return { success: true, action: 'delete' };
 	}
 };
