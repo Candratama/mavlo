@@ -37,6 +37,9 @@
 		{ value: '6', label: 'Sa' }
 	];
 
+	let selectedMonthStartDay = $state<number>(prefs.monthStartDay ?? 1);
+	const cycleDays = Array.from({ length: 28 }, (_, i) => i + 1);
+
 	$effect(() => {
 		setMode(selectedTheme as Theme);
 	});
@@ -94,17 +97,21 @@
 				<SegmentedControl options={weekStartOptions} bind:value={selectedWeekStart} name="weekStartsOn" />
 			</div>
 
-			<div class="space-y-1">
-				<Label for="pref-cycle-start">Cycle start (e.g. payday)</Label>
-				<Input
-					id="pref-cycle-start"
-					type="number"
-					name="monthStartDay"
-					min="1"
-					max="28"
-					required
-					value={prefs.monthStartDay}
-				/>
+			<div class="space-y-2">
+				<Label>Cycle start (e.g. payday)</Label>
+				<div class="grid grid-cols-7 gap-1.5 rounded-lg bg-muted p-2">
+					{#each cycleDays as d (d)}
+						<button
+							type="button"
+							onclick={() => (selectedMonthStartDay = d)}
+							class="h-9 rounded-md text-sm tabular-nums transition-colors {selectedMonthStartDay === d ? 'bg-primary text-primary-foreground font-semibold' : 'hover:bg-background text-foreground'}"
+							aria-pressed={selectedMonthStartDay === d}
+						>
+							{d}
+						</button>
+					{/each}
+				</div>
+				<input type="hidden" name="monthStartDay" value={selectedMonthStartDay} />
 				<p class="text-xs text-muted-foreground">
 					Day 1 = calendar month. Day 25 = your month runs 25th to 24th. Affects current and future periods.
 				</p>
