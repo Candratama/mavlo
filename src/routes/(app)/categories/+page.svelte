@@ -94,6 +94,14 @@
 			notify.error('Could not save order');
 		}
 	}
+
+	let dndDisabled = $state(true);
+	function enableDrag() {
+		dndDisabled = false;
+	}
+	function disableDrag() {
+		dndDisabled = true;
+	}
 </script>
 
 <svelte:head><title>Categories — Mavlo</title></svelte:head>
@@ -240,22 +248,28 @@
 {#if visibleCategories.length > 0}
 	<ul
 		class="md:hidden space-y-2"
-		use:dndzone={{ items: visibleCategories, flipDurationMs: 150, dropTargetStyle: {} }}
+		use:dndzone={{ items: visibleCategories, flipDurationMs: 150, dropTargetStyle: {}, dragDisabled: dndDisabled }}
 		onconsider={(e) => (visibleCategories = e.detail.items)}
 		onfinalize={(e) => {
 			visibleCategories = e.detail.items;
 			persistOrder(visibleCategories.map((c) => c.id));
+			disableDrag();
 		}}
 	>
 		{#each visibleCategories as category (category.id)}
 			{@const IconComp = getIconByName(category.icon)}
 			<li class="rounded-lg border bg-card p-3 flex items-center gap-3 {category.archived ? 'opacity-60' : ''}">
-				<GripVertical class="size-4 text-muted-foreground shrink-0 touch-none cursor-grab active:cursor-grabbing" aria-label="Drag to reorder" />
-				<div
-					class="flex items-center gap-3 flex-1 min-w-0"
-					onpointerdown={(e) => e.stopPropagation()}
-					ontouchstart={(e) => e.stopPropagation()}
+				<button
+					type="button"
+					tabindex="-1"
+					aria-label="Drag to reorder"
+					onpointerdown={enableDrag}
+					ontouchstart={enableDrag}
+					class="shrink-0 touch-none cursor-grab active:cursor-grabbing"
 				>
+					<GripVertical class="size-4 text-muted-foreground" />
+				</button>
+				<div class="flex items-center gap-3 flex-1 min-w-0">
 					<div class="size-9 shrink-0 rounded-md flex items-center justify-center" style={category.color ? `background-color: ${category.color}20` : ''}>
 						{#if IconComp}
 							<IconComp class="size-4" style={category.color ? `color: ${category.color}` : ''} />
