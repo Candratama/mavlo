@@ -6,7 +6,16 @@ export interface Cycle {
 
 function clampStartDay(startDay: number): number {
 	if (!Number.isFinite(startDay)) return 1;
-	return Math.min(28, Math.max(1, Math.trunc(startDay)));
+	return Math.min(31, Math.max(1, Math.trunc(startDay)));
+}
+
+function daysInMonth(year: number, month1to12: number): number {
+	// JS Date trick: day 0 of next month = last day of given month
+	return new Date(Date.UTC(year, month1to12, 0)).getUTCDate();
+}
+
+function effectiveDayForMonth(year: number, month1to12: number, startDay: number): number {
+	return Math.min(startDay, daysInMonth(year, month1to12));
 }
 
 function getZonedYearMonthDay(date: Date, timezone: string): { y: number; m: number; d: number } {
@@ -71,18 +80,21 @@ export function getCycleForPeriod(periodYYYYMM: string, startDay: number, timezo
 	const [yStr, mStr] = periodYYYYMM.split('-');
 	const y = Number(yStr);
 	const m = Number(mStr);
-	const start = zonedDayStartUtc(y, m, sd, timezone);
+	const startDayInMonth = effectiveDayForMonth(y, m, sd);
+	const start = zonedDayStartUtc(y, m, startDayInMonth, timezone);
 	const next = addMonths(y, m, 1);
-	const end = zonedDayStartUtc(next.y, next.m, sd, timezone);
+	const endDayInMonth = effectiveDayForMonth(next.y, next.m, sd);
+	const end = zonedDayStartUtc(next.y, next.m, endDayInMonth, timezone);
 	return { start, end, periodMonth: periodMonthStr(y, m) };
 }
 
 export function getCurrentCycle(now: Date, startDay: number, timezone: string): Cycle {
 	const sd = clampStartDay(startDay);
 	const z = getZonedYearMonthDay(now, timezone);
+	const effective = effectiveDayForMonth(z.y, z.m, sd);
 	let anchorY = z.y;
 	let anchorM = z.m;
-	if (z.d < sd) {
+	if (z.d < effective) {
 		const prev = addMonths(z.y, z.m, -1);
 		anchorY = prev.y;
 		anchorM = prev.m;
