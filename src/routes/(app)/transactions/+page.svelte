@@ -123,13 +123,13 @@
 	<Card.Content class="grid grid-cols-2 gap-4 p-4">
 		<div>
 			<p class="text-xs text-muted-foreground">Income</p>
-			<p class="text-lg sm:text-xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+			<p class="text-lg sm:text-xl font-semibold tabular-nums text-income">
 				{formatCentsAsCurrency(totalIncome, txCurrency)}
 			</p>
 		</div>
 		<div>
 			<p class="text-xs text-muted-foreground">Expense</p>
-			<p class="text-lg sm:text-xl font-semibold tabular-nums text-rose-600 dark:text-rose-400">
+			<p class="text-lg sm:text-xl font-semibold tabular-nums text-expense">
 				{formatCentsAsCurrency(totalExpense, txCurrency)}
 			</p>
 		</div>
@@ -305,11 +305,11 @@
 							<Table.Cell>{formatDate(tx.occurredAt)}</Table.Cell>
 							<Table.Cell class="capitalize">
 								{#if tx.kind === 'income'}
-									<span class="text-emerald-600 dark:text-emerald-400">income</span>
+									<span class="text-income">income</span>
 								{:else if tx.kind === 'expense'}
-									<span class="text-rose-600 dark:text-rose-400">expense</span>
+									<span class="text-expense">expense</span>
 								{:else}
-									<span class="text-blue-600 dark:text-blue-400">transfer</span>
+									<span class="text-transfer">transfer</span>
 								{/if}
 							</Table.Cell>
 							<Table.Cell>
@@ -329,11 +329,11 @@
 							<Table.Cell class="max-w-xs truncate">{tx.note ?? ''}</Table.Cell>
 							<Table.Cell class="text-right tabular-nums">
 								{#if tx.kind === 'expense'}
-									<span class="text-rose-600 dark:text-rose-400">−{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}</span>
+									<span class="text-expense">−{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}</span>
 								{:else if tx.kind === 'income'}
-									<span class="text-emerald-600 dark:text-emerald-400">+{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}</span>
+									<span class="text-income">+{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}</span>
 								{:else}
-									<span class="text-blue-600 dark:text-blue-400">{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}</span>
+									<span class="text-transfer">{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}</span>
 								{/if}
 							</Table.Cell>
 							<Table.Cell>
@@ -377,7 +377,7 @@
 				</div>
 			</div>
 			<div class="flex items-center gap-1 shrink-0">
-				<span class="text-sm font-semibold tabular-nums whitespace-nowrap {tx.kind === 'expense' ? 'text-rose-600 dark:text-rose-400' : tx.kind === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-blue-600 dark:text-blue-400'}">
+				<span class="text-sm font-semibold tabular-nums whitespace-nowrap {tx.kind === 'expense' ? 'text-expense' : tx.kind === 'income' ? 'text-income' : 'text-transfer'}">
 					{tx.kind === 'expense' ? '−' : tx.kind === 'income' ? '+' : ''}{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}
 				</span>
 				{@render rowMenu(tx)}
