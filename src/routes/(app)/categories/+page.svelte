@@ -250,21 +250,27 @@
 		{#each visibleCategories as category (category.id)}
 			{@const IconComp = getIconByName(category.icon)}
 			<li class="rounded-lg border bg-card p-3 flex items-center gap-3 {category.archived ? 'opacity-60' : ''}">
-				<GripVertical class="size-4 text-muted-foreground shrink-0 cursor-grab" aria-hidden="true" />
-				<div class="size-9 shrink-0 rounded-md flex items-center justify-center" style={category.color ? `background-color: ${category.color}20` : ''}>
-					{#if IconComp}
-						<IconComp class="size-4" style={category.color ? `color: ${category.color}` : ''} />
-					{:else}
-						<Tag class="size-4 text-muted-foreground" />
-					{/if}
-				</div>
-				<div class="flex-1 min-w-0">
-					<div class="font-medium truncate">{category.name}</div>
-					<div class="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-						<span class="capitalize">{category.kind}</span>
+				<GripVertical class="size-4 text-muted-foreground shrink-0 touch-none cursor-grab active:cursor-grabbing" aria-label="Drag to reorder" />
+				<div
+					class="flex items-center gap-3 flex-1 min-w-0"
+					onpointerdown={(e) => e.stopPropagation()}
+					ontouchstart={(e) => e.stopPropagation()}
+				>
+					<div class="size-9 shrink-0 rounded-md flex items-center justify-center" style={category.color ? `background-color: ${category.color}20` : ''}>
+						{#if IconComp}
+							<IconComp class="size-4" style={category.color ? `color: ${category.color}` : ''} />
+						{:else}
+							<Tag class="size-4 text-muted-foreground" />
+						{/if}
 					</div>
+					<div class="flex-1 min-w-0">
+						<div class="font-medium truncate">{category.name}</div>
+						<div class="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+							<span class="capitalize">{category.kind}</span>
+						</div>
+					</div>
+					{@render rowMenu(category)}
 				</div>
-				{@render rowMenu(category)}
 			</li>
 		{/each}
 	</ul>

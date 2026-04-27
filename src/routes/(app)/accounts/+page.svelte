@@ -228,24 +228,30 @@
 		{#each visibleAccounts as account (account.id)}
 			{@const IconComp = iconForType(account.type)}
 			<li class="rounded-lg border bg-card p-3 flex items-center gap-3 {account.archived ? 'opacity-60' : ''}">
-				<GripVertical class="size-4 text-muted-foreground shrink-0 cursor-grab" aria-hidden="true" />
-				<div class="size-9 shrink-0 rounded-md flex items-center justify-center" style={account.color ? `background-color: ${account.color}20` : ''}>
-					{#if IconComp}
-						<IconComp class="size-4" style={account.color ? `color: ${account.color}` : ''} />
-					{:else}
-						<Wallet class="size-4 text-muted-foreground" />
-					{/if}
-				</div>
-				<div class="flex-1 min-w-0">
-					<div class="font-medium truncate">{account.name}</div>
-					<div class="text-xs text-muted-foreground capitalize mt-0.5">
-						{account.type} · {account.currency}
+				<GripVertical class="size-4 text-muted-foreground shrink-0 touch-none cursor-grab active:cursor-grabbing" aria-label="Drag to reorder" />
+				<div
+					class="flex items-center gap-3 flex-1 min-w-0"
+					onpointerdown={(e) => e.stopPropagation()}
+					ontouchstart={(e) => e.stopPropagation()}
+				>
+					<div class="size-9 shrink-0 rounded-md flex items-center justify-center" style={account.color ? `background-color: ${account.color}20` : ''}>
+						{#if IconComp}
+							<IconComp class="size-4" style={account.color ? `color: ${account.color}` : ''} />
+						{:else}
+							<Wallet class="size-4 text-muted-foreground" />
+						{/if}
 					</div>
-					<div class="text-base font-semibold tabular-nums mt-1">
-						{formatBalance(account.balanceCents, account.currency)}
+					<div class="flex-1 min-w-0">
+						<div class="font-medium truncate">{account.name}</div>
+						<div class="text-xs text-muted-foreground capitalize mt-0.5">
+							{account.type} · {account.currency}
+						</div>
+						<div class="text-base font-semibold tabular-nums mt-1">
+							{formatBalance(account.balanceCents, account.currency)}
+						</div>
 					</div>
+					{@render rowMenu(account)}
 				</div>
-				{@render rowMenu(account)}
 			</li>
 		{/each}
 	</ul>
