@@ -285,7 +285,7 @@
 					<span class="size-6 rounded border" style="background-color: {createColor || 'transparent'}"></span>
 				</div>
 			{/if}
-			<input type="hidden" name="color" value={createColor} />
+			<input type="text" name="color" bind:value={createColor} class="sr-only" tabindex="-1" aria-hidden="true" />
 		</div>
 		<div class="space-y-2">
 			<Label>Icon</Label>
@@ -310,7 +310,7 @@
 					</button>
 				{/each}
 			</div>
-			<input type="hidden" name="icon" value={createIcon} />
+			<input type="text" name="icon" bind:value={createIcon} class="sr-only" tabindex="-1" aria-hidden="true" />
 		</div>
 		<div class="flex justify-end gap-2">
 			<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
@@ -391,7 +391,7 @@
 					<span class="size-6 rounded border" style="background-color: {editColor || 'transparent'}"></span>
 				</div>
 			{/if}
-			<input type="hidden" name="color" value={editColor} />
+			<input type="text" name="color" bind:value={editColor} class="sr-only" tabindex="-1" aria-hidden="true" />
 		</div>
 		<div class="space-y-2">
 			<Label>Icon</Label>
@@ -416,7 +416,7 @@
 					</button>
 				{/each}
 			</div>
-			<input type="hidden" name="icon" value={editIcon} />
+			<input type="text" name="icon" bind:value={editIcon} class="sr-only" tabindex="-1" aria-hidden="true" />
 		</div>
 		<div class="flex justify-end gap-2">
 			<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
