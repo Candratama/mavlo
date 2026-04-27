@@ -81,9 +81,13 @@
 	];
 
 	let visibleCategories = $state<CategoryRow[]>(data.categories.filter((c) => c.kind === viewKind));
+	let expenseCategories = $state<CategoryRow[]>(data.categories.filter((c) => c.kind === 'expense'));
+	let incomeCategories = $state<CategoryRow[]>(data.categories.filter((c) => c.kind === 'income'));
 
 	$effect(() => {
 		visibleCategories = data.categories.filter((c) => c.kind === viewKind);
+		expenseCategories = data.categories.filter((c) => c.kind === 'expense');
+		incomeCategories = data.categories.filter((c) => c.kind === 'income');
 	});
 
 	async function persistOrder(ids: string[]) {
@@ -192,57 +196,80 @@
 	</DropdownMenu.Root>
 {/snippet}
 
-{#snippet kindTable(kind: 'expense' | 'income', label: string)}
-	{@const items = data.categories.filter((c) => c.kind === kind)}
+{#snippet kindList(
+	items: CategoryRow[],
+	label: string,
+	onConsider: (next: CategoryRow[]) => void,
+	onFinalize: (next: CategoryRow[]) => void
+)}
 	<Card.Root>
 		<Card.Header class="pb-2">
 			<Card.Title class="text-base">{label}</Card.Title>
 		</Card.Header>
-		<Card.Content class="p-0">
-			<Table.Root>
-				<Table.Header>
-					<Table.Row>
-						<Table.Head class="w-10"></Table.Head>
-						<Table.Head>Name</Table.Head>
-						<Table.Head class="w-12"></Table.Head>
-					</Table.Row>
-				</Table.Header>
-				<Table.Body>
+		<Card.Content class="p-3">
+			{#if items.length === 0}
+				<EmptyState icon={Tag} title="No {label.toLowerCase()} categories" description="Add one to classify {label.toLowerCase()} transactions.">
+					<Button onclick={() => (createOpen = true)}>Add category</Button>
+				</EmptyState>
+			{:else}
+				<ul
+					class="space-y-1.5"
+					use:dndzone={{ items, flipDurationMs: 150, dropTargetStyle: {}, dragDisabled: dndDisabled }}
+					onconsider={(e) => onConsider(e.detail.items as CategoryRow[])}
+					onfinalize={(e) => {
+						onFinalize(e.detail.items as CategoryRow[]);
+						disableDrag();
+					}}
+				>
 					{#each items as category (category.id)}
 						{@const IconComp = getIconByName(category.icon)}
-						<Table.Row class={category.archived ? 'opacity-60' : ''}>
-							<Table.Cell>
-								<div class="size-7 rounded-md flex items-center justify-center" style={category.color ? `background-color: ${category.color}20` : ''}>
-									{#if IconComp}
-										<IconComp class="size-4" style={category.color ? `color: ${category.color}` : ''} />
-									{:else}
-										<Tag class="size-4 text-muted-foreground" />
-									{/if}
-								</div>
-							</Table.Cell>
-							<Table.Cell class="font-medium">{category.name}</Table.Cell>
-							<Table.Cell>
-								{@render rowMenu(category)}
-							</Table.Cell>
-						</Table.Row>
-					{:else}
-						<Table.Row>
-							<Table.Cell colspan={3} class="p-0">
-								<EmptyState icon={Tag} title="No {label.toLowerCase()} categories" description="Add one to classify {label.toLowerCase()} transactions.">
-									<Button onclick={() => (createOpen = true)}>Add category</Button>
-								</EmptyState>
-							</Table.Cell>
-						</Table.Row>
+						<li class="flex items-center gap-3 rounded-md p-2 hover:bg-accent/30 {category.archived ? 'opacity-60' : ''}">
+							<button
+								type="button"
+								tabindex="-1"
+								aria-label="Drag to reorder"
+								onpointerdown={enableDrag}
+								ontouchstart={enableDrag}
+								class="shrink-0 touch-none cursor-grab active:cursor-grabbing"
+							>
+								<GripVertical class="size-4 text-muted-foreground" />
+							</button>
+							<div class="size-7 shrink-0 rounded-md flex items-center justify-center" style={category.color ? `background-color: ${category.color}20` : ''}>
+								{#if IconComp}
+									<IconComp class="size-4" style={category.color ? `color: ${category.color}` : ''} />
+								{:else}
+									<Tag class="size-4 text-muted-foreground" />
+								{/if}
+							</div>
+							<span class="font-medium flex-1 min-w-0 truncate">{category.name}</span>
+							{@render rowMenu(category)}
+						</li>
 					{/each}
-				</Table.Body>
-			</Table.Root>
+				</ul>
+			{/if}
 		</Card.Content>
 	</Card.Root>
 {/snippet}
 
 <div class="hidden md:grid md:grid-cols-2 gap-6">
-	{@render kindTable('expense', 'Expense')}
-	{@render kindTable('income', 'Income')}
+	{@render kindList(
+		expenseCategories,
+		'Expense',
+		(next) => (expenseCategories = next),
+		(next) => {
+			expenseCategories = next;
+			persistOrder(next.map((c) => c.id));
+		}
+	)}
+	{@render kindList(
+		incomeCategories,
+		'Income',
+		(next) => (incomeCategories = next),
+		(next) => {
+			incomeCategories = next;
+			persistOrder(next.map((c) => c.id));
+		}
+	)}
 </div>
 
 {#if visibleCategories.length > 0}
