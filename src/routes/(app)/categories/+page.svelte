@@ -65,6 +65,15 @@
 		editTarget = c;
 		editOpen = true;
 	};
+
+	let viewKind = $state<'expense' | 'income'>('expense');
+
+	const viewKindOptions = [
+		{ value: 'expense', label: 'Expense' },
+		{ value: 'income', label: 'Income' }
+	];
+
+	const visibleCategories = $derived(data.categories.filter((c) => c.kind === viewKind));
 </script>
 
 <svelte:head><title>Categories — Mavlo</title></svelte:head>
@@ -84,6 +93,10 @@
 {#if form?.message}
 	<p class="mb-4 text-sm text-destructive">{form.message}</p>
 {/if}
+
+<div class="mb-4">
+	<SegmentedControl options={viewKindOptions} bind:value={viewKind} ariaLabel="Category kind" />
+</div>
 
 {#snippet rowMenu(category: CategoryRow)}
 	<DropdownMenu.Root>
@@ -138,7 +151,7 @@
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
-					{#each data.categories as category (category.id)}
+					{#each visibleCategories as category (category.id)}
 						{@const IconComp = getIconByName(category.icon)}
 						<Table.Row class={category.archived ? 'opacity-60' : ''}>
 							<Table.Cell>
@@ -185,7 +198,7 @@
 </div>
 
 <ul class="md:hidden space-y-2">
-	{#each data.categories as category (category.id)}
+	{#each visibleCategories as category (category.id)}
 		{@const IconComp = getIconByName(category.icon)}
 		<li class="rounded-lg border bg-card p-3 flex items-start gap-3 {category.archived ? 'opacity-60' : ''}">
 			<div class="size-9 shrink-0 rounded-md border flex items-center justify-center" style={category.color ? `background-color: ${category.color}20; border-color: ${category.color}` : ''}>
