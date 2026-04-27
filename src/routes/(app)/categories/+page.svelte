@@ -266,7 +266,10 @@
 	<form
 		method="POST"
 		action="?/create"
-		use:enhance={() => {
+		use:enhance={({ formData }) => {
+			formData.set('kind', createKind);
+			formData.set('color', createColor);
+			formData.set('icon', createIcon);
 			createPending = true;
 			return async ({ result }) => {
 				await goto(page.url.pathname + page.url.search, {
@@ -378,7 +381,10 @@
 	<form
 		method="POST"
 		action="?/update"
-		use:enhance={() => {
+		use:enhance={({ formData }) => {
+			formData.set('kind', editKind);
+			formData.set('color', editColor);
+			formData.set('icon', editIcon);
 			editPending = true;
 			return async ({ result }) => {
 				await goto(page.url.pathname + page.url.search, {

@@ -223,7 +223,9 @@
 	<form
 		method="POST"
 		action="?/create"
-		use:enhance={() => {
+		use:enhance={({ formData }) => {
+			formData.set('type', createType);
+			formData.set('color', createColor);
 			createPending = true;
 			return async ({ result }) => {
 				await goto(page.url.pathname + page.url.search, {
@@ -328,7 +330,9 @@
 	<form
 		method="POST"
 		action="?/update"
-		use:enhance={() => {
+		use:enhance={({ formData }) => {
+			formData.set('type', editType);
+			formData.set('color', editColor);
 			editPending = true;
 			return async ({ result }) => {
 				await goto(page.url.pathname + page.url.search, {
