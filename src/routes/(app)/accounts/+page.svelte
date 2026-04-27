@@ -263,16 +263,22 @@
 			</div>
 		</div>
 		<div class="space-y-2">
-			<Label>Color <span class="text-xs text-muted-foreground">({createColor || 'none'})</span></Label>
+			<div class="flex items-center justify-between">
+				<Label>Color</Label>
+				<span class="size-5 rounded border" style="background-color: {createColor || 'transparent'}" aria-hidden="true"></span>
+			</div>
 			<div class="grid grid-cols-8 gap-2">
 				{#each PRESET_SWATCHES as swatch (swatch)}
 					<button
 						type="button"
-						onclick={() => { createColor = swatch; createCustomColor = false; }}
-						aria-label={swatch}
-						class="size-9 rounded-lg cursor-pointer border-2 {createColor === swatch ? 'border-foreground ring-2 ring-foreground' : 'border-transparent'}"
-						style="background-color: {swatch}"
-					></button>
+						onclick={() => { createColor = swatch; createCustomColor = false; notify.info(`Picked ${swatch}`); }}
+						aria-pressed={createColor === swatch}
+						aria-label="Color {swatch}"
+						style="background-color: {swatch}; touch-action: manipulation; -webkit-tap-highlight-color: transparent;"
+						class="size-10 rounded-lg cursor-pointer outline-none {createColor === swatch ? 'ring-2 ring-offset-2 ring-foreground ring-offset-background' : ''}"
+					>
+						<span class="sr-only">{swatch}</span>
+					</button>
 				{/each}
 			</div>
 			<button
@@ -368,16 +374,22 @@
 			</div>
 		</div>
 		<div class="space-y-2">
-			<Label>Color <span class="text-xs text-muted-foreground">({editColor || 'none'})</span></Label>
+			<div class="flex items-center justify-between">
+				<Label>Color</Label>
+				<span class="size-5 rounded border" style="background-color: {editColor || 'transparent'}" aria-hidden="true"></span>
+			</div>
 			<div class="grid grid-cols-8 gap-2">
 				{#each PRESET_SWATCHES as swatch (swatch)}
 					<button
 						type="button"
-						onclick={() => { editColor = swatch; editCustomColor = false; }}
-						aria-label={swatch}
-						class="size-9 rounded-lg cursor-pointer border-2 {editColor === swatch ? 'border-foreground ring-2 ring-foreground' : 'border-transparent'}"
-						style="background-color: {swatch}"
-					></button>
+						onclick={() => { editColor = swatch; editCustomColor = false; notify.info(`Picked ${swatch}`); }}
+						aria-pressed={editColor === swatch}
+						aria-label="Color {swatch}"
+						style="background-color: {swatch}; touch-action: manipulation; -webkit-tap-highlight-color: transparent;"
+						class="size-10 rounded-lg cursor-pointer outline-none {editColor === swatch ? 'ring-2 ring-offset-2 ring-foreground ring-offset-background' : ''}"
+					>
+						<span class="sr-only">{swatch}</span>
+					</button>
 				{/each}
 			</div>
 			<button
