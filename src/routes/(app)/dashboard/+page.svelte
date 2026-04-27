@@ -81,33 +81,6 @@
 	{/if}
 </div>
 
-<!-- Quick add -->
-<div class="mt-4 grid grid-cols-3 gap-2">
-	<button
-		type="button"
-		onclick={() => openAddTransaction('income')}
-		class="flex flex-col items-center gap-1 rounded-xl border bg-card p-3 hover:bg-accent/50 transition-colors active:scale-95"
-	>
-		<TrendingUp class="size-5 text-emerald-600 dark:text-emerald-400" />
-		<span class="text-xs font-medium">Income</span>
-	</button>
-	<button
-		type="button"
-		onclick={() => openAddTransaction('expense')}
-		class="flex flex-col items-center gap-1 rounded-xl border bg-card p-3 hover:bg-accent/50 transition-colors active:scale-95"
-	>
-		<TrendingDown class="size-5 text-rose-600 dark:text-rose-400" />
-		<span class="text-xs font-medium">Expense</span>
-	</button>
-	<button
-		type="button"
-		onclick={() => openAddTransaction('transfer')}
-		class="flex flex-col items-center gap-1 rounded-xl border bg-card p-3 hover:bg-accent/50 transition-colors active:scale-95"
-	>
-		<ArrowLeftRight class="size-5 text-blue-600 dark:text-blue-400" />
-		<span class="text-xs font-medium">Transfer</span>
-	</button>
-</div>
 
 <!-- Cycle dual-stat -->
 <div class="mt-4 grid grid-cols-2 gap-3">
