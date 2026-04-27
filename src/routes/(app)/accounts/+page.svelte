@@ -18,8 +18,11 @@
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
+	import { MediaQuery } from 'svelte/reactivity';
 
 	let { data, form } = $props();
+
+	const isDesktop = new MediaQuery('(min-width: 768px)');
 
 	type AccountRow = (typeof data.accounts)[number];
 
@@ -263,13 +266,20 @@
 			<Label>Color</Label>
 			<div class="grid grid-cols-8 gap-2">
 				{#each PRESET_SWATCHES as swatch (swatch)}
-					<button
-						type="button"
-						onclick={() => { createColor = swatch; createCustomColor = false; }}
-						class="size-8 rounded-lg border transition-shadow {createColor === swatch ? 'ring-2 ring-foreground' : ''}"
-						style="background-color: {swatch}"
+					<label
+						class="size-8 rounded-lg border cursor-pointer block transition-shadow"
+						style="background-color: {swatch}; box-shadow: {createColor === swatch ? '0 0 0 2px var(--foreground)' : 'none'}"
 						aria-label={swatch}
-					></button>
+					>
+						<input
+							type="radio"
+							name="color"
+							value={swatch}
+							checked={createColor === swatch}
+							onchange={() => { createColor = swatch; createCustomColor = false; }}
+							class="sr-only"
+						/>
+					</label>
 				{/each}
 			</div>
 			<button
@@ -294,21 +304,7 @@
 	</form>
 {/snippet}
 
-<!-- Create: mobile sheet -->
-<div class="md:hidden">
-	<Sheet.Root bind:open={createOpen}>
-		<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
-			<Sheet.Header class="text-left p-4 pb-2">
-				<Sheet.Title>New account</Sheet.Title>
-				<Sheet.Description>Add a new financial account to track.</Sheet.Description>
-			</Sheet.Header>
-			<div class="flex-1 overflow-y-auto">{@render createForm()}</div>
-		</Sheet.Content>
-	</Sheet.Root>
-</div>
-
-<!-- Create: desktop dialog -->
-<div class="hidden md:block">
+{#if isDesktop.current}
 	<Dialog.Root bind:open={createOpen}>
 		<Dialog.Content>
 			<Dialog.Header>
@@ -318,7 +314,17 @@
 			{@render createForm()}
 		</Dialog.Content>
 	</Dialog.Root>
-</div>
+{:else}
+	<Sheet.Root bind:open={createOpen}>
+		<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
+			<Sheet.Header class="text-left p-4 pb-2">
+				<Sheet.Title>New account</Sheet.Title>
+				<Sheet.Description>Add a new financial account to track.</Sheet.Description>
+			</Sheet.Header>
+			<div class="flex-1 overflow-y-auto">{@render createForm()}</div>
+		</Sheet.Content>
+	</Sheet.Root>
+{/if}
 
 <!-- Edit form snippet (receives account to avoid null narrowing issues) -->
 {#snippet editForm(account: AccountRow)}
@@ -403,9 +409,17 @@
 	</form>
 {/snippet}
 
-<!-- Edit: mobile sheet -->
 {#if editTarget}
-	<div class="md:hidden">
+	{#if isDesktop.current}
+		<Dialog.Root bind:open={editOpen}>
+			<Dialog.Content>
+				<Dialog.Header>
+					<Dialog.Title>Edit account</Dialog.Title>
+				</Dialog.Header>
+				{@render editForm(editTarget)}
+			</Dialog.Content>
+		</Dialog.Root>
+	{:else}
 		<Sheet.Root bind:open={editOpen}>
 			<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
 				<Sheet.Header class="text-left p-4 pb-2">
@@ -415,17 +429,5 @@
 				<div class="flex-1 overflow-y-auto">{@render editForm(editTarget)}</div>
 			</Sheet.Content>
 		</Sheet.Root>
-	</div>
-
-	<!-- Edit: desktop dialog -->
-	<div class="hidden md:block">
-		<Dialog.Root bind:open={editOpen}>
-			<Dialog.Content>
-				<Dialog.Header>
-					<Dialog.Title>Edit account</Dialog.Title>
-				</Dialog.Header>
-				{@render editForm(editTarget)}
-			</Dialog.Content>
-		</Dialog.Root>
-	</div>
+	{/if}
 {/if}

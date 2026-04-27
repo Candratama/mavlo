@@ -16,8 +16,11 @@
 	import EmptyState from '$lib/components/empty-state.svelte';
 	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
 	import { CATEGORY_ICONS, getIconByName } from '$lib/utils/category-icons.js';
+	import { MediaQuery } from 'svelte/reactivity';
 
 	let { data, form } = $props();
+
+	const isDesktop = new MediaQuery('(min-width: 768px)');
 
 	type CategoryRow = (typeof data.categories)[number];
 
@@ -297,13 +300,20 @@
 			<Label>Color</Label>
 			<div class="grid grid-cols-8 gap-2">
 				{#each PRESET_SWATCHES as swatch (swatch)}
-					<button
-						type="button"
-						onclick={() => { createColor = swatch; createCustomColor = false; }}
-						class="size-8 rounded-lg border transition-shadow {createColor === swatch ? 'ring-2 ring-foreground' : ''}"
-						style="background-color: {swatch}"
+					<label
+						class="size-8 rounded-lg border cursor-pointer block transition-shadow"
+						style="background-color: {swatch}; box-shadow: {createColor === swatch ? '0 0 0 2px var(--foreground)' : 'none'}"
 						aria-label={swatch}
-					></button>
+					>
+						<input
+							type="radio"
+							name="color"
+							value={swatch}
+							checked={createColor === swatch}
+							onchange={() => { createColor = swatch; createCustomColor = false; }}
+							class="sr-only"
+						/>
+					</label>
 				{/each}
 			</div>
 			<button
@@ -319,7 +329,6 @@
 					<span class="size-6 rounded border" style="background-color: {createColor || 'transparent'}"></span>
 				</div>
 			{/if}
-			<input type="text" name="color" bind:value={createColor} class="sr-only" tabindex="-1" aria-hidden="true" />
 		</div>
 		<div class="space-y-2">
 			<Label>Icon</Label>
@@ -355,22 +364,21 @@
 	</form>
 {/snippet}
 
-<div class="md:hidden">
-	<Sheet.Root bind:open={createOpen}>
-		<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
-			<Sheet.Header class="text-left p-4 pb-2"><Sheet.Title>New category</Sheet.Title></Sheet.Header>
-			<div class="flex-1 overflow-y-auto">{@render createForm()}</div>
-		</Sheet.Content>
-	</Sheet.Root>
-</div>
-<div class="hidden md:block">
+{#if isDesktop.current}
 	<Dialog.Root bind:open={createOpen}>
 		<Dialog.Content>
 			<Dialog.Header><Dialog.Title>New category</Dialog.Title></Dialog.Header>
 			{@render createForm()}
 		</Dialog.Content>
 	</Dialog.Root>
-</div>
+{:else}
+	<Sheet.Root bind:open={createOpen}>
+		<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
+			<Sheet.Header class="text-left p-4 pb-2"><Sheet.Title>New category</Sheet.Title></Sheet.Header>
+			<div class="flex-1 overflow-y-auto">{@render createForm()}</div>
+		</Sheet.Content>
+	</Sheet.Root>
+{/if}
 
 {#snippet editForm(target: CategoryRow)}
 	<form
@@ -408,13 +416,20 @@
 			<Label>Color</Label>
 			<div class="grid grid-cols-8 gap-2">
 				{#each PRESET_SWATCHES as swatch (swatch)}
-					<button
-						type="button"
-						onclick={() => { editColor = swatch; editCustomColor = false; }}
-						class="size-8 rounded-lg border transition-shadow {editColor === swatch ? 'ring-2 ring-foreground' : ''}"
-						style="background-color: {swatch}"
+					<label
+						class="size-8 rounded-lg border cursor-pointer block transition-shadow"
+						style="background-color: {swatch}; box-shadow: {editColor === swatch ? '0 0 0 2px var(--foreground)' : 'none'}"
 						aria-label={swatch}
-					></button>
+					>
+						<input
+							type="radio"
+							name="color"
+							value={swatch}
+							checked={editColor === swatch}
+							onchange={() => { editColor = swatch; editCustomColor = false; }}
+							class="sr-only"
+						/>
+					</label>
 				{/each}
 			</div>
 			<button
@@ -430,7 +445,6 @@
 					<span class="size-6 rounded border" style="background-color: {editColor || 'transparent'}"></span>
 				</div>
 			{/if}
-			<input type="text" name="color" bind:value={editColor} class="sr-only" tabindex="-1" aria-hidden="true" />
 		</div>
 		<div class="space-y-2">
 			<Label>Icon</Label>
@@ -466,7 +480,14 @@
 	</form>
 {/snippet}
 
-<div class="md:hidden">
+{#if isDesktop.current}
+	<Dialog.Root bind:open={editOpen}>
+		<Dialog.Content>
+			<Dialog.Header><Dialog.Title>Edit category</Dialog.Title></Dialog.Header>
+			{#if editTarget}{@render editForm(editTarget)}{/if}
+		</Dialog.Content>
+	</Dialog.Root>
+{:else}
 	<Sheet.Root bind:open={editOpen}>
 		<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
 			<Sheet.Header class="text-left p-4 pb-2"><Sheet.Title>Edit category</Sheet.Title></Sheet.Header>
@@ -475,12 +496,4 @@
 			</div>
 		</Sheet.Content>
 	</Sheet.Root>
-</div>
-<div class="hidden md:block">
-	<Dialog.Root bind:open={editOpen}>
-		<Dialog.Content>
-			<Dialog.Header><Dialog.Title>Edit category</Dialog.Title></Dialog.Header>
-			{#if editTarget}{@render editForm(editTarget)}{/if}
-		</Dialog.Content>
-	</Dialog.Root>
-</div>
+{/if}

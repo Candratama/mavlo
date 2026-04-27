@@ -14,6 +14,7 @@
 	import { CalendarDays, StickyNote, Trash2 } from 'lucide-svelte';
 	import { setLastUsed } from '$lib/utils/last-used.js';
 	import { notify } from '$lib/utils/toast.js';
+	import { MediaQuery } from 'svelte/reactivity';
 
 	type Account = { id: string; name: string; currency: string };
 	type Category = { id: string; name: string; kind: 'income' | 'expense' };
@@ -132,6 +133,8 @@
 		open = false;
 		onClose();
 	}
+
+	const isDesktop = new MediaQuery('(min-width: 768px)');
 </script>
 
 {#snippet body()}
@@ -285,7 +288,16 @@
 	</form>
 {/snippet}
 
-<div class="md:hidden">
+{#if isDesktop.current}
+	<Dialog.Root bind:open>
+		<Dialog.Content>
+			<Dialog.Header>
+				<Dialog.Title>{mode === 'create' ? 'New transaction' : 'Edit transaction'}</Dialog.Title>
+			</Dialog.Header>
+			{@render body()}
+		</Dialog.Content>
+	</Dialog.Root>
+{:else}
 	<Sheet.Root bind:open>
 		<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
 			<Sheet.Header class="text-left p-4 pb-2">
@@ -296,15 +308,4 @@
 			</div>
 		</Sheet.Content>
 	</Sheet.Root>
-</div>
-
-<div class="hidden md:block">
-	<Dialog.Root bind:open>
-		<Dialog.Content>
-			<Dialog.Header>
-				<Dialog.Title>{mode === 'create' ? 'New transaction' : 'Edit transaction'}</Dialog.Title>
-			</Dialog.Header>
-			{@render body()}
-		</Dialog.Content>
-	</Dialog.Root>
-</div>
+{/if}
