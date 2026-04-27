@@ -272,16 +272,11 @@
 			formData.set('icon', createIcon);
 			createPending = true;
 			return async ({ result }) => {
-				await goto(page.url.pathname + page.url.search, {
-					invalidateAll: true,
-					replaceState: true,
-					keepFocus: true,
-					noScroll: true
-				});
 				createPending = false;
 				if (result.type === 'success') {
 					createOpen = false;
 					notify.success('Category created');
+					window.location.reload();
 				} else if (result.type === 'failure') {
 					const message = (result.data as { message?: string } | undefined)?.message;
 					notify.error(message ?? 'Could not create category');
@@ -387,16 +382,11 @@
 			formData.set('icon', editIcon);
 			editPending = true;
 			return async ({ result }) => {
-				await goto(page.url.pathname + page.url.search, {
-					invalidateAll: true,
-					replaceState: true,
-					keepFocus: true,
-					noScroll: true
-				});
 				editPending = false;
 				if (result.type === 'success') {
 					editOpen = false;
 					notify.success('Category updated');
+					window.location.reload();
 				} else if (result.type === 'failure') {
 					const message = (result.data as { message?: string } | undefined)?.message;
 					notify.error(message ?? 'Could not save category');
