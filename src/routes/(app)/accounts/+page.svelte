@@ -273,7 +273,7 @@
 				{#each PRESET_SWATCHES as swatch (swatch)}
 					<button
 						type="button"
-						onclick={() => { createColor = swatch; createCustomColor = false; notify.info(`Picked ${swatch}`); }}
+						onclick={() => { createColor = swatch; createCustomColor = false; }}
 						aria-pressed={createColor === swatch}
 						aria-label="Color {swatch}"
 						style="background-color: {swatch}; touch-action: manipulation; -webkit-tap-highlight-color: transparent;"
@@ -384,7 +384,7 @@
 				{#each PRESET_SWATCHES as swatch (swatch)}
 					<button
 						type="button"
-						onclick={() => { editColor = swatch; editCustomColor = false; notify.info(`Picked ${swatch}`); }}
+						onclick={() => { editColor = swatch; editCustomColor = false; }}
 						aria-pressed={editColor === swatch}
 						aria-label="Color {swatch}"
 						style="background-color: {swatch}; touch-action: manipulation; -webkit-tap-highlight-color: transparent;"
