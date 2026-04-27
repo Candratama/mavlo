@@ -4,6 +4,7 @@ import { getDb } from '$lib/server/db';
 import { userPreferences } from '$lib/server/db/schema';
 import { listAccounts } from '$lib/server/repositories/accounts';
 import { listCategories } from '$lib/server/repositories/categories';
+import { computeAccountBalances } from '$lib/server/repositories/balances';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async (event) => {
@@ -27,15 +28,21 @@ export const load: LayoutServerLoad = async (event) => {
 		)[0];
 	}
 
-	const [accounts, categories] = await Promise.all([
+	const [accounts, categories, balances] = await Promise.all([
 		listAccounts(db, user.id, { includeArchived: false }),
-		listCategories(db, user.id, { includeArchived: false })
+		listCategories(db, user.id, { includeArchived: false }),
+		computeAccountBalances(db, user.id)
 	]);
+
+	const accountsWithBalance = accounts.map((a) => ({
+		...a,
+		balanceCents: balances.get(a.id) ?? a.initialBalanceCents
+	}));
 
 	return {
 		user: { id: user.id, name: user.name, email: user.email, image: user.image },
 		preferences: prefs,
-		accounts,
+		accounts: accountsWithBalance,
 		categories
 	};
 };
