@@ -73,3 +73,11 @@ export async function unarchiveCategory(db: Db, userId: string, id: string) {
 		.returning();
 	return row ?? null;
 }
+
+export async function deleteCategory(db: Db, userId: string, id: string) {
+	const [row] = await db
+		.delete(categories)
+		.where(and(eq(categories.userId, userId), eq(categories.id, id)))
+		.returning();
+	return row ?? null;
+}

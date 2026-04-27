@@ -11,7 +11,7 @@
 	import * as Sheet from '$lib/components/ui/sheet';
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil, Tag } from 'lucide-svelte';
+	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil, Trash2, Tag } from 'lucide-svelte';
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
 	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
@@ -135,6 +135,31 @@
 							{:else}
 								<Archive class="size-4" /> Archive
 							{/if}
+						</button>
+					{/snippet}
+				</DropdownMenu.Item>
+			</form>
+			<form method="POST" action="?/delete" use:enhance={() => async ({ result }) => {
+				await goto(page.url.pathname + page.url.search, {
+					invalidateAll: true,
+					replaceState: true,
+					keepFocus: true,
+					noScroll: true
+				});
+				if (result.type === 'success') {
+					notify.success('Category deleted');
+				} else if (result.type === 'failure') {
+					const message = (result.data as { message?: string } | undefined)?.message;
+					notify.error(message ?? 'Could not delete category');
+				}
+			}} onsubmit={(e) => {
+				if (!confirm(`Delete category "${category.name}"? This will also delete its budgets. Transactions keep their amount but lose the category.`)) e.preventDefault();
+			}}>
+				<input type="hidden" name="id" value={category.id} />
+				<DropdownMenu.Item>
+					{#snippet child({ props })}
+						<button {...props} type="submit" class="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-left text-destructive rounded-sm hover:bg-accent/50">
+							<Trash2 class="size-4" /> Delete
 						</button>
 					{/snippet}
 				</DropdownMenu.Item>
