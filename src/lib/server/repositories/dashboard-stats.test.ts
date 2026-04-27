@@ -14,7 +14,7 @@ beforeEach(() => {
 	h = createTestDb({ tables: ['accounts', 'categories', 'transactions'] });
 	const now = Date.now();
 	h.sqlite
-		.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)')
+		.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
 		.run('acc1', h.userId, 'Cash', 'cash', 'IDR', 0, now, now);
 	h.sqlite
 		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, NULL, NULL, 0, ?, ?)')

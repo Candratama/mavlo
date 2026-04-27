@@ -13,7 +13,7 @@ beforeEach(() => {
 	h = createTestDb({ tables: ['accounts', 'categories', 'transactions', 'budgets'] });
 	const now = Date.now();
 	h.sqlite
-		.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)')
+		.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
 		.run('acc1', h.userId, 'Cash', 'cash', 'IDR', 0, now, now);
 	h.sqlite
 		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
@@ -54,7 +54,7 @@ describe('computeBudgetSpent', () => {
 	it('cross-user expenses do not count', async () => {
 		const otherNow = Date.now();
 		h.sqlite
-			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)')
+			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
 			.run('acc-other', h.otherUserId, 'Other', 'cash', 'IDR', 0, otherNow, otherNow);
 		h.sqlite
 			.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
@@ -72,7 +72,7 @@ describe('computeBudgetSpent', () => {
 		// add a second account so transfer is valid
 		const now = Date.now();
 		h.sqlite
-			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)')
+			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
 			.run('acc-bank', h.userId, 'Bank', 'bank', 'IDR', 0, now, now);
 
 		insertTx('t-tx', null, 'transfer', 99999, apr2026Mid, { transferTo: 'acc-bank' });

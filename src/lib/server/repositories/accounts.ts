@@ -35,7 +35,9 @@ export async function createAccount(db: Db, userId: string, input: AccountCreate
 			name: input.name,
 			type: input.type,
 			currency: input.currency,
-			initialBalanceCents: input.initialBalanceCents
+			initialBalanceCents: input.initialBalanceCents,
+			color: input.color ?? null,
+			icon: input.icon ?? null
 		})
 		.returning();
 	return row;
@@ -49,6 +51,8 @@ export async function updateAccount(db: Db, userId: string, input: AccountUpdate
 			type: input.type,
 			currency: input.currency,
 			initialBalanceCents: input.initialBalanceCents,
+			color: input.color ?? null,
+			icon: input.icon ?? null,
 			updatedAt: Date.now()
 		})
 		.where(and(eq(accounts.userId, userId), eq(accounts.id, input.id)))

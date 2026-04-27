@@ -21,6 +21,8 @@ export const accounts = sqliteTable(
 		type: text('type', { enum: ['cash', 'bank', 'credit', 'wallet', 'other'] }).notNull(),
 		currency: text('currency').notNull().default('IDR'),
 		initialBalanceCents: integer('initial_balance_cents', { mode: 'number' }).notNull().default(0),
+		color: text('color'),
+		icon: text('icon'),
 		archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
 		createdAt: epochMsNow('created_at'),
 		updatedAt: epochMsNow('updated_at')
