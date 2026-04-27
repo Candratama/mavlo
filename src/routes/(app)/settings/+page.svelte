@@ -13,6 +13,8 @@
 	import { notify } from '$lib/utils/toast.js';
 	import SegmentedControl, { type SegmentedOption } from '$lib/components/ui/segmented-control.svelte';
 	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
+	import { Smartphone, Download, Share, Check } from 'lucide-svelte';
+	import { getPwaInstallState, triggerInstall, isIOS, isStandalone } from '$lib/stores/pwa-install.svelte.js';
 
 	let { data, form } = $props();
 	const prefs = $derived(data.preferences);
@@ -121,6 +123,24 @@
 		const t = selectedTheme;
 		untrack(() => setMode(t as Theme));
 	});
+
+	const pwa = getPwaInstallState();
+	let iosDevice = $state(false);
+	let alreadyInstalled = $state(false);
+
+	$effect(() => {
+		iosDevice = isIOS();
+		alreadyInstalled = isStandalone();
+	});
+
+	async function onInstall() {
+		const result = await triggerInstall();
+		if (result === 'accepted') {
+			notify.success('App installed');
+		} else if (result === 'dismissed') {
+			notify.info('Install dismissed');
+		}
+	}
 </script>
 
 <svelte:head><title>Settings — Mavlo</title></svelte:head>
@@ -196,6 +216,35 @@
 
 			<SubmitButton {pending}>Save</SubmitButton>
 		</form>
+	</Card.Content>
+</Card.Root>
+
+<Card.Root class="max-w-2xl mt-6">
+	<Card.Header>
+		<Card.Title>Install app</Card.Title>
+		<Card.Description>Add Mavlo to your home screen for an app-like experience.</Card.Description>
+	</Card.Header>
+	<Card.Content>
+		{#if alreadyInstalled}
+			<div class="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+				<Check class="size-4" /> Already installed
+			</div>
+		{:else if pwa.canInstall}
+			<Button onclick={onInstall}>
+				<Download class="size-4 mr-1.5" /> Install Mavlo
+			</Button>
+			<p class="mt-2 text-xs text-muted-foreground">Adds Mavlo to your home screen / app drawer.</p>
+		{:else if iosDevice}
+			<div class="space-y-2 text-sm">
+				<p class="flex items-center gap-2 text-muted-foreground">
+					<Smartphone class="size-4" /> On iOS Safari, tap <Share class="size-4" /> Share, then <strong class="text-foreground">Add to Home Screen</strong>.
+				</p>
+			</div>
+		{:else}
+			<p class="text-sm text-muted-foreground">
+				Open Mavlo in Chrome / Edge / Safari. Browser will offer the install option when ready.
+			</p>
+		{/if}
 	</Card.Content>
 </Card.Root>
 

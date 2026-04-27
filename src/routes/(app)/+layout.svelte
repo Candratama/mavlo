@@ -10,6 +10,7 @@
 		getAddTransactionState,
 		closeAddTransaction
 	} from '$lib/stores/add-transaction.svelte.js';
+	import { setupPwaCapture } from '$lib/stores/pwa-install.svelte.js';
 	import { getLastUsed } from '$lib/utils/last-used.js';
 	import { invalidateAll } from '$app/navigation';
 	import {
@@ -30,6 +31,8 @@
 			if (t === 'light' || t === 'dark' || t === 'system') setMode(t);
 		});
 	});
+
+	$effect(() => setupPwaCapture());
 
 	const txState = getAddTransactionState();
 	const defaultAccountId = $derived.by(() => {
