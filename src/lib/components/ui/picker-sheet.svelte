@@ -94,7 +94,7 @@
 	{#if searchable}
 		<div class="px-2 pt-2 pb-2 relative">
 			<Search class="absolute left-5 top-1/2 -translate-y-1/2 size-4 opacity-50 pointer-events-none" />
-			<Input type="search" placeholder="Search…" bind:value={query} class="pl-9" autofocus />
+			<Input type="search" placeholder="Search…" bind:value={query} class="pl-9" />
 		</div>
 	{/if}
 	{#if groups}
