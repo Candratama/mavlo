@@ -30,15 +30,32 @@
 
 	const cents = $derived(parseRupiahToCents(display));
 
-	function reformat() {
-		if (cents === null) return;
-		display = formatCentsToRupiah(cents);
+	function formatDigits(digits: string): string {
+		if (!digits) return '';
+		return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 	}
 
 	function onInput(e: Event) {
-		const raw = (e.currentTarget as HTMLInputElement).value;
-		const cleaned = raw.replace(/[^\d.]/g, '');
-		display = cleaned;
+		const input = e.currentTarget as HTMLInputElement;
+		const raw = input.value;
+		const oldCursor = input.selectionStart ?? raw.length;
+		const digitsBeforeCursor = raw.slice(0, oldCursor).replace(/\D/g, '').length;
+		const digits = raw.replace(/\D/g, '');
+		const formatted = formatDigits(digits);
+		display = formatted;
+		queueMicrotask(() => {
+			let target = 0;
+			let count = 0;
+			while (target < formatted.length && count < digitsBeforeCursor) {
+				if (/\d/.test(formatted[target])) count++;
+				target++;
+			}
+			try {
+				input.setSelectionRange(target, target);
+			} catch {
+				// non-text inputs don't support selection
+			}
+		});
 	}
 </script>
 
