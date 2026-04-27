@@ -76,14 +76,9 @@
 			{data.includeArchived ? 'Showing archived categories.' : 'Active categories.'}
 		</p>
 	</div>
-	<div class="flex items-center gap-2">
-		<Button variant="outline" href={data.includeArchived ? '/categories' : '/categories?archived=1'}>
-			{data.includeArchived ? 'Hide archived' : 'Show archived'}
-		</Button>
-		<Button onclick={() => (createOpen = true)}>
-			<Plus class="size-4 mr-1" /> New category
-		</Button>
-	</div>
+	<Button onclick={() => (createOpen = true)}>
+		<Plus class="size-4 mr-1" /> New category
+	</Button>
 </div>
 
 {#if form?.message}
@@ -216,6 +211,12 @@
 		</li>
 	{/each}
 </ul>
+
+<div class="mt-6 flex justify-center">
+	<Button variant="ghost" size="sm" href={data.includeArchived ? '/categories' : '/categories?archived=1'}>
+		{data.includeArchived ? 'Hide archived' : 'Show archived'}
+	</Button>
+</div>
 
 {#snippet createForm()}
 	<form
