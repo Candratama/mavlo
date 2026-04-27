@@ -5,10 +5,10 @@ import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
-const src = join(root, 'static/brand/logo.svg');
+const src = join(root, 'static/brand/logo.png');
 const out = join(root, 'static');
 
-const svg = readFileSync(src);
+const sourceBuffer = readFileSync(src);
 
 const targets = [
 	{ name: 'icon-192.png', size: 192 },
@@ -19,7 +19,7 @@ const targets = [
 ];
 
 for (const { name, size } of targets) {
-	await sharp(svg, { density: Math.max(72, size * 4) })
+	await sharp(sourceBuffer)
 		.resize(size, size, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
 		.png()
 		.toFile(join(out, name));
@@ -29,7 +29,7 @@ for (const { name, size } of targets) {
 const maskableSize = 512;
 const innerSize = Math.round(maskableSize * 0.8);
 const padding = (maskableSize - innerSize) / 2;
-const innerPng = await sharp(svg, { density: 2048 })
+const innerPng = await sharp(sourceBuffer)
 	.resize(innerSize, innerSize, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
 	.png()
 	.toBuffer();
