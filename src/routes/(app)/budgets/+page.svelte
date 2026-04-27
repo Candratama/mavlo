@@ -272,7 +272,7 @@
 	</Dialog.Root>
 {:else}
 	<Sheet.Root bind:open={createOpen}>
-		<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
+		<Sheet.Content side="bottom" class="max-h-[calc(90dvh-var(--keyboard-h,0px))] flex flex-col p-0">
 			<Sheet.Header class="text-left p-4 pb-2"><Sheet.Title>New budget</Sheet.Title></Sheet.Header>
 			<div class="flex-1 overflow-y-auto">{@render createForm()}</div>
 		</Sheet.Content>
@@ -338,7 +338,7 @@
 	</Dialog.Root>
 {:else}
 	<Sheet.Root bind:open={editOpen}>
-		<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
+		<Sheet.Content side="bottom" class="max-h-[calc(90dvh-var(--keyboard-h,0px))] flex flex-col p-0">
 			<Sheet.Header class="text-left p-4 pb-2"><Sheet.Title>Edit budget</Sheet.Title></Sheet.Header>
 			<div class="flex-1 overflow-y-auto">{@render editForm()}</div>
 		</Sheet.Content>

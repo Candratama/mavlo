@@ -100,7 +100,7 @@
 			</button>
 		{/snippet}
 	</Sheet.Trigger>
-	<Sheet.Content side="bottom" class="max-h-[80dvh] flex flex-col p-0">
+	<Sheet.Content side="bottom" class="max-h-[calc(80dvh-var(--keyboard-h,0px))] flex flex-col p-0">
 		<Sheet.Header class="text-left p-4 pb-2">
 			<Sheet.Title>{title}</Sheet.Title>
 		</Sheet.Header>
