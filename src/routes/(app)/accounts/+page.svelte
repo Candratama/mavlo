@@ -53,9 +53,11 @@
 
 	$effect(() => {
 		if (editTarget) {
-			editType = editTarget.type;
-			editColor = editTarget.color ?? '';
-			editCustomColor = !!editColor && !PRESET_SWATCHES.includes(editColor);
+			const t = editTarget;
+			const c = t.color ?? '';
+			editType = t.type;
+			editColor = c;
+			editCustomColor = !!c && !PRESET_SWATCHES.includes(c);
 		}
 	});
 
