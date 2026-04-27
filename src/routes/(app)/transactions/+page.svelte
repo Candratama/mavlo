@@ -202,7 +202,7 @@
 
 <!-- Mobile filter sheet -->
 <Sheet.Root bind:open={filterOpen}>
-	<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
+	<Sheet.Content side="bottom" class="max-h-[calc(90dvh-var(--keyboard-h,0px))] flex flex-col p-0">
 		<Sheet.Header class="text-left p-4 pb-2">
 			<Sheet.Title>Filter transactions</Sheet.Title>
 		</Sheet.Header>
