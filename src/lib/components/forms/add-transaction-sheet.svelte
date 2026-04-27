@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -137,13 +138,13 @@
 		action={actionUrl}
 		use:enhance={() => {
 			pending = true;
-			return async ({ update, result }) => {
-				await update();
+			return async ({ result }) => {
 				pending = false;
 				if (result.type === 'success') {
 					setLastUsed({ accountId, kind });
+					await invalidateAll();
+					await onSuccess?.();
 					notify.success(mode === 'create' ? 'Transaction added' : 'Transaction updated');
-					onSuccess?.();
 					onClosed();
 				} else if (result.type === 'failure') {
 					const message = (result.data as { message?: string } | undefined)?.message;
