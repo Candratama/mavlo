@@ -11,14 +11,27 @@
 	import SubmitButton from './submit-button.svelte';
 	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
 	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
-	import { CalendarDays, StickyNote, Trash2 } from 'lucide-svelte';
+	import { CalendarDays, StickyNote, Trash2, Coins, Landmark, CreditCard, Wallet, CircleEllipsis, Tag } from 'lucide-svelte';
+	import type { Component } from 'svelte';
 	import { setLastUsed } from '$lib/utils/last-used.js';
 	import { notify } from '$lib/utils/toast.js';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
+	import { getIconByName } from '$lib/utils/category-icons.js';
 	import { MediaQuery } from 'svelte/reactivity';
 
-	type Account = { id: string; name: string; currency: string; balanceCents?: number };
-	type Category = { id: string; name: string; kind: 'income' | 'expense' };
+	type Account = {
+		id: string;
+		name: string;
+		currency: string;
+		balanceCents?: number;
+		type?: string;
+	};
+	type Category = {
+		id: string;
+		name: string;
+		kind: 'income' | 'expense';
+		icon?: string | null;
+	};
 	type EditTarget = {
 		id: string;
 		kind: 'income' | 'expense' | 'transfer';
@@ -107,6 +120,14 @@
 		{ value: 'transfer', label: 'Transfer' }
 	];
 
+	const accountTypeIcon: Record<string, Component> = {
+		cash: Coins as unknown as Component,
+		bank: Landmark as unknown as Component,
+		credit: CreditCard as unknown as Component,
+		wallet: Wallet as unknown as Component,
+		other: CircleEllipsis as unknown as Component
+	};
+
 	const accountItems = $derived<PickerItem[]>(
 		accounts.map((a) => ({
 			value: a.id,
@@ -114,15 +135,20 @@
 			description:
 				a.balanceCents !== undefined
 					? `${a.currency} · ${formatCentsAsCurrency(a.balanceCents, a.currency)}`
-					: a.currency
+					: a.currency,
+			icon: a.type ? accountTypeIcon[a.type] ?? Wallet : Wallet
 		}))
 	);
 
 	const categoryItems = $derived<PickerItem[]>([
-		{ value: '', label: 'None' },
+		{ value: '', label: 'None', icon: Tag as unknown as Component },
 		...categories
 			.filter((c) => c.kind === (kind === 'income' ? 'income' : 'expense'))
-			.map((c) => ({ value: c.id, label: c.name }))
+			.map((c) => ({
+				value: c.id,
+				label: c.name,
+				icon: getIconByName(c.icon) ?? (Tag as unknown as Component)
+			}))
 	]);
 
 	$effect(() => {
