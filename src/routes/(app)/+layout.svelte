@@ -51,6 +51,21 @@
 		};
 	});
 
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		const onFocusIn = (e: FocusEvent) => {
+			const target = e.target;
+			if (!(target instanceof HTMLElement)) return;
+			const tag = target.tagName;
+			if (tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') return;
+			setTimeout(() => {
+				target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+			}, 300);
+		};
+		document.addEventListener('focusin', onFocusIn);
+		return () => document.removeEventListener('focusin', onFocusIn);
+	});
+
 	const txState = getAddTransactionState();
 	const defaultAccountId = $derived.by(() => {
 		if (typeof window === 'undefined') return data.accounts?.[0]?.id;
