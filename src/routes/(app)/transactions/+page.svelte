@@ -7,7 +7,8 @@
 	import * as Sheet from '$lib/components/ui/sheet';
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Plus, MoreHorizontal, Pencil, Trash2, ArrowLeftRight, Filter, X } from 'lucide-svelte';
+	import { Plus, MoreHorizontal, Pencil, Trash2, ArrowLeftRight, Filter, X, Tag } from 'lucide-svelte';
+	import { getIconByName } from '$lib/utils/category-icons.js';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
@@ -111,8 +112,7 @@
 
 <div class="flex items-center justify-between mb-6">
 	<div>
-		<h1 class="text-2xl font-semibold">Transactions</h1>
-		<p class="text-sm text-muted-foreground mt-1">Track inflows and outflows.</p>
+		<h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Transactions</h1>
 	</div>
 	<Button class="hidden md:inline-flex" onclick={() => openAddTransaction('expense')}>
 		<Plus class="size-4 mr-1" /> New transaction
@@ -360,26 +360,28 @@
 		{@const acc = accountById.get(tx.accountId)}
 		{@const destAcc = tx.transferToAccountId ? accountById.get(tx.transferToAccountId) : null}
 		{@const cat = tx.categoryId ? categoryById.get(tx.categoryId) : null}
-		<li class="rounded-lg border bg-card p-3 flex items-start gap-3">
+		{@const IconComp = tx.kind === 'transfer' ? ArrowLeftRight : (getIconByName(cat?.icon) ?? Tag)}
+		{@const tint = cat?.color ?? (tx.kind === 'income' ? '#10b981' : tx.kind === 'transfer' ? '#3b82f6' : '#94a3b8')}
+		<li class="rounded-lg border bg-card p-3 flex items-center gap-3">
+			<div class="size-10 shrink-0 rounded-lg flex items-center justify-center" style="background-color: {tint}20; color: {tint}">
+				<IconComp class="size-5" />
+			</div>
 			<div class="flex-1 min-w-0">
-				<div class="flex items-baseline justify-between gap-2 mb-0.5">
-					<span class="text-xs text-muted-foreground tabular-nums">{formatDate(tx.occurredAt)}</span>
-					<span class="text-sm font-medium tabular-nums whitespace-nowrap {tx.kind === 'expense' ? 'text-rose-600 dark:text-rose-400' : tx.kind === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-blue-600 dark:text-blue-400'}">
-						{tx.kind === 'expense' ? '−' : tx.kind === 'income' ? '+' : ''}{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}
-					</span>
+				<div class="text-sm font-medium truncate">
+					{tx.note || cat?.name || acc?.name || 'Transaction'}
 				</div>
 				<div class="text-xs text-muted-foreground truncate">
-					{#if tx.kind === 'transfer' && destAcc}
-						{acc?.name ?? '—'} → {destAcc.name}
-					{:else}
-						{acc?.name ?? '—'}{cat ? ` · ${cat.name}` : ''}
-					{/if}
+					<span class="tabular-nums">{formatDate(tx.occurredAt)}</span>
+					· {acc?.name ?? '—'}
+					{#if tx.kind === 'transfer' && destAcc} → {destAcc.name}{/if}
 				</div>
-				{#if tx.note}
-					<div class="text-xs mt-0.5 truncate">{tx.note}</div>
-				{/if}
 			</div>
-			{@render rowMenu(tx)}
+			<div class="flex items-center gap-1 shrink-0">
+				<span class="text-sm font-semibold tabular-nums whitespace-nowrap {tx.kind === 'expense' ? 'text-rose-600 dark:text-rose-400' : tx.kind === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-blue-600 dark:text-blue-400'}">
+					{tx.kind === 'expense' ? '−' : tx.kind === 'income' ? '+' : ''}{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}
+				</span>
+				{@render rowMenu(tx)}
+			</div>
 		</li>
 	{:else}
 		<li>

@@ -12,7 +12,8 @@
 	import * as Sheet from '$lib/components/ui/sheet';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
-	import { Plus, MoreHorizontal, Pencil, Trash2, PiggyBank } from 'lucide-svelte';
+	import { Plus, MoreHorizontal, Pencil, Trash2, PiggyBank, Tag } from 'lucide-svelte';
+	import { getIconByName } from '$lib/utils/category-icons.js';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
@@ -67,8 +68,7 @@
 
 <div class="flex items-center justify-between mb-6">
 	<div>
-		<h1 class="text-2xl font-semibold">Budgets</h1>
-		<p class="text-sm text-muted-foreground mt-1">Monthly category spending limits.</p>
+		<h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Budgets</h1>
 	</div>
 	<Button onclick={() => (createOpen = true)}>
 		<Plus class="size-4 mr-1" /> New budget
@@ -134,11 +134,18 @@
 		{@const spent = data.spentByCategory[budget.categoryId] ?? 0}
 		{@const percentage = pct(spent, budget.limitCents)}
 		{@const over = spent > budget.limitCents}
+		{@const IconComp = getIconByName(cat?.icon) ?? Tag}
+		{@const tint = cat?.color ?? '#8b5cf6'}
 		<Card.Root>
-			<Card.Header class="flex flex-row items-start justify-between">
-				<div>
-					<Card.Title>{cat?.name ?? 'Unknown'}</Card.Title>
-					<Card.Description>{budget.periodMonth}</Card.Description>
+			<Card.Header class="flex flex-row items-start justify-between gap-3">
+				<div class="flex items-center gap-3 min-w-0 flex-1">
+					<div class="size-10 shrink-0 rounded-lg flex items-center justify-center" style="background-color: {tint}20; color: {tint}">
+						<IconComp class="size-5" />
+					</div>
+					<div class="min-w-0">
+						<Card.Title class="truncate">{cat?.name ?? 'Unknown'}</Card.Title>
+						<Card.Description>{budget.periodMonth}</Card.Description>
+					</div>
 				</div>
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger>
