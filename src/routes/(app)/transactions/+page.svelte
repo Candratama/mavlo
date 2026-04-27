@@ -101,6 +101,10 @@
 		{ value: 'expense', label: 'Expense' },
 		{ value: 'transfer', label: 'Transfer' }
 	];
+
+	const totalIncome = $derived(data.transactions.filter((t) => t.kind === 'income').reduce((s, t) => s + t.amountCents, 0));
+	const totalExpense = $derived(data.transactions.filter((t) => t.kind === 'expense').reduce((s, t) => s + t.amountCents, 0));
+	const txCurrency = $derived(data.accounts[0]?.currency ?? 'IDR');
 </script>
 
 <svelte:head><title>Transactions — Mavlo</title></svelte:head>
@@ -114,6 +118,23 @@
 		<Plus class="size-4 mr-1" /> New transaction
 	</Button>
 </div>
+
+<Card.Root class="mb-6">
+	<Card.Content class="grid grid-cols-2 gap-4 p-4">
+		<div>
+			<p class="text-xs text-muted-foreground">Income</p>
+			<p class="text-lg sm:text-xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+				{formatCentsAsCurrency(totalIncome, txCurrency)}
+			</p>
+		</div>
+		<div>
+			<p class="text-xs text-muted-foreground">Expense</p>
+			<p class="text-lg sm:text-xl font-semibold tabular-nums text-rose-600 dark:text-rose-400">
+				{formatCentsAsCurrency(totalExpense, txCurrency)}
+			</p>
+		</div>
+	</Card.Content>
+</Card.Root>
 
 {#if form?.message}
 	<p class="mb-4 text-sm text-destructive">{form.message}</p>
