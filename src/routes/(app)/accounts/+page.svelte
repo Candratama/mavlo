@@ -66,6 +66,9 @@
 
 	const formatBalance = (cents: number, currency: string) => formatCentsAsCurrency(cents, currency);
 
+	const totalBalance = $derived(data.accounts.reduce((sum, a) => sum + a.balanceCents, 0));
+	const defaultCurrency = $derived(data.accounts[0]?.currency ?? 'IDR');
+
 	const openEdit = (a: AccountRow) => {
 		editTarget = a;
 		editOpen = true;
@@ -85,6 +88,16 @@
 		<Plus class="size-4 mr-1" /> New account
 	</Button>
 </div>
+
+<Card.Root class="mb-6">
+	<Card.Header>
+		<Card.Description>Total balance</Card.Description>
+		<Card.Title class="text-2xl tabular-nums">{formatBalance(totalBalance, defaultCurrency)}</Card.Title>
+	</Card.Header>
+	<Card.Content class="text-xs text-muted-foreground -mt-2">
+		Across {data.accounts.length} {data.accounts.length === 1 ? 'account' : 'accounts'}
+	</Card.Content>
+</Card.Root>
 
 {#if form?.message}
 	<p class="mb-4 text-sm text-destructive">{form.message}</p>

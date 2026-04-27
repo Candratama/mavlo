@@ -39,6 +39,9 @@
 		editOpen = true;
 	};
 
+	const totalAllocated = $derived(data.budgets.reduce((s, b) => s + b.limitCents, 0));
+	const totalSpent = $derived(data.budgets.reduce((s, b) => s + (data.spentByCategory[b.categoryId] ?? 0), 0));
+
 	const pct = (spent: number, limit: number) =>
 		limit === 0 ? 0 : Math.min(100, Math.round((spent / limit) * 100));
 
@@ -71,6 +74,23 @@
 		<Plus class="size-4 mr-1" /> New budget
 	</Button>
 </div>
+
+<Card.Root class="mb-6">
+	<Card.Content class="grid grid-cols-2 gap-4 p-4">
+		<div>
+			<p class="text-xs text-muted-foreground">Allocated</p>
+			<p class="text-lg sm:text-xl font-semibold tabular-nums">
+				{formatCents(totalAllocated)}
+			</p>
+		</div>
+		<div>
+			<p class="text-xs text-muted-foreground">Spent</p>
+			<p class="text-lg sm:text-xl font-semibold tabular-nums {totalSpent > totalAllocated ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">
+				{formatCents(totalSpent)}
+			</p>
+		</div>
+	</Card.Content>
+</Card.Root>
 
 <!-- Mobile: period chip -->
 <form method="GET" class="md:hidden mb-4 flex items-center gap-2">
