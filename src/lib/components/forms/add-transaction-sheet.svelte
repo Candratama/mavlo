@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
+	import { invalidateAll, goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -142,7 +143,12 @@
 				pending = false;
 				if (result.type === 'success') {
 					setLastUsed({ accountId, kind });
-					await invalidateAll();
+					await goto(page.url.pathname + page.url.search, {
+						invalidateAll: true,
+						replaceState: true,
+						keepFocus: true,
+						noScroll: true
+					});
 					await onSuccess?.();
 					notify.success(mode === 'create' ? 'Transaction added' : 'Transaction updated');
 					onClosed();

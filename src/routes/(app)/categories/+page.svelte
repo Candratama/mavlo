@@ -123,11 +123,11 @@
 				<input type="hidden" name="id" value={category.id} />
 				<DropdownMenu.Item>
 					{#snippet child({ props })}
-						<button {...props} type="submit" class="w-full text-left">
+						<button {...props} type="submit" class="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-left rounded-sm hover:bg-accent/50">
 							{#if category.archived}
-								<ArchiveRestore class="size-4 mr-2" /> Unarchive
+								<ArchiveRestore class="size-4" /> Unarchive
 							{:else}
-								<Archive class="size-4 mr-2" /> Archive
+								<Archive class="size-4" /> Archive
 							{/if}
 						</button>
 					{/snippet}
