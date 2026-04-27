@@ -226,7 +226,7 @@
 	</Card.Header>
 	<Card.Content>
 		{#if alreadyInstalled}
-			<div class="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+			<div class="flex items-center gap-2 text-sm text-income">
 				<Check class="size-4" /> Already installed
 			</div>
 		{:else if pwa.canInstall}

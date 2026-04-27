@@ -64,7 +64,7 @@
 <div class="relative overflow-hidden rounded-2xl border bg-gradient-to-br {trendingUp ? 'from-emerald-500/10' : 'from-rose-500/10'} via-background to-background p-5 sm:p-6">
 	<div class="flex items-baseline justify-between">
 		<span class="text-xs uppercase tracking-wider text-muted-foreground">Net worth</span>
-		<span class="inline-flex items-center gap-1 text-xs {trendingUp ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
+		<span class="inline-flex items-center gap-1 text-xs {trendingUp ? 'text-income' : 'text-expense'}">
 			{#if trendingUp}<TrendingUp class="size-3" />{:else}<TrendingDown class="size-3" />{/if}
 			{trendingUp ? '+' : ''}{formatCentsAsCurrency(cycleNetCents, data.displayCurrency)}
 		</span>
@@ -86,13 +86,13 @@
 <div class="mt-4 grid grid-cols-2 gap-3">
 	<div class="rounded-xl border bg-card p-4">
 		<p class="text-xs uppercase tracking-wider text-muted-foreground">Income</p>
-		<p class="mt-1 text-lg sm:text-xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+		<p class="mt-1 text-lg sm:text-xl font-semibold tabular-nums text-income">
 			+{formatCentsAsCurrency(data.monthIncomeCents, data.displayCurrency)}
 		</p>
 	</div>
 	<div class="rounded-xl border bg-card p-4">
 		<p class="text-xs uppercase tracking-wider text-muted-foreground">Expense</p>
-		<p class="mt-1 text-lg sm:text-xl font-semibold tabular-nums text-rose-600 dark:text-rose-400">
+		<p class="mt-1 text-lg sm:text-xl font-semibold tabular-nums text-expense">
 			−{formatCentsAsCurrency(data.monthExpenseCents, data.displayCurrency)}
 		</p>
 	</div>
@@ -101,7 +101,7 @@
 <!-- Top category callout -->
 {#if data.topCategory}
 	<div class="mt-4 flex items-center gap-3 rounded-xl border bg-card p-4">
-		<div class="size-10 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-600 dark:text-rose-400">
+		<div class="size-10 rounded-lg bg-rose-500/10 flex items-center justify-center text-expense">
 			<TrendingDown class="size-5" />
 		</div>
 		<div class="flex-1 min-w-0">
@@ -205,10 +205,10 @@
 						</div>
 						<span
 							class="text-sm font-semibold tabular-nums whitespace-nowrap {r.kind === 'income'
-								? 'text-emerald-600 dark:text-emerald-400'
+								? 'text-income'
 								: r.kind === 'transfer'
-									? 'text-blue-600 dark:text-blue-400'
-									: 'text-rose-600 dark:text-rose-400'}"
+									? 'text-transfer'
+									: 'text-expense'}"
 						>
 							{r.kind === 'expense' ? '−' : r.kind === 'income' ? '+' : ''}{formatCentsAsCurrency(r.amountCents, r.accountCurrency)}
 						</span>

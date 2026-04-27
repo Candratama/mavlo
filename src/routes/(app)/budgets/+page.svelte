@@ -85,7 +85,7 @@
 		</div>
 		<div>
 			<p class="text-xs text-muted-foreground">Spent</p>
-			<p class="text-lg sm:text-xl font-semibold tabular-nums {totalSpent > totalAllocated ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">
+			<p class="text-lg sm:text-xl font-semibold tabular-nums {totalSpent > totalAllocated ? 'text-expense' : 'text-income'}">
 				{formatCents(totalSpent)}
 			</p>
 		</div>
@@ -187,7 +187,7 @@
 			</Card.Header>
 			<Card.Content>
 				<div class="flex items-baseline justify-between text-sm tabular-nums mb-2">
-					<span class={over ? 'text-rose-600 dark:text-rose-400 font-medium' : ''}>
+					<span class={over ? 'text-expense font-medium' : ''}>
 						{formatCents(spent)}
 					</span>
 					<span class="text-muted-foreground">of {formatCents(budget.limitCents)}</span>
