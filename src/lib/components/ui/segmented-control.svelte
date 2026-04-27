@@ -30,7 +30,7 @@
 		class: className = ''
 	}: Props = $props();
 
-	let buttonEls: HTMLButtonElement[] = [];
+	const buttonEls: HTMLButtonElement[] = $state([]);
 
 	function onKeydown(e: KeyboardEvent) {
 		const idx = options.findIndex((o) => o.value === value);
