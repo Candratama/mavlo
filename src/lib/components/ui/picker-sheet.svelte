@@ -18,7 +18,9 @@
 <script lang="ts">
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
-	import { ChevronRight, Check, Search } from 'lucide-svelte';
+	import { ChevronDown, Check, Search } from 'lucide-svelte';
+	import { Popover } from 'bits-ui';
+	import { MediaQuery } from 'svelte/reactivity';
 	import { cn } from '$lib/utils.js';
 
 	type Props = {
@@ -50,6 +52,8 @@
 	let open = $state(false);
 	let query = $state('');
 
+	const isDesktop = new MediaQuery('(min-width: 768px)');
+
 	const flat = $derived<PickerItem[]>(groups ? groups.flatMap((g) => g.items) : (items ?? []));
 	const selected = $derived(flat.find((i) => i.value === value));
 
@@ -61,7 +65,9 @@
 
 	const filteredGroups = $derived<PickerGroup[]>(
 		groups
-			? groups.map((g) => ({ label: g.label, items: g.items.filter((i) => matches(i, query)) })).filter((g) => g.items.length)
+			? groups
+					.map((g) => ({ label: g.label, items: g.items.filter((i) => matches(i, query)) }))
+					.filter((g) => g.items.length)
 			: []
 	);
 
@@ -74,118 +80,141 @@
 		open = false;
 		query = '';
 	}
+
+	const triggerClass = $derived(
+		cn(
+			'flex h-9 md:h-8 w-full items-center justify-between rounded-md border border-input bg-background px-3 text-sm transition-colors disabled:opacity-50 hover:bg-accent/30',
+			!selected && 'text-muted-foreground',
+			className
+		)
+	);
 </script>
 
-<Sheet.Root bind:open>
-	<Sheet.Trigger>
-		{#snippet child({ props })}
-			<button
-				{...props}
-				type="button"
-				{id}
-				{disabled}
-				class={cn(
-					'flex h-9 md:h-8 w-full items-center justify-between rounded-md border border-input bg-background px-3 text-sm transition-colors disabled:opacity-50 hover:bg-accent/30',
-					!selected && 'text-muted-foreground',
-					className
-				)}
-			>
-				<span class="flex items-center gap-2 min-w-0">
-					{#if selected?.icon}
-						<selected.icon class="size-4 shrink-0" />
-					{/if}
-					<span class="truncate">{selected?.label ?? placeholder}</span>
-				</span>
-				<ChevronRight class="size-4 shrink-0 opacity-60" />
-			</button>
-		{/snippet}
-	</Sheet.Trigger>
-	<Sheet.Content side="bottom" class="max-h-[calc(80dvh-var(--keyboard-h,0px))] flex flex-col p-0">
-		<Sheet.Header class="text-left p-4 pb-2">
-			<Sheet.Title>{title}</Sheet.Title>
-		</Sheet.Header>
-		{#if searchable}
-			<div class="px-4 pb-2 relative">
-				<Search class="absolute left-7 top-1/2 -translate-y-1/2 size-4 opacity-50 pointer-events-none" />
-				<Input
-					type="search"
-					placeholder="Search…"
-					bind:value={query}
-					class="pl-9"
-					autofocus
-				/>
-			</div>
-		{/if}
-		<div class="flex-1 overflow-y-auto pb-[max(1rem,env(safe-area-inset-bottom))]">
-			{#if groups}
-				{#each filteredGroups as g (g.label)}
-					<div class="px-4 pt-3 pb-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-						{g.label}
-					</div>
-					<ul>
-						{#each g.items as it (it.value)}
-							<li>
-								<button
-									type="button"
-									onclick={() => pick(it.value)}
-									class={cn(
-										'w-full flex items-center justify-between gap-2 px-4 py-3 text-left text-sm hover:bg-accent/50',
-										value === it.value && 'bg-accent/30'
-									)}
-								>
-									<span class="flex items-center gap-2 min-w-0">
-										{#if it.icon}
-											<it.icon class="size-4 shrink-0" />
-										{/if}
-										<span class="flex flex-col min-w-0">
-											<span class="truncate">{it.label}</span>
-											{#if it.description}
-												<span class="text-xs text-muted-foreground truncate">{it.description}</span>
-											{/if}
-										</span>
-									</span>
-									{#if value === it.value}
-										<Check class="size-4 text-primary" />
-									{/if}
-								</button>
-							</li>
-						{/each}
-					</ul>
-				{/each}
-			{:else}
-				<ul>
-					{#each filteredItems as it (it.value)}
-						<li>
-							<button
-								type="button"
-								onclick={() => pick(it.value)}
-								class={cn(
-									'w-full flex items-center justify-between gap-2 px-4 py-3 text-left text-sm hover:bg-accent/50',
-									value === it.value && 'bg-accent/30'
-								)}
-							>
-								<span class="flex items-center gap-2 min-w-0">
-									{#if it.icon}
-										<it.icon class="size-4 shrink-0" />
-									{/if}
-									<span class="flex flex-col min-w-0">
-										<span class="truncate">{it.label}</span>
-										{#if it.description}
-											<span class="text-xs text-muted-foreground truncate">{it.description}</span>
-										{/if}
-									</span>
-								</span>
-								{#if value === it.value}
-									<Check class="size-4 text-primary" />
-								{/if}
-							</button>
-						</li>
-					{/each}
-				</ul>
-			{/if}
+{#snippet listBody()}
+	{#if searchable}
+		<div class="px-2 pt-2 pb-2 relative">
+			<Search class="absolute left-5 top-1/2 -translate-y-1/2 size-4 opacity-50 pointer-events-none" />
+			<Input type="search" placeholder="Search…" bind:value={query} class="pl-9" autofocus />
 		</div>
-	</Sheet.Content>
-</Sheet.Root>
+	{/if}
+	{#if groups}
+		{#each filteredGroups as g (g.label)}
+			<div class="px-3 pt-3 pb-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+				{g.label}
+			</div>
+			<ul>
+				{#each g.items as it (it.value)}
+					<li>
+						<button
+							type="button"
+							onclick={() => pick(it.value)}
+							class={cn(
+								'w-full flex items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-accent/50',
+								value === it.value && 'bg-accent/30'
+							)}
+						>
+							<span class="flex items-center gap-2 min-w-0">
+								{#if it.icon}
+									<it.icon class="size-4 shrink-0" />
+								{/if}
+								<span class="flex flex-col min-w-0">
+									<span class="truncate">{it.label}</span>
+									{#if it.description}
+										<span class="text-xs text-muted-foreground truncate">{it.description}</span>
+									{/if}
+								</span>
+							</span>
+							{#if value === it.value}
+								<Check class="size-4 text-primary" />
+							{/if}
+						</button>
+					</li>
+				{/each}
+			</ul>
+		{/each}
+	{:else}
+		<ul>
+			{#each filteredItems as it (it.value)}
+				<li>
+					<button
+						type="button"
+						onclick={() => pick(it.value)}
+						class={cn(
+							'w-full flex items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-accent/50',
+							value === it.value && 'bg-accent/30'
+						)}
+					>
+						<span class="flex items-center gap-2 min-w-0">
+							{#if it.icon}
+								<it.icon class="size-4 shrink-0" />
+							{/if}
+							<span class="flex flex-col min-w-0">
+								<span class="truncate">{it.label}</span>
+								{#if it.description}
+									<span class="text-xs text-muted-foreground truncate">{it.description}</span>
+								{/if}
+							</span>
+						</span>
+						{#if value === it.value}
+							<Check class="size-4 text-primary" />
+						{/if}
+					</button>
+				</li>
+			{/each}
+		</ul>
+	{/if}
+{/snippet}
+
+{#if isDesktop.current}
+	<Popover.Root bind:open>
+		<Popover.Trigger>
+			{#snippet child({ props })}
+				<button {...props} type="button" {id} {disabled} class={triggerClass}>
+					<span class="flex items-center gap-2 min-w-0">
+						{#if selected?.icon}
+							<selected.icon class="size-4 shrink-0" />
+						{/if}
+						<span class="truncate">{selected?.label ?? placeholder}</span>
+					</span>
+					<ChevronDown class="size-4 shrink-0 opacity-60" />
+				</button>
+			{/snippet}
+		</Popover.Trigger>
+		<Popover.Content
+			side="bottom"
+			align="start"
+			sideOffset={4}
+			class="z-50 rounded-md border bg-popover text-popover-foreground shadow-md outline-none max-h-80 overflow-y-auto"
+			style="width: var(--bits-popover-anchor-width)"
+		>
+			{@render listBody()}
+		</Popover.Content>
+	</Popover.Root>
+{:else}
+	<Sheet.Root bind:open>
+		<Sheet.Trigger>
+			{#snippet child({ props })}
+				<button {...props} type="button" {id} {disabled} class={triggerClass}>
+					<span class="flex items-center gap-2 min-w-0">
+						{#if selected?.icon}
+							<selected.icon class="size-4 shrink-0" />
+						{/if}
+						<span class="truncate">{selected?.label ?? placeholder}</span>
+					</span>
+					<ChevronDown class="size-4 shrink-0 opacity-60" />
+				</button>
+			{/snippet}
+		</Sheet.Trigger>
+		<Sheet.Content side="bottom" class="max-h-[calc(80dvh-var(--keyboard-h,0px))] flex flex-col p-0">
+			<Sheet.Header class="text-left p-4 pb-2">
+				<Sheet.Title>{title}</Sheet.Title>
+			</Sheet.Header>
+			<div class="flex-1 overflow-y-auto pb-[max(1rem,env(safe-area-inset-bottom))]">
+				{@render listBody()}
+			</div>
+		</Sheet.Content>
+	</Sheet.Root>
+{/if}
 
 {#if name}
 	<input type="hidden" {name} {value} />
