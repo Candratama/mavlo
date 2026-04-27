@@ -58,10 +58,12 @@
 
 	$effect(() => {
 		if (editTarget) {
-			editKind = editTarget.kind;
-			editColor = editTarget.color ?? '';
-			editCustomColor = !!editColor && !PRESET_SWATCHES.includes(editColor);
-			editIcon = editTarget.icon ?? '';
+			const t = editTarget;
+			const c = t.color ?? '';
+			editKind = t.kind;
+			editColor = c;
+			editCustomColor = !!c && !PRESET_SWATCHES.includes(c);
+			editIcon = t.icon ?? '';
 		}
 	});
 
