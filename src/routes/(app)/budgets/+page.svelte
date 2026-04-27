@@ -7,7 +7,9 @@
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
+	import * as Sheet from '$lib/components/ui/sheet';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
 	import { Plus, MoreHorizontal, Pencil, Trash2, PiggyBank } from 'lucide-svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
@@ -34,6 +36,23 @@
 
 	const pct = (spent: number, limit: number) =>
 		limit === 0 ? 0 : Math.min(100, Math.round((spent / limit) * 100));
+
+	const expenseCategoryItems = $derived<PickerItem[]>(
+		data.expenseCategories.map((c) => ({ value: c.id, label: c.name }))
+	);
+
+	let createCategoryId = $state('');
+	let editCategoryId = $state('');
+
+	$effect(() => {
+		if (createOpen && !createCategoryId) {
+			createCategoryId = data.expenseCategories[0]?.id ?? '';
+		}
+	});
+
+	$effect(() => {
+		if (editTarget) editCategoryId = editTarget.categoryId;
+	});
 </script>
 
 <svelte:head><title>Budgets — Mavlo</title></svelte:head>
@@ -48,7 +67,27 @@
 	</Button>
 </div>
 
-<Card.Root class="mb-6">
+<!-- Mobile: period chip -->
+<form method="GET" class="md:hidden mb-4 flex items-center gap-2">
+	<label class="inline-flex items-center gap-1.5 px-3 h-9 rounded-full border border-input bg-background text-sm relative">
+		{data.periodMonth}
+		<input
+			type="month"
+			name="period"
+			value={data.periodMonth}
+			onchange={(e) => (e.currentTarget.form as HTMLFormElement).submit()}
+			class="absolute inset-0 opacity-0 cursor-pointer"
+		/>
+	</label>
+	{#if data.monthStartDay && data.monthStartDay !== 1}
+		<span class="text-xs text-muted-foreground truncate">
+			(cycle starts day {data.monthStartDay})
+		</span>
+	{/if}
+</form>
+
+<!-- Desktop: existing form with month input -->
+<Card.Root class="hidden md:block mb-6">
 	<Card.Content class="p-4">
 		<form method="GET" class="flex items-end gap-3">
 			<div class="space-y-1 flex-1 max-w-xs">
@@ -140,128 +179,123 @@
 	{/each}
 </div>
 
-<!-- Create dialog -->
-<Dialog.Root bind:open={createOpen}>
-	<Dialog.Content>
-		<Dialog.Header>
-			<Dialog.Title>New budget</Dialog.Title>
-		</Dialog.Header>
+<!-- Create dialog/sheet -->
+{#snippet createForm()}
+	<form
+		method="POST"
+		action="?/create"
+		use:enhance={() => {
+			createPending = true;
+			return async ({ update, result }) => {
+				await update();
+				createPending = false;
+				if (result.type === 'success') {
+					createOpen = false;
+					notify.success('Budget created');
+				} else if (result.type === 'failure') {
+					const message = (result.data as { message?: string } | undefined)?.message;
+					notify.error(message ?? 'Could not create budget');
+				}
+			};
+		}}
+		class="space-y-4 p-4"
+	>
+		<div class="space-y-1">
+			<Label>Category</Label>
+			<PickerSheet items={expenseCategoryItems} bind:value={createCategoryId} name="categoryId" placeholder="Select category" title="Category" searchable />
+		</div>
+		<div class="grid grid-cols-2 gap-3">
+			<div class="space-y-1">
+				<Label for="budget-c-period">Period</Label>
+				<Input id="budget-c-period" type="month" name="periodMonth" required value={data.periodMonth} />
+			</div>
+			<div class="space-y-1">
+				<Label for="budget-c-limit">Limit</Label>
+				<MoneyInput id="budget-c-limit" name="limitCents" min={1} required class="text-2xl h-12" />
+			</div>
+		</div>
+		<div class="flex justify-end gap-2">
+			<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
+			<SubmitButton pending={createPending}>Create</SubmitButton>
+		</div>
+	</form>
+{/snippet}
+
+<div class="md:hidden">
+	<Sheet.Root bind:open={createOpen}>
+		<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
+			<Sheet.Header class="text-left p-4 pb-2"><Sheet.Title>New budget</Sheet.Title></Sheet.Header>
+			<div class="flex-1 overflow-y-auto">{@render createForm()}</div>
+		</Sheet.Content>
+	</Sheet.Root>
+</div>
+<div class="hidden md:block">
+	<Dialog.Root bind:open={createOpen}>
+		<Dialog.Content>
+			<Dialog.Header><Dialog.Title>New budget</Dialog.Title></Dialog.Header>
+			{@render createForm()}
+		</Dialog.Content>
+	</Dialog.Root>
+</div>
+
+<!-- Edit dialog/sheet -->
+{#snippet editForm()}
+	{#if editTarget}
 		<form
 			method="POST"
-			action="?/create"
+			action="?/update"
 			use:enhance={() => {
-				createPending = true;
+				editPending = true;
 				return async ({ update, result }) => {
 					await update();
-					createPending = false;
+					editPending = false;
 					if (result.type === 'success') {
-						createOpen = false;
-						notify.success('Budget created');
+						editOpen = false;
+						notify.success('Budget updated');
 					} else if (result.type === 'failure') {
 						const message = (result.data as { message?: string } | undefined)?.message;
-						notify.error(message ?? 'Could not create budget');
+						notify.error(message ?? 'Could not update budget');
 					}
 				};
 			}}
-			class="space-y-4"
+			class="space-y-4 p-4"
 		>
+			<input type="hidden" name="id" value={editTarget.id} />
 			<div class="space-y-1">
-				<Label for="budget-c-category">Category</Label>
-				<select
-					id="budget-c-category"
-					name="categoryId"
-					required
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-				>
-					{#each data.expenseCategories as c}
-						<option value={c.id}>{c.name}</option>
-					{/each}
-				</select>
+				<Label>Category</Label>
+				<PickerSheet items={expenseCategoryItems} bind:value={editCategoryId} name="categoryId" placeholder="Select category" title="Category" searchable />
 			</div>
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-1">
-					<Label for="budget-c-period">Period (YYYY-MM)</Label>
-					<Input id="budget-c-period" name="periodMonth" required value={data.periodMonth} />
+					<Label for="budget-e-period">Period</Label>
+					<Input id="budget-e-period" type="month" name="periodMonth" required value={editTarget.periodMonth} />
 				</div>
 				<div class="space-y-1">
-					<Label for="budget-c-limit">Limit</Label>
-					<MoneyInput id="budget-c-limit" name="limitCents" min={1} required />
+					<Label for="budget-e-limit">Limit</Label>
+					<MoneyInput id="budget-e-limit" name="limitCents" min={1} required value={editTarget.limitCents} class="text-2xl h-12" />
 				</div>
 			</div>
-			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
-				<SubmitButton pending={createPending}>Create</SubmitButton>
-			</Dialog.Footer>
+			<div class="flex justify-end gap-2">
+				<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
+				<SubmitButton pending={editPending}>Save</SubmitButton>
+			</div>
 		</form>
-	</Dialog.Content>
-</Dialog.Root>
+	{/if}
+{/snippet}
 
-<!-- Edit dialog -->
-<Dialog.Root bind:open={editOpen}>
-	<Dialog.Content>
-		<Dialog.Header>
-			<Dialog.Title>Edit budget</Dialog.Title>
-		</Dialog.Header>
-		{#if editTarget}
-			<form
-				method="POST"
-				action="?/update"
-				use:enhance={() => {
-					editPending = true;
-					return async ({ update, result }) => {
-						await update();
-						editPending = false;
-						if (result.type === 'success') {
-							editOpen = false;
-							notify.success('Budget updated');
-						} else if (result.type === 'failure') {
-							const message = (result.data as { message?: string } | undefined)?.message;
-							notify.error(message ?? 'Could not update budget');
-						}
-					};
-				}}
-				class="space-y-4"
-			>
-				<input type="hidden" name="id" value={editTarget.id} />
-				<div class="space-y-1">
-					<Label for="budget-e-category">Category</Label>
-					<select
-						id="budget-e-category"
-						name="categoryId"
-						required
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-					>
-						{#each data.expenseCategories as c}
-							<option value={c.id} selected={c.id === editTarget.categoryId}>{c.name}</option>
-						{/each}
-					</select>
-				</div>
-				<div class="grid grid-cols-2 gap-3">
-					<div class="space-y-1">
-						<Label for="budget-e-period">Period (YYYY-MM)</Label>
-						<Input
-							id="budget-e-period"
-							name="periodMonth"
-							required
-							value={editTarget.periodMonth}
-						/>
-					</div>
-					<div class="space-y-1">
-						<Label for="budget-e-limit">Limit</Label>
-						<MoneyInput
-							id="budget-e-limit"
-							name="limitCents"
-							min={1}
-							required
-							value={editTarget.limitCents}
-						/>
-					</div>
-				</div>
-				<Dialog.Footer>
-					<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
-					<SubmitButton pending={editPending}>Save</SubmitButton>
-				</Dialog.Footer>
-			</form>
-		{/if}
-	</Dialog.Content>
-</Dialog.Root>
+<div class="md:hidden">
+	<Sheet.Root bind:open={editOpen}>
+		<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
+			<Sheet.Header class="text-left p-4 pb-2"><Sheet.Title>Edit budget</Sheet.Title></Sheet.Header>
+			<div class="flex-1 overflow-y-auto">{@render editForm()}</div>
+		</Sheet.Content>
+	</Sheet.Root>
+</div>
+<div class="hidden md:block">
+	<Dialog.Root bind:open={editOpen}>
+		<Dialog.Content>
+			<Dialog.Header><Dialog.Title>Edit budget</Dialog.Title></Dialog.Header>
+			{@render editForm()}
+		</Dialog.Content>
+	</Dialog.Root>
+</div>

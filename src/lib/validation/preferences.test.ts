@@ -7,7 +7,8 @@ describe('preferences validation', () => {
 		locale: 'id-ID',
 		timezone: 'Asia/Jakarta',
 		theme: 'light',
-		weekStartsOn: 1
+		weekStartsOn: 1,
+		monthStartDay: 1
 	};
 
 	it('accepts valid input', () => {

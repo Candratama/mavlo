@@ -9,12 +9,14 @@ import {
 } from '$lib/server/repositories/transactions';
 import { listAccounts } from '$lib/server/repositories/accounts';
 import { listCategories } from '$lib/server/repositories/categories';
+import { getPreferences } from '$lib/server/repositories/preferences';
 import {
 	transactionCreateSchema,
 	transactionUpdateSchema,
 	transactionIdSchema,
 	transactionListFilterSchema
 } from '$lib/validation/transaction';
+import { getCurrentCycle } from '$lib/utils/cycle.js';
 import type { Actions, PageServerLoad } from './$types';
 
 const dayMs = 24 * 60 * 60 * 1000;
@@ -25,29 +27,29 @@ const ymdToMs = (s: string | null): number | undefined => {
 	return Number.isNaN(t) ? undefined : t;
 };
 
-const startOfMonthUtc = () => {
-	const d = new Date();
-	return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
-};
-
-const endOfMonthUtc = () => {
-	const d = new Date();
-	return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1) - 1;
-};
-
 export const load: PageServerLoad = async (event) => {
 	const user = requireUser(event);
 	const db = getDb(event.platform!.env.DB);
 
+	const preferences = await getPreferences(db, user.id);
+	const monthStartDay = preferences?.monthStartDay ?? 1;
+	const timezone = preferences?.timezone ?? 'Asia/Jakarta';
+
+	const cycle = getCurrentCycle(new Date(), monthStartDay, timezone);
+
 	const url = event.url;
 	const fromParam = url.searchParams.get('from');
 	const toParam = url.searchParams.get('to');
-	const fromMs = ymdToMs(fromParam) ?? startOfMonthUtc();
-	const toMs = ymdToMs(toParam) ?? endOfMonthUtc();
+	let fromMs: number | undefined = ymdToMs(fromParam);
+	let toMs: number | undefined = ymdToMs(toParam);
+	if (fromMs === undefined && toMs === undefined) {
+		fromMs = cycle.start.getTime();
+		toMs = cycle.end.getTime();
+	}
 
 	const filter = transactionListFilterSchema.parse({
 		fromMs,
-		toMs: toMs + dayMs - 1, // include end-of-day for `to` if user supplied YYYY-MM-DD
+		toMs: (toMs ?? cycle.end.getTime()) + dayMs - 1, // include end-of-day for `to` if user supplied YYYY-MM-DD
 		accountId: url.searchParams.get('account') ?? undefined,
 		categoryId: url.searchParams.get('category') ?? undefined,
 		kind: url.searchParams.get('kind') ?? undefined
@@ -64,8 +66,8 @@ export const load: PageServerLoad = async (event) => {
 		accounts,
 		categories,
 		filter: {
-			from: fromParam ?? new Date(fromMs).toISOString().slice(0, 10),
-			to: toParam ?? new Date(toMs).toISOString().slice(0, 10),
+			from: fromParam ?? '',
+			to: toParam ?? '',
 			accountId: url.searchParams.get('account') ?? '',
 			categoryId: url.searchParams.get('category') ?? '',
 			kind: url.searchParams.get('kind') ?? ''

@@ -1,0 +1,299 @@
+<script lang="ts">
+	import { enhance } from '$app/forms';
+	import * as Sheet from '$lib/components/ui/sheet/index.js';
+	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import { Input } from '$lib/components/ui/input/index.js';
+	import { Label } from '$lib/components/ui/label/index.js';
+	import MoneyInput from './money-input.svelte';
+	import SubmitButton from './submit-button.svelte';
+	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
+	import PickerSheet, { type PickerItem, type PickerGroup } from '$lib/components/ui/picker-sheet.svelte';
+	import { CalendarDays, StickyNote, Trash2 } from 'lucide-svelte';
+	import { setLastUsed } from '$lib/utils/last-used.js';
+	import { notify } from '$lib/utils/toast.js';
+
+	type Account = { id: string; name: string; currency: string };
+	type Category = { id: string; name: string; kind: 'income' | 'expense' };
+	type EditTarget = {
+		id: string;
+		kind: 'income' | 'expense' | 'transfer';
+		amountCents: number;
+		accountId: string;
+		transferToAccountId: string | null;
+		categoryId: string | null;
+		occurredAt: number;
+		note: string | null;
+	};
+
+	type Props = {
+		open: boolean;
+		mode: 'create' | 'edit';
+		accounts: Account[];
+		categories: Category[];
+		defaultKind?: 'income' | 'expense' | 'transfer';
+		defaultAccountId?: string;
+		editTarget?: EditTarget | null;
+		actionUrl: string;
+		onClose: () => void;
+		onSuccess?: () => void;
+	};
+
+	let {
+		open = $bindable(),
+		mode,
+		accounts,
+		categories,
+		defaultKind = 'expense',
+		defaultAccountId,
+		editTarget = null,
+		actionUrl,
+		onClose,
+		onSuccess
+	}: Props = $props();
+
+	const todayYmd = new Date().toISOString().slice(0, 10);
+
+	function initialState() {
+		if (mode === 'edit' && editTarget) {
+			return {
+				kind: editTarget.kind,
+				accountId: editTarget.accountId,
+				transferToAccountId: editTarget.transferToAccountId ?? '',
+				categoryId: editTarget.categoryId ?? '',
+				occurredAt: new Date(editTarget.occurredAt).toISOString().slice(0, 10),
+				note: editTarget.note ?? ''
+			};
+		}
+		return {
+			kind: defaultKind,
+			accountId: defaultAccountId ?? accounts[0]?.id ?? '',
+			transferToAccountId: '',
+			categoryId: '',
+			occurredAt: todayYmd,
+			note: ''
+		};
+	}
+
+	let kind = $state<'income' | 'expense' | 'transfer'>(initialState().kind);
+	let accountId = $state(initialState().accountId);
+	let transferToAccountId = $state(initialState().transferToAccountId);
+	let categoryId = $state(initialState().categoryId);
+	let occurredAt = $state(initialState().occurredAt);
+	let note = $state(initialState().note);
+	let showNote = $state(initialState().note.length > 0);
+	let pending = $state(false);
+
+	$effect(() => {
+		if (!open) return;
+		const i = initialState();
+		kind = i.kind;
+		accountId = i.accountId;
+		transferToAccountId = i.transferToAccountId;
+		categoryId = i.categoryId;
+		occurredAt = i.occurredAt;
+		note = i.note;
+		showNote = i.note.length > 0;
+	});
+
+	const kindOptions = [
+		{ value: 'expense', label: 'Expense' },
+		{ value: 'income', label: 'Income' },
+		{ value: 'transfer', label: 'Transfer' }
+	];
+
+	const accountItems = $derived<PickerItem[]>(
+		accounts.map((a) => ({ value: a.id, label: a.name, description: a.currency }))
+	);
+
+	const categoryGroups = $derived<PickerGroup[]>([
+		{
+			label: 'Expense',
+			items: [
+				{ value: '', label: 'None' },
+				...categories.filter((c) => c.kind === 'expense').map((c) => ({ value: c.id, label: c.name }))
+			]
+		},
+		{
+			label: 'Income',
+			items: categories
+				.filter((c) => c.kind === 'income')
+				.map((c) => ({ value: c.id, label: c.name }))
+		}
+	]);
+
+	const isToday = $derived(occurredAt === todayYmd);
+	const dateLabel = $derived(
+		isToday
+			? 'Today'
+			: new Date(occurredAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+	);
+
+	function onClosed() {
+		open = false;
+		onClose();
+	}
+</script>
+
+{#snippet body()}
+	<form
+		method="POST"
+		action={actionUrl}
+		use:enhance={() => {
+			pending = true;
+			return async ({ update, result }) => {
+				await update();
+				pending = false;
+				if (result.type === 'success') {
+					setLastUsed({ accountId, kind });
+					notify.success(mode === 'create' ? 'Transaction added' : 'Transaction updated');
+					onSuccess?.();
+					onClosed();
+				} else if (result.type === 'failure') {
+					const message = (result.data as { message?: string } | undefined)?.message;
+					notify.error(message ?? 'Could not save transaction');
+				}
+			};
+		}}
+		class="space-y-4 px-4 pb-4"
+	>
+		{#if mode === 'edit' && editTarget}
+			<input type="hidden" name="id" value={editTarget.id} />
+		{/if}
+
+		<SegmentedControl
+			options={kindOptions}
+			bind:value={kind}
+			ariaLabel="Transaction kind"
+		/>
+		<input type="hidden" name="kind" value={kind} />
+
+		<div class="space-y-1">
+			<div class="text-xs text-muted-foreground">
+				{accounts.find((a) => a.id === accountId)?.currency ?? 'IDR'}
+			</div>
+			<MoneyInput
+				name="amountCents"
+				value={editTarget?.amountCents ?? null}
+				min={1}
+				required
+				placeholder="0"
+				class="text-3xl md:text-2xl h-14 md:h-12 font-semibold"
+			/>
+		</div>
+
+		<div class="space-y-2">
+			<Label>{kind === 'transfer' ? 'From account' : 'Account'}</Label>
+			<PickerSheet
+				items={accountItems}
+				bind:value={accountId}
+				name="accountId"
+				placeholder="Choose account"
+				title="Select account"
+			/>
+		</div>
+
+		{#if kind === 'transfer'}
+			<div class="space-y-2">
+				<Label>To account</Label>
+				<PickerSheet
+					items={accountItems.filter((i) => i.value !== accountId)}
+					bind:value={transferToAccountId}
+					name="transferToAccountId"
+					placeholder="Choose destination"
+					title="Select destination"
+				/>
+			</div>
+		{:else}
+			<div class="space-y-2">
+				<Label>Category</Label>
+				<PickerSheet
+					groups={categoryGroups}
+					bind:value={categoryId}
+					name="categoryId"
+					placeholder="None"
+					title="Select category"
+					searchable
+				/>
+			</div>
+		{/if}
+
+		<div class="flex items-center gap-2 flex-wrap">
+			<label class="inline-flex items-center gap-1.5 px-3 h-9 rounded-full border border-input bg-background text-sm cursor-pointer hover:bg-accent/30 relative">
+				<CalendarDays class="size-4" />
+				{dateLabel}
+				<input
+					type="date"
+					name="occurredAt"
+					bind:value={occurredAt}
+					class="absolute inset-0 opacity-0 cursor-pointer"
+				/>
+			</label>
+			{#if !showNote}
+				<button
+					type="button"
+					onclick={() => (showNote = true)}
+					class="inline-flex items-center gap-1.5 px-3 h-9 rounded-full border border-dashed border-input text-sm text-muted-foreground hover:bg-accent/30"
+				>
+					<StickyNote class="size-4" />
+					Add note
+				</button>
+			{/if}
+		</div>
+
+		{#if showNote}
+			<div class="space-y-1">
+				<Label for="tx-note">Note</Label>
+				<div class="flex items-center gap-2">
+					<Input id="tx-note" name="note" bind:value={note} maxlength={200} placeholder="Optional" />
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon"
+						onclick={() => {
+							note = '';
+							showNote = false;
+						}}
+						aria-label="Remove note"
+					>
+						<Trash2 class="size-4" />
+					</Button>
+				</div>
+			</div>
+		{/if}
+
+		<div class="md:hidden sticky bottom-0 -mx-4 px-4 py-3 bg-background border-t pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+			<SubmitButton {pending} class="w-full">
+				{mode === 'create' ? 'Save' : 'Update'}
+			</SubmitButton>
+		</div>
+		<div class="hidden md:flex justify-end gap-2 pt-2">
+			<Button type="button" variant="outline" onclick={onClosed}>Cancel</Button>
+			<SubmitButton {pending}>{mode === 'create' ? 'Save' : 'Update'}</SubmitButton>
+		</div>
+	</form>
+{/snippet}
+
+<div class="md:hidden">
+	<Sheet.Root bind:open>
+		<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
+			<Sheet.Header class="text-left p-4 pb-2">
+				<Sheet.Title>{mode === 'create' ? 'New transaction' : 'Edit transaction'}</Sheet.Title>
+			</Sheet.Header>
+			<div class="flex-1 overflow-y-auto">
+				{@render body()}
+			</div>
+		</Sheet.Content>
+	</Sheet.Root>
+</div>
+
+<div class="hidden md:block">
+	<Dialog.Root bind:open>
+		<Dialog.Content>
+			<Dialog.Header>
+				<Dialog.Title>{mode === 'create' ? 'New transaction' : 'Edit transaction'}</Dialog.Title>
+			</Dialog.Header>
+			{@render body()}
+		</Dialog.Content>
+	</Dialog.Root>
+</div>

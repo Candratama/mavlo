@@ -8,6 +8,7 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Sun, Moon, Monitor } from 'lucide-svelte';
 	import { notify } from '$lib/utils/toast.js';
+	import SegmentedControl, { type SegmentedOption } from '$lib/components/ui/segmented-control.svelte';
 
 	let { data, form } = $props();
 	const prefs = $derived(data.preferences);
@@ -16,16 +17,15 @@
 	type Theme = 'light' | 'dark' | 'system';
 	let selectedTheme = $state<Theme>(prefs.theme as Theme);
 
-	const themes = [
+	const themeOptions: SegmentedOption[] = [
 		{ value: 'light', label: 'Light', icon: Sun },
 		{ value: 'dark', label: 'Dark', icon: Moon },
 		{ value: 'system', label: 'System', icon: Monitor }
-	] as const;
+	];
 
-	function pickTheme(value: Theme) {
-		selectedTheme = value;
-		setMode(value);
-	}
+	$effect(() => {
+		setMode(selectedTheme as Theme);
+	});
 </script>
 
 <svelte:head><title>Settings — Mavlo</title></svelte:head>
@@ -68,21 +68,7 @@
 			</div>
 			<div class="space-y-1">
 				<Label>Theme</Label>
-				<div class="flex gap-2">
-					{#each themes as t}
-						<button
-							type="button"
-							onclick={() => pickTheme(t.value)}
-							class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border text-sm transition-colors {selectedTheme === t.value
-								? 'border-primary bg-primary/10 text-foreground'
-								: 'border-input bg-background text-muted-foreground hover:text-foreground'}"
-						>
-							<t.icon class="size-4" />
-							{t.label}
-						</button>
-					{/each}
-				</div>
-				<input type="hidden" name="theme" value={selectedTheme} />
+				<SegmentedControl options={themeOptions} bind:value={selectedTheme} name="theme" />
 			</div>
 			<div class="space-y-1">
 				<Label for="pref-week">Week starts on (0=Sun, 1=Mon, ..., 6=Sat)</Label>
@@ -95,6 +81,22 @@
 					required
 					value={prefs.weekStartsOn}
 				/>
+			</div>
+
+			<div class="space-y-1">
+				<Label for="pref-cycle-start">Cycle start (e.g. payday)</Label>
+				<Input
+					id="pref-cycle-start"
+					type="number"
+					name="monthStartDay"
+					min="1"
+					max="28"
+					required
+					value={prefs.monthStartDay}
+				/>
+				<p class="text-xs text-muted-foreground">
+					Day 1 = calendar month. Day 25 = your month runs 25th to 24th. Affects current and future periods.
+				</p>
 			</div>
 
 			<SubmitButton {pending}>Save</SubmitButton>

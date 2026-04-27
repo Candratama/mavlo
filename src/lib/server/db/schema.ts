@@ -96,6 +96,7 @@ export const userPreferences = sqliteTable('user_preferences', {
 	timezone: text('timezone').notNull().default('Asia/Jakarta'),
 	theme: text('theme', { enum: ['light', 'dark', 'system'] }).notNull().default('system'),
 	weekStartsOn: integer('week_starts_on', { mode: 'number' }).notNull().default(1),
+	monthStartDay: integer('month_start_day', { mode: 'number' }).notNull().default(1),
 	createdAt: epochMsNow('created_at'),
 	updatedAt: epochMsNow('updated_at')
 });

@@ -6,11 +6,13 @@
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
+	import * as Sheet from '$lib/components/ui/sheet';
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil, Tag } from 'lucide-svelte';
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
+	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
 
 	let { data, form } = $props();
 
@@ -22,10 +24,37 @@
 	let createPending = $state(false);
 	let editPending = $state(false);
 
-	const kindOptions = [
+	const kindSegmentOptions = [
 		{ value: 'income', label: 'Income' },
 		{ value: 'expense', label: 'Expense' }
-	] as const;
+	];
+
+	const PRESET_SWATCHES = [
+		'#10b981',
+		'#3b82f6',
+		'#f59e0b',
+		'#f43f5e',
+		'#8b5cf6',
+		'#ec4899',
+		'#14b8a6',
+		'#f97316'
+	];
+
+	let createKind = $state<'income' | 'expense'>('expense');
+	let createColor = $state('');
+	let createCustomColor = $state(false);
+
+	let editKind = $state<'income' | 'expense'>('expense');
+	let editColor = $state('');
+	let editCustomColor = $state(false);
+
+	$effect(() => {
+		if (editTarget) {
+			editKind = editTarget.kind;
+			editColor = editTarget.color ?? '';
+			editCustomColor = !!editColor && !PRESET_SWATCHES.includes(editColor);
+		}
+	});
 
 	const openEdit = (c: CategoryRow) => {
 		editTarget = c;
@@ -170,123 +199,173 @@
 	{/each}
 </ul>
 
-<Dialog.Root bind:open={createOpen}>
-	<Dialog.Content>
-		<Dialog.Header>
-			<Dialog.Title>New category</Dialog.Title>
-		</Dialog.Header>
-		<form
-			method="POST"
-			action="?/create"
-			use:enhance={() => {
-				createPending = true;
-				return async ({ update, result }) => {
-					await update();
-					createPending = false;
-					if (result.type === 'success') {
-						createOpen = false;
-						notify.success('Category created');
-					} else if (result.type === 'failure') {
-						const message = (result.data as { message?: string } | undefined)?.message;
-						notify.error(message ?? 'Could not create category');
-					}
-				};
-			}}
-			class="space-y-4"
-		>
-			<div class="space-y-1">
-				<Label for="cat-c-name">Name</Label>
-				<Input id="cat-c-name" name="name" required maxlength={60} />
+{#snippet createForm()}
+	<form
+		method="POST"
+		action="?/create"
+		use:enhance={() => {
+			createPending = true;
+			return async ({ update, result }) => {
+				await update();
+				createPending = false;
+				if (result.type === 'success') {
+					createOpen = false;
+					notify.success('Category created');
+				} else if (result.type === 'failure') {
+					const message = (result.data as { message?: string } | undefined)?.message;
+					notify.error(message ?? 'Could not create category');
+				}
+			};
+		}}
+		class="space-y-4 p-4"
+	>
+		<div class="space-y-1">
+			<Label for="cat-c-name">Name</Label>
+			<Input id="cat-c-name" name="name" required maxlength={60} />
+		</div>
+		<div class="space-y-1">
+			<Label>Kind</Label>
+			<SegmentedControl options={kindSegmentOptions} bind:value={createKind} name="kind" />
+		</div>
+		<div class="space-y-2">
+			<Label>Color</Label>
+			<div class="grid grid-cols-8 gap-2">
+				{#each PRESET_SWATCHES as swatch (swatch)}
+					<button
+						type="button"
+						onclick={() => { createColor = swatch; createCustomColor = false; }}
+						class="size-8 rounded-lg border transition-shadow {createColor === swatch ? 'ring-2 ring-foreground' : ''}"
+						style="background-color: {swatch}"
+						aria-label={swatch}
+					></button>
+				{/each}
 			</div>
-			<div class="space-y-1">
-				<Label for="cat-c-kind">Kind</Label>
-				<select
-					id="cat-c-kind"
-					name="kind"
-					required
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-				>
-					{#each kindOptions as opt}
-						<option value={opt.value}>{opt.label}</option>
-					{/each}
-				</select>
-			</div>
-			<div class="grid grid-cols-2 gap-3">
-				<div class="space-y-1">
-					<Label for="cat-c-color">Color (hex)</Label>
-					<Input id="cat-c-color" name="color" placeholder="#10b981" />
-				</div>
-				<div class="space-y-1">
-					<Label for="cat-c-icon">Icon</Label>
-					<Input id="cat-c-icon" name="icon" placeholder="utensils" />
-				</div>
-			</div>
-			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
-				<SubmitButton pending={createPending}>Create</SubmitButton>
-			</Dialog.Footer>
-		</form>
-	</Dialog.Content>
-</Dialog.Root>
-
-<Dialog.Root bind:open={editOpen}>
-	<Dialog.Content>
-		<Dialog.Header>
-			<Dialog.Title>Edit category</Dialog.Title>
-		</Dialog.Header>
-		{#if editTarget}
-			<form
-				method="POST"
-				action="?/update"
-				use:enhance={() => {
-					editPending = true;
-					return async ({ update, result }) => {
-						await update();
-						editPending = false;
-						if (result.type === 'success') {
-							editOpen = false;
-							notify.success('Category updated');
-						} else if (result.type === 'failure') {
-							const message = (result.data as { message?: string } | undefined)?.message;
-							notify.error(message ?? 'Could not save category');
-						}
-					};
-				}}
-				class="space-y-4"
+			<button
+				type="button"
+				onclick={() => (createCustomColor = !createCustomColor)}
+				class="text-xs text-muted-foreground underline"
 			>
-				<input type="hidden" name="id" value={editTarget.id} />
-				<div class="space-y-1">
-					<Label for="cat-e-name">Name</Label>
-					<Input id="cat-e-name" name="name" required maxlength={60} value={editTarget.name} />
+				{createCustomColor ? 'Hide custom' : '+ Custom hex'}
+			</button>
+			{#if createCustomColor}
+				<div class="flex items-center gap-2">
+					<Input bind:value={createColor} placeholder="#10b981" maxlength={7} />
+					<span class="size-6 rounded border" style="background-color: {createColor || 'transparent'}"></span>
 				</div>
-				<div class="space-y-1">
-					<Label for="cat-e-kind">Kind</Label>
-					<select
-						id="cat-e-kind"
-						name="kind"
-						required
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-					>
-						{#each kindOptions as opt}
-							<option value={opt.value} selected={opt.value === editTarget.kind}>{opt.label}</option>
-						{/each}
-					</select>
+			{/if}
+			<input type="hidden" name="color" value={createColor} />
+		</div>
+		<div class="space-y-1">
+			<Label for="cat-c-icon">Icon</Label>
+			<Input id="cat-c-icon" name="icon" placeholder="utensils" />
+		</div>
+		<div class="flex justify-end gap-2">
+			<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
+			<SubmitButton pending={createPending}>Create</SubmitButton>
+		</div>
+	</form>
+{/snippet}
+
+<div class="md:hidden">
+	<Sheet.Root bind:open={createOpen}>
+		<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
+			<Sheet.Header class="text-left p-4 pb-2"><Sheet.Title>New category</Sheet.Title></Sheet.Header>
+			<div class="flex-1 overflow-y-auto">{@render createForm()}</div>
+		</Sheet.Content>
+	</Sheet.Root>
+</div>
+<div class="hidden md:block">
+	<Dialog.Root bind:open={createOpen}>
+		<Dialog.Content>
+			<Dialog.Header><Dialog.Title>New category</Dialog.Title></Dialog.Header>
+			{@render createForm()}
+		</Dialog.Content>
+	</Dialog.Root>
+</div>
+
+{#snippet editForm(target: CategoryRow)}
+	<form
+		method="POST"
+		action="?/update"
+		use:enhance={() => {
+			editPending = true;
+			return async ({ update, result }) => {
+				await update();
+				editPending = false;
+				if (result.type === 'success') {
+					editOpen = false;
+					notify.success('Category updated');
+				} else if (result.type === 'failure') {
+					const message = (result.data as { message?: string } | undefined)?.message;
+					notify.error(message ?? 'Could not save category');
+				}
+			};
+		}}
+		class="space-y-4 p-4"
+	>
+		<input type="hidden" name="id" value={target.id} />
+		<div class="space-y-1">
+			<Label for="cat-e-name">Name</Label>
+			<Input id="cat-e-name" name="name" required maxlength={60} value={target.name} />
+		</div>
+		<div class="space-y-1">
+			<Label>Kind</Label>
+			<SegmentedControl options={kindSegmentOptions} bind:value={editKind} name="kind" />
+		</div>
+		<div class="space-y-2">
+			<Label>Color</Label>
+			<div class="grid grid-cols-8 gap-2">
+				{#each PRESET_SWATCHES as swatch (swatch)}
+					<button
+						type="button"
+						onclick={() => { editColor = swatch; editCustomColor = false; }}
+						class="size-8 rounded-lg border transition-shadow {editColor === swatch ? 'ring-2 ring-foreground' : ''}"
+						style="background-color: {swatch}"
+						aria-label={swatch}
+					></button>
+				{/each}
+			</div>
+			<button
+				type="button"
+				onclick={() => (editCustomColor = !editCustomColor)}
+				class="text-xs text-muted-foreground underline"
+			>
+				{editCustomColor ? 'Hide custom' : '+ Custom hex'}
+			</button>
+			{#if editCustomColor}
+				<div class="flex items-center gap-2">
+					<Input bind:value={editColor} placeholder="#10b981" maxlength={7} />
+					<span class="size-6 rounded border" style="background-color: {editColor || 'transparent'}"></span>
 				</div>
-				<div class="grid grid-cols-2 gap-3">
-					<div class="space-y-1">
-						<Label for="cat-e-color">Color (hex)</Label>
-						<Input id="cat-e-color" name="color" value={editTarget.color ?? ''} placeholder="#10b981" />
-					</div>
-					<div class="space-y-1">
-						<Label for="cat-e-icon">Icon</Label>
-						<Input id="cat-e-icon" name="icon" value={editTarget.icon ?? ''} placeholder="utensils" />
-					</div>
-				</div>
-				<Dialog.Footer>
-					<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
-					<SubmitButton pending={editPending}>Save</SubmitButton>
-				</Dialog.Footer>
-			</form>
-		{/if}
-	</Dialog.Content>
-</Dialog.Root>
+			{/if}
+			<input type="hidden" name="color" value={editColor} />
+		</div>
+		<div class="space-y-1">
+			<Label for="cat-e-icon">Icon</Label>
+			<Input id="cat-e-icon" name="icon" value={target.icon ?? ''} placeholder="utensils" />
+		</div>
+		<div class="flex justify-end gap-2">
+			<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
+			<SubmitButton pending={editPending}>Save</SubmitButton>
+		</div>
+	</form>
+{/snippet}
+
+<div class="md:hidden">
+	<Sheet.Root bind:open={editOpen}>
+		<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
+			<Sheet.Header class="text-left p-4 pb-2"><Sheet.Title>Edit category</Sheet.Title></Sheet.Header>
+			<div class="flex-1 overflow-y-auto">
+				{#if editTarget}{@render editForm(editTarget)}{/if}
+			</div>
+		</Sheet.Content>
+	</Sheet.Root>
+</div>
+<div class="hidden md:block">
+	<Dialog.Root bind:open={editOpen}>
+		<Dialog.Content>
+			<Dialog.Header><Dialog.Title>Edit category</Dialog.Title></Dialog.Header>
+			{#if editTarget}{@render editForm(editTarget)}{/if}
+		</Dialog.Content>
+	</Dialog.Root>
+</div>

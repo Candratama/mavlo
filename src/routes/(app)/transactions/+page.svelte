@@ -2,32 +2,34 @@
 	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
-	import MoneyInput from '$lib/components/forms/money-input.svelte';
-	import SubmitButton from '$lib/components/forms/submit-button.svelte';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
-	import * as Dialog from '$lib/components/ui/dialog';
+	import * as Sheet from '$lib/components/ui/sheet';
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Plus, MoreHorizontal, Pencil, Trash2, ArrowLeftRight } from 'lucide-svelte';
+	import { Plus, MoreHorizontal, Pencil, Trash2, ArrowLeftRight, Filter, X } from 'lucide-svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
+	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
+	import PickerSheet, { type PickerItem, type PickerGroup } from '$lib/components/ui/picker-sheet.svelte';
+	import { goto } from '$app/navigation';
+	import AddTransactionSheet from '$lib/components/forms/add-transaction-sheet.svelte';
+	import { openAddTransaction } from '$lib/stores/add-transaction.svelte.js';
 
 	let { data, form } = $props();
 
 	type TxRow = (typeof data.transactions)[number];
 
-	let createOpen = $state(false);
 	let editOpen = $state(false);
 	let editTarget = $state<TxRow | null>(null);
-	let createKind = $state<'income' | 'expense' | 'transfer'>('expense');
-	let editKind = $state<'income' | 'expense' | 'transfer'>('expense');
-	let createPending = $state(false);
-	let editPending = $state(false);
 
-	const expenseCategories = $derived(data.categories.filter((c) => c.kind === 'expense'));
-	const incomeCategories = $derived(data.categories.filter((c) => c.kind === 'income'));
+	let filterOpen = $state(false);
+	let fFrom = $state(data.filter.from ?? '');
+	let fTo = $state(data.filter.to ?? '');
+	let fAccount = $state(data.filter.accountId ?? '');
+	let fCategory = $state(data.filter.categoryId ?? '');
+	let fKind = $state(data.filter.kind ?? '');
 
 	const accountById = $derived(new Map(data.accounts.map((a) => [a.id, a])));
 	const categoryById = $derived(new Map(data.categories.map((c) => [c.id, c])));
@@ -36,13 +38,68 @@
 
 	const formatDate = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
-	const todayYmd = new Date().toISOString().slice(0, 10);
-
 	const openEdit = (t: TxRow) => {
 		editTarget = t;
-		editKind = t.kind;
 		editOpen = true;
 	};
+
+	type Chip = { key: string; label: string; remove: () => void };
+	const chips = $derived.by<Chip[]>(() => {
+		const out: Chip[] = [];
+		if (data.filter.from) out.push({ key: 'from', label: `From: ${data.filter.from}`, remove: () => removeParam('from') });
+		if (data.filter.to) out.push({ key: 'to', label: `To: ${data.filter.to}`, remove: () => removeParam('to') });
+		if (data.filter.accountId) {
+			const a = accountById.get(data.filter.accountId);
+			out.push({ key: 'account', label: a?.name ?? 'Account', remove: () => removeParam('account') });
+		}
+		if (data.filter.categoryId) {
+			const c = categoryById.get(data.filter.categoryId);
+			out.push({ key: 'category', label: c?.name ?? 'Category', remove: () => removeParam('category') });
+		}
+		if (data.filter.kind) out.push({ key: 'kind', label: data.filter.kind, remove: () => removeParam('kind') });
+		return out;
+	});
+
+	function removeParam(key: string) {
+		const params = new URLSearchParams(window.location.search);
+		params.delete(key);
+		goto(`?${params.toString()}`, { keepFocus: true });
+	}
+
+	function applyFilters() {
+		const params = new URLSearchParams();
+		if (fFrom) params.set('from', fFrom);
+		if (fTo) params.set('to', fTo);
+		if (fAccount) params.set('account', fAccount);
+		if (fCategory) params.set('category', fCategory);
+		if (fKind) params.set('kind', fKind);
+		filterOpen = false;
+		goto(`?${params.toString()}`);
+	}
+
+	function resetFilters() {
+		fFrom = fTo = fAccount = fCategory = fKind = '';
+		filterOpen = false;
+		goto('?');
+	}
+
+	const accountItems = $derived<PickerItem[]>([
+		{ value: '', label: 'All accounts' },
+		...data.accounts.map((a) => ({ value: a.id, label: a.name }))
+	]);
+
+	const categoryItems = $derived<PickerGroup[]>([
+		{ label: 'All', items: [{ value: '', label: 'All categories' }] },
+		{ label: 'Expense', items: data.categories.filter((c) => c.kind === 'expense').map((c) => ({ value: c.id, label: c.name })) },
+		{ label: 'Income', items: data.categories.filter((c) => c.kind === 'income').map((c) => ({ value: c.id, label: c.name })) }
+	]);
+
+	const filterKindOptions = [
+		{ value: '', label: 'All' },
+		{ value: 'income', label: 'Income' },
+		{ value: 'expense', label: 'Expense' },
+		{ value: 'transfer', label: 'Transfer' }
+	];
 </script>
 
 <svelte:head><title>Transactions — Mavlo</title></svelte:head>
@@ -52,7 +109,7 @@
 		<h1 class="text-2xl font-semibold">Transactions</h1>
 		<p class="text-sm text-muted-foreground mt-1">Track inflows and outflows.</p>
 	</div>
-	<Button onclick={() => { createKind = 'expense'; createOpen = true; }}>
+	<Button class="hidden md:inline-flex" onclick={() => openAddTransaction('expense')}>
 		<Plus class="size-4 mr-1" /> New transaction
 	</Button>
 </div>
@@ -61,7 +118,39 @@
 	<p class="mb-4 text-sm text-destructive">{form.message}</p>
 {/if}
 
-<Card.Root class="mb-6">
+<!-- Mobile chip bar -->
+<div class="md:hidden mb-4 flex items-center gap-2 overflow-x-auto">
+	{#if chips.length === 0}
+		<button
+			type="button"
+			onclick={() => (filterOpen = true)}
+			class="inline-flex items-center gap-1.5 px-3 h-9 rounded-full border border-input bg-background text-sm shrink-0"
+		>
+			<Filter class="size-4" />
+			Filter
+		</button>
+	{:else}
+		{#each chips as chip (chip.key)}
+			<span class="inline-flex items-center gap-1 px-3 h-8 rounded-full bg-accent text-accent-foreground text-xs shrink-0">
+				{chip.label}
+				<button type="button" onclick={chip.remove} aria-label="Remove filter">
+					<X class="size-3" />
+				</button>
+			</span>
+		{/each}
+		<button
+			type="button"
+			onclick={() => (filterOpen = true)}
+			class="inline-flex items-center gap-1.5 px-3 h-8 rounded-full border border-input text-xs shrink-0"
+		>
+			<Filter class="size-3" />
+			Edit
+		</button>
+	{/if}
+</div>
+
+<!-- Desktop filter form -->
+<Card.Root class="hidden md:block mb-6">
 	<Card.Content class="p-4">
 		<form method="GET" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 items-end">
 			<div class="space-y-1">
@@ -73,50 +162,58 @@
 				<Input id="filter-to" type="date" name="to" value={data.filter.to} />
 			</div>
 			<div class="space-y-1">
-				<Label for="filter-account">Account</Label>
-				<select
-					id="filter-account"
-					name="account"
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm h-9 md:h-8"
-				>
-					<option value="">All</option>
-					{#each data.accounts as a}
-						<option value={a.id} selected={data.filter.accountId === a.id}>{a.name}</option>
-					{/each}
-				</select>
+				<Label>Account</Label>
+				<PickerSheet items={accountItems} bind:value={fAccount} name="account" placeholder="All" title="Account" />
 			</div>
 			<div class="space-y-1">
-				<Label for="filter-category">Category</Label>
-				<select
-					id="filter-category"
-					name="category"
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm h-9 md:h-8"
-				>
-					<option value="">All</option>
-					{#each data.categories as c}
-						<option value={c.id} selected={data.filter.categoryId === c.id}>
-							{c.name} ({c.kind})
-						</option>
-					{/each}
-				</select>
+				<Label>Category</Label>
+				<PickerSheet groups={categoryItems} bind:value={fCategory} name="category" placeholder="All" title="Category" searchable />
 			</div>
 			<div class="space-y-1">
-				<Label for="filter-kind">Kind</Label>
-				<select
-					id="filter-kind"
-					name="kind"
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm h-9 md:h-8"
-				>
-					<option value="">All</option>
-					<option value="income" selected={data.filter.kind === 'income'}>Income</option>
-					<option value="expense" selected={data.filter.kind === 'expense'}>Expense</option>
-					<option value="transfer" selected={data.filter.kind === 'transfer'}>Transfer</option>
-				</select>
+				<Label>Kind</Label>
+				<SegmentedControl options={filterKindOptions} bind:value={fKind} name="kind" />
 			</div>
 			<Button type="submit" class="w-full md:w-auto">Apply</Button>
 		</form>
 	</Card.Content>
 </Card.Root>
+
+<!-- Mobile filter sheet -->
+<Sheet.Root bind:open={filterOpen}>
+	<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
+		<Sheet.Header class="text-left p-4 pb-2">
+			<Sheet.Title>Filter transactions</Sheet.Title>
+		</Sheet.Header>
+		<div class="flex-1 overflow-y-auto p-4 space-y-4">
+			<div class="grid grid-cols-2 gap-3">
+				<div class="space-y-1">
+					<Label for="m-from">From</Label>
+					<Input id="m-from" type="date" bind:value={fFrom} />
+				</div>
+				<div class="space-y-1">
+					<Label for="m-to">To</Label>
+					<Input id="m-to" type="date" bind:value={fTo} />
+				</div>
+			</div>
+			<div class="space-y-1">
+				<Label>Account</Label>
+				<PickerSheet items={accountItems} bind:value={fAccount} placeholder="All accounts" title="Account" />
+			</div>
+			<div class="space-y-1">
+				<Label>Category</Label>
+				<PickerSheet groups={categoryItems} bind:value={fCategory} placeholder="All categories" title="Category" searchable />
+			</div>
+			<div class="space-y-1">
+				<Label>Kind</Label>
+				<SegmentedControl options={filterKindOptions} bind:value={fKind} />
+			</div>
+		</div>
+		<div class="border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex gap-2">
+			<Button variant="outline" class="flex-1" onclick={resetFilters}>Reset</Button>
+			<Button class="flex-1" onclick={applyFilters}>Apply</Button>
+		</div>
+	</Sheet.Content>
+</Sheet.Root>
 
 {#snippet rowMenu(tx: TxRow)}
 	<DropdownMenu.Root>
@@ -220,7 +317,7 @@
 						<Table.Row>
 							<Table.Cell colspan={7} class="p-0">
 								<EmptyState icon={ArrowLeftRight} title="No transactions in this range" description="Try a different date range or add a new transaction.">
-									<Button onclick={() => { createKind = 'expense'; createOpen = true; }}>Add transaction</Button>
+									<Button onclick={() => openAddTransaction('expense')}>Add transaction</Button>
 								</EmptyState>
 							</Table.Cell>
 						</Table.Row>
@@ -260,251 +357,28 @@
 	{:else}
 		<li>
 			<EmptyState icon={ArrowLeftRight} title="No transactions in this range" description="Try a different date range or add a new transaction.">
-				<Button onclick={() => { createKind = 'expense'; createOpen = true; }}>Add transaction</Button>
+				<Button onclick={() => openAddTransaction('expense')}>Add transaction</Button>
 			</EmptyState>
 		</li>
 	{/each}
 </ul>
 
-<!-- Create dialog -->
-<Dialog.Root bind:open={createOpen}>
-	<Dialog.Content>
-		<Dialog.Header>
-			<Dialog.Title>New transaction</Dialog.Title>
-		</Dialog.Header>
-		<form
-			method="POST"
-			action="?/create"
-			use:enhance={() => {
-				createPending = true;
-				return async ({ update, result }) => {
-					await update();
-					createPending = false;
-					if (result.type === 'success') {
-						createOpen = false;
-						notify.success('Transaction added');
-					} else if (result.type === 'failure') {
-						const message = (result.data as { message?: string } | undefined)?.message;
-						notify.error(message ?? 'Could not add transaction');
-					}
-				};
-			}}
-			class="space-y-4"
-		>
-			<div class="grid grid-cols-2 gap-3">
-				<div class="space-y-1">
-					<Label for="tx-c-kind">Kind</Label>
-					<select
-						id="tx-c-kind"
-						name="kind"
-						required
-						bind:value={createKind}
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-					>
-						<option value="expense">Expense</option>
-						<option value="income">Income</option>
-						<option value="transfer">Transfer</option>
-					</select>
-				</div>
-				<div class="space-y-1">
-					<Label for="tx-c-amount">Amount</Label>
-					<MoneyInput id="tx-c-amount" name="amountCents" min={1} required />
-				</div>
-			</div>
-			<div class="space-y-1">
-				<Label for="tx-c-account">{createKind === 'transfer' ? 'From account' : 'Account'}</Label>
-				<select
-					id="tx-c-account"
-					name="accountId"
-					required
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-				>
-					{#each data.accounts as a}
-						<option value={a.id}>{a.name} ({a.currency})</option>
-					{/each}
-				</select>
-			</div>
-			{#if createKind === 'transfer'}
-				<div class="space-y-1">
-					<Label for="tx-c-to">To account</Label>
-					<select
-						id="tx-c-to"
-						name="transferToAccountId"
-						required
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-					>
-						{#each data.accounts as a}
-							<option value={a.id}>{a.name} ({a.currency})</option>
-						{/each}
-					</select>
-				</div>
-			{:else}
-				<div class="space-y-1">
-					<Label for="tx-c-category">Category (optional)</Label>
-					<select
-						id="tx-c-category"
-						name="categoryId"
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-					>
-						<option value="">None</option>
-						<optgroup label="Expense">
-							{#each expenseCategories as c}
-								<option value={c.id}>{c.name}</option>
-							{/each}
-						</optgroup>
-						<optgroup label="Income">
-							{#each incomeCategories as c}
-								<option value={c.id}>{c.name}</option>
-							{/each}
-						</optgroup>
-					</select>
-				</div>
-			{/if}
-			<div class="grid grid-cols-2 gap-3">
-				<div class="space-y-1">
-					<Label for="tx-c-date">Date</Label>
-					<Input id="tx-c-date" type="date" name="occurredAt" required value={todayYmd} />
-				</div>
-				<div class="space-y-1">
-					<Label for="tx-c-note">Note</Label>
-					<Input id="tx-c-note" name="note" maxlength={200} placeholder="optional" />
-				</div>
-			</div>
-			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
-				<SubmitButton pending={createPending}>Create</SubmitButton>
-			</Dialog.Footer>
-		</form>
-	</Dialog.Content>
-</Dialog.Root>
-
-<!-- Edit dialog -->
-<Dialog.Root bind:open={editOpen}>
-	<Dialog.Content>
-		<Dialog.Header>
-			<Dialog.Title>Edit transaction</Dialog.Title>
-		</Dialog.Header>
-		{#if editTarget}
-			<form
-				method="POST"
-				action="?/update"
-				use:enhance={() => {
-					editPending = true;
-					return async ({ update, result }) => {
-						await update();
-						editPending = false;
-						if (result.type === 'success') {
-							editOpen = false;
-							notify.success('Transaction updated');
-						} else if (result.type === 'failure') {
-							const message = (result.data as { message?: string } | undefined)?.message;
-							notify.error(message ?? 'Could not update transaction');
-						}
-					};
-				}}
-				class="space-y-4"
-			>
-				<input type="hidden" name="id" value={editTarget.id} />
-				<div class="grid grid-cols-2 gap-3">
-					<div class="space-y-1">
-						<Label for="tx-e-kind">Kind</Label>
-						<select
-							id="tx-e-kind"
-							name="kind"
-							required
-							bind:value={editKind}
-							class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-						>
-							<option value="expense">Expense</option>
-							<option value="income">Income</option>
-							<option value="transfer">Transfer</option>
-						</select>
-					</div>
-					<div class="space-y-1">
-						<Label for="tx-e-amount">Amount</Label>
-						<MoneyInput
-							id="tx-e-amount"
-							name="amountCents"
-							min={1}
-							required
-							value={editTarget.amountCents}
-						/>
-					</div>
-				</div>
-				<div class="space-y-1">
-					<Label for="tx-e-account">{editKind === 'transfer' ? 'From account' : 'Account'}</Label>
-					<select
-						id="tx-e-account"
-						name="accountId"
-						required
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-					>
-						{#each data.accounts as a}
-							<option value={a.id} selected={a.id === editTarget.accountId}>
-								{a.name} ({a.currency})
-							</option>
-						{/each}
-					</select>
-				</div>
-				{#if editKind === 'transfer'}
-					<div class="space-y-1">
-						<Label for="tx-e-to">To account</Label>
-						<select
-							id="tx-e-to"
-							name="transferToAccountId"
-							required
-							class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-						>
-							{#each data.accounts as a}
-								<option value={a.id} selected={a.id === editTarget.transferToAccountId}>
-									{a.name} ({a.currency})
-								</option>
-							{/each}
-						</select>
-					</div>
-				{:else}
-					<div class="space-y-1">
-						<Label for="tx-e-category">Category (optional)</Label>
-						<select
-							id="tx-e-category"
-							name="categoryId"
-							class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-						>
-							<option value="" selected={!editTarget.categoryId}>None</option>
-							<optgroup label="Expense">
-								{#each expenseCategories as c}
-									<option value={c.id} selected={c.id === editTarget.categoryId}>{c.name}</option>
-								{/each}
-							</optgroup>
-							<optgroup label="Income">
-								{#each incomeCategories as c}
-									<option value={c.id} selected={c.id === editTarget.categoryId}>{c.name}</option>
-								{/each}
-							</optgroup>
-						</select>
-					</div>
-				{/if}
-				<div class="grid grid-cols-2 gap-3">
-					<div class="space-y-1">
-						<Label for="tx-e-date">Date</Label>
-						<Input
-							id="tx-e-date"
-							type="date"
-							name="occurredAt"
-							required
-							value={formatDate(editTarget.occurredAt)}
-						/>
-					</div>
-					<div class="space-y-1">
-						<Label for="tx-e-note">Note</Label>
-						<Input id="tx-e-note" name="note" maxlength={200} value={editTarget.note ?? ''} />
-					</div>
-				</div>
-				<Dialog.Footer>
-					<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
-					<SubmitButton pending={editPending}>Save</SubmitButton>
-				</Dialog.Footer>
-			</form>
-		{/if}
-	</Dialog.Content>
-</Dialog.Root>
+<!-- Edit sheet -->
+<AddTransactionSheet
+	bind:open={editOpen}
+	mode="edit"
+	accounts={data.accounts}
+	categories={data.categories}
+	editTarget={editTarget ? {
+		id: editTarget.id,
+		kind: editTarget.kind,
+		amountCents: editTarget.amountCents,
+		accountId: editTarget.accountId,
+		transferToAccountId: editTarget.transferToAccountId,
+		categoryId: editTarget.categoryId,
+		occurredAt: editTarget.occurredAt,
+		note: editTarget.note
+	} : null}
+	actionUrl="?/update"
+	onClose={() => (editOpen = false)}
+/>

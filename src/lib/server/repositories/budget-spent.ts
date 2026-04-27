@@ -6,28 +6,17 @@ import * as schema from '$lib/server/db/schema';
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
 
-const periodMonthBounds = (periodMonth: string): { fromMs: number; toMs: number } => {
-	const [yStr, mStr] = periodMonth.split('-');
-	const y = Number(yStr);
-	const m = Number(mStr) - 1;
-	return {
-		fromMs: Date.UTC(y, m, 1),
-		toMs: Date.UTC(y, m + 1, 1) - 1
-	};
-};
-
 /**
- * Returns Map<categoryId, spentCents>. Sums expense transactions in `periodMonth`
- * (UTC YYYY-MM) for `userId`, grouped by `categoryId`. Excludes income, transfers,
- * and rows without a categoryId.
+ * Returns Map<categoryId, spentCents>. Sums expense transactions in the given
+ * time range [fromMs, toMs] for `userId`, grouped by `categoryId`. Excludes
+ * income, transfers, and rows without a categoryId.
  */
 export async function computeBudgetSpent(
 	db: Db,
 	userId: string,
-	periodMonth: string
+	fromMs: number,
+	toMs: number
 ): Promise<Map<string, number>> {
-	const { fromMs, toMs } = periodMonthBounds(periodMonth);
-
 	const conds: SQL[] = [
 		eq(transactions.userId, userId),
 		eq(transactions.kind, 'expense'),

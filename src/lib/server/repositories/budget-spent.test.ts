@@ -6,6 +6,8 @@ let h: TestDbHandle;
 
 const apr2026Mid = Date.UTC(2026, 3, 15);
 const may2026 = Date.UTC(2026, 4, 1);
+const apr2026FromMs = Date.UTC(2026, 3, 1);
+const apr2026ToMs = Date.UTC(2026, 4, 1) - 1;
 
 beforeEach(() => {
 	h = createTestDb({ tables: ['accounts', 'categories', 'transactions', 'budgets'] });
@@ -45,7 +47,7 @@ describe('computeBudgetSpent', () => {
 		insertTx('t4', 'cat1', 'expense', 99999, may2026); // ignored — wrong month
 		insertTx('t5', null, 'expense', 5000, apr2026Mid); // ignored — no category
 
-		const map = await computeBudgetSpent(h.db, h.userId, '2026-04');
+		const map = await computeBudgetSpent(h.db, h.userId, apr2026FromMs, apr2026ToMs);
 		expect(map.get('cat1')).toBe(80000);
 	});
 
@@ -62,7 +64,7 @@ describe('computeBudgetSpent', () => {
 			accountId: 'acc-other'
 		});
 
-		const map = await computeBudgetSpent(h.db, h.userId, '2026-04');
+		const map = await computeBudgetSpent(h.db, h.userId, apr2026FromMs, apr2026ToMs);
 		expect(map.has('cat1-other')).toBe(false);
 	});
 
@@ -75,7 +77,7 @@ describe('computeBudgetSpent', () => {
 
 		insertTx('t-tx', null, 'transfer', 99999, apr2026Mid, { transferTo: 'acc-bank' });
 
-		const map = await computeBudgetSpent(h.db, h.userId, '2026-04');
+		const map = await computeBudgetSpent(h.db, h.userId, apr2026FromMs, apr2026ToMs);
 		expect(map.size).toBe(0);
 	});
 });

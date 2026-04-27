@@ -9,28 +9,32 @@ import {
 } from '$lib/server/repositories/budgets';
 import { listCategories } from '$lib/server/repositories/categories';
 import { computeBudgetSpent } from '$lib/server/repositories/budget-spent';
+import { getPreferences } from '$lib/server/repositories/preferences';
 import {
 	budgetCreateSchema,
 	budgetUpdateSchema,
 	budgetIdSchema
 } from '$lib/validation/budget';
+import { getCycleForPeriod, getCurrentCycle } from '$lib/utils/cycle.js';
 import type { Actions, PageServerLoad } from './$types';
-
-const currentPeriodMonth = (): string => {
-	const d = new Date();
-	const y = d.getUTCFullYear();
-	const m = String(d.getUTCMonth() + 1).padStart(2, '0');
-	return `${y}-${m}`;
-};
 
 export const load: PageServerLoad = async (event) => {
 	const user = requireUser(event);
 	const db = getDb(event.platform!.env.DB);
 
-	const periodMonth = event.url.searchParams.get('period') ?? currentPeriodMonth();
+	const preferences = await getPreferences(db, user.id);
+	const monthStartDay = preferences?.monthStartDay ?? 1;
+	const timezone = preferences?.timezone ?? 'Asia/Jakarta';
+
+	const periodMonth =
+		event.url.searchParams.get('period') ??
+		getCurrentCycle(new Date(), monthStartDay, timezone).periodMonth;
+
+	const cycle = getCycleForPeriod(periodMonth, monthStartDay, timezone);
+
 	const [budgets, spent, categories] = await Promise.all([
 		listBudgets(db, user.id, { periodMonth }),
-		computeBudgetSpent(db, user.id, periodMonth),
+		computeBudgetSpent(db, user.id, cycle.start.getTime(), cycle.end.getTime() - 1),
 		listCategories(db, user.id, { includeArchived: false })
 	]);
 
@@ -42,7 +46,9 @@ export const load: PageServerLoad = async (event) => {
 		budgets,
 		expenseCategories,
 		categories,
-		spentByCategory
+		spentByCategory,
+		monthStartDay,
+		timezone
 	};
 };
 

@@ -29,6 +29,7 @@ export async function updatePreferences(
 			timezone: input.timezone,
 			theme: input.theme,
 			weekStartsOn: input.weekStartsOn,
+			monthStartDay: input.monthStartDay,
 			updatedAt: Date.now()
 		})
 		.where(eq(userPreferences.userId, userId))
