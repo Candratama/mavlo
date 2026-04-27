@@ -11,10 +11,86 @@
 	import { Sun, Moon, Monitor } from 'lucide-svelte';
 	import { notify } from '$lib/utils/toast.js';
 	import SegmentedControl, { type SegmentedOption } from '$lib/components/ui/segmented-control.svelte';
+	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
 
 	let { data, form } = $props();
 	const prefs = $derived(data.preferences);
 	let pending = $state(false);
+
+	const currencyItems: PickerItem[] = [
+		{ value: 'IDR', label: 'IDR', description: 'Indonesian Rupiah' },
+		{ value: 'USD', label: 'USD', description: 'US Dollar' },
+		{ value: 'EUR', label: 'EUR', description: 'Euro' },
+		{ value: 'SGD', label: 'SGD', description: 'Singapore Dollar' },
+		{ value: 'MYR', label: 'MYR', description: 'Malaysian Ringgit' },
+		{ value: 'JPY', label: 'JPY', description: 'Japanese Yen' },
+		{ value: 'GBP', label: 'GBP', description: 'British Pound' },
+		{ value: 'AUD', label: 'AUD', description: 'Australian Dollar' },
+		{ value: 'CNY', label: 'CNY', description: 'Chinese Yuan' },
+		{ value: 'KRW', label: 'KRW', description: 'Korean Won' },
+		{ value: 'THB', label: 'THB', description: 'Thai Baht' },
+		{ value: 'HKD', label: 'HKD', description: 'Hong Kong Dollar' },
+		{ value: 'PHP', label: 'PHP', description: 'Philippine Peso' },
+		{ value: 'VND', label: 'VND', description: 'Vietnamese Dong' },
+		{ value: 'INR', label: 'INR', description: 'Indian Rupee' },
+		{ value: 'CHF', label: 'CHF', description: 'Swiss Franc' },
+		{ value: 'CAD', label: 'CAD', description: 'Canadian Dollar' },
+		{ value: 'NZD', label: 'NZD', description: 'New Zealand Dollar' }
+	];
+
+	const localeItems: PickerItem[] = [
+		{ value: 'id-ID', label: 'id-ID', description: 'Indonesian (Indonesia)' },
+		{ value: 'en-US', label: 'en-US', description: 'English (US)' },
+		{ value: 'en-GB', label: 'en-GB', description: 'English (UK)' },
+		{ value: 'en-AU', label: 'en-AU', description: 'English (Australia)' },
+		{ value: 'en-SG', label: 'en-SG', description: 'English (Singapore)' },
+		{ value: 'ms-MY', label: 'ms-MY', description: 'Malay (Malaysia)' },
+		{ value: 'ja-JP', label: 'ja-JP', description: 'Japanese (Japan)' },
+		{ value: 'zh-CN', label: 'zh-CN', description: 'Chinese (China)' },
+		{ value: 'zh-HK', label: 'zh-HK', description: 'Chinese (Hong Kong)' },
+		{ value: 'ko-KR', label: 'ko-KR', description: 'Korean (Korea)' },
+		{ value: 'th-TH', label: 'th-TH', description: 'Thai (Thailand)' },
+		{ value: 'vi-VN', label: 'vi-VN', description: 'Vietnamese (Vietnam)' },
+		{ value: 'fr-FR', label: 'fr-FR', description: 'French (France)' },
+		{ value: 'de-DE', label: 'de-DE', description: 'German (Germany)' },
+		{ value: 'es-ES', label: 'es-ES', description: 'Spanish (Spain)' },
+		{ value: 'pt-BR', label: 'pt-BR', description: 'Portuguese (Brazil)' }
+	];
+
+	const timezoneItems: PickerItem[] = [
+		{ value: 'Asia/Jakarta', label: 'Asia/Jakarta', description: 'WIB · UTC+7' },
+		{ value: 'Asia/Makassar', label: 'Asia/Makassar', description: 'WITA · UTC+8' },
+		{ value: 'Asia/Jayapura', label: 'Asia/Jayapura', description: 'WIT · UTC+9' },
+		{ value: 'Asia/Singapore', label: 'Asia/Singapore', description: 'UTC+8' },
+		{ value: 'Asia/Kuala_Lumpur', label: 'Asia/Kuala_Lumpur', description: 'UTC+8' },
+		{ value: 'Asia/Bangkok', label: 'Asia/Bangkok', description: 'UTC+7' },
+		{ value: 'Asia/Manila', label: 'Asia/Manila', description: 'UTC+8' },
+		{ value: 'Asia/Hong_Kong', label: 'Asia/Hong_Kong', description: 'UTC+8' },
+		{ value: 'Asia/Tokyo', label: 'Asia/Tokyo', description: 'UTC+9' },
+		{ value: 'Asia/Seoul', label: 'Asia/Seoul', description: 'UTC+9' },
+		{ value: 'Asia/Shanghai', label: 'Asia/Shanghai', description: 'UTC+8' },
+		{ value: 'Asia/Taipei', label: 'Asia/Taipei', description: 'UTC+8' },
+		{ value: 'Asia/Kolkata', label: 'Asia/Kolkata', description: 'UTC+5:30' },
+		{ value: 'Asia/Dubai', label: 'Asia/Dubai', description: 'UTC+4' },
+		{ value: 'Australia/Sydney', label: 'Australia/Sydney', description: 'UTC+10/+11' },
+		{ value: 'Australia/Perth', label: 'Australia/Perth', description: 'UTC+8' },
+		{ value: 'Pacific/Auckland', label: 'Pacific/Auckland', description: 'UTC+12/+13' },
+		{ value: 'UTC', label: 'UTC', description: 'Coordinated Universal Time' },
+		{ value: 'Europe/London', label: 'Europe/London', description: 'UTC+0/+1' },
+		{ value: 'Europe/Paris', label: 'Europe/Paris', description: 'UTC+1/+2' },
+		{ value: 'Europe/Berlin', label: 'Europe/Berlin', description: 'UTC+1/+2' },
+		{ value: 'Europe/Amsterdam', label: 'Europe/Amsterdam', description: 'UTC+1/+2' },
+		{ value: 'America/New_York', label: 'America/New_York', description: 'UTC-5/-4' },
+		{ value: 'America/Chicago', label: 'America/Chicago', description: 'UTC-6/-5' },
+		{ value: 'America/Denver', label: 'America/Denver', description: 'UTC-7/-6' },
+		{ value: 'America/Los_Angeles', label: 'America/Los_Angeles', description: 'UTC-8/-7' },
+		{ value: 'America/Toronto', label: 'America/Toronto', description: 'UTC-5/-4' },
+		{ value: 'America/Sao_Paulo', label: 'America/Sao_Paulo', description: 'UTC-3' }
+	];
+
+	let selectedCurrency = $state<string>(prefs.currency ?? 'IDR');
+	let selectedLocale = $state<string>(prefs.locale ?? 'id-ID');
+	let selectedTimezone = $state<string>(prefs.timezone ?? 'Asia/Jakarta');
 
 	type Theme = 'light' | 'dark' | 'system';
 	let selectedTheme = $state<Theme>(prefs.theme as Theme);
@@ -76,17 +152,17 @@
 			}} class="space-y-4">
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-1">
-					<Label for="pref-currency">Default currency</Label>
-					<Input id="pref-currency" name="currency" required maxlength={8} value={prefs.currency} />
+					<Label>Default currency</Label>
+					<PickerSheet items={currencyItems} bind:value={selectedCurrency} name="currency" placeholder="Select currency" title="Currency" searchable />
 				</div>
 				<div class="space-y-1">
-					<Label for="pref-locale">Locale</Label>
-					<Input id="pref-locale" name="locale" required maxlength={20} value={prefs.locale} />
+					<Label>Locale</Label>
+					<PickerSheet items={localeItems} bind:value={selectedLocale} name="locale" placeholder="Select locale" title="Locale" searchable />
 				</div>
 			</div>
 			<div class="space-y-1">
-				<Label for="pref-timezone">Timezone</Label>
-				<Input id="pref-timezone" name="timezone" required maxlength={60} value={prefs.timezone} />
+				<Label>Timezone</Label>
+				<PickerSheet items={timezoneItems} bind:value={selectedTimezone} name="timezone" placeholder="Select timezone" title="Timezone" searchable />
 			</div>
 			<div class="space-y-1">
 				<Label>Theme</Label>
