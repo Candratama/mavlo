@@ -13,7 +13,8 @@
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
-	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil, Wallet, Coins, Landmark, CreditCard, CircleEllipsis, Tag } from 'lucide-svelte';
+	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil, Wallet, Coins, Landmark, CreditCard, CircleEllipsis, Tag, GripVertical } from 'lucide-svelte';
+	import { dndzone } from 'svelte-dnd-action';
 	import type { Component } from 'svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
@@ -73,6 +74,20 @@
 		editTarget = a;
 		editOpen = true;
 	};
+
+	let visibleAccounts = $state<AccountRow[]>(data.accounts);
+	$effect(() => {
+		visibleAccounts = data.accounts;
+	});
+
+	async function persistOrder(ids: string[]) {
+		const fd = new FormData();
+		fd.set('ids', ids.join(','));
+		const res = await fetch('?/reorder', { method: 'POST', body: fd });
+		if (!res.ok) {
+			notify.error('Could not save order');
+		}
+	}
 </script>
 
 <svelte:head><title>Accounts — Mavlo</title></svelte:head>
@@ -150,6 +165,7 @@
 			<Table.Root>
 				<Table.Header>
 					<Table.Row>
+						<Table.Head class="w-8"></Table.Head>
 						<Table.Head class="w-10"></Table.Head>
 						<Table.Head>Name</Table.Head>
 						<Table.Head>Type</Table.Head>
@@ -159,9 +175,12 @@
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
-					{#each data.accounts as account (account.id)}
+					{#each visibleAccounts as account (account.id)}
 						{@const IconComp = iconForType(account.type)}
 						<Table.Row class={account.archived ? 'opacity-60' : ''}>
+							<Table.Cell class="text-muted-foreground">
+								<GripVertical class="size-4" />
+							</Table.Cell>
 							<Table.Cell>
 								<div class="size-7 rounded-md flex items-center justify-center" style={account.color ? `background-color: ${account.color}20` : ''}>
 									{#if IconComp}
@@ -183,7 +202,7 @@
 						</Table.Row>
 					{:else}
 						<Table.Row>
-							<Table.Cell colspan={6} class="p-0">
+							<Table.Cell colspan={7} class="p-0">
 								<EmptyState icon={Wallet} title="No accounts yet" description="Add your first account to start tracking your finances.">
 									<Button onclick={() => (createOpen = true)}>Add account</Button>
 								</EmptyState>
@@ -196,36 +215,49 @@
 	</Card.Root>
 </div>
 
-<ul class="md:hidden space-y-2">
-	{#each data.accounts as account (account.id)}
-		{@const IconComp = iconForType(account.type)}
-		<li class="rounded-lg border bg-card p-3 flex items-start gap-3 {account.archived ? 'opacity-60' : ''}">
-			<div class="size-9 shrink-0 rounded-md flex items-center justify-center" style={account.color ? `background-color: ${account.color}20` : ''}>
-				{#if IconComp}
-					<IconComp class="size-4" style={account.color ? `color: ${account.color}` : ''} />
-				{:else}
-					<Wallet class="size-4 text-muted-foreground" />
-				{/if}
-			</div>
-			<div class="flex-1 min-w-0">
-				<div class="font-medium truncate">{account.name}</div>
-				<div class="text-xs text-muted-foreground capitalize mt-0.5">
-					{account.type} · {account.currency}
+{#if visibleAccounts.length > 0}
+	<ul
+		class="md:hidden space-y-2"
+		use:dndzone={{ items: visibleAccounts, flipDurationMs: 150, dropTargetStyle: {} }}
+		onconsider={(e) => visibleAccounts = e.detail.items}
+		onfinalize={(e) => {
+			visibleAccounts = e.detail.items;
+			persistOrder(visibleAccounts.map((a) => a.id));
+		}}
+	>
+		{#each visibleAccounts as account (account.id)}
+			{@const IconComp = iconForType(account.type)}
+			<li class="rounded-lg border bg-card p-3 flex items-center gap-3 {account.archived ? 'opacity-60' : ''}">
+				<GripVertical class="size-4 text-muted-foreground shrink-0 cursor-grab" aria-hidden="true" />
+				<div class="size-9 shrink-0 rounded-md flex items-center justify-center" style={account.color ? `background-color: ${account.color}20` : ''}>
+					{#if IconComp}
+						<IconComp class="size-4" style={account.color ? `color: ${account.color}` : ''} />
+					{:else}
+						<Wallet class="size-4 text-muted-foreground" />
+					{/if}
 				</div>
-				<div class="text-base font-semibold tabular-nums mt-1">
-					{formatBalance(account.balanceCents, account.currency)}
+				<div class="flex-1 min-w-0">
+					<div class="font-medium truncate">{account.name}</div>
+					<div class="text-xs text-muted-foreground capitalize mt-0.5">
+						{account.type} · {account.currency}
+					</div>
+					<div class="text-base font-semibold tabular-nums mt-1">
+						{formatBalance(account.balanceCents, account.currency)}
+					</div>
 				</div>
-			</div>
-			{@render rowMenu(account)}
-		</li>
-	{:else}
+				{@render rowMenu(account)}
+			</li>
+		{/each}
+	</ul>
+{:else}
+	<ul class="md:hidden space-y-2">
 		<li>
 			<EmptyState icon={Wallet} title="No accounts yet" description="Add your first account to start tracking your finances.">
 				<Button onclick={() => (createOpen = true)}>Add account</Button>
 			</EmptyState>
 		</li>
-	{/each}
-</ul>
+	</ul>
+{/if}
 
 <div class="mt-6 flex justify-center">
 	<Button variant="ghost" size="sm" href={data.includeArchived ? '/accounts' : '/accounts?archived=1'}>

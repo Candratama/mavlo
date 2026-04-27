@@ -6,7 +6,8 @@ import {
 	createAccount,
 	updateAccount,
 	archiveAccount,
-	unarchiveAccount
+	unarchiveAccount,
+	reorderAccounts
 } from '$lib/server/repositories/accounts';
 import { computeAccountBalances } from '$lib/server/repositories/balances';
 import {
@@ -77,5 +78,17 @@ export const actions: Actions = {
 		if (!parsed.success) return fail(400, { action: 'unarchive', message: 'Invalid id' });
 		await unarchiveAccount(db, user.id, parsed.data.id);
 		return { success: true, action: 'unarchive' };
+	},
+
+	reorder: async (event) => {
+		const user = requireUser(event);
+		const db = getDb(event.platform!.env.DB);
+		const fd = await event.request.formData();
+		const idsRaw = fd.get('ids');
+		if (typeof idsRaw !== 'string') return fail(400, { action: 'reorder', message: 'Invalid ids' });
+		const ids = idsRaw.split(',').filter(Boolean);
+		if (ids.length === 0) return fail(400, { action: 'reorder', message: 'Empty ids' });
+		await reorderAccounts(db, user.id, ids);
+		return { success: true, action: 'reorder' };
 	}
 };

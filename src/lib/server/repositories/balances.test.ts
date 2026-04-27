@@ -8,10 +8,10 @@ beforeEach(() => {
 	h = createTestDb({ tables: ['accounts', 'categories', 'transactions'] });
 	const now = Date.now();
 	h.sqlite
-		.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
+		.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
 		.run('acc1', h.userId, 'Cash', 'cash', 'IDR', 100000, now, now);
 	h.sqlite
-		.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
+		.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
 		.run('acc2', h.userId, 'Bank', 'bank', 'IDR', 500000, now, now);
 });
 
@@ -50,7 +50,7 @@ describe('computeAccountBalances', () => {
 	it('cross-user transactions do not affect own balance', async () => {
 		const now = Date.now();
 		h.sqlite
-			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
+			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
 			.run('acc-other', h.otherUserId, 'Other', 'cash', 'IDR', 0, now, now);
 		h.sqlite
 			.prepare('INSERT INTO transactions VALUES (?, ?, ?, NULL, ?, ?, NULL, ?, ?, ?, NULL)')
@@ -77,7 +77,7 @@ describe('computeAccountBalances', () => {
 	it('cross-user transfer rows are excluded from compute', async () => {
 		const now = Date.now();
 		h.sqlite
-			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
+			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
 			.run('acc-other', h.otherUserId, 'Other', 'cash', 'IDR', 0, now, now);
 		// Simulate (would never happen via validators) a cross-user row pointing dest at our acc1
 		h.sqlite
