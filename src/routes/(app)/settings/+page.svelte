@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { untrack } from 'svelte';
 	import { setMode } from 'mode-watcher';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -117,7 +118,8 @@
 	const cycleDays = Array.from({ length: 28 }, (_, i) => i + 1);
 
 	$effect(() => {
-		setMode(selectedTheme as Theme);
+		const t = selectedTheme;
+		untrack(() => setMode(t as Theme));
 	});
 </script>
 
