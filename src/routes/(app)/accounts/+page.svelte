@@ -163,7 +163,7 @@
 						{@const IconComp = iconForType(account.type)}
 						<Table.Row class={account.archived ? 'opacity-60' : ''}>
 							<Table.Cell>
-								<div class="size-7 rounded-md border flex items-center justify-center" style={account.color ? `background-color: ${account.color}20; border-color: ${account.color}` : ''}>
+								<div class="size-7 rounded-md flex items-center justify-center" style={account.color ? `background-color: ${account.color}20` : ''}>
 									{#if IconComp}
 										<IconComp class="size-4" style={account.color ? `color: ${account.color}` : ''} />
 									{:else}
@@ -200,7 +200,7 @@
 	{#each data.accounts as account (account.id)}
 		{@const IconComp = iconForType(account.type)}
 		<li class="rounded-lg border bg-card p-3 flex items-start gap-3 {account.archived ? 'opacity-60' : ''}">
-			<div class="size-9 shrink-0 rounded-md border flex items-center justify-center" style={account.color ? `background-color: ${account.color}20; border-color: ${account.color}` : ''}>
+			<div class="size-9 shrink-0 rounded-md flex items-center justify-center" style={account.color ? `background-color: ${account.color}20` : ''}>
 				{#if IconComp}
 					<IconComp class="size-4" style={account.color ? `color: ${account.color}` : ''} />
 				{:else}
