@@ -183,61 +183,64 @@
 	</DropdownMenu.Root>
 {/snippet}
 
-<div class="hidden md:block">
-	<Card.Root>
-		<Card.Content class="p-0">
-			<Table.Root>
-				<Table.Header>
-					<Table.Row>
-						<Table.Head class="w-8"></Table.Head>
-						<Table.Head class="w-10"></Table.Head>
-						<Table.Head>Name</Table.Head>
-						<Table.Head>Type</Table.Head>
-						<Table.Head>Currency</Table.Head>
-						<Table.Head class="text-right">Balance</Table.Head>
-						<Table.Head class="w-12"></Table.Head>
-					</Table.Row>
-				</Table.Header>
-				<Table.Body>
-					{#each visibleAccounts as account (account.id)}
-						{@const IconComp = iconForType(account.type)}
-						<Table.Row class={account.archived ? 'opacity-60' : ''}>
-							<Table.Cell class="text-muted-foreground">
-								<GripVertical class="size-4" />
-							</Table.Cell>
-							<Table.Cell>
-								<div class="size-7 rounded-md flex items-center justify-center" style={account.color ? `background-color: ${account.color}20` : ''}>
-									{#if IconComp}
-										<IconComp class="size-4" style={account.color ? `color: ${account.color}` : ''} />
-									{:else}
-										<Wallet class="size-4 text-muted-foreground" />
-									{/if}
-								</div>
-							</Table.Cell>
-							<Table.Cell class="font-medium">{account.name}</Table.Cell>
-							<Table.Cell class="capitalize">{account.type}</Table.Cell>
-							<Table.Cell>{account.currency}</Table.Cell>
-							<Table.Cell class="text-right tabular-nums font-medium">
-								{formatBalance(account.balanceCents, account.currency)}
-							</Table.Cell>
-							<Table.Cell>
-								{@render rowMenu(account)}
-							</Table.Cell>
-						</Table.Row>
-					{:else}
-						<Table.Row>
-							<Table.Cell colspan={7} class="p-0">
-								<EmptyState icon={Wallet} title="No accounts yet" description="Add your first account to start tracking your finances.">
-									<Button onclick={() => (createOpen = true)}>Add account</Button>
-								</EmptyState>
-							</Table.Cell>
-						</Table.Row>
-					{/each}
-				</Table.Body>
-			</Table.Root>
-		</Card.Content>
-	</Card.Root>
-</div>
+{#if visibleAccounts.length > 0}
+	<div class="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+		{#each visibleAccounts as account (account.id)}
+			{@const IconComp = iconForType(account.type)}
+			{@const color = account.color || '#3b82f6'}
+			<div
+				class="group relative aspect-[1.586/1] rounded-2xl overflow-hidden p-5 text-white shadow-lg ring-1 ring-white/10 transition-transform hover:-translate-y-0.5 {account.archived ? 'opacity-60' : ''}"
+				style="background: linear-gradient(135deg, {color} 0%, {color}cc 50%, {color}88 100%)"
+			>
+				<div class="absolute inset-0 opacity-20" style="background: radial-gradient(circle at top right, white, transparent 60%)"></div>
+				<div class="absolute -right-8 -bottom-8 size-40 rounded-full opacity-15" style="background: white"></div>
+
+				<div class="relative flex flex-col h-full justify-between">
+					<div class="flex items-start justify-between">
+						<div class="flex items-center gap-2">
+							<div class="size-9 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center">
+								{#if IconComp}
+									<IconComp class="size-5" />
+								{:else}
+									<Wallet class="size-5" />
+								{/if}
+							</div>
+							<div>
+								<div class="text-xs uppercase tracking-wider opacity-80">{account.type}</div>
+								<div class="font-semibold leading-tight">{account.name}</div>
+							</div>
+						</div>
+						<div class="text-white">
+							{@render rowMenu(account)}
+						</div>
+					</div>
+
+					<div>
+						<div class="text-xs uppercase tracking-wider opacity-80">Balance</div>
+						<div class="text-2xl xl:text-3xl font-semibold tabular-nums tracking-tight">
+							{formatBalance(account.balanceCents, account.currency)}
+						</div>
+					</div>
+
+					<div class="flex items-end justify-between text-xs opacity-80">
+						<span class="tracking-[0.3em]">•••• ••••</span>
+						<span class="font-semibold tracking-wider">{account.currency}</span>
+					</div>
+				</div>
+			</div>
+		{/each}
+	</div>
+{:else}
+	<div class="hidden md:block">
+		<Card.Root>
+			<Card.Content>
+				<EmptyState icon={Wallet} title="No accounts yet" description="Add your first account to start tracking your finances.">
+					<Button onclick={() => (createOpen = true)}>Add account</Button>
+				</EmptyState>
+			</Card.Content>
+		</Card.Root>
+	</div>
+{/if}
 
 {#if visibleAccounts.length > 0}
 	<ul
