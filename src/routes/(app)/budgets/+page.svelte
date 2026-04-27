@@ -16,8 +16,11 @@
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
+	import { MediaQuery } from 'svelte/reactivity';
 
 	let { data, form } = $props();
+
+	const isDesktop = new MediaQuery('(min-width: 768px)');
 
 	type BudgetRow = (typeof data.budgets)[number];
 
@@ -233,22 +236,21 @@
 	</form>
 {/snippet}
 
-<div class="md:hidden">
-	<Sheet.Root bind:open={createOpen}>
-		<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
-			<Sheet.Header class="text-left p-4 pb-2"><Sheet.Title>New budget</Sheet.Title></Sheet.Header>
-			<div class="flex-1 overflow-y-auto">{@render createForm()}</div>
-		</Sheet.Content>
-	</Sheet.Root>
-</div>
-<div class="hidden md:block">
+{#if isDesktop.current}
 	<Dialog.Root bind:open={createOpen}>
 		<Dialog.Content>
 			<Dialog.Header><Dialog.Title>New budget</Dialog.Title></Dialog.Header>
 			{@render createForm()}
 		</Dialog.Content>
 	</Dialog.Root>
-</div>
+{:else}
+	<Sheet.Root bind:open={createOpen}>
+		<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
+			<Sheet.Header class="text-left p-4 pb-2"><Sheet.Title>New budget</Sheet.Title></Sheet.Header>
+			<div class="flex-1 overflow-y-auto">{@render createForm()}</div>
+		</Sheet.Content>
+	</Sheet.Root>
+{/if}
 
 <!-- Edit dialog/sheet -->
 {#snippet editForm()}
@@ -300,19 +302,18 @@
 	{/if}
 {/snippet}
 
-<div class="md:hidden">
-	<Sheet.Root bind:open={editOpen}>
-		<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
-			<Sheet.Header class="text-left p-4 pb-2"><Sheet.Title>Edit budget</Sheet.Title></Sheet.Header>
-			<div class="flex-1 overflow-y-auto">{@render editForm()}</div>
-		</Sheet.Content>
-	</Sheet.Root>
-</div>
-<div class="hidden md:block">
+{#if isDesktop.current}
 	<Dialog.Root bind:open={editOpen}>
 		<Dialog.Content>
 			<Dialog.Header><Dialog.Title>Edit budget</Dialog.Title></Dialog.Header>
 			{@render editForm()}
 		</Dialog.Content>
 	</Dialog.Root>
-</div>
+{:else}
+	<Sheet.Root bind:open={editOpen}>
+		<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
+			<Sheet.Header class="text-left p-4 pb-2"><Sheet.Title>Edit budget</Sheet.Title></Sheet.Header>
+			<div class="flex-1 overflow-y-auto">{@render editForm()}</div>
+		</Sheet.Content>
+	</Sheet.Root>
+{/if}
