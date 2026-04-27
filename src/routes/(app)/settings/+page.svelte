@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import { setMode } from 'mode-watcher';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -41,8 +42,8 @@
 	<Card.Content>
 		<form method="POST" use:enhance={() => {
 				pending = true;
-				return async ({ update, result }) => {
-					await update();
+				return async ({ result }) => {
+					await invalidateAll();
 					pending = false;
 					if (result.type === 'success') {
 						notify.success('Preferences saved');

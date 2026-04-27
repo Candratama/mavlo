@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import SubmitButton from '$lib/components/forms/submit-button.svelte';
@@ -102,8 +103,8 @@
 			<DropdownMenu.Item onclick={() => openEdit(category)}>
 				<Pencil class="size-4 mr-2" /> Edit
 			</DropdownMenu.Item>
-			<form method="POST" action="?/{category.archived ? 'unarchive' : 'archive'}" use:enhance={() => async ({ update, result }) => {
-				await update();
+			<form method="POST" action="?/{category.archived ? 'unarchive' : 'archive'}" use:enhance={() => async ({ result }) => {
+				await invalidateAll();
 				if (result.type === 'success') {
 					notify.success(category.archived ? 'Category restored' : 'Category archived');
 				} else if (result.type === 'failure') {
@@ -222,8 +223,8 @@
 		action="?/create"
 		use:enhance={() => {
 			createPending = true;
-			return async ({ update, result }) => {
-				await update();
+			return async ({ result }) => {
+				await invalidateAll();
 				createPending = false;
 				if (result.type === 'success') {
 					createOpen = false;
@@ -327,8 +328,8 @@
 		action="?/update"
 		use:enhance={() => {
 			editPending = true;
-			return async ({ update, result }) => {
-				await update();
+			return async ({ result }) => {
+				await invalidateAll();
 				editPending = false;
 				if (result.type === 'success') {
 					editOpen = false;
