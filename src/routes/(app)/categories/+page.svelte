@@ -189,7 +189,7 @@
 						{@const IconComp = getIconByName(category.icon)}
 						<Table.Row class={category.archived ? 'opacity-60' : ''}>
 							<Table.Cell>
-								<div class="size-7 rounded-md border flex items-center justify-center" style={category.color ? `background-color: ${category.color}20; border-color: ${category.color}` : ''}>
+								<div class="size-7 rounded-md flex items-center justify-center" style={category.color ? `background-color: ${category.color}20` : ''}>
 									{#if IconComp}
 										<IconComp class="size-4" style={category.color ? `color: ${category.color}` : ''} />
 									{:else}
@@ -238,7 +238,7 @@
 	{#each visibleCategories as category (category.id)}
 		{@const IconComp = getIconByName(category.icon)}
 		<li class="rounded-lg border bg-card p-3 flex items-start gap-3 {category.archived ? 'opacity-60' : ''}">
-			<div class="size-9 shrink-0 rounded-md border flex items-center justify-center" style={category.color ? `background-color: ${category.color}20; border-color: ${category.color}` : ''}>
+			<div class="size-9 shrink-0 rounded-md flex items-center justify-center" style={category.color ? `background-color: ${category.color}20` : ''}>
 				{#if IconComp}
 					<IconComp class="size-4" style={category.color ? `color: ${category.color}` : ''} />
 				{:else}
