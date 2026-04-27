@@ -184,6 +184,7 @@
 			side="bottom"
 			align="start"
 			sideOffset={4}
+			onOpenAutoFocus={(e) => e.preventDefault()}
 			class="z-50 rounded-md border bg-popover text-popover-foreground shadow-md outline-none max-h-80 overflow-y-auto"
 			style="width: var(--bits-popover-anchor-width)"
 		>
@@ -205,7 +206,11 @@
 				</button>
 			{/snippet}
 		</Sheet.Trigger>
-		<Sheet.Content side="bottom" class="max-h-[calc(80dvh-var(--keyboard-h,0px))] flex flex-col p-0">
+		<Sheet.Content
+			side="bottom"
+			onOpenAutoFocus={(e) => e.preventDefault()}
+			class="max-h-[calc(80dvh-var(--keyboard-h,0px))] flex flex-col p-0"
+		>
 			<Sheet.Header class="text-left p-4 pb-2">
 				<Sheet.Title>{title}</Sheet.Title>
 			</Sheet.Header>
