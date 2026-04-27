@@ -72,7 +72,6 @@
 		autocomplete="off"
 		value={display}
 		oninput={onInput}
-		onblur={reformat}
 		{placeholder}
 		{required}
 		class="pl-9 tabular-nums {className}"
