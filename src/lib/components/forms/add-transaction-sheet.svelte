@@ -120,13 +120,16 @@
 		{ value: 'transfer', label: 'Transfer' }
 	];
 
-	const accountTypeIcon: Record<string, Component> = {
-		cash: Coins as unknown as Component,
-		bank: Landmark as unknown as Component,
-		credit: CreditCard as unknown as Component,
-		wallet: Wallet as unknown as Component,
-		other: CircleEllipsis as unknown as Component
+	type Icon = PickerItem['icon'];
+	const accountTypeIcon: Record<string, Icon> = {
+		cash: Coins as unknown as Icon,
+		bank: Landmark as unknown as Icon,
+		credit: CreditCard as unknown as Icon,
+		wallet: Wallet as unknown as Icon,
+		other: CircleEllipsis as unknown as Icon
 	};
+	const fallbackAccountIcon = Wallet as unknown as Icon;
+	const fallbackCategoryIcon = Tag as unknown as Icon;
 
 	const accountItems = $derived<PickerItem[]>(
 		accounts.map((a) => ({
@@ -136,18 +139,18 @@
 				a.balanceCents !== undefined
 					? `${a.currency} · ${formatCentsAsCurrency(a.balanceCents, a.currency)}`
 					: a.currency,
-			icon: a.type ? accountTypeIcon[a.type] ?? Wallet : Wallet
+			icon: (a.type && accountTypeIcon[a.type]) || fallbackAccountIcon
 		}))
 	);
 
 	const categoryItems = $derived<PickerItem[]>([
-		{ value: '', label: 'None', icon: Tag as unknown as Component },
+		{ value: '', label: 'None', icon: fallbackCategoryIcon },
 		...categories
 			.filter((c) => c.kind === (kind === 'income' ? 'income' : 'expense'))
 			.map((c) => ({
 				value: c.id,
 				label: c.name,
-				icon: getIconByName(c.icon) ?? (Tag as unknown as Component)
+				icon: (getIconByName(c.icon) as unknown as Icon) ?? fallbackCategoryIcon
 			}))
 	]);
 
