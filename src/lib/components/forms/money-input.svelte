@@ -63,11 +63,19 @@
 			if (/\d/.test(formatted[target])) count++;
 			target++;
 		}
-		try {
-			input.setSelectionRange(target, target);
-		} catch {
-			// non-text inputs don't support selection
-		}
+		const apply = () => {
+			try {
+				input.setSelectionRange(target, target);
+			} catch {
+				// non-text inputs don't support selection
+			}
+		};
+		apply();
+		// Defensive: bind:value on the inner input may write input.value reactively
+		// after our setSelectionRange (especially when formatted length differs from
+		// raw, e.g. when the thousands separator is added). Re-apply on the next
+		// frame so our cursor wins.
+		requestAnimationFrame(apply);
 	}
 </script>
 
