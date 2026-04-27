@@ -10,6 +10,17 @@
 
 	let { data, currency = 'IDR' }: { data: CategoryRow[]; currency?: string } = $props();
 
+	const PALETTE = [
+		'#10b981',
+		'#3b82f6',
+		'#f59e0b',
+		'#ef4444',
+		'#8b5cf6',
+		'#ec4899',
+		'#14b8a6',
+		'#f97316'
+	];
+
 	const formatCents = (cents: number) => formatCentsAsCurrency(cents, currency);
 
 	const total = $derived(data.reduce((sum, r) => sum + r.amountCents, 0));
@@ -23,38 +34,22 @@
 	</div>
 {:else}
 	<div class="h-48 sm:h-56 md:h-64">
-		<Chart
-			{data}
-			x="amountCents"
-			c="categoryName"
-			cRange={[
-				'#10b981',
-				'#3b82f6',
-				'#f59e0b',
-				'#ef4444',
-				'#8b5cf6',
-				'#ec4899',
-				'#14b8a6',
-				'#f97316'
-			]}
-		>
+		<Chart {data} x="amountCents" c="categoryName" cRange={PALETTE}>
 			<Svg center>
 				<Pie innerRadius={0.6} cornerRadius={2} padAngle={0.01} />
 			</Svg>
 		</Chart>
 	</div>
-	<div class="mt-4 space-y-1 text-sm">
-		{#each data.slice(0, 5) as row (row.categoryId)}
-			<div class="flex justify-between">
-				<span>{row.categoryName}</span>
-				<span class="tabular-nums text-muted-foreground"
-					>{formatCents(row.amountCents)}</span
-				>
+	<div class="mt-4 space-y-1.5 text-sm">
+		{#each data as row, i (row.categoryId)}
+			<div class="flex items-center justify-between gap-3">
+				<div class="flex items-center gap-2 min-w-0">
+					<span class="size-3 rounded-sm shrink-0" style="background-color: {PALETTE[i % PALETTE.length]}"></span>
+					<span class="truncate">{row.categoryName}</span>
+				</div>
+				<span class="tabular-nums text-muted-foreground shrink-0">{formatCents(row.amountCents)}</span>
 			</div>
 		{/each}
-		{#if data.length > 5}
-			<div class="pt-2 text-xs text-muted-foreground">+{data.length - 5} more</div>
-		{/if}
 		<div class="mt-2 flex justify-between border-t pt-2 font-medium">
 			<span>Total</span>
 			<span class="tabular-nums">{formatCents(total)}</span>
