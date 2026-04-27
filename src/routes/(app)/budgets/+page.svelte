@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import MoneyInput from '$lib/components/forms/money-input.svelte';
@@ -129,7 +130,12 @@
 							<Pencil class="size-4 mr-2" /> Edit
 						</DropdownMenu.Item>
 						<form method="POST" action="?/delete" use:enhance={() => async ({ result }) => {
-								await invalidateAll();
+								await goto(page.url.pathname + page.url.search, {
+									invalidateAll: true,
+									replaceState: true,
+									keepFocus: true,
+									noScroll: true
+								});
 								if (result.type === 'success') {
 									notify.success('Budget deleted');
 								} else if (result.type === 'failure') {
@@ -188,7 +194,12 @@
 		use:enhance={() => {
 			createPending = true;
 			return async ({ result }) => {
-				await invalidateAll();
+				await goto(page.url.pathname + page.url.search, {
+					invalidateAll: true,
+					replaceState: true,
+					keepFocus: true,
+					noScroll: true
+				});
 				createPending = false;
 				if (result.type === 'success') {
 					createOpen = false;
@@ -248,7 +259,12 @@
 			use:enhance={() => {
 				editPending = true;
 				return async ({ result }) => {
-					await invalidateAll();
+					await goto(page.url.pathname + page.url.search, {
+						invalidateAll: true,
+						replaceState: true,
+						keepFocus: true,
+						noScroll: true
+					});
 					editPending = false;
 					if (result.type === 'success') {
 						editOpen = false;

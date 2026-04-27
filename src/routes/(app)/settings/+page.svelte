@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { setMode } from 'mode-watcher';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -43,7 +44,12 @@
 		<form method="POST" use:enhance={() => {
 				pending = true;
 				return async ({ result }) => {
-					await invalidateAll();
+					await goto(page.url.pathname + page.url.search, {
+						invalidateAll: true,
+						replaceState: true,
+						keepFocus: true,
+						noScroll: true
+					});
 					pending = false;
 					if (result.type === 'success') {
 						notify.success('Preferences saved');
