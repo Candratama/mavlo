@@ -297,23 +297,16 @@
 			<SegmentedControl options={kindSegmentOptions} bind:value={createKind} name="kind" />
 		</div>
 		<div class="space-y-2">
-			<Label>Color</Label>
+			<Label>Color <span class="text-xs text-muted-foreground">({createColor || 'none'})</span></Label>
 			<div class="grid grid-cols-8 gap-2">
 				{#each PRESET_SWATCHES as swatch (swatch)}
-					<label
-						class="size-8 rounded-lg border cursor-pointer block transition-shadow"
-						style="background-color: {swatch}; box-shadow: {createColor === swatch ? '0 0 0 2px var(--foreground)' : 'none'}"
+					<button
+						type="button"
+						onclick={() => { createColor = swatch; createCustomColor = false; }}
 						aria-label={swatch}
-					>
-						<input
-							type="radio"
-							name="color"
-							value={swatch}
-							checked={createColor === swatch}
-							onchange={() => { createColor = swatch; createCustomColor = false; }}
-							class="sr-only"
-						/>
-					</label>
+						class="size-9 rounded-lg cursor-pointer border-2 {createColor === swatch ? 'border-foreground ring-2 ring-foreground' : 'border-transparent'}"
+						style="background-color: {swatch}"
+					></button>
 				{/each}
 			</div>
 			<button
@@ -413,23 +406,16 @@
 			<SegmentedControl options={kindSegmentOptions} bind:value={editKind} name="kind" />
 		</div>
 		<div class="space-y-2">
-			<Label>Color</Label>
+			<Label>Color <span class="text-xs text-muted-foreground">({editColor || 'none'})</span></Label>
 			<div class="grid grid-cols-8 gap-2">
 				{#each PRESET_SWATCHES as swatch (swatch)}
-					<label
-						class="size-8 rounded-lg border cursor-pointer block transition-shadow"
-						style="background-color: {swatch}; box-shadow: {editColor === swatch ? '0 0 0 2px var(--foreground)' : 'none'}"
+					<button
+						type="button"
+						onclick={() => { editColor = swatch; editCustomColor = false; }}
 						aria-label={swatch}
-					>
-						<input
-							type="radio"
-							name="color"
-							value={swatch}
-							checked={editColor === swatch}
-							onchange={() => { editColor = swatch; editCustomColor = false; }}
-							class="sr-only"
-						/>
-					</label>
+						class="size-9 rounded-lg cursor-pointer border-2 {editColor === swatch ? 'border-foreground ring-2 ring-foreground' : 'border-transparent'}"
+						style="background-color: {swatch}"
+					></button>
 				{/each}
 			</div>
 			<button
