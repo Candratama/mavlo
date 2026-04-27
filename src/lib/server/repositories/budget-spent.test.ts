@@ -16,7 +16,7 @@ beforeEach(() => {
 		.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
 		.run('acc1', h.userId, 'Cash', 'cash', 'IDR', 0, now, now);
 	h.sqlite
-		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
+		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
 		.run('cat1', h.userId, 'Food', 'expense', now, now);
 });
 
@@ -57,7 +57,7 @@ describe('computeBudgetSpent', () => {
 			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
 			.run('acc-other', h.otherUserId, 'Other', 'cash', 'IDR', 0, otherNow, otherNow);
 		h.sqlite
-			.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
+			.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
 			.run('cat1-other', h.otherUserId, 'Food', 'expense', otherNow, otherNow);
 		insertTx('tx-other', 'cat1-other', 'expense', 123456, apr2026Mid, {
 			userId: h.otherUserId,

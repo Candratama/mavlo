@@ -15,7 +15,7 @@ export async function listCategories(
 	const where = opts.includeArchived
 		? eq(categories.userId, userId)
 		: and(eq(categories.userId, userId), eq(categories.archived, false));
-	return db.select().from(categories).where(where).orderBy(asc(categories.kind), asc(categories.name));
+	return db.select().from(categories).where(where).orderBy(asc(categories.sortOrder), asc(categories.name));
 }
 
 export async function getCategory(db: Db, userId: string, id: string) {
@@ -80,4 +80,15 @@ export async function deleteCategory(db: Db, userId: string, id: string) {
 		.where(and(eq(categories.userId, userId), eq(categories.id, id)))
 		.returning();
 	return row ?? null;
+}
+
+export async function reorderCategories(db: Db, userId: string, orderedIds: string[]): Promise<void> {
+	await Promise.all(
+		orderedIds.map((id, idx) =>
+			db
+				.update(categories)
+				.set({ sortOrder: idx, updatedAt: Date.now() })
+				.where(and(eq(categories.userId, userId), eq(categories.id, id)))
+		)
+	);
 }

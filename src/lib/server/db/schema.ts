@@ -40,6 +40,7 @@ export const categories = sqliteTable(
 		color: text('color'),
 		icon: text('icon'),
 		archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
+		sortOrder: integer('sort_order', { mode: 'number' }).notNull().default(0),
 		createdAt: epochMsNow('created_at'),
 		updatedAt: epochMsNow('updated_at')
 	},

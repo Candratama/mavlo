@@ -7,7 +7,8 @@ import {
 	updateCategory,
 	archiveCategory,
 	unarchiveCategory,
-	deleteCategory
+	deleteCategory,
+	reorderCategories
 } from '$lib/server/repositories/categories';
 import {
 	categoryCreateSchema,
@@ -86,5 +87,16 @@ export const actions: Actions = {
 		if (!parsed.success) return fail(400, { action: 'delete', message: 'Invalid id' });
 		await deleteCategory(db, user.id, parsed.data.id);
 		return { success: true, action: 'delete' };
+	},
+	reorder: async (event) => {
+		const user = requireUser(event);
+		const db = getDb(event.platform!.env.DB);
+		const fd = await event.request.formData();
+		const idsRaw = fd.get('ids');
+		if (typeof idsRaw !== 'string') return fail(400, { action: 'reorder', message: 'Invalid ids' });
+		const ids = idsRaw.split(',').filter(Boolean);
+		if (ids.length === 0) return fail(400, { action: 'reorder', message: 'Empty ids' });
+		await reorderCategories(db, user.id, ids);
+		return { success: true, action: 'reorder' };
 	}
 };

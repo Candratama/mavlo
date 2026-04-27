@@ -11,7 +11,8 @@
 	import * as Sheet from '$lib/components/ui/sheet';
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil, Trash2, Tag } from 'lucide-svelte';
+	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil, Trash2, Tag, GripVertical } from 'lucide-svelte';
+	import { dndzone } from 'svelte-dnd-action';
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
 	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
@@ -79,7 +80,20 @@
 		{ value: 'income', label: 'Income' }
 	];
 
-	const visibleCategories = $derived(data.categories.filter((c) => c.kind === viewKind));
+	let visibleCategories = $state<CategoryRow[]>(data.categories.filter((c) => c.kind === viewKind));
+
+	$effect(() => {
+		visibleCategories = data.categories.filter((c) => c.kind === viewKind);
+	});
+
+	async function persistOrder(ids: string[]) {
+		const fd = new FormData();
+		fd.set('ids', ids.join(','));
+		const res = await fetch('?/reorder', { method: 'POST', body: fd });
+		if (!res.ok) {
+			notify.error('Could not save order');
+		}
+	}
 </script>
 
 <svelte:head><title>Categories — Mavlo</title></svelte:head>
@@ -176,6 +190,7 @@
 			<Table.Root>
 				<Table.Header>
 					<Table.Row>
+						<Table.Head class="w-8"></Table.Head>
 						<Table.Head class="w-10"></Table.Head>
 						<Table.Head>Name</Table.Head>
 						<Table.Head>Kind</Table.Head>
@@ -187,6 +202,9 @@
 					{#each visibleCategories as category (category.id)}
 						{@const IconComp = getIconByName(category.icon)}
 						<Table.Row class={category.archived ? 'opacity-60' : ''}>
+							<Table.Cell class="pr-0">
+								<GripVertical class="size-4 text-muted-foreground" aria-hidden="true" />
+							</Table.Cell>
 							<Table.Cell>
 								<div class="size-7 rounded-md flex items-center justify-center" style={category.color ? `background-color: ${category.color}20` : ''}>
 									{#if IconComp}
@@ -217,7 +235,7 @@
 						</Table.Row>
 					{:else}
 						<Table.Row>
-							<Table.Cell colspan={5} class="p-0">
+							<Table.Cell colspan={6} class="p-0">
 								<EmptyState icon={Tag} title="No categories yet" description="Add your first category to classify income and expenses.">
 									<Button onclick={() => (createOpen = true)}>Add category</Button>
 								</EmptyState>
@@ -230,33 +248,46 @@
 	</Card.Root>
 </div>
 
-<ul class="md:hidden space-y-2">
-	{#each visibleCategories as category (category.id)}
-		{@const IconComp = getIconByName(category.icon)}
-		<li class="rounded-lg border bg-card p-3 flex items-start gap-3 {category.archived ? 'opacity-60' : ''}">
-			<div class="size-9 shrink-0 rounded-md flex items-center justify-center" style={category.color ? `background-color: ${category.color}20` : ''}>
-				{#if IconComp}
-					<IconComp class="size-4" style={category.color ? `color: ${category.color}` : ''} />
-				{:else}
-					<Tag class="size-4 text-muted-foreground" />
-				{/if}
-			</div>
-			<div class="flex-1 min-w-0">
-				<div class="font-medium truncate">{category.name}</div>
-				<div class="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-					<span class="capitalize">{category.kind}</span>
+{#if visibleCategories.length > 0}
+	<ul
+		class="md:hidden space-y-2"
+		use:dndzone={{ items: visibleCategories, flipDurationMs: 150, dropTargetStyle: {} }}
+		onconsider={(e) => (visibleCategories = e.detail.items)}
+		onfinalize={(e) => {
+			visibleCategories = e.detail.items;
+			persistOrder(visibleCategories.map((c) => c.id));
+		}}
+	>
+		{#each visibleCategories as category (category.id)}
+			{@const IconComp = getIconByName(category.icon)}
+			<li class="rounded-lg border bg-card p-3 flex items-center gap-3 {category.archived ? 'opacity-60' : ''}">
+				<GripVertical class="size-4 text-muted-foreground shrink-0 cursor-grab" aria-hidden="true" />
+				<div class="size-9 shrink-0 rounded-md flex items-center justify-center" style={category.color ? `background-color: ${category.color}20` : ''}>
+					{#if IconComp}
+						<IconComp class="size-4" style={category.color ? `color: ${category.color}` : ''} />
+					{:else}
+						<Tag class="size-4 text-muted-foreground" />
+					{/if}
 				</div>
-			</div>
-			{@render rowMenu(category)}
-		</li>
-	{:else}
+				<div class="flex-1 min-w-0">
+					<div class="font-medium truncate">{category.name}</div>
+					<div class="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+						<span class="capitalize">{category.kind}</span>
+					</div>
+				</div>
+				{@render rowMenu(category)}
+			</li>
+		{/each}
+	</ul>
+{:else}
+	<ul class="md:hidden space-y-2">
 		<li>
 			<EmptyState icon={Tag} title="No categories yet" description="Add your first category to classify income and expenses.">
 				<Button onclick={() => (createOpen = true)}>Add category</Button>
 			</EmptyState>
 		</li>
-	{/each}
-</ul>
+	</ul>
+{/if}
 
 <div class="mt-6 flex justify-center">
 	<Button variant="ghost" size="sm" href={data.includeArchived ? '/categories' : '/categories?archived=1'}>
