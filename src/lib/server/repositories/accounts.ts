@@ -15,7 +15,7 @@ export async function listAccounts(
 	const where = opts.includeArchived
 		? eq(accounts.userId, userId)
 		: and(eq(accounts.userId, userId), eq(accounts.archived, false));
-	return db.select().from(accounts).where(where).orderBy(asc(accounts.name));
+	return db.select().from(accounts).where(where).orderBy(asc(accounts.sortOrder), asc(accounts.name));
 }
 
 export async function getAccount(db: Db, userId: string, id: string) {
@@ -76,4 +76,15 @@ export async function unarchiveAccount(db: Db, userId: string, id: string) {
 		.where(and(eq(accounts.userId, userId), eq(accounts.id, id)))
 		.returning();
 	return row ?? null;
+}
+
+export async function reorderAccounts(db: Db, userId: string, orderedIds: string[]): Promise<void> {
+	await Promise.all(
+		orderedIds.map((id, idx) =>
+			db
+				.update(accounts)
+				.set({ sortOrder: idx, updatedAt: Date.now() })
+				.where(and(eq(accounts.userId, userId), eq(accounts.id, id)))
+		)
+	);
 }
