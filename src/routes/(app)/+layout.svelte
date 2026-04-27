@@ -19,7 +19,6 @@
 		Tag,
 		PiggyBank,
 		Settings,
-		Coins,
 		LogOut
 	} from 'lucide-svelte';
 
@@ -73,7 +72,7 @@
 		class="w-60 border-r bg-sidebar text-sidebar-foreground border-sidebar-border p-4 hidden md:flex flex-col"
 	>
 		<div class="flex items-center gap-2 mb-6">
-			<Coins class="h-5 w-5 text-primary" />
+			<img src="/icon-192.png" alt="Mavlo" class="h-7 w-7 rounded-md" />
 			<h1 class="text-xl font-bold text-primary">Mavlo</h1>
 		</div>
 		<nav class="space-y-1 text-sm flex-1">
@@ -97,7 +96,7 @@
 				pt-[max(0.75rem,env(safe-area-inset-top))]"
 		>
 			<div class="flex items-center gap-1.5 md:hidden">
-				<Coins class="h-5 w-5 text-primary" />
+				<img src="/icon-192.png" alt="Mavlo" class="h-6 w-6 rounded-md" />
 				<span class="text-base font-bold text-primary">Mavlo</span>
 			</div>
 
