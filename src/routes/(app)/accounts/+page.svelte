@@ -79,10 +79,7 @@
 
 <div class="flex items-center justify-between mb-6">
 	<div>
-		<h1 class="text-2xl font-semibold">Accounts</h1>
-		<p class="text-sm text-muted-foreground mt-1">
-			{data.includeArchived ? 'Showing archived accounts.' : 'Active accounts.'}
-		</p>
+		<h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Accounts</h1>
 	</div>
 	<Button onclick={() => (createOpen = true)}>
 		<Plus class="size-4 mr-1" /> New account

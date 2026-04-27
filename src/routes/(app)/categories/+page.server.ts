@@ -14,6 +14,8 @@ import {
 	categoryUpdateSchema,
 	categoryIdSchema
 } from '$lib/validation/category';
+import { transactions } from '$lib/server/db/schema';
+import { eq, sql } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
@@ -21,7 +23,15 @@ export const load: PageServerLoad = async (event) => {
 	const db = getDb(event.platform!.env.DB);
 	const includeArchived = event.url.searchParams.get('archived') === '1';
 	const categories = await listCategories(db, user.id, { includeArchived });
-	return { categories, includeArchived };
+
+	const counts = await db
+		.select({ categoryId: transactions.categoryId, n: sql<number>`count(*)`.as('n') })
+		.from(transactions)
+		.where(eq(transactions.userId, user.id))
+		.groupBy(transactions.categoryId);
+	const countByCategory = Object.fromEntries(counts.map((r) => [r.categoryId ?? '', Number(r.n)]));
+
+	return { categories, includeArchived, countByCategory };
 };
 
 const formObject = (fd: FormData) => Object.fromEntries(fd.entries());

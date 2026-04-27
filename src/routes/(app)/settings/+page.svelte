@@ -125,8 +125,7 @@
 
 <svelte:head><title>Settings — Mavlo</title></svelte:head>
 
-<h1 class="text-2xl font-semibold mb-2">Settings</h1>
-<p class="text-sm text-muted-foreground mb-6">Customize your Mavlo experience.</p>
+<h1 class="text-xl sm:text-2xl font-semibold tracking-tight mb-6">Settings</h1>
 
 <Card.Root class="max-w-2xl">
 	<Card.Header>
