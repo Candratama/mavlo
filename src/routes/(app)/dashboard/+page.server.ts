@@ -55,16 +55,35 @@ export const load: PageServerLoad = async (event) => {
 		.filter((t) => t.kind === 'income')
 		.reduce((sum, t) => sum + t.amountCents, 0);
 
-	const recent = recentTxns.slice(0, 5).map((t) => ({
-		id: t.id,
-		kind: t.kind,
-		amountCents: t.amountCents,
-		occurredAt: t.occurredAt,
-		note: t.note,
-		accountName: accountById.get(t.accountId)?.name ?? null,
-		accountCurrency: accountById.get(t.accountId)?.currency ?? 'IDR',
-		categoryName: t.categoryId ? (categoryById.get(t.categoryId)?.name ?? null) : null
-	}));
+	const recent = recentTxns.slice(0, 5).map((t) => {
+		const cat = t.categoryId ? categoryById.get(t.categoryId) : null;
+		const acc = accountById.get(t.accountId);
+		return {
+			id: t.id,
+			kind: t.kind,
+			amountCents: t.amountCents,
+			occurredAt: t.occurredAt,
+			note: t.note,
+			accountName: acc?.name ?? null,
+			accountCurrency: acc?.currency ?? 'IDR',
+			accountColor: acc?.color ?? null,
+			accountType: acc?.type ?? null,
+			categoryName: cat?.name ?? null,
+			categoryColor: cat?.color ?? null,
+			categoryIcon: cat?.icon ?? null
+		};
+	});
+
+	const topCategoryEntry = spendingByCategory.length > 0
+		? [...spendingByCategory].sort((a, b) => b.amountCents - a.amountCents)[0]
+		: null;
+	const topCategory = topCategoryEntry
+		? {
+			name: topCategoryEntry.categoryName,
+			amountCents: topCategoryEntry.amountCents,
+			percent: monthExpenseCents > 0 ? Math.round((topCategoryEntry.amountCents / monthExpenseCents) * 100) : 0
+		}
+		: null;
 
 	return {
 		netWorthCents,
@@ -80,6 +99,7 @@ export const load: PageServerLoad = async (event) => {
 			startMs: cycle.start.getTime(),
 			endMs: cycle.end.getTime()
 		},
-		monthStartDay
+		monthStartDay,
+		topCategory
 	};
 };
