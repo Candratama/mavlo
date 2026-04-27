@@ -115,7 +115,7 @@
 	];
 
 	let selectedMonthStartDay = $state<number>(prefs.monthStartDay ?? 1);
-	const cycleDays = Array.from({ length: 28 }, (_, i) => i + 1);
+	const cycleDays = Array.from({ length: 31 }, (_, i) => i + 1);
 
 	$effect(() => {
 		const t = selectedTheme;

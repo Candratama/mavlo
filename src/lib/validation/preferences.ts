@@ -6,7 +6,7 @@ export const preferencesUpdateSchema = z.object({
 	timezone: z.string().trim().min(1, 'Timezone required').max(60),
 	theme: z.enum(['light', 'dark', 'system']),
 	weekStartsOn: z.coerce.number().int().min(0).max(6),
-	monthStartDay: z.coerce.number().int().min(1).max(28)
+	monthStartDay: z.coerce.number().int().min(1).max(31)
 });
 
 export type PreferencesUpdateInput = z.infer<typeof preferencesUpdateSchema>;
