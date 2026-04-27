@@ -214,7 +214,9 @@
 				</p>
 			</div>
 
-			<SubmitButton {pending}>Save</SubmitButton>
+			<div class="flex justify-end">
+				<SubmitButton {pending}>Save</SubmitButton>
+			</div>
 		</form>
 	</Card.Content>
 </Card.Root>
