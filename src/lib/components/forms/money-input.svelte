@@ -1,11 +1,10 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { Input } from '$lib/components/ui/input';
 	import { formatCentsToRupiah, parseRupiahToCents } from '$lib/utils/money.js';
 
 	type Props = {
-		/** Form field name; submits as integer cents. */
 		name: string;
-		/** Initial value in cents. */
 		value?: number | null;
 		required?: boolean;
 		min?: number;
@@ -16,7 +15,7 @@
 
 	let {
 		name,
-		value = null,
+		value = $bindable(null),
 		required = false,
 		min = 0,
 		id,
@@ -30,12 +29,26 @@
 
 	const cents = $derived(parseRupiahToCents(display));
 
+	$effect(() => {
+		if (cents !== value) value = cents;
+	});
+
+	$effect(() => {
+		if (value === null || value === undefined) {
+			if (display !== '') display = '';
+			return;
+		}
+		if (parseRupiahToCents(display) !== value) {
+			display = formatCentsToRupiah(value);
+		}
+	});
+
 	function formatDigits(digits: string): string {
 		if (!digits) return '';
 		return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 	}
 
-	function onInput(e: Event) {
+	async function onInput(e: Event) {
 		const input = e.currentTarget as HTMLInputElement;
 		const raw = input.value;
 		const oldCursor = input.selectionStart ?? raw.length;
@@ -43,19 +56,18 @@
 		const digits = raw.replace(/\D/g, '');
 		const formatted = formatDigits(digits);
 		display = formatted;
-		queueMicrotask(() => {
-			let target = 0;
-			let count = 0;
-			while (target < formatted.length && count < digitsBeforeCursor) {
-				if (/\d/.test(formatted[target])) count++;
-				target++;
-			}
-			try {
-				input.setSelectionRange(target, target);
-			} catch {
-				// non-text inputs don't support selection
-			}
-		});
+		await tick();
+		let target = 0;
+		let count = 0;
+		while (target < formatted.length && count < digitsBeforeCursor) {
+			if (/\d/.test(formatted[target])) count++;
+			target++;
+		}
+		try {
+			input.setSelectionRange(target, target);
+		} catch {
+			// non-text inputs don't support selection
+		}
 	}
 </script>
 
@@ -66,7 +78,6 @@
 		Rp
 	</span>
 	<Input
-		bind:ref={inputEl}
 		{id}
 		type="text"
 		inputmode="numeric"
