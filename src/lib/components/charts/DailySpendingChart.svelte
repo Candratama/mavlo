@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Chart, Svg, Axis, Area } from 'layerchart';
 	import { scaleTime } from 'd3-scale';
+	import { curveMonotoneX } from 'd3-shape';
 
 	interface Row {
 		dateMs: number;
@@ -37,6 +38,7 @@
 				<Axis placement="left" rule grid />
 				<Axis placement="bottom" format={formatDay} />
 				<Area
+					curve={curveMonotoneX}
 					line={{ class: 'stroke-emerald-500 stroke-2' }}
 					class="fill-emerald-500/20"
 				/>
