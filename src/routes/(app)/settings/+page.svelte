@@ -25,6 +25,18 @@
 		{ value: 'system', label: 'System', icon: Monitor }
 	];
 
+	let selectedWeekStart = $state<string>(String(prefs.weekStartsOn ?? 1));
+
+	const weekStartOptions: SegmentedOption[] = [
+		{ value: '0', label: 'Su' },
+		{ value: '1', label: 'Mo' },
+		{ value: '2', label: 'Tu' },
+		{ value: '3', label: 'We' },
+		{ value: '4', label: 'Th' },
+		{ value: '5', label: 'Fr' },
+		{ value: '6', label: 'Sa' }
+	];
+
 	$effect(() => {
 		setMode(selectedTheme as Theme);
 	});
@@ -78,16 +90,8 @@
 				<SegmentedControl options={themeOptions} bind:value={selectedTheme} name="theme" />
 			</div>
 			<div class="space-y-1">
-				<Label for="pref-week">Week starts on (0=Sun, 1=Mon, ..., 6=Sat)</Label>
-				<Input
-					id="pref-week"
-					type="number"
-					name="weekStartsOn"
-					min="0"
-					max="6"
-					required
-					value={prefs.weekStartsOn}
-				/>
+				<Label>Week starts on</Label>
+				<SegmentedControl options={weekStartOptions} bind:value={selectedWeekStart} name="weekStartsOn" />
 			</div>
 
 			<div class="space-y-1">
