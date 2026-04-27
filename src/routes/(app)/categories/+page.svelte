@@ -13,6 +13,7 @@
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
 	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
+	import { CATEGORY_ICONS, getIconByName } from '$lib/utils/category-icons.js';
 
 	let { data, form } = $props();
 
@@ -43,16 +44,19 @@
 	let createKind = $state<'income' | 'expense'>('expense');
 	let createColor = $state('');
 	let createCustomColor = $state(false);
+	let createIcon = $state('');
 
 	let editKind = $state<'income' | 'expense'>('expense');
 	let editColor = $state('');
 	let editCustomColor = $state(false);
+	let editIcon = $state('');
 
 	$effect(() => {
 		if (editTarget) {
 			editKind = editTarget.kind;
 			editColor = editTarget.color ?? '';
 			editCustomColor = !!editColor && !PRESET_SWATCHES.includes(editColor);
+			editIcon = editTarget.icon ?? '';
 		}
 	});
 
@@ -130,6 +134,7 @@
 			<Table.Root>
 				<Table.Header>
 					<Table.Row>
+						<Table.Head class="w-10"></Table.Head>
 						<Table.Head>Name</Table.Head>
 						<Table.Head>Kind</Table.Head>
 						<Table.Head>Color</Table.Head>
@@ -138,7 +143,17 @@
 				</Table.Header>
 				<Table.Body>
 					{#each data.categories as category (category.id)}
+						{@const IconComp = getIconByName(category.icon)}
 						<Table.Row class={category.archived ? 'opacity-60' : ''}>
+							<Table.Cell>
+								<div class="size-7 rounded-md border flex items-center justify-center" style={category.color ? `background-color: ${category.color}20; border-color: ${category.color}` : ''}>
+									{#if IconComp}
+										<IconComp class="size-4" style={category.color ? `color: ${category.color}` : ''} />
+									{:else}
+										<Tag class="size-4 text-muted-foreground" />
+									{/if}
+								</div>
+							</Table.Cell>
 							<Table.Cell class="font-medium">{category.name}</Table.Cell>
 							<Table.Cell class="capitalize">{category.kind}</Table.Cell>
 							<Table.Cell>
@@ -160,7 +175,7 @@
 						</Table.Row>
 					{:else}
 						<Table.Row>
-							<Table.Cell colspan={4} class="p-0">
+							<Table.Cell colspan={5} class="p-0">
 								<EmptyState icon={Tag} title="No categories yet" description="Add your first category to classify income and expenses.">
 									<Button onclick={() => (createOpen = true)}>Add category</Button>
 								</EmptyState>
@@ -175,17 +190,19 @@
 
 <ul class="md:hidden space-y-2">
 	{#each data.categories as category (category.id)}
+		{@const IconComp = getIconByName(category.icon)}
 		<li class="rounded-lg border bg-card p-3 flex items-start gap-3 {category.archived ? 'opacity-60' : ''}">
+			<div class="size-9 shrink-0 rounded-md border flex items-center justify-center" style={category.color ? `background-color: ${category.color}20; border-color: ${category.color}` : ''}>
+				{#if IconComp}
+					<IconComp class="size-4" style={category.color ? `color: ${category.color}` : ''} />
+				{:else}
+					<Tag class="size-4 text-muted-foreground" />
+				{/if}
+			</div>
 			<div class="flex-1 min-w-0">
 				<div class="font-medium truncate">{category.name}</div>
 				<div class="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
 					<span class="capitalize">{category.kind}</span>
-					{#if category.color}
-						<span class="flex items-center gap-1">
-							<span class="inline-block size-3 rounded border" style="background: {category.color}"></span>
-							<span class="font-mono">{category.color}</span>
-						</span>
-					{/if}
 				</div>
 			</div>
 			{@render rowMenu(category)}
@@ -255,9 +272,30 @@
 			{/if}
 			<input type="hidden" name="color" value={createColor} />
 		</div>
-		<div class="space-y-1">
-			<Label for="cat-c-icon">Icon</Label>
-			<Input id="cat-c-icon" name="icon" placeholder="utensils" />
+		<div class="space-y-2">
+			<Label>Icon</Label>
+			<div class="grid grid-cols-8 gap-2">
+				<button
+					type="button"
+					onclick={() => (createIcon = '')}
+					class="size-9 rounded-lg border flex items-center justify-center text-muted-foreground transition-shadow {createIcon === '' ? 'ring-2 ring-foreground' : ''}"
+					aria-label="No icon"
+				>
+					<span class="text-xs">—</span>
+				</button>
+				{#each CATEGORY_ICONS as ico (ico.name)}
+					<button
+						type="button"
+						onclick={() => (createIcon = ico.name)}
+						class="size-9 rounded-lg border flex items-center justify-center transition-shadow {createIcon === ico.name ? 'ring-2 ring-foreground bg-accent/30' : ''}"
+						aria-label={ico.label}
+						title={ico.label}
+					>
+						<ico.icon class="size-4" />
+					</button>
+				{/each}
+			</div>
+			<input type="hidden" name="icon" value={createIcon} />
 		</div>
 		<div class="flex justify-end gap-2">
 			<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
@@ -340,9 +378,30 @@
 			{/if}
 			<input type="hidden" name="color" value={editColor} />
 		</div>
-		<div class="space-y-1">
-			<Label for="cat-e-icon">Icon</Label>
-			<Input id="cat-e-icon" name="icon" value={target.icon ?? ''} placeholder="utensils" />
+		<div class="space-y-2">
+			<Label>Icon</Label>
+			<div class="grid grid-cols-8 gap-2">
+				<button
+					type="button"
+					onclick={() => (editIcon = '')}
+					class="size-9 rounded-lg border flex items-center justify-center text-muted-foreground transition-shadow {editIcon === '' ? 'ring-2 ring-foreground' : ''}"
+					aria-label="No icon"
+				>
+					<span class="text-xs">—</span>
+				</button>
+				{#each CATEGORY_ICONS as ico (ico.name)}
+					<button
+						type="button"
+						onclick={() => (editIcon = ico.name)}
+						class="size-9 rounded-lg border flex items-center justify-center transition-shadow {editIcon === ico.name ? 'ring-2 ring-foreground bg-accent/30' : ''}"
+						aria-label={ico.label}
+						title={ico.label}
+					>
+						<ico.icon class="size-4" />
+					</button>
+				{/each}
+			</div>
+			<input type="hidden" name="icon" value={editIcon} />
 		</div>
 		<div class="flex justify-end gap-2">
 			<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
