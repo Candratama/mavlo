@@ -18,7 +18,6 @@
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
-	import { CATEGORY_ICONS, getIconByName } from '$lib/utils/category-icons.js';
 
 	let { data, form } = $props();
 
@@ -44,21 +43,21 @@
 	let createType = $state<string>('cash');
 	let createColor = $state('');
 	let createCustomColor = $state(false);
-	let createIcon = $state('');
 
 	let editType = $state<string>('cash');
 	let editColor = $state('');
 	let editCustomColor = $state(false);
-	let editIcon = $state('');
 
 	$effect(() => {
 		if (editTarget) {
 			editType = editTarget.type;
 			editColor = editTarget.color ?? '';
 			editCustomColor = !!editColor && !PRESET_SWATCHES.includes(editColor);
-			editIcon = editTarget.icon ?? '';
 		}
 	});
+
+	const iconForType = (type: string) =>
+		typeItems.find((i) => i.value === type)?.icon ?? null;
 
 	const formatBalance = (cents: number, currency: string) => formatCentsAsCurrency(cents, currency);
 
@@ -146,7 +145,7 @@
 				</Table.Header>
 				<Table.Body>
 					{#each data.accounts as account (account.id)}
-						{@const IconComp = getIconByName(account.icon)}
+						{@const IconComp = iconForType(account.type)}
 						<Table.Row class={account.archived ? 'opacity-60' : ''}>
 							<Table.Cell>
 								<div class="size-7 rounded-md border flex items-center justify-center" style={account.color ? `background-color: ${account.color}20; border-color: ${account.color}` : ''}>
@@ -184,7 +183,7 @@
 
 <ul class="md:hidden space-y-2">
 	{#each data.accounts as account (account.id)}
-		{@const IconComp = getIconByName(account.icon)}
+		{@const IconComp = iconForType(account.type)}
 		<li class="rounded-lg border bg-card p-3 flex items-start gap-3 {account.archived ? 'opacity-60' : ''}">
 			<div class="size-9 shrink-0 rounded-md border flex items-center justify-center" style={account.color ? `background-color: ${account.color}20; border-color: ${account.color}` : ''}>
 				{#if IconComp}
@@ -290,31 +289,6 @@
 				</div>
 			{/if}
 			<input type="text" name="color" bind:value={createColor} class="sr-only" tabindex="-1" aria-hidden="true" />
-		</div>
-		<div class="space-y-2">
-			<Label>Icon</Label>
-			<div class="grid grid-cols-8 gap-2">
-				<button
-					type="button"
-					onclick={() => (createIcon = '')}
-					class="size-9 rounded-lg border flex items-center justify-center text-muted-foreground transition-shadow {createIcon === '' ? 'ring-2 ring-foreground' : ''}"
-					aria-label="No icon"
-				>
-					<span class="text-xs">—</span>
-				</button>
-				{#each CATEGORY_ICONS as ico (ico.name)}
-					<button
-						type="button"
-						onclick={() => (createIcon = ico.name)}
-						class="size-9 rounded-lg border flex items-center justify-center transition-shadow {createIcon === ico.name ? 'ring-2 ring-foreground bg-accent/30' : ''}"
-						aria-label={ico.label}
-						title={ico.label}
-					>
-						<ico.icon class="size-4" />
-					</button>
-				{/each}
-			</div>
-			<input type="text" name="icon" bind:value={createIcon} class="sr-only" tabindex="-1" aria-hidden="true" />
 		</div>
 		<div class="flex justify-end gap-2">
 			<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
@@ -427,31 +401,6 @@
 				</div>
 			{/if}
 			<input type="text" name="color" bind:value={editColor} class="sr-only" tabindex="-1" aria-hidden="true" />
-		</div>
-		<div class="space-y-2">
-			<Label>Icon</Label>
-			<div class="grid grid-cols-8 gap-2">
-				<button
-					type="button"
-					onclick={() => (editIcon = '')}
-					class="size-9 rounded-lg border flex items-center justify-center text-muted-foreground transition-shadow {editIcon === '' ? 'ring-2 ring-foreground' : ''}"
-					aria-label="No icon"
-				>
-					<span class="text-xs">—</span>
-				</button>
-				{#each CATEGORY_ICONS as ico (ico.name)}
-					<button
-						type="button"
-						onclick={() => (editIcon = ico.name)}
-						class="size-9 rounded-lg border flex items-center justify-center transition-shadow {editIcon === ico.name ? 'ring-2 ring-foreground bg-accent/30' : ''}"
-						aria-label={ico.label}
-						title={ico.label}
-					>
-						<ico.icon class="size-4" />
-					</button>
-				{/each}
-			</div>
-			<input type="text" name="icon" bind:value={editIcon} class="sr-only" tabindex="-1" aria-hidden="true" />
 		</div>
 		<div class="flex justify-end gap-2">
 			<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
