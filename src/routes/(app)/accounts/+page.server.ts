@@ -8,6 +8,7 @@ import {
 	archiveAccount,
 	unarchiveAccount
 } from '$lib/server/repositories/accounts';
+import { computeAccountBalances } from '$lib/server/repositories/balances';
 import {
 	accountCreateSchema,
 	accountUpdateSchema,
@@ -19,8 +20,15 @@ export const load: PageServerLoad = async (event) => {
 	const user = requireUser(event);
 	const db = getDb(event.platform!.env.DB);
 	const includeArchived = event.url.searchParams.get('archived') === '1';
-	const accounts = await listAccounts(db, user.id, { includeArchived });
-	return { accounts, includeArchived };
+	const [accounts, balances] = await Promise.all([
+		listAccounts(db, user.id, { includeArchived }),
+		computeAccountBalances(db, user.id)
+	]);
+	const accountsWithBalance = accounts.map((a) => ({
+		...a,
+		balanceCents: balances.get(a.id) ?? a.initialBalanceCents
+	}));
+	return { accounts: accountsWithBalance, includeArchived };
 };
 
 const formObject = (fd: FormData) => Object.fromEntries(fd.entries());
