@@ -111,7 +111,7 @@
 	<p class="mb-4 text-sm text-destructive">{form.message}</p>
 {/if}
 
-<div class="mb-4">
+<div class="md:hidden mb-4">
 	<SegmentedControl options={viewKindOptions} bind:value={viewKind} ariaLabel="Category kind" />
 </div>
 
@@ -184,27 +184,25 @@
 	</DropdownMenu.Root>
 {/snippet}
 
-<div class="hidden md:block">
+{#snippet kindTable(kind: 'expense' | 'income', label: string)}
+	{@const items = data.categories.filter((c) => c.kind === kind)}
 	<Card.Root>
+		<Card.Header class="pb-2">
+			<Card.Title class="text-base">{label}</Card.Title>
+		</Card.Header>
 		<Card.Content class="p-0">
 			<Table.Root>
 				<Table.Header>
 					<Table.Row>
-						<Table.Head class="w-8"></Table.Head>
 						<Table.Head class="w-10"></Table.Head>
 						<Table.Head>Name</Table.Head>
-						<Table.Head>Kind</Table.Head>
-						<Table.Head>Color</Table.Head>
 						<Table.Head class="w-12"></Table.Head>
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
-					{#each visibleCategories as category (category.id)}
+					{#each items as category (category.id)}
 						{@const IconComp = getIconByName(category.icon)}
 						<Table.Row class={category.archived ? 'opacity-60' : ''}>
-							<Table.Cell class="pr-0">
-								<GripVertical class="size-4 text-muted-foreground" aria-hidden="true" />
-							</Table.Cell>
 							<Table.Cell>
 								<div class="size-7 rounded-md flex items-center justify-center" style={category.color ? `background-color: ${category.color}20` : ''}>
 									{#if IconComp}
@@ -215,28 +213,14 @@
 								</div>
 							</Table.Cell>
 							<Table.Cell class="font-medium">{category.name}</Table.Cell>
-							<Table.Cell class="capitalize">{category.kind}</Table.Cell>
-							<Table.Cell>
-								{#if category.color}
-									<div class="flex items-center gap-2">
-										<span
-											class="inline-block size-4 rounded border"
-											style="background: {category.color}"
-										></span>
-										<span class="font-mono text-xs">{category.color}</span>
-									</div>
-								{:else}
-									<span class="text-muted-foreground text-xs">—</span>
-								{/if}
-							</Table.Cell>
 							<Table.Cell>
 								{@render rowMenu(category)}
 							</Table.Cell>
 						</Table.Row>
 					{:else}
 						<Table.Row>
-							<Table.Cell colspan={6} class="p-0">
-								<EmptyState icon={Tag} title="No categories yet" description="Add your first category to classify income and expenses.">
+							<Table.Cell colspan={3} class="p-0">
+								<EmptyState icon={Tag} title="No {label.toLowerCase()} categories" description="Add one to classify {label.toLowerCase()} transactions.">
 									<Button onclick={() => (createOpen = true)}>Add category</Button>
 								</EmptyState>
 							</Table.Cell>
@@ -246,6 +230,11 @@
 			</Table.Root>
 		</Card.Content>
 	</Card.Root>
+{/snippet}
+
+<div class="hidden md:grid md:grid-cols-2 gap-6">
+	{@render kindTable('expense', 'Expense')}
+	{@render kindTable('income', 'Income')}
 </div>
 
 {#if visibleCategories.length > 0}
