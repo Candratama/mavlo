@@ -2,6 +2,8 @@ import { eq } from 'drizzle-orm';
 import { requireUser } from '$lib/server/auth/guards';
 import { getDb } from '$lib/server/db';
 import { userPreferences } from '$lib/server/db/schema';
+import { listAccounts } from '$lib/server/repositories/accounts';
+import { listCategories } from '$lib/server/repositories/categories';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async (event) => {
@@ -25,8 +27,15 @@ export const load: LayoutServerLoad = async (event) => {
 		)[0];
 	}
 
+	const [accounts, categories] = await Promise.all([
+		listAccounts(db, user.id, { includeArchived: false }),
+		listCategories(db, user.id, { includeArchived: false })
+	]);
+
 	return {
 		user: { id: user.id, name: user.name, email: user.email, image: user.image },
-		preferences: prefs
+		preferences: prefs,
+		accounts,
+		categories
 	};
 };

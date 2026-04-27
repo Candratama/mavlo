@@ -4,6 +4,14 @@
 	import { setMode } from 'mode-watcher';
 	import { Button } from '$lib/components/ui/button';
 	import * as Sheet from '$lib/components/ui/sheet';
+	import Fab from '$lib/components/ui/fab.svelte';
+	import AddTransactionSheet from '$lib/components/forms/add-transaction-sheet.svelte';
+	import {
+		getAddTransactionState,
+		closeAddTransaction
+	} from '$lib/stores/add-transaction.svelte.js';
+	import { getLastUsed } from '$lib/utils/last-used.js';
+	import { invalidateAll } from '$app/navigation';
 	import {
 		LayoutDashboard,
 		ArrowLeftRight,
@@ -27,6 +35,12 @@
 	});
 
 	let mobileNavOpen = $state(false);
+
+	const txState = getAddTransactionState();
+	const defaultAccountId = $derived.by(() => {
+		if (typeof window === 'undefined') return data.accounts?.[0]?.id;
+		return getLastUsed().accountId ?? data.accounts?.[0]?.id;
+	});
 
 	const primaryNav = [
 		{ href: '/dashboard', label: 'Home', icon: LayoutDashboard },
@@ -147,6 +161,20 @@
 			{@render children()}
 		</div>
 	</main>
+
+	<Fab />
+
+	<AddTransactionSheet
+		bind:open={txState.open}
+		mode="create"
+		accounts={data.accounts ?? []}
+		categories={data.categories ?? []}
+		defaultKind={txState.defaultKind}
+		{defaultAccountId}
+		actionUrl="/transactions?/create"
+		onClose={closeAddTransaction}
+		onSuccess={() => invalidateAll()}
+	/>
 
 	<nav
 		class="md:hidden fixed inset-x-0 bottom-0 z-40 border-t bg-background pb-[env(safe-area-inset-bottom)]"
