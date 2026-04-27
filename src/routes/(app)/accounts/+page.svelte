@@ -123,7 +123,7 @@
 						<Table.Head>Name</Table.Head>
 						<Table.Head>Type</Table.Head>
 						<Table.Head>Currency</Table.Head>
-						<Table.Head class="text-right">Initial balance</Table.Head>
+						<Table.Head class="text-right">Balance</Table.Head>
 						<Table.Head class="w-12"></Table.Head>
 					</Table.Row>
 				</Table.Header>
@@ -133,8 +133,8 @@
 							<Table.Cell class="font-medium">{account.name}</Table.Cell>
 							<Table.Cell class="capitalize">{account.type}</Table.Cell>
 							<Table.Cell>{account.currency}</Table.Cell>
-							<Table.Cell class="text-right tabular-nums">
-								{formatBalance(account.initialBalanceCents, account.currency)}
+							<Table.Cell class="text-right tabular-nums font-medium">
+								{formatBalance(account.balanceCents, account.currency)}
 							</Table.Cell>
 							<Table.Cell>
 								{@render rowMenu(account)}
@@ -163,8 +163,8 @@
 				<div class="text-xs text-muted-foreground capitalize mt-0.5">
 					{account.type} · {account.currency}
 				</div>
-				<div class="text-sm tabular-nums mt-1">
-					{formatBalance(account.initialBalanceCents, account.currency)}
+				<div class="text-base font-semibold tabular-nums mt-1">
+					{formatBalance(account.balanceCents, account.currency)}
 				</div>
 			</div>
 			{@render rowMenu(account)}
