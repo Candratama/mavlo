@@ -98,23 +98,6 @@
 	</div>
 </div>
 
-<!-- Top category callout -->
-{#if data.topCategory}
-	<div class="mt-4 flex items-center gap-3 rounded-xl border bg-card p-4">
-		<div class="size-10 rounded-lg bg-rose-500/10 flex items-center justify-center text-expense">
-			<TrendingDown class="size-5" />
-		</div>
-		<div class="flex-1 min-w-0">
-			<p class="text-xs uppercase tracking-wider text-muted-foreground">Top spending</p>
-			<p class="font-medium truncate">{data.topCategory.name}</p>
-		</div>
-		<div class="text-right">
-			<p class="text-sm font-semibold tabular-nums">{formatCentsAsCurrency(data.topCategory.amountCents, data.displayCurrency)}</p>
-			<p class="text-xs text-muted-foreground">{data.topCategory.percent}% of expense</p>
-		</div>
-	</div>
-{/if}
-
 <!-- Charts: tab on mobile, grid on desktop -->
 <div class="mt-6">
 	<div class="md:hidden">
