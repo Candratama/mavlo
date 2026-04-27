@@ -5,7 +5,8 @@
 		value: string;
 		label: string;
 		description?: string;
-		icon?: Component;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		icon?: Component<any, any, any>;
 	};
 
 	export type PickerGroup = {

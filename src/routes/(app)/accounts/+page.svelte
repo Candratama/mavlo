@@ -7,9 +7,12 @@
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
+	import * as Sheet from '$lib/components/ui/sheet';
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil, Wallet } from 'lucide-svelte';
+	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
+	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil, Wallet, Coins, Landmark, CreditCard, CircleEllipsis } from 'lucide-svelte';
+	import type { Component } from 'svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
@@ -24,13 +27,21 @@
 	let createPending = $state(false);
 	let editPending = $state(false);
 
-	const accountTypeOptions = [
-		{ value: 'cash', label: 'Cash' },
-		{ value: 'bank', label: 'Bank' },
-		{ value: 'credit', label: 'Credit' },
-		{ value: 'wallet', label: 'Wallet' },
-		{ value: 'other', label: 'Other' }
-	] as const;
+	// Cast lucide icons (SvelteComponentTyped) to Component for PickerItem compatibility
+	const typeItems: PickerItem[] = [
+		{ value: 'cash', label: 'Cash', icon: Coins as unknown as Component },
+		{ value: 'bank', label: 'Bank', icon: Landmark as unknown as Component },
+		{ value: 'credit', label: 'Credit', icon: CreditCard as unknown as Component },
+		{ value: 'wallet', label: 'Wallet', icon: Wallet as unknown as Component },
+		{ value: 'other', label: 'Other', icon: CircleEllipsis as unknown as Component }
+	];
+
+	let createType = $state<string>('cash');
+	let editType = $state<string>('cash');
+
+	$effect(() => {
+		if (editTarget) editType = editTarget.type;
+	});
 
 	const formatBalance = (cents: number, currency: string) => formatCentsAsCurrency(cents, currency);
 
@@ -166,131 +177,154 @@
 	{/each}
 </ul>
 
-<!-- Create dialog -->
-<Dialog.Root bind:open={createOpen}>
-	<Dialog.Content>
-		<Dialog.Header>
-			<Dialog.Title>New account</Dialog.Title>
-			<Dialog.Description>Add a new financial account to track.</Dialog.Description>
-		</Dialog.Header>
-		<form
-			method="POST"
-			action="?/create"
-			use:enhance={() => {
-				createPending = true;
-				return async ({ update, result }) => {
-					await update();
-					createPending = false;
-					if (result.type === 'success') {
-						createOpen = false;
-						notify.success('Account created');
-					} else if (result.type === 'failure') {
-						const message = (result.data as { message?: string } | undefined)?.message;
-						notify.error(message ?? 'Could not create account');
-					}
-				};
-			}}
-			class="space-y-4"
-		>
+<!-- Create form snippet -->
+{#snippet createForm()}
+	<form
+		method="POST"
+		action="?/create"
+		use:enhance={() => {
+			createPending = true;
+			return async ({ update, result }) => {
+				await update();
+				createPending = false;
+				if (result.type === 'success') {
+					createOpen = false;
+					notify.success('Account created');
+				} else if (result.type === 'failure') {
+					const message = (result.data as { message?: string } | undefined)?.message;
+					notify.error(message ?? 'Could not create account');
+				}
+			};
+		}}
+		class="space-y-4 p-4"
+	>
+		<div class="space-y-1">
+			<Label for="create-name">Name</Label>
+			<Input id="create-name" name="name" required maxlength={80} />
+		</div>
+		<div class="space-y-1">
+			<Label>Type</Label>
+			<PickerSheet items={typeItems} bind:value={createType} name="type" placeholder="Select type" title="Account type" />
+		</div>
+		<div class="grid grid-cols-2 gap-3">
 			<div class="space-y-1">
-				<Label for="create-name">Name</Label>
-				<Input id="create-name" name="name" required maxlength={80} />
+				<Label for="create-currency">Currency</Label>
+				<Input id="create-currency" name="currency" required maxlength={8} value="IDR" />
 			</div>
 			<div class="space-y-1">
-				<Label for="create-type">Type</Label>
-				<select
-					id="create-type"
-					name="type"
-					required
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-				>
-					{#each accountTypeOptions as opt}
-						<option value={opt.value}>{opt.label}</option>
-					{/each}
-				</select>
+				<Label for="create-balance">Initial balance</Label>
+				<MoneyInput id="create-balance" name="initialBalanceCents" min={0} class="text-2xl h-12" />
 			</div>
-			<div class="grid grid-cols-2 gap-3">
-				<div class="space-y-1">
-					<Label for="create-currency">Currency</Label>
-					<Input id="create-currency" name="currency" required maxlength={8} value="IDR" />
-				</div>
-				<div class="space-y-1">
-					<Label for="create-balance">Initial balance</Label>
-					<MoneyInput id="create-balance" name="initialBalanceCents" min={0} />
-				</div>
-			</div>
-			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
-				<SubmitButton pending={createPending}>Create</SubmitButton>
-			</Dialog.Footer>
-		</form>
-	</Dialog.Content>
-</Dialog.Root>
+		</div>
+		<div class="flex justify-end gap-2">
+			<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
+			<SubmitButton pending={createPending}>Create</SubmitButton>
+		</div>
+	</form>
+{/snippet}
 
-<!-- Edit dialog -->
-<Dialog.Root bind:open={editOpen}>
-	<Dialog.Content>
-		<Dialog.Header>
-			<Dialog.Title>Edit account</Dialog.Title>
-		</Dialog.Header>
-		{#if editTarget}
-			<form
-				method="POST"
-				action="?/update"
-				use:enhance={() => {
-					editPending = true;
-					return async ({ update, result }) => {
-						await update();
-						editPending = false;
-						if (result.type === 'success') {
-							editOpen = false;
-							notify.success('Account updated');
-						} else if (result.type === 'failure') {
-							const message = (result.data as { message?: string } | undefined)?.message;
-							notify.error(message ?? 'Could not save account');
-						}
-					};
-				}}
-				class="space-y-4"
-			>
-				<input type="hidden" name="id" value={editTarget.id} />
-				<div class="space-y-1">
-					<Label for="edit-name">Name</Label>
-					<Input id="edit-name" name="name" required maxlength={80} value={editTarget.name} />
-				</div>
-				<div class="space-y-1">
-					<Label for="edit-type">Type</Label>
-					<select
-						id="edit-type"
-						name="type"
-						required
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-					>
-						{#each accountTypeOptions as opt}
-							<option value={opt.value} selected={opt.value === editTarget.type}>{opt.label}</option>
-						{/each}
-					</select>
-				</div>
-				<div class="grid grid-cols-2 gap-3">
-					<div class="space-y-1">
-						<Label for="edit-currency">Currency</Label>
-						<Input id="edit-currency" name="currency" required maxlength={8} value={editTarget.currency} />
-					</div>
-					<div class="space-y-1">
-						<Label for="edit-balance">Initial balance</Label>
-						<MoneyInput
-							id="edit-balance"
-							name="initialBalanceCents"
-							min={0}
-							value={editTarget.initialBalanceCents}
-						/>
-					</div>
-				</div>
-				<Dialog.Footer>
-					<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
-					<SubmitButton pending={editPending}>Save</SubmitButton>
-				</Dialog.Footer>
-			</form>
-		{/if}
-	</Dialog.Content>
-</Dialog.Root>
+<!-- Create: mobile sheet -->
+<div class="md:hidden">
+	<Sheet.Root bind:open={createOpen}>
+		<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
+			<Sheet.Header class="text-left p-4 pb-2">
+				<Sheet.Title>New account</Sheet.Title>
+				<Sheet.Description>Add a new financial account to track.</Sheet.Description>
+			</Sheet.Header>
+			<div class="flex-1 overflow-y-auto">{@render createForm()}</div>
+		</Sheet.Content>
+	</Sheet.Root>
+</div>
+
+<!-- Create: desktop dialog -->
+<div class="hidden md:block">
+	<Dialog.Root bind:open={createOpen}>
+		<Dialog.Content>
+			<Dialog.Header>
+				<Dialog.Title>New account</Dialog.Title>
+				<Dialog.Description>Add a new financial account to track.</Dialog.Description>
+			</Dialog.Header>
+			{@render createForm()}
+		</Dialog.Content>
+	</Dialog.Root>
+</div>
+
+<!-- Edit form snippet (receives account to avoid null narrowing issues) -->
+{#snippet editForm(account: AccountRow)}
+	<form
+		method="POST"
+		action="?/update"
+		use:enhance={() => {
+			editPending = true;
+			return async ({ update, result }) => {
+				await update();
+				editPending = false;
+				if (result.type === 'success') {
+					editOpen = false;
+					notify.success('Account updated');
+				} else if (result.type === 'failure') {
+					const message = (result.data as { message?: string } | undefined)?.message;
+					notify.error(message ?? 'Could not save account');
+				}
+			};
+		}}
+		class="space-y-4 p-4"
+	>
+		<input type="hidden" name="id" value={account.id} />
+		<div class="space-y-1">
+			<Label for="edit-name">Name</Label>
+			<Input id="edit-name" name="name" required maxlength={80} value={account.name} />
+		</div>
+		<div class="space-y-1">
+			<Label>Type</Label>
+			<PickerSheet items={typeItems} bind:value={editType} name="type" placeholder="Select type" title="Account type" />
+		</div>
+		<div class="grid grid-cols-2 gap-3">
+			<div class="space-y-1">
+				<Label for="edit-currency">Currency</Label>
+				<Input id="edit-currency" name="currency" required maxlength={8} value={account.currency} />
+			</div>
+			<div class="space-y-1">
+				<Label for="edit-balance">Initial balance</Label>
+				<MoneyInput
+					id="edit-balance"
+					name="initialBalanceCents"
+					min={0}
+					value={account.initialBalanceCents}
+					class="text-2xl h-12"
+				/>
+			</div>
+		</div>
+		<div class="flex justify-end gap-2">
+			<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
+			<SubmitButton pending={editPending}>Save</SubmitButton>
+		</div>
+	</form>
+{/snippet}
+
+<!-- Edit: mobile sheet -->
+{#if editTarget}
+	<div class="md:hidden">
+		<Sheet.Root bind:open={editOpen}>
+			<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
+				<Sheet.Header class="text-left p-4 pb-2">
+					<Sheet.Title>Edit account</Sheet.Title>
+					<Sheet.Description>Update your account details.</Sheet.Description>
+				</Sheet.Header>
+				<div class="flex-1 overflow-y-auto">{@render editForm(editTarget)}</div>
+			</Sheet.Content>
+		</Sheet.Root>
+	</div>
+
+	<!-- Edit: desktop dialog -->
+	<div class="hidden md:block">
+		<Dialog.Root bind:open={editOpen}>
+			<Dialog.Content>
+				<Dialog.Header>
+					<Dialog.Title>Edit account</Dialog.Title>
+				</Dialog.Header>
+				{@render editForm(editTarget)}
+			</Dialog.Content>
+		</Dialog.Root>
+	</div>
+{/if}
