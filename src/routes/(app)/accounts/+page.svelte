@@ -150,7 +150,7 @@
 				<Pencil class="size-4 mr-2" /> Edit
 			</DropdownMenu.Item>
 			<DropdownMenu.Item onclick={() => openAdjust(account)}>
-				<Scale class="size-4 mr-2" /> Adjust balance
+				<Scale class="size-4 mr-2" /> Adjust
 			</DropdownMenu.Item>
 			<form method="POST" action="?/{account.archived ? 'unarchive' : 'archive'}" use:enhance={() => async ({ result }) => {
 				await goto(page.url.pathname + page.url.search, {
@@ -565,7 +565,7 @@
 		<Dialog.Root bind:open={adjustOpen}>
 			<Dialog.Content>
 				<Dialog.Header>
-					<Dialog.Title>Adjust balance</Dialog.Title>
+					<Dialog.Title>Adjust</Dialog.Title>
 				</Dialog.Header>
 				{@render adjustForm(adjustTarget)}
 			</Dialog.Content>
@@ -574,7 +574,7 @@
 		<Sheet.Root bind:open={adjustOpen}>
 			<Sheet.Content side="bottom" class="max-h-[calc(90dvh-var(--keyboard-h,0px))] flex flex-col p-0">
 				<Sheet.Header class="text-left p-4 pb-2">
-					<Sheet.Title>Adjust balance</Sheet.Title>
+					<Sheet.Title>Adjust</Sheet.Title>
 				</Sheet.Header>
 				<div class="flex-1 overflow-y-auto">{@render adjustForm(adjustTarget)}</div>
 			</Sheet.Content>
