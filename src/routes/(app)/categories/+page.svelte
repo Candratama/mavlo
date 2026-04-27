@@ -180,7 +180,6 @@
 						<Table.Head>Name</Table.Head>
 						<Table.Head>Kind</Table.Head>
 						<Table.Head>Color</Table.Head>
-						<Table.Head class="text-right">Usage</Table.Head>
 						<Table.Head class="w-12"></Table.Head>
 					</Table.Row>
 				</Table.Header>
@@ -212,16 +211,13 @@
 									<span class="text-muted-foreground text-xs">—</span>
 								{/if}
 							</Table.Cell>
-							<Table.Cell class="text-right tabular-nums text-muted-foreground">
-								{data.countByCategory[category.id] ?? 0}
-							</Table.Cell>
 							<Table.Cell>
 								{@render rowMenu(category)}
 							</Table.Cell>
 						</Table.Row>
 					{:else}
 						<Table.Row>
-							<Table.Cell colspan={6} class="p-0">
+							<Table.Cell colspan={5} class="p-0">
 								<EmptyState icon={Tag} title="No categories yet" description="Add your first category to classify income and expenses.">
 									<Button onclick={() => (createOpen = true)}>Add category</Button>
 								</EmptyState>
@@ -250,9 +246,6 @@
 				<div class="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
 					<span class="capitalize">{category.kind}</span>
 				</div>
-				<span class="text-xs text-muted-foreground tabular-nums">
-					{data.countByCategory[category.id] ?? 0} txn
-				</span>
 			</div>
 			{@render rowMenu(category)}
 		</li>
