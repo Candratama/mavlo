@@ -7,10 +7,24 @@
 	import IncomeExpenseChart from '$lib/components/charts/IncomeExpenseChart.svelte';
 
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
+	import { formatCycleLabel } from '$lib/utils/cycle.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
 	import { setupPullToRefresh } from '$lib/actions/pull-to-refresh.js';
 
 	let { data } = $props();
+
+	const cycleLabel = $derived.by(() => {
+		if (!data.cycle) return null;
+		return formatCycleLabel(
+			{
+				start: new Date(data.cycle.startMs),
+				end: new Date(data.cycle.endMs),
+				periodMonth: data.cycle.periodMonth
+			},
+			data.monthStartDay,
+			data.preferences.locale
+		);
+	});
 
 	const formatDate = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
@@ -31,7 +45,7 @@
 	<Card.Root>
 		<Card.Header>
 			<Card.Description>Net worth</Card.Description>
-			<Card.Title class="text-2xl tabular-nums">
+			<Card.Title class="text-xl sm:text-2xl tabular-nums">
 				{formatCentsAsCurrency(data.netWorthCents, data.displayCurrency)}
 			</Card.Title>
 		</Card.Header>
@@ -42,8 +56,8 @@
 
 	<Card.Root>
 		<Card.Header>
-			<Card.Description>This month spending</Card.Description>
-			<Card.Title class="text-2xl tabular-nums text-rose-600 dark:text-rose-400">
+			<Card.Description>This month spending{#if cycleLabel} · {cycleLabel}{/if}</Card.Description>
+			<Card.Title class="text-xl sm:text-2xl tabular-nums text-rose-600 dark:text-rose-400">
 				{formatCentsAsCurrency(data.monthExpenseCents, data.displayCurrency)}
 			</Card.Title>
 		</Card.Header>
@@ -58,7 +72,7 @@
 	<Card.Root>
 		<Card.Header>
 			<Card.Description>Recent activity</Card.Description>
-			<Card.Title class="text-2xl">{data.recent.length}</Card.Title>
+			<Card.Title class="text-xl sm:text-2xl tabular-nums">{data.recent.length}</Card.Title>
 		</Card.Header>
 		<Card.Content class="text-xs text-muted-foreground">
 			Last {data.recent.length} transaction{data.recent.length === 1 ? '' : 's'}.
@@ -113,7 +127,7 @@
 		{:else}
 			<ul class="divide-y">
 				{#each data.recent as r}
-					<li class="px-6 py-3 flex items-center justify-between text-sm">
+					<li class="px-4 sm:px-6 py-3 flex items-center justify-between text-sm">
 						<div class="flex flex-col">
 							<span class="font-medium">
 								{r.note || r.categoryName || r.accountName || 'Transaction'}
