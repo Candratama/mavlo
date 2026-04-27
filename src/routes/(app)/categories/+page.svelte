@@ -325,26 +325,28 @@
 		</div>
 		<div class="space-y-2">
 			<Label>Icon</Label>
-			<div class="grid grid-cols-8 gap-2">
-				<button
-					type="button"
-					onclick={() => (createIcon = '')}
-					class="size-9 rounded-lg border flex items-center justify-center text-muted-foreground transition-shadow {createIcon === '' ? 'ring-2 ring-foreground' : ''}"
-					aria-label="No icon"
-				>
-					<span class="text-xs">—</span>
-				</button>
-				{#each CATEGORY_ICONS as ico (ico.name)}
+			<div class="max-h-[17rem] overflow-y-auto rounded-lg border p-2">
+				<div class="grid grid-cols-8 gap-2">
 					<button
 						type="button"
-						onclick={() => (createIcon = ico.name)}
-						class="size-9 rounded-lg border flex items-center justify-center transition-shadow {createIcon === ico.name ? 'ring-2 ring-foreground bg-accent/30' : ''}"
-						aria-label={ico.label}
-						title={ico.label}
+						onclick={() => (createIcon = '')}
+						class="size-9 rounded-lg border flex items-center justify-center text-muted-foreground transition-shadow {createIcon === '' ? 'ring-2 ring-foreground' : ''}"
+						aria-label="No icon"
 					>
-						<ico.icon class="size-4" />
+						<span class="text-xs">—</span>
 					</button>
-				{/each}
+					{#each CATEGORY_ICONS as ico (ico.name)}
+						<button
+							type="button"
+							onclick={() => (createIcon = ico.name)}
+							class="size-9 rounded-lg border flex items-center justify-center transition-shadow {createIcon === ico.name ? 'ring-2 ring-foreground bg-accent/30' : ''}"
+							aria-label={ico.label}
+							title={ico.label}
+						>
+							<ico.icon class="size-4" />
+						</button>
+					{/each}
+				</div>
 			</div>
 			<input type="text" name="icon" bind:value={createIcon} class="sr-only" tabindex="-1" aria-hidden="true" />
 		</div>
@@ -436,26 +438,28 @@
 		</div>
 		<div class="space-y-2">
 			<Label>Icon</Label>
-			<div class="grid grid-cols-8 gap-2">
-				<button
-					type="button"
-					onclick={() => (editIcon = '')}
-					class="size-9 rounded-lg border flex items-center justify-center text-muted-foreground transition-shadow {editIcon === '' ? 'ring-2 ring-foreground' : ''}"
-					aria-label="No icon"
-				>
-					<span class="text-xs">—</span>
-				</button>
-				{#each CATEGORY_ICONS as ico (ico.name)}
+			<div class="max-h-[17rem] overflow-y-auto rounded-lg border p-2">
+				<div class="grid grid-cols-8 gap-2">
 					<button
 						type="button"
-						onclick={() => (editIcon = ico.name)}
-						class="size-9 rounded-lg border flex items-center justify-center transition-shadow {editIcon === ico.name ? 'ring-2 ring-foreground bg-accent/30' : ''}"
-						aria-label={ico.label}
-						title={ico.label}
+						onclick={() => (editIcon = '')}
+						class="size-9 rounded-lg border flex items-center justify-center text-muted-foreground transition-shadow {editIcon === '' ? 'ring-2 ring-foreground' : ''}"
+						aria-label="No icon"
 					>
-						<ico.icon class="size-4" />
+						<span class="text-xs">—</span>
 					</button>
-				{/each}
+					{#each CATEGORY_ICONS as ico (ico.name)}
+						<button
+							type="button"
+							onclick={() => (editIcon = ico.name)}
+							class="size-9 rounded-lg border flex items-center justify-center transition-shadow {editIcon === ico.name ? 'ring-2 ring-foreground bg-accent/30' : ''}"
+							aria-label={ico.label}
+							title={ico.label}
+						>
+							<ico.icon class="size-4" />
+						</button>
+					{/each}
+				</div>
 			</div>
 			<input type="text" name="icon" bind:value={editIcon} class="sr-only" tabindex="-1" aria-hidden="true" />
 		</div>
