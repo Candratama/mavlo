@@ -228,16 +228,11 @@
 			formData.set('color', createColor);
 			createPending = true;
 			return async ({ result }) => {
-				await goto(page.url.pathname + page.url.search, {
-					invalidateAll: true,
-					replaceState: true,
-					keepFocus: true,
-					noScroll: true
-				});
 				createPending = false;
 				if (result.type === 'success') {
 					createOpen = false;
 					notify.success('Account created');
+					window.location.reload();
 				} else if (result.type === 'failure') {
 					const message = (result.data as { message?: string } | undefined)?.message;
 					notify.error(message ?? 'Could not create account');
@@ -335,16 +330,11 @@
 			formData.set('color', editColor);
 			editPending = true;
 			return async ({ result }) => {
-				await goto(page.url.pathname + page.url.search, {
-					invalidateAll: true,
-					replaceState: true,
-					keepFocus: true,
-					noScroll: true
-				});
 				editPending = false;
 				if (result.type === 'success') {
 					editOpen = false;
 					notify.success('Account updated');
+					window.location.reload();
 				} else if (result.type === 'failure') {
 					const message = (result.data as { message?: string } | undefined)?.message;
 					notify.error(message ?? 'Could not save account');
