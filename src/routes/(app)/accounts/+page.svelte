@@ -317,8 +317,13 @@
 				createPending = false;
 				if (result.type === 'success') {
 					createOpen = false;
+					await goto(page.url.pathname + page.url.search, {
+						invalidateAll: true,
+						replaceState: true,
+						keepFocus: true,
+						noScroll: true
+					});
 					notify.success('Account created');
-					window.location.reload();
 				} else if (result.type === 'failure') {
 					const message = (result.data as { message?: string } | undefined)?.message;
 					notify.error(message ?? 'Could not create account');
@@ -421,8 +426,13 @@
 				editPending = false;
 				if (result.type === 'success') {
 					editOpen = false;
+					await goto(page.url.pathname + page.url.search, {
+						invalidateAll: true,
+						replaceState: true,
+						keepFocus: true,
+						noScroll: true
+					});
 					notify.success('Account updated');
-					window.location.reload();
 				} else if (result.type === 'failure') {
 					const message = (result.data as { message?: string } | undefined)?.message;
 					notify.error(message ?? 'Could not save account');
@@ -530,8 +540,13 @@
 				adjustPending = false;
 				if (result.type === 'success') {
 					adjustOpen = false;
+					await goto(page.url.pathname + page.url.search, {
+						invalidateAll: true,
+						replaceState: true,
+						keepFocus: true,
+						noScroll: true
+					});
 					notify.success('Balance adjusted');
-					window.location.reload();
 				} else if (result.type === 'failure') {
 					const message = (result.data as { message?: string } | undefined)?.message;
 					notify.error(message ?? 'Could not adjust');

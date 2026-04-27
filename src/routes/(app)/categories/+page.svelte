@@ -344,8 +344,13 @@
 				createPending = false;
 				if (result.type === 'success') {
 					createOpen = false;
+					await goto(page.url.pathname + page.url.search, {
+						invalidateAll: true,
+						replaceState: true,
+						keepFocus: true,
+						noScroll: true
+					});
 					notify.success('Category created');
-					window.location.reload();
 				} else if (result.type === 'failure') {
 					const message = (result.data as { message?: string } | undefined)?.message;
 					notify.error(message ?? 'Could not create category');
@@ -458,8 +463,13 @@
 				editPending = false;
 				if (result.type === 'success') {
 					editOpen = false;
+					await goto(page.url.pathname + page.url.search, {
+						invalidateAll: true,
+						replaceState: true,
+						keepFocus: true,
+						noScroll: true
+					});
 					notify.success('Category updated');
-					window.location.reload();
 				} else if (result.type === 'failure') {
 					const message = (result.data as { message?: string } | undefined)?.message;
 					notify.error(message ?? 'Could not save category');
