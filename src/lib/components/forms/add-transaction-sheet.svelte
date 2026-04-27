@@ -77,6 +77,7 @@
 		};
 	}
 
+	let dateInput: HTMLInputElement | undefined = $state();
 	let kind = $state<'income' | 'expense' | 'transfer'>(initialState().kind);
 	let accountId = $state(initialState().accountId);
 	let transferToAccountId = $state(initialState().transferToAccountId);
@@ -186,16 +187,23 @@
 		</div>
 
 		<div class="flex items-center gap-2 flex-wrap">
-			<label class="inline-flex items-center gap-1.5 px-3 h-9 rounded-full border border-input bg-background text-sm cursor-pointer hover:bg-accent/30 relative">
+			<button
+				type="button"
+				onclick={() => dateInput?.showPicker?.()}
+				class="inline-flex items-center gap-1.5 px-3 h-9 rounded-full border border-input bg-background text-sm cursor-pointer hover:bg-accent/30"
+			>
 				<CalendarDays class="size-4" />
 				{dateLabel}
-				<input
-					type="date"
-					name="occurredAt"
-					bind:value={occurredAt}
-					class="absolute inset-0 opacity-0 cursor-pointer"
-				/>
-			</label>
+			</button>
+			<input
+				bind:this={dateInput}
+				type="date"
+				name="occurredAt"
+				bind:value={occurredAt}
+				class="sr-only"
+				tabindex="-1"
+				aria-hidden="true"
+			/>
 			{#if !showNote}
 				<button
 					type="button"
