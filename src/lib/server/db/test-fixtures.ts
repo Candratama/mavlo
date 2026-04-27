@@ -22,6 +22,8 @@ const accountsTableSql = `
 		type TEXT NOT NULL,
 		currency TEXT NOT NULL DEFAULT 'IDR',
 		initial_balance_cents INTEGER NOT NULL DEFAULT 0,
+		color TEXT,
+		icon TEXT,
 		archived INTEGER NOT NULL DEFAULT 0,
 		created_at INTEGER NOT NULL,
 		updated_at INTEGER NOT NULL

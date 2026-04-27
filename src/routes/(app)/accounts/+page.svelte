@@ -13,11 +13,12 @@
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
-	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil, Wallet, Coins, Landmark, CreditCard, CircleEllipsis } from 'lucide-svelte';
+	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil, Wallet, Coins, Landmark, CreditCard, CircleEllipsis, Tag } from 'lucide-svelte';
 	import type { Component } from 'svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
+	import { CATEGORY_ICONS, getIconByName } from '$lib/utils/category-icons.js';
 
 	let { data, form } = $props();
 
@@ -38,11 +39,25 @@
 		{ value: 'other', label: 'Other', icon: CircleEllipsis as unknown as Component }
 	];
 
+	const PRESET_SWATCHES = ['#10b981','#3b82f6','#f59e0b','#f43f5e','#8b5cf6','#ec4899','#14b8a6','#f97316'];
+
 	let createType = $state<string>('cash');
+	let createColor = $state('');
+	let createCustomColor = $state(false);
+	let createIcon = $state('');
+
 	let editType = $state<string>('cash');
+	let editColor = $state('');
+	let editCustomColor = $state(false);
+	let editIcon = $state('');
 
 	$effect(() => {
-		if (editTarget) editType = editTarget.type;
+		if (editTarget) {
+			editType = editTarget.type;
+			editColor = editTarget.color ?? '';
+			editCustomColor = !!editColor && !PRESET_SWATCHES.includes(editColor);
+			editIcon = editTarget.icon ?? '';
+		}
 	});
 
 	const formatBalance = (cents: number, currency: string) => formatCentsAsCurrency(cents, currency);
@@ -121,6 +136,7 @@
 			<Table.Root>
 				<Table.Header>
 					<Table.Row>
+						<Table.Head class="w-10"></Table.Head>
 						<Table.Head>Name</Table.Head>
 						<Table.Head>Type</Table.Head>
 						<Table.Head>Currency</Table.Head>
@@ -130,7 +146,17 @@
 				</Table.Header>
 				<Table.Body>
 					{#each data.accounts as account (account.id)}
+						{@const IconComp = getIconByName(account.icon)}
 						<Table.Row class={account.archived ? 'opacity-60' : ''}>
+							<Table.Cell>
+								<div class="size-7 rounded-md border flex items-center justify-center" style={account.color ? `background-color: ${account.color}20; border-color: ${account.color}` : ''}>
+									{#if IconComp}
+										<IconComp class="size-4" style={account.color ? `color: ${account.color}` : ''} />
+									{:else}
+										<Wallet class="size-4 text-muted-foreground" />
+									{/if}
+								</div>
+							</Table.Cell>
 							<Table.Cell class="font-medium">{account.name}</Table.Cell>
 							<Table.Cell class="capitalize">{account.type}</Table.Cell>
 							<Table.Cell>{account.currency}</Table.Cell>
@@ -143,7 +169,7 @@
 						</Table.Row>
 					{:else}
 						<Table.Row>
-							<Table.Cell colspan={5} class="p-0">
+							<Table.Cell colspan={6} class="p-0">
 								<EmptyState icon={Wallet} title="No accounts yet" description="Add your first account to start tracking your finances.">
 									<Button onclick={() => (createOpen = true)}>Add account</Button>
 								</EmptyState>
@@ -158,7 +184,15 @@
 
 <ul class="md:hidden space-y-2">
 	{#each data.accounts as account (account.id)}
+		{@const IconComp = getIconByName(account.icon)}
 		<li class="rounded-lg border bg-card p-3 flex items-start gap-3 {account.archived ? 'opacity-60' : ''}">
+			<div class="size-9 shrink-0 rounded-md border flex items-center justify-center" style={account.color ? `background-color: ${account.color}20; border-color: ${account.color}` : ''}>
+				{#if IconComp}
+					<IconComp class="size-4" style={account.color ? `color: ${account.color}` : ''} />
+				{:else}
+					<Wallet class="size-4 text-muted-foreground" />
+				{/if}
+			</div>
 			<div class="flex-1 min-w-0">
 				<div class="font-medium truncate">{account.name}</div>
 				<div class="text-xs text-muted-foreground capitalize mt-0.5">
@@ -228,6 +262,59 @@
 				<Label for="create-balance">Initial balance</Label>
 				<MoneyInput id="create-balance" name="initialBalanceCents" min={0} class="text-2xl h-12" />
 			</div>
+		</div>
+		<div class="space-y-2">
+			<Label>Color</Label>
+			<div class="grid grid-cols-8 gap-2">
+				{#each PRESET_SWATCHES as swatch (swatch)}
+					<button
+						type="button"
+						onclick={() => { createColor = swatch; createCustomColor = false; }}
+						class="size-8 rounded-lg border transition-shadow {createColor === swatch ? 'ring-2 ring-foreground' : ''}"
+						style="background-color: {swatch}"
+						aria-label={swatch}
+					></button>
+				{/each}
+			</div>
+			<button
+				type="button"
+				onclick={() => (createCustomColor = !createCustomColor)}
+				class="text-xs text-muted-foreground underline"
+			>
+				{createCustomColor ? 'Hide custom' : '+ Custom hex'}
+			</button>
+			{#if createCustomColor}
+				<div class="flex items-center gap-2">
+					<Input bind:value={createColor} placeholder="#10b981" maxlength={7} />
+					<span class="size-6 rounded border" style="background-color: {createColor || 'transparent'}"></span>
+				</div>
+			{/if}
+			<input type="text" name="color" bind:value={createColor} class="sr-only" tabindex="-1" aria-hidden="true" />
+		</div>
+		<div class="space-y-2">
+			<Label>Icon</Label>
+			<div class="grid grid-cols-8 gap-2">
+				<button
+					type="button"
+					onclick={() => (createIcon = '')}
+					class="size-9 rounded-lg border flex items-center justify-center text-muted-foreground transition-shadow {createIcon === '' ? 'ring-2 ring-foreground' : ''}"
+					aria-label="No icon"
+				>
+					<span class="text-xs">—</span>
+				</button>
+				{#each CATEGORY_ICONS as ico (ico.name)}
+					<button
+						type="button"
+						onclick={() => (createIcon = ico.name)}
+						class="size-9 rounded-lg border flex items-center justify-center transition-shadow {createIcon === ico.name ? 'ring-2 ring-foreground bg-accent/30' : ''}"
+						aria-label={ico.label}
+						title={ico.label}
+					>
+						<ico.icon class="size-4" />
+					</button>
+				{/each}
+			</div>
+			<input type="text" name="icon" bind:value={createIcon} class="sr-only" tabindex="-1" aria-hidden="true" />
 		</div>
 		<div class="flex justify-end gap-2">
 			<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
@@ -312,6 +399,59 @@
 					class="text-2xl h-12"
 				/>
 			</div>
+		</div>
+		<div class="space-y-2">
+			<Label>Color</Label>
+			<div class="grid grid-cols-8 gap-2">
+				{#each PRESET_SWATCHES as swatch (swatch)}
+					<button
+						type="button"
+						onclick={() => { editColor = swatch; editCustomColor = false; }}
+						class="size-8 rounded-lg border transition-shadow {editColor === swatch ? 'ring-2 ring-foreground' : ''}"
+						style="background-color: {swatch}"
+						aria-label={swatch}
+					></button>
+				{/each}
+			</div>
+			<button
+				type="button"
+				onclick={() => (editCustomColor = !editCustomColor)}
+				class="text-xs text-muted-foreground underline"
+			>
+				{editCustomColor ? 'Hide custom' : '+ Custom hex'}
+			</button>
+			{#if editCustomColor}
+				<div class="flex items-center gap-2">
+					<Input bind:value={editColor} placeholder="#10b981" maxlength={7} />
+					<span class="size-6 rounded border" style="background-color: {editColor || 'transparent'}"></span>
+				</div>
+			{/if}
+			<input type="text" name="color" bind:value={editColor} class="sr-only" tabindex="-1" aria-hidden="true" />
+		</div>
+		<div class="space-y-2">
+			<Label>Icon</Label>
+			<div class="grid grid-cols-8 gap-2">
+				<button
+					type="button"
+					onclick={() => (editIcon = '')}
+					class="size-9 rounded-lg border flex items-center justify-center text-muted-foreground transition-shadow {editIcon === '' ? 'ring-2 ring-foreground' : ''}"
+					aria-label="No icon"
+				>
+					<span class="text-xs">—</span>
+				</button>
+				{#each CATEGORY_ICONS as ico (ico.name)}
+					<button
+						type="button"
+						onclick={() => (editIcon = ico.name)}
+						class="size-9 rounded-lg border flex items-center justify-center transition-shadow {editIcon === ico.name ? 'ring-2 ring-foreground bg-accent/30' : ''}"
+						aria-label={ico.label}
+						title={ico.label}
+					>
+						<ico.icon class="size-4" />
+					</button>
+				{/each}
+			</div>
+			<input type="text" name="icon" bind:value={editIcon} class="sr-only" tabindex="-1" aria-hidden="true" />
 		</div>
 		<div class="flex justify-end gap-2">
 			<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
