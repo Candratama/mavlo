@@ -66,6 +66,7 @@
 		Rp
 	</span>
 	<Input
+		bind:ref={inputEl}
 		{id}
 		type="text"
 		inputmode="numeric"

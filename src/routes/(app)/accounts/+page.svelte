@@ -521,8 +521,7 @@
 	<form
 		method="POST"
 		action="?/adjust"
-		use:enhance={({ formData }) => {
-			formData.set('targetCents', String(adjustTargetCents ?? target.balanceCents));
+		use:enhance={() => {
 			adjustPending = true;
 			return async ({ result }) => {
 				adjustPending = false;
