@@ -9,23 +9,19 @@ import {
 	computeDailySpending,
 	computeMonthlyIncomeExpense
 } from '$lib/server/repositories/dashboard-stats';
+import { getPreferences } from '$lib/server/repositories/preferences';
+import { getCurrentCycle } from '$lib/utils/cycle.js';
 import type { PageServerLoad } from './$types';
-
-const currentPeriodMonth = (): string => {
-	const d = new Date();
-	const y = d.getUTCFullYear();
-	const m = String(d.getUTCMonth() + 1).padStart(2, '0');
-	return `${y}-${m}`;
-};
 
 export const load: PageServerLoad = async (event) => {
 	const user = requireUser(event);
 	const db = getDb(event.platform!.env.DB);
 
-	const periodMonth = currentPeriodMonth();
-	const now = new Date();
-	const monthStartMs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1);
-	const monthEndMs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1) - 1;
+	const preferences = await getPreferences(db, user.id);
+	const monthStartDay = preferences?.monthStartDay ?? 1;
+	const timezone = preferences?.timezone ?? 'Asia/Jakarta';
+
+	const cycle = getCurrentCycle(new Date(), monthStartDay, timezone);
 
 	const [
 		balances,
@@ -38,13 +34,13 @@ export const load: PageServerLoad = async (event) => {
 		monthlyIncomeExpense
 	] = await Promise.all([
 		computeAccountBalances(db, user.id),
-		listTransactions(db, user.id, { fromMs: monthStartMs, toMs: monthEndMs }),
+		listTransactions(db, user.id, { fromMs: cycle.start.getTime(), toMs: cycle.end.getTime() - 1 }),
 		listTransactions(db, user.id, {}),
 		listAccounts(db, user.id, { includeArchived: false }),
 		listCategories(db, user.id, { includeArchived: false }),
-		computeSpendingByCategory(db, user.id, periodMonth),
-		computeDailySpending(db, user.id, periodMonth),
-		computeMonthlyIncomeExpense(db, user.id, 6, periodMonth)
+		computeSpendingByCategory(db, user.id, cycle.periodMonth),
+		computeDailySpending(db, user.id, cycle.periodMonth),
+		computeMonthlyIncomeExpense(db, user.id, 6, cycle.periodMonth)
 	]);
 
 	const accountById = new Map(accounts.map((a) => [a.id, a]));
@@ -78,6 +74,12 @@ export const load: PageServerLoad = async (event) => {
 		spendingByCategory,
 		dailySpending,
 		monthlyIncomeExpense,
-		displayCurrency: 'IDR'
+		displayCurrency: 'IDR',
+		cycle: {
+			periodMonth: cycle.periodMonth,
+			startMs: cycle.start.getTime(),
+			endMs: cycle.end.getTime()
+		},
+		monthStartDay
 	};
 };
