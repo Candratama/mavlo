@@ -13,7 +13,7 @@
 	import EmptyState from '$lib/components/empty-state.svelte';
 	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
 	import PickerSheet, { type PickerItem, type PickerGroup } from '$lib/components/ui/picker-sheet.svelte';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import AddTransactionSheet from '$lib/components/forms/add-transaction-sheet.svelte';
 	import { openAddTransaction } from '$lib/stores/add-transaction.svelte.js';
 
@@ -228,8 +228,8 @@
 			<DropdownMenu.Item onclick={() => openEdit(tx)}>
 				<Pencil class="size-4 mr-2" /> Edit
 			</DropdownMenu.Item>
-			<form method="POST" action="?/delete" use:enhance={() => async ({ update, result }) => {
-					await update();
+			<form method="POST" action="?/delete" use:enhance={() => async ({ result }) => {
+					await invalidateAll();
 					if (result.type === 'success') {
 						notify.success('Transaction deleted');
 					} else if (result.type === 'failure') {
