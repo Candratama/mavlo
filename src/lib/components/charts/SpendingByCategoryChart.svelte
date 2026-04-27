@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Chart, Pie, Svg } from 'layerchart';
+	import { Chart, Pie, Svg, Arc } from 'layerchart';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 
 	interface CategoryRow {
@@ -36,7 +36,32 @@
 	<div class="h-48 sm:h-56 md:h-64">
 		<Chart {data} x="amountCents" c="categoryName" cRange={PALETTE}>
 			<Svg center>
-				<Pie innerRadius={0.6} cornerRadius={2} padAngle={0.01} />
+				<Pie innerRadius={0.6} cornerRadius={2} padAngle={0.01} let:arcs>
+					{#each arcs as arc, i (i)}
+						{@const pct = total > 0 ? Math.round(((arc.data as CategoryRow).amountCents / total) * 100) : 0}
+						<Arc
+							startAngle={arc.startAngle}
+							endAngle={arc.endAngle}
+							padAngle={arc.padAngle}
+							innerRadius={0.6}
+							cornerRadius={2}
+							fill={PALETTE[i % PALETTE.length]}
+							let:centroid
+						>
+							{#if pct >= 5}
+								<text
+									x={centroid[0]}
+									y={centroid[1]}
+									text-anchor="middle"
+									dominant-baseline="middle"
+									class="fill-white text-[11px] font-semibold pointer-events-none"
+								>
+									{pct}%
+								</text>
+							{/if}
+						</Arc>
+					{/each}
+				</Pie>
 			</Svg>
 		</Chart>
 	</div>
