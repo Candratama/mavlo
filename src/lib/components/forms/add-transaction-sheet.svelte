@@ -8,7 +8,7 @@
 	import MoneyInput from './money-input.svelte';
 	import SubmitButton from './submit-button.svelte';
 	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
-	import PickerSheet, { type PickerItem, type PickerGroup } from '$lib/components/ui/picker-sheet.svelte';
+	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
 	import { CalendarDays, StickyNote, Trash2 } from 'lucide-svelte';
 	import { setLastUsed } from '$lib/utils/last-used.js';
 	import { notify } from '$lib/utils/toast.js';
@@ -106,21 +106,17 @@
 		accounts.map((a) => ({ value: a.id, label: a.name, description: a.currency }))
 	);
 
-	const categoryGroups = $derived<PickerGroup[]>([
-		{
-			label: 'Expense',
-			items: [
-				{ value: '', label: 'None' },
-				...categories.filter((c) => c.kind === 'expense').map((c) => ({ value: c.id, label: c.name }))
-			]
-		},
-		{
-			label: 'Income',
-			items: categories
-				.filter((c) => c.kind === 'income')
-				.map((c) => ({ value: c.id, label: c.name }))
-		}
+	const categoryItems = $derived<PickerItem[]>([
+		{ value: '', label: 'None' },
+		...categories
+			.filter((c) => c.kind === (kind === 'income' ? 'income' : 'expense'))
+			.map((c) => ({ value: c.id, label: c.name }))
 	]);
+
+	$effect(() => {
+		const ids = new Set(categoryItems.map((i) => i.value));
+		if (categoryId && !ids.has(categoryId)) categoryId = '';
+	});
 
 	const isToday = $derived(occurredAt === todayYmd);
 	const dateLabel = $derived(
@@ -182,42 +178,6 @@
 			/>
 		</div>
 
-		<div class="space-y-2">
-			<Label>{kind === 'transfer' ? 'From account' : 'Account'}</Label>
-			<PickerSheet
-				items={accountItems}
-				bind:value={accountId}
-				name="accountId"
-				placeholder="Choose account"
-				title="Select account"
-			/>
-		</div>
-
-		{#if kind === 'transfer'}
-			<div class="space-y-2">
-				<Label>To account</Label>
-				<PickerSheet
-					items={accountItems.filter((i) => i.value !== accountId)}
-					bind:value={transferToAccountId}
-					name="transferToAccountId"
-					placeholder="Choose destination"
-					title="Select destination"
-				/>
-			</div>
-		{:else}
-			<div class="space-y-2">
-				<Label>Category</Label>
-				<PickerSheet
-					groups={categoryGroups}
-					bind:value={categoryId}
-					name="categoryId"
-					placeholder="None"
-					title="Select category"
-					searchable
-				/>
-			</div>
-		{/if}
-
 		<div class="flex items-center gap-2 flex-wrap">
 			<label class="inline-flex items-center gap-1.5 px-3 h-9 rounded-full border border-input bg-background text-sm cursor-pointer hover:bg-accent/30 relative">
 				<CalendarDays class="size-4" />
@@ -259,6 +219,42 @@
 						<Trash2 class="size-4" />
 					</Button>
 				</div>
+			</div>
+		{/if}
+
+		<div class="space-y-2">
+			<Label>{kind === 'transfer' ? 'From account' : 'Account'}</Label>
+			<PickerSheet
+				items={accountItems}
+				bind:value={accountId}
+				name="accountId"
+				placeholder="Choose account"
+				title="Select account"
+			/>
+		</div>
+
+		{#if kind === 'transfer'}
+			<div class="space-y-2">
+				<Label>To account</Label>
+				<PickerSheet
+					items={accountItems.filter((i) => i.value !== accountId)}
+					bind:value={transferToAccountId}
+					name="transferToAccountId"
+					placeholder="Choose destination"
+					title="Select destination"
+				/>
+			</div>
+		{:else}
+			<div class="space-y-2">
+				<Label>Category</Label>
+				<PickerSheet
+					items={categoryItems}
+					bind:value={categoryId}
+					name="categoryId"
+					placeholder="None"
+					title="Select category"
+					searchable
+				/>
 			</div>
 		{/if}
 

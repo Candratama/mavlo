@@ -40,6 +40,7 @@
 	--sidebar-border: oklch(0.922 0 0);
 	--sidebar-ring: oklch(0.708 0 0);
 	--bottom-nav-h: 4rem;
+	--fab-h: 4.5rem;
 }
 
 .dark {
