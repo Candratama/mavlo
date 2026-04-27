@@ -343,13 +343,13 @@
 			return async ({ result }) => {
 				createPending = false;
 				if (result.type === 'success') {
-					createOpen = false;
 					await goto(page.url.pathname + page.url.search, {
 						invalidateAll: true,
 						replaceState: true,
 						keepFocus: true,
 						noScroll: true
 					});
+					createOpen = false;
 					notify.success('Category created');
 				} else if (result.type === 'failure') {
 					const message = (result.data as { message?: string } | undefined)?.message;
@@ -462,13 +462,13 @@
 			return async ({ result }) => {
 				editPending = false;
 				if (result.type === 'success') {
-					editOpen = false;
 					await goto(page.url.pathname + page.url.search, {
 						invalidateAll: true,
 						replaceState: true,
 						keepFocus: true,
 						noScroll: true
 					});
+					editOpen = false;
 					notify.success('Category updated');
 				} else if (result.type === 'failure') {
 					const message = (result.data as { message?: string } | undefined)?.message;

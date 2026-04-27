@@ -316,13 +316,13 @@
 			return async ({ result }) => {
 				createPending = false;
 				if (result.type === 'success') {
-					createOpen = false;
 					await goto(page.url.pathname + page.url.search, {
 						invalidateAll: true,
 						replaceState: true,
 						keepFocus: true,
 						noScroll: true
 					});
+					createOpen = false;
 					notify.success('Account created');
 				} else if (result.type === 'failure') {
 					const message = (result.data as { message?: string } | undefined)?.message;
@@ -425,13 +425,13 @@
 			return async ({ result }) => {
 				editPending = false;
 				if (result.type === 'success') {
-					editOpen = false;
 					await goto(page.url.pathname + page.url.search, {
 						invalidateAll: true,
 						replaceState: true,
 						keepFocus: true,
 						noScroll: true
 					});
+					editOpen = false;
 					notify.success('Account updated');
 				} else if (result.type === 'failure') {
 					const message = (result.data as { message?: string } | undefined)?.message;
@@ -539,13 +539,13 @@
 			return async ({ result }) => {
 				adjustPending = false;
 				if (result.type === 'success') {
-					adjustOpen = false;
 					await goto(page.url.pathname + page.url.search, {
 						invalidateAll: true,
 						replaceState: true,
 						keepFocus: true,
 						noScroll: true
 					});
+					adjustOpen = false;
 					notify.success('Balance adjusted');
 				} else if (result.type === 'failure') {
 					const message = (result.data as { message?: string } | undefined)?.message;
