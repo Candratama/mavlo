@@ -7,9 +7,12 @@ import {
 	updateAccount,
 	archiveAccount,
 	unarchiveAccount,
-	reorderAccounts
+	reorderAccounts,
+	getAccount
 } from '$lib/server/repositories/accounts';
 import { computeAccountBalances } from '$lib/server/repositories/balances';
+import { getOrCreateAdjustmentCategory } from '$lib/server/repositories/categories';
+import { createTransaction } from '$lib/server/repositories/transactions';
 import {
 	accountCreateSchema,
 	accountUpdateSchema,
@@ -90,5 +93,40 @@ export const actions: Actions = {
 		if (ids.length === 0) return fail(400, { action: 'reorder', message: 'Empty ids' });
 		await reorderAccounts(db, user.id, ids);
 		return { success: true, action: 'reorder' };
+	},
+
+	adjust: async (event) => {
+		const user = requireUser(event);
+		const db = getDb(event.platform!.env.DB);
+		const fd = await event.request.formData();
+		const accountId = String(fd.get('id') ?? '');
+		const targetRaw = String(fd.get('targetCents') ?? '');
+		const note = String(fd.get('note') ?? '').trim() || null;
+		const targetCents = Number(targetRaw);
+		if (!accountId) return fail(400, { action: 'adjust', message: 'Account required' });
+		if (!Number.isFinite(targetCents)) return fail(400, { action: 'adjust', message: 'Invalid amount' });
+
+		const account = await getAccount(db, user.id, accountId);
+		if (!account) return fail(404, { action: 'adjust', message: 'Account not found' });
+
+		const balances = await computeAccountBalances(db, user.id);
+		const current = balances.get(accountId) ?? account.initialBalanceCents;
+		const delta = targetCents - current;
+		if (delta === 0) return { success: true, action: 'adjust' };
+
+		const kind: 'income' | 'expense' = delta > 0 ? 'income' : 'expense';
+		const categoryId = await getOrCreateAdjustmentCategory(db, user.id, kind);
+
+		await createTransaction(db, user.id, {
+			accountId,
+			categoryId,
+			kind,
+			amountCents: Math.abs(delta),
+			occurredAt: Date.now(),
+			note: note ?? `Adjustment to ${account.currency} ${(targetCents / 100).toLocaleString('id-ID')}`,
+			transferToAccountId: null
+		});
+
+		return { success: true, action: 'adjust' };
 	}
 };

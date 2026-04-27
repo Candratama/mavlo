@@ -13,7 +13,7 @@
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
-	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil, Wallet, Coins, Landmark, CreditCard, CircleEllipsis, Tag, GripVertical } from 'lucide-svelte';
+	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil, Wallet, Coins, Landmark, CreditCard, CircleEllipsis, Tag, GripVertical, Scale } from 'lucide-svelte';
 	import { dndzone } from 'svelte-dnd-action';
 	import type { Component } from 'svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
@@ -73,6 +73,19 @@
 	const openEdit = (a: AccountRow) => {
 		editTarget = a;
 		editOpen = true;
+	};
+
+	let adjustOpen = $state(false);
+	let adjustTarget = $state<AccountRow | null>(null);
+	let adjustTargetCents = $state<number | null>(null);
+	let adjustNote = $state('');
+	let adjustPending = $state(false);
+
+	const openAdjust = (a: AccountRow) => {
+		adjustTarget = a;
+		adjustTargetCents = a.balanceCents;
+		adjustNote = '';
+		adjustOpen = true;
 	};
 
 	let visibleAccounts = $state<AccountRow[]>(data.accounts);
@@ -135,6 +148,9 @@
 		<DropdownMenu.Content align="end">
 			<DropdownMenu.Item onclick={() => openEdit(account)}>
 				<Pencil class="size-4 mr-2" /> Edit
+			</DropdownMenu.Item>
+			<DropdownMenu.Item onclick={() => openAdjust(account)}>
+				<Scale class="size-4 mr-2" /> Adjust balance
 			</DropdownMenu.Item>
 			<form method="POST" action="?/{account.archived ? 'unarchive' : 'archive'}" use:enhance={() => async ({ result }) => {
 				await goto(page.url.pathname + page.url.search, {
@@ -496,6 +512,72 @@
 					<Sheet.Description>Update your account details.</Sheet.Description>
 				</Sheet.Header>
 				<div class="flex-1 overflow-y-auto">{@render editForm(editTarget)}</div>
+			</Sheet.Content>
+		</Sheet.Root>
+	{/if}
+{/if}
+
+{#snippet adjustForm(target: AccountRow)}
+	<form
+		method="POST"
+		action="?/adjust"
+		use:enhance={({ formData }) => {
+			formData.set('targetCents', String(adjustTargetCents ?? target.balanceCents));
+			adjustPending = true;
+			return async ({ result }) => {
+				adjustPending = false;
+				if (result.type === 'success') {
+					adjustOpen = false;
+					notify.success('Balance adjusted');
+					window.location.reload();
+				} else if (result.type === 'failure') {
+					const message = (result.data as { message?: string } | undefined)?.message;
+					notify.error(message ?? 'Could not adjust');
+				}
+			};
+		}}
+		class="space-y-4 p-4"
+	>
+		<input type="hidden" name="id" value={target.id} />
+		<div class="rounded-lg bg-muted p-3 text-sm">
+			<div class="text-xs text-muted-foreground">Current balance</div>
+			<div class="font-semibold tabular-nums text-base">{formatBalance(target.balanceCents, target.currency)}</div>
+		</div>
+		<div class="space-y-1">
+			<Label for="adjust-target">New balance</Label>
+			<MoneyInput id="adjust-target" name="targetCents" bind:value={adjustTargetCents} class="text-2xl h-12" required />
+		</div>
+		<div class="space-y-1">
+			<Label for="adjust-note">Note (optional)</Label>
+			<Input id="adjust-note" name="note" bind:value={adjustNote} maxlength={200} placeholder="Reason for adjustment" />
+		</div>
+		<p class="text-xs text-muted-foreground">
+			Creates a tracked transaction (income or expense) under "Balance Adjustment" category for the difference.
+		</p>
+		<div class="flex justify-end gap-2">
+			<Button type="button" variant="outline" onclick={() => (adjustOpen = false)}>Cancel</Button>
+			<SubmitButton pending={adjustPending}>Save</SubmitButton>
+		</div>
+	</form>
+{/snippet}
+
+{#if adjustTarget}
+	{#if isDesktop.current}
+		<Dialog.Root bind:open={adjustOpen}>
+			<Dialog.Content>
+				<Dialog.Header>
+					<Dialog.Title>Adjust balance</Dialog.Title>
+				</Dialog.Header>
+				{@render adjustForm(adjustTarget)}
+			</Dialog.Content>
+		</Dialog.Root>
+	{:else}
+		<Sheet.Root bind:open={adjustOpen}>
+			<Sheet.Content side="bottom" class="max-h-[calc(90dvh-var(--keyboard-h,0px))] flex flex-col p-0">
+				<Sheet.Header class="text-left p-4 pb-2">
+					<Sheet.Title>Adjust balance</Sheet.Title>
+				</Sheet.Header>
+				<div class="flex-1 overflow-y-auto">{@render adjustForm(adjustTarget)}</div>
 			</Sheet.Content>
 		</Sheet.Root>
 	{/if}

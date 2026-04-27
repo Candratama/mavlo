@@ -92,3 +92,36 @@ export async function reorderCategories(db: Db, userId: string, orderedIds: stri
 		)
 	);
 }
+
+const ADJUSTMENT_NAME = 'Balance Adjustment';
+
+export async function getOrCreateAdjustmentCategory(
+	db: Db,
+	userId: string,
+	kind: 'income' | 'expense'
+): Promise<string> {
+	const [existing] = await db
+		.select()
+		.from(categories)
+		.where(
+			and(
+				eq(categories.userId, userId),
+				eq(categories.name, ADJUSTMENT_NAME),
+				eq(categories.kind, kind)
+			)
+		)
+		.limit(1);
+	if (existing) return existing.id;
+
+	const [created] = await db
+		.insert(categories)
+		.values({
+			userId,
+			name: ADJUSTMENT_NAME,
+			kind,
+			color: kind === 'income' ? '#10b981' : '#f43f5e',
+			icon: kind === 'income' ? 'trending-up' : 'trending-down'
+		})
+		.returning();
+	return created.id;
+}
