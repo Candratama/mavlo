@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
-	import { ArrowRight, ArrowLeftRight, TrendingUp, TrendingDown, Tag } from 'lucide-svelte';
+	import { ArrowRight, ArrowLeftRight, ArrowUp, ArrowDown, Tag, Eye, EyeOff } from 'lucide-svelte';
 	import SpendingByCategoryChart from '$lib/components/charts/SpendingByCategoryChart.svelte';
 	import DailySpendingChart from '$lib/components/charts/DailySpendingChart.svelte';
 	import IncomeExpenseChart from '$lib/components/charts/IncomeExpenseChart.svelte';
@@ -38,6 +38,30 @@
 	const cycleNetCents = $derived(data.monthIncomeCents - data.monthExpenseCents);
 	const trendingUp = $derived(cycleNetCents >= 0);
 
+	const budgetPercent = $derived(
+		data.budgetLimitCents > 0
+			? Math.min(100, Math.round((data.budgetSpentCents / data.budgetLimitCents) * 100))
+			: 0
+	);
+	const budgetOver = $derived(data.budgetSpentCents > data.budgetLimitCents);
+
+	const HIDE_KEY = 'mavlo:hideBalance';
+	let hideBalance = $state(false);
+
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		hideBalance = window.localStorage.getItem(HIDE_KEY) === '1';
+	});
+
+	function toggleHideBalance() {
+		hideBalance = !hideBalance;
+		if (typeof window !== 'undefined') {
+			window.localStorage.setItem(HIDE_KEY, hideBalance ? '1' : '0');
+		}
+	}
+
+	const maskedAmount = '••••••';
+
 	const formatDate = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
 	let chartTab = $state<'category' | 'daily' | 'trend'>('category');
@@ -60,24 +84,27 @@
 <!-- Greeting -->
 <p class="text-xs uppercase tracking-wider text-muted-foreground mb-1">Hi, {firstName}</p>
 
-<!-- Hero net worth -->
-<div class="relative overflow-hidden rounded-2xl border bg-gradient-to-br {trendingUp ? 'from-emerald-500/10' : 'from-rose-500/10'} via-background to-background p-5 sm:p-6">
-	<div class="flex items-baseline justify-between">
-		<span class="text-xs uppercase tracking-wider text-muted-foreground">Net worth</span>
-		<span class="inline-flex items-center gap-1 text-xs {trendingUp ? 'text-income' : 'text-expense'}">
-			{#if trendingUp}<TrendingUp class="size-3" />{:else}<TrendingDown class="size-3" />{/if}
-			{trendingUp ? '+' : ''}{formatCentsAsCurrency(cycleNetCents, data.displayCurrency)}
-		</span>
-	</div>
+<!-- Hero total balance -->
+<div class="relative overflow-hidden rounded-2xl border bg-gradient-to-br {trendingUp ? 'from-emerald-500/15' : 'from-rose-500/15'} via-background to-background p-5 sm:p-6 text-center">
+	<button
+		type="button"
+		onclick={toggleHideBalance}
+		aria-label={hideBalance ? 'Show balance' : 'Hide balance'}
+		class="absolute top-3 right-3 size-9 rounded-full inline-flex items-center justify-center text-muted-foreground hover:bg-accent/40 cursor-pointer"
+	>
+		{#if hideBalance}<EyeOff class="size-4" />{:else}<Eye class="size-4" />{/if}
+	</button>
+	<p class="text-xs uppercase tracking-wider text-muted-foreground">
+		Total Balance <span class="text-foreground/70">({data.displayCurrency})</span>
+	</p>
 	<p class="mt-1 text-4xl sm:text-5xl font-semibold tabular-nums tracking-tight">
-		{formatCentsAsCurrency(data.netWorthCents, data.displayCurrency)}
+		{hideBalance ? maskedAmount : formatCentsAsCurrency(data.netWorthCents, data.displayCurrency)}
 	</p>
 	{#if cycleLabel}
-		<p class="mt-2 text-xs text-muted-foreground">{cycleLabel}</p>
-		<div class="mt-3 h-1 rounded-full bg-muted overflow-hidden">
+		<div class="mt-4 h-1 rounded-full bg-muted overflow-hidden">
 			<div class="h-full bg-primary transition-all" style="width: {cycleProgress}%"></div>
 		</div>
-		<p class="mt-1 text-[10px] text-muted-foreground">{cycleProgress}% through cycle</p>
+		<p class="mt-2 text-[10px] text-muted-foreground">{cycleLabel} · {cycleProgress}% through cycle</p>
 	{/if}
 </div>
 
@@ -85,18 +112,49 @@
 <!-- Cycle dual-stat -->
 <div class="mt-4 grid grid-cols-2 gap-3">
 	<div class="rounded-xl border bg-card p-4">
-		<p class="text-xs uppercase tracking-wider text-muted-foreground">Income</p>
-		<p class="mt-1 text-lg sm:text-xl font-semibold tabular-nums text-income">
-			+{formatCentsAsCurrency(data.monthIncomeCents, data.displayCurrency)}
+		<div class="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+			<span class="size-6 rounded-full bg-income/15 inline-flex items-center justify-center">
+				<ArrowDown class="size-3.5 text-income" />
+			</span>
+			Income
+		</div>
+		<p class="mt-2 text-lg sm:text-xl font-semibold tabular-nums">
+			{hideBalance ? maskedAmount : formatCentsAsCurrency(data.monthIncomeCents, data.displayCurrency)}
 		</p>
 	</div>
 	<div class="rounded-xl border bg-card p-4">
-		<p class="text-xs uppercase tracking-wider text-muted-foreground">Expense</p>
-		<p class="mt-1 text-lg sm:text-xl font-semibold tabular-nums text-expense">
-			−{formatCentsAsCurrency(data.monthExpenseCents, data.displayCurrency)}
+		<div class="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+			<span class="size-6 rounded-full bg-expense/15 inline-flex items-center justify-center">
+				<ArrowUp class="size-3.5 text-expense" />
+			</span>
+			Expense
+		</div>
+		<p class="mt-2 text-lg sm:text-xl font-semibold tabular-nums">
+			{hideBalance ? maskedAmount : formatCentsAsCurrency(data.monthExpenseCents, data.displayCurrency)}
 		</p>
 	</div>
 </div>
+
+{#if data.budgetLimitCents > 0}
+	<a href="/budgets" class="mt-4 block rounded-xl border bg-card p-4 hover:bg-accent/20 transition-colors">
+		<div class="flex items-center justify-between mb-2">
+			<span class="text-sm font-semibold">Monthly Budget</span>
+			<span class="text-sm font-semibold tabular-nums {budgetOver ? 'text-expense' : 'text-muted-foreground'}">
+				{budgetPercent}%
+			</span>
+		</div>
+		<div class="h-2 rounded-full bg-muted overflow-hidden mb-2">
+			<div
+				class="h-full transition-all {budgetOver ? 'bg-expense' : 'bg-primary'}"
+				style="width: {budgetPercent}%"
+			></div>
+		</div>
+		<div class="flex justify-between text-xs text-muted-foreground tabular-nums">
+			<span>{hideBalance ? maskedAmount : formatCentsAsCurrency(data.budgetSpentCents, data.displayCurrency)}</span>
+			<span>{hideBalance ? maskedAmount : formatCentsAsCurrency(data.budgetLimitCents, data.displayCurrency)}</span>
+		</div>
+	</a>
+{/if}
 
 <!-- Charts: tab on mobile, grid on desktop -->
 <div class="mt-6">

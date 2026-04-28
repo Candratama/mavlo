@@ -4,6 +4,8 @@ import { computeAccountBalances } from '$lib/server/repositories/balances';
 import { listTransactions } from '$lib/server/repositories/transactions';
 import { listAccounts } from '$lib/server/repositories/accounts';
 import { listCategories } from '$lib/server/repositories/categories';
+import { listBudgets } from '$lib/server/repositories/budgets';
+import { computeBudgetSpent } from '$lib/server/repositories/budget-spent';
 import {
 	computeSpendingByCategory,
 	computeDailySpending,
@@ -31,7 +33,9 @@ export const load: PageServerLoad = async (event) => {
 		categories,
 		spendingByCategory,
 		dailySpending,
-		monthlyIncomeExpense
+		monthlyIncomeExpense,
+		budgetList,
+		budgetSpentMap
 	] = await Promise.all([
 		computeAccountBalances(db, user.id),
 		listTransactions(db, user.id, { fromMs: cycle.start.getTime(), toMs: cycle.end.getTime() - 1 }),
@@ -40,8 +44,16 @@ export const load: PageServerLoad = async (event) => {
 		listCategories(db, user.id, { includeArchived: false }),
 		computeSpendingByCategory(db, user.id, cycle.periodMonth),
 		computeDailySpending(db, user.id, cycle.periodMonth),
-		computeMonthlyIncomeExpense(db, user.id, 6, cycle.periodMonth)
+		computeMonthlyIncomeExpense(db, user.id, 6, cycle.periodMonth),
+		listBudgets(db, user.id, { periodMonth: cycle.periodMonth }),
+		computeBudgetSpent(db, user.id, cycle.start.getTime(), cycle.end.getTime() - 1)
 	]);
+
+	const budgetLimitCents = budgetList.reduce((s, b) => s + b.limitCents, 0);
+	const budgetSpentCents = budgetList.reduce(
+		(s, b) => s + (budgetSpentMap.get(b.categoryId) ?? 0),
+		0
+	);
 
 	const accountById = new Map(accounts.map((a) => [a.id, a]));
 	const categoryById = new Map(categories.map((c) => [c.id, c]));
@@ -100,6 +112,8 @@ export const load: PageServerLoad = async (event) => {
 			endMs: cycle.end.getTime()
 		},
 		monthStartDay,
-		topCategory
+		topCategory,
+		budgetLimitCents,
+		budgetSpentCents
 	};
 };
