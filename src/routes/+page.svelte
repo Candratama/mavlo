@@ -16,6 +16,18 @@
 		setMode('dark');
 	});
 
+	let scrolled = $state(false);
+
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		const onScroll = () => {
+			scrolled = window.scrollY > 8;
+		};
+		onScroll();
+		window.addEventListener('scroll', onScroll, { passive: true });
+		return () => window.removeEventListener('scroll', onScroll);
+	});
+
 	const features = [
 		{
 			icon: Wallet,
@@ -57,7 +69,11 @@
 	></div>
 
 	<!-- Top bar -->
-	<header class="border-b border-border/40 backdrop-blur sticky top-0 z-30 bg-background/80">
+	<header
+		class="sticky top-0 z-30 transition-all duration-200 {scrolled
+			? 'border-b border-border/40 bg-background/50 backdrop-blur'
+			: 'border-b border-transparent bg-transparent'}"
+	>
 		<div class="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
 			<div class="flex items-center gap-2">
 				<img src="/icon-192.png" alt="Mavlo" class="size-7 rounded-md" />
