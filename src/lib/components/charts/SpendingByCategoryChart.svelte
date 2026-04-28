@@ -11,14 +11,14 @@
 	let { data, currency = 'IDR' }: { data: CategoryRow[]; currency?: string } = $props();
 
 	const PALETTE = [
-		'#10b981',
-		'#3b82f6',
-		'#f59e0b',
-		'#ef4444',
-		'#8b5cf6',
-		'#ec4899',
-		'#14b8a6',
-		'#f97316'
+		'#047857', // emerald-700
+		'#1d4ed8', // blue-700
+		'#b45309', // amber-700
+		'#b91c1c', // red-700
+		'#6d28d9', // violet-700
+		'#be185d', // pink-700
+		'#0f766e', // teal-700
+		'#c2410c'  // orange-700
 	];
 
 	const formatCents = (cents: number) => formatCentsAsCurrency(cents, currency);
