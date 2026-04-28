@@ -321,27 +321,20 @@
 					<div
 						data-stagger-item
 						use:magnetic={{ strength: 0.12, tilt: 0.04 }}
-						class="footer-glass-pill group relative isolate overflow-hidden rounded-2xl p-6"
+						class="feature-card group relative rounded-2xl border border-border/40 bg-card/80 p-6 backdrop-blur-md transition-colors duration-300 hover:border-primary/50 hover:bg-card/90"
 					>
 						<div
-							aria-hidden="true"
-							class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-							style="background: radial-gradient(circle at 30% 0%, rgba(16,185,129,0.18), transparent 60%);"
-						></div>
-						<div class="relative">
-							<div
-								class="mb-4 inline-flex size-11 items-center justify-center rounded-xl border border-border/40 bg-background/40 backdrop-blur"
-							>
-								<f.icon class="size-5 text-primary" />
-							</div>
-							<div class="mb-1 flex items-baseline gap-2">
-								<span class="text-[10px] font-bold tracking-widest text-muted-foreground/60">
-									0{i + 1}
-								</span>
-								<h3 class="text-lg font-bold tracking-tight">{f.title}</h3>
-							</div>
-							<p class="text-sm leading-relaxed text-muted-foreground">{f.body}</p>
+							class="mb-4 inline-flex size-11 items-center justify-center rounded-xl border border-border/40 bg-background/60 backdrop-blur transition-colors group-hover:border-primary/40 group-hover:bg-primary/10"
+						>
+							<f.icon class="size-5 text-primary transition-transform duration-500 group-hover:scale-110" />
 						</div>
+						<div class="mb-1 flex items-baseline gap-2">
+							<span class="text-[10px] font-bold tracking-widest text-muted-foreground/60">
+								0{i + 1}
+							</span>
+							<h3 class="text-lg font-bold tracking-tight">{f.title}</h3>
+						</div>
+						<p class="text-sm leading-relaxed text-muted-foreground">{f.body}</p>
 					</div>
 				{/each}
 			</div>
@@ -437,5 +430,16 @@
 <style>
 	.landing :global(.footer-glass-pill) {
 		transform-style: preserve-3d;
+	}
+
+	/* Force GPU layer + isolation so border-radius stays consistent under
+	   the magnetic 3D transform. Clip-path also forces immediate rounded
+	   masking instead of relying on overflow:hidden which lags briefly when
+	   the transform begins. */
+	.feature-card {
+		clip-path: inset(0 round 1rem);
+		transform-style: preserve-3d;
+		backface-visibility: hidden;
+		will-change: transform;
 	}
 </style>
