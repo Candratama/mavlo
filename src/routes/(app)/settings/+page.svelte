@@ -9,7 +9,7 @@
 	import SubmitButton from '$lib/components/forms/submit-button.svelte';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
-	import { Sun, Moon, Monitor } from 'lucide-svelte';
+	import { Sun, Moon, Monitor, LogOut, User as UserIcon, Mail } from 'lucide-svelte';
 	import { notify } from '$lib/utils/toast.js';
 	import SegmentedControl, { type SegmentedOption } from '$lib/components/ui/segmented-control.svelte';
 	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
@@ -147,130 +147,207 @@
 
 <h1 class="text-xl sm:text-2xl font-semibold tracking-tight mb-6">Settings</h1>
 
-<Card.Root class="max-w-2xl">
-	<Card.Header>
-		<Card.Title>Preferences</Card.Title>
-		<Card.Description>Currency, locale, timezone, and display options.</Card.Description>
-	</Card.Header>
-	<Card.Content>
-		<form method="POST" use:enhance={() => {
-				pending = true;
-				return async ({ result }) => {
-					await goto(page.url.pathname + page.url.search, {
-						invalidateAll: true,
-						replaceState: true,
-						keepFocus: true,
-						noScroll: true
-					});
-					pending = false;
-					if (result.type === 'success') {
-						notify.success('Preferences saved');
-					} else if (result.type === 'failure') {
-						const message = (result.data as { message?: string } | undefined)?.message;
-						notify.error(message ?? 'Could not save preferences');
-					}
-				};
-			}} class="space-y-4">
-			<div class="grid grid-cols-2 gap-3">
-				<div class="space-y-1">
-					<Label>Default currency</Label>
-					<PickerSheet items={currencyItems} bind:value={selectedCurrency} name="currency" placeholder="Select currency" title="Currency" searchable />
+<div class="max-w-2xl space-y-6">
+	<!-- Account -->
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>Account</Card.Title>
+			<Card.Description>Your profile picture, identity, and session.</Card.Description>
+		</Card.Header>
+		<Card.Content class="space-y-5">
+			<div class="flex items-center gap-4">
+				{#if data.user.image}
+					<img
+						src={data.user.image}
+						alt="Current avatar"
+						class="size-16 rounded-full object-cover border shrink-0"
+					/>
+				{:else}
+					<div class="size-16 rounded-full border bg-muted flex items-center justify-center shrink-0">
+						<UserIcon class="size-7 text-muted-foreground" />
+					</div>
+				{/if}
+				<div class="min-w-0 flex-1">
+					<div class="font-medium truncate">{data.user.name ?? '—'}</div>
+					<div class="flex items-center gap-1.5 text-xs text-muted-foreground truncate">
+						<Mail class="size-3.5 shrink-0" />
+						<span class="truncate">{data.user.email}</span>
+					</div>
 				</div>
-				<div class="space-y-1">
-					<Label>Locale</Label>
-					<PickerSheet items={localeItems} bind:value={selectedLocale} name="locale" placeholder="Select locale" title="Locale" searchable />
-				</div>
-			</div>
-			<div class="space-y-1">
-				<Label>Timezone</Label>
-				<PickerSheet items={timezoneItems} bind:value={selectedTimezone} name="timezone" placeholder="Select timezone" title="Timezone" searchable />
-			</div>
-			<div class="space-y-1">
-				<Label>Theme</Label>
-				<SegmentedControl options={themeOptions} bind:value={selectedTheme} name="theme" />
-			</div>
-			<div class="space-y-1">
-				<Label>Week starts on</Label>
-				<SegmentedControl options={weekStartOptions} bind:value={selectedWeekStart} name="weekStartsOn" />
 			</div>
 
 			<div class="space-y-2">
-				<Label>Cycle start (e.g. payday)</Label>
-				<div class="grid grid-cols-7 gap-1.5 rounded-lg bg-muted p-2">
-					{#each cycleDays as d (d)}
-						<button
-							type="button"
-							onclick={() => (selectedMonthStartDay = d)}
-							class="h-9 rounded-md text-sm tabular-nums transition-colors {selectedMonthStartDay === d ? 'bg-primary text-primary-foreground font-semibold' : 'hover:bg-background text-foreground'}"
-							aria-pressed={selectedMonthStartDay === d}
-						>
-							{d}
-						</button>
-					{/each}
+				<Label class="text-xs uppercase tracking-wider text-muted-foreground">Profile picture</Label>
+				<form
+					method="POST"
+					action="/settings/avatar"
+					enctype="multipart/form-data"
+					class="flex items-center gap-2"
+				>
+					<Input
+						type="file"
+						name="avatar"
+						accept="image/png,image/jpeg,image/webp,image/gif"
+						required
+					/>
+					<Button type="submit">Upload</Button>
+				</form>
+				<p class="text-xs text-muted-foreground">PNG, JPEG, WebP, or GIF; max 2 MB.</p>
+			</div>
+
+			<div class="border-t pt-4">
+				<form method="POST" action="/sign-out">
+					<Button type="submit" variant="outline" class="w-full sm:w-auto text-destructive">
+						<LogOut class="size-4 mr-1.5" /> Sign out
+					</Button>
+				</form>
+			</div>
+		</Card.Content>
+	</Card.Root>
+
+	<!-- Preferences (general + cycle in one form) -->
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>Preferences</Card.Title>
+			<Card.Description>Currency, locale, timezone, theme, and cycle.</Card.Description>
+		</Card.Header>
+		<Card.Content>
+			<form
+				method="POST"
+				use:enhance={() => {
+					pending = true;
+					return async ({ result }) => {
+						await goto(page.url.pathname + page.url.search, {
+							invalidateAll: true,
+							replaceState: true,
+							keepFocus: true,
+							noScroll: true
+						});
+						pending = false;
+						if (result.type === 'success') {
+							notify.success('Preferences saved');
+						} else if (result.type === 'failure') {
+							const message = (result.data as { message?: string } | undefined)?.message;
+							notify.error(message ?? 'Could not save preferences');
+						}
+					};
+				}}
+				class="space-y-6"
+			>
+				<section class="space-y-4">
+					<h2 class="text-xs uppercase tracking-wider text-muted-foreground">General</h2>
+					<div class="grid grid-cols-2 gap-3">
+						<div class="space-y-1">
+							<Label>Default currency</Label>
+							<PickerSheet
+								items={currencyItems}
+								bind:value={selectedCurrency}
+								name="currency"
+								placeholder="Select currency"
+								title="Currency"
+								searchable
+							/>
+						</div>
+						<div class="space-y-1">
+							<Label>Locale</Label>
+							<PickerSheet
+								items={localeItems}
+								bind:value={selectedLocale}
+								name="locale"
+								placeholder="Select locale"
+								title="Locale"
+								searchable
+							/>
+						</div>
+					</div>
+					<div class="space-y-1">
+						<Label>Timezone</Label>
+						<PickerSheet
+							items={timezoneItems}
+							bind:value={selectedTimezone}
+							name="timezone"
+							placeholder="Select timezone"
+							title="Timezone"
+							searchable
+						/>
+					</div>
+					<div class="space-y-1">
+						<Label>Theme</Label>
+						<SegmentedControl options={themeOptions} bind:value={selectedTheme} name="theme" />
+					</div>
+				</section>
+
+				<section class="space-y-4 border-t pt-5">
+					<h2 class="text-xs uppercase tracking-wider text-muted-foreground">Cycle</h2>
+					<div class="space-y-1">
+						<Label>Week starts on</Label>
+						<SegmentedControl
+							options={weekStartOptions}
+							bind:value={selectedWeekStart}
+							name="weekStartsOn"
+						/>
+					</div>
+					<div class="space-y-2">
+						<Label>Cycle start (e.g. payday)</Label>
+						<div class="grid grid-cols-7 gap-1.5 rounded-lg bg-muted p-2">
+							{#each cycleDays as d (d)}
+								<button
+									type="button"
+									onclick={() => (selectedMonthStartDay = d)}
+									class="h-9 rounded-md text-sm tabular-nums transition-colors {selectedMonthStartDay ===
+									d
+										? 'bg-primary text-primary-foreground font-semibold'
+										: 'hover:bg-background text-foreground'}"
+									aria-pressed={selectedMonthStartDay === d}
+								>
+									{d}
+								</button>
+							{/each}
+						</div>
+						<input type="hidden" name="monthStartDay" value={selectedMonthStartDay} />
+						<p class="text-xs text-muted-foreground">
+							Day 1 = calendar month. Day 25 = your month runs 25th to 24th. Affects current and future periods.
+						</p>
+					</div>
+				</section>
+
+				<div class="flex justify-end border-t pt-4">
+					<SubmitButton {pending}>Save</SubmitButton>
 				</div>
-				<input type="hidden" name="monthStartDay" value={selectedMonthStartDay} />
-				<p class="text-xs text-muted-foreground">
-					Day 1 = calendar month. Day 25 = your month runs 25th to 24th. Affects current and future periods.
+			</form>
+		</Card.Content>
+	</Card.Root>
+
+	<!-- Install -->
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>Install app</Card.Title>
+			<Card.Description>Add Mavlo to your home screen for an app-like experience.</Card.Description>
+		</Card.Header>
+		<Card.Content>
+			{#if alreadyInstalled}
+				<div class="flex items-center gap-2 text-sm text-income">
+					<Check class="size-4" /> Already installed
+				</div>
+			{:else if pwa.canInstall}
+				<Button onclick={onInstall}>
+					<Download class="size-4 mr-1.5" /> Install Mavlo
+				</Button>
+				<p class="mt-2 text-xs text-muted-foreground">
+					Adds Mavlo to your home screen / app drawer.
 				</p>
-			</div>
-
-			<div class="flex justify-end">
-				<SubmitButton {pending}>Save</SubmitButton>
-			</div>
-		</form>
-	</Card.Content>
-</Card.Root>
-
-<Card.Root class="max-w-2xl mt-6">
-	<Card.Header>
-		<Card.Title>Install app</Card.Title>
-		<Card.Description>Add Mavlo to your home screen for an app-like experience.</Card.Description>
-	</Card.Header>
-	<Card.Content>
-		{#if alreadyInstalled}
-			<div class="flex items-center gap-2 text-sm text-income">
-				<Check class="size-4" /> Already installed
-			</div>
-		{:else if pwa.canInstall}
-			<Button onclick={onInstall}>
-				<Download class="size-4 mr-1.5" /> Install Mavlo
-			</Button>
-			<p class="mt-2 text-xs text-muted-foreground">Adds Mavlo to your home screen / app drawer.</p>
-		{:else if iosDevice}
-			<div class="space-y-2 text-sm">
-				<p class="flex items-center gap-2 text-muted-foreground">
-					<Smartphone class="size-4" /> On iOS Safari, tap <Share class="size-4" /> Share, then <strong class="text-foreground">Add to Home Screen</strong>.
+			{:else if iosDevice}
+				<div class="space-y-2 text-sm">
+					<p class="flex items-center gap-2 text-muted-foreground">
+						<Smartphone class="size-4" /> On iOS Safari, tap <Share class="size-4" /> Share, then
+						<strong class="text-foreground">Add to Home Screen</strong>.
+					</p>
+				</div>
+			{:else}
+				<p class="text-sm text-muted-foreground">
+					Open Mavlo in Chrome / Edge / Safari. Browser will offer the install option when ready.
 				</p>
-			</div>
-		{:else}
-			<p class="text-sm text-muted-foreground">
-				Open Mavlo in Chrome / Edge / Safari. Browser will offer the install option when ready.
-			</p>
-		{/if}
-	</Card.Content>
-</Card.Root>
-
-<Card.Root class="max-w-2xl mt-6">
-	<Card.Header>
-		<Card.Title>Avatar</Card.Title>
-		<Card.Description>Upload a profile picture (PNG, JPEG, WebP, or GIF; max 2 MB).</Card.Description>
-	</Card.Header>
-	<Card.Content>
-		{#if data.user.image}
-			<img
-				src={data.user.image}
-				alt="Current avatar"
-				class="size-20 rounded-full object-cover border mb-4"
-			/>
-		{/if}
-		<form
-			method="POST"
-			action="/settings/avatar"
-			enctype="multipart/form-data"
-			class="flex items-center gap-3"
-		>
-			<Input type="file" name="avatar" accept="image/png,image/jpeg,image/webp,image/gif" required />
-			<Button type="submit">Upload</Button>
-		</form>
-	</Card.Content>
-</Card.Root>
+			{/if}
+		</Card.Content>
+	</Card.Root>
+</div>
