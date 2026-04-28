@@ -2,10 +2,9 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { resolve } from '$app/paths';
+	import { onMount } from 'svelte';
+	import type { Component } from 'svelte';
 	import { ArrowRight, ArrowLeftRight, ArrowUp, ArrowDown, Tag, Eye, EyeOff } from 'lucide-svelte';
-	import SpendingByCategoryChart from '$lib/components/charts/SpendingByCategoryChart.svelte';
-	import DailySpendingChart from '$lib/components/charts/DailySpendingChart.svelte';
-	import IncomeExpenseChart from '$lib/components/charts/IncomeExpenseChart.svelte';
 	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { formatCycleLabel } from '$lib/utils/cycle.js';
@@ -71,6 +70,22 @@
 		{ value: 'daily', label: 'Daily' },
 		{ value: 'trend', label: 'Trend' }
 	];
+
+	let SpendingByCategoryChart = $state<Component | null>(null);
+	let DailySpendingChart = $state<Component | null>(null);
+	let IncomeExpenseChart = $state<Component | null>(null);
+
+	onMount(() => {
+		void Promise.all([
+			import('$lib/components/charts/SpendingByCategoryChart.svelte'),
+			import('$lib/components/charts/DailySpendingChart.svelte'),
+			import('$lib/components/charts/IncomeExpenseChart.svelte')
+		]).then(([s, d, i]) => {
+			SpendingByCategoryChart = s.default as Component;
+			DailySpendingChart = d.default as Component;
+			IncomeExpenseChart = i.default as Component;
+		});
+	});
 
 	$effect(() => {
 		if (typeof window === 'undefined') return;
@@ -204,11 +219,11 @@
 				</Card.Description>
 			</Card.Header>
 			<Card.Content class="p-3 pt-0">
-				{#if chartTab === 'category'}
+				{#if chartTab === 'category' && SpendingByCategoryChart}
 					<SpendingByCategoryChart data={data.spendingByCategory} currency={data.displayCurrency} />
-				{:else if chartTab === 'daily'}
+				{:else if chartTab === 'daily' && DailySpendingChart}
 					<DailySpendingChart data={data.dailySpending} currency={data.displayCurrency} />
-				{:else}
+				{:else if IncomeExpenseChart}
 					<IncomeExpenseChart data={data.monthlyIncomeExpense} currency={data.displayCurrency} />
 				{/if}
 			</Card.Content>
@@ -222,7 +237,9 @@
 				<Card.Description>This cycle</Card.Description>
 			</Card.Header>
 			<Card.Content>
-				<SpendingByCategoryChart data={data.spendingByCategory} currency={data.displayCurrency} />
+				{#if SpendingByCategoryChart}
+					<SpendingByCategoryChart data={data.spendingByCategory} currency={data.displayCurrency} />
+				{/if}
 			</Card.Content>
 		</Card.Root>
 
@@ -232,7 +249,9 @@
 				<Card.Description>This cycle</Card.Description>
 			</Card.Header>
 			<Card.Content>
-				<DailySpendingChart data={data.dailySpending} currency={data.displayCurrency} />
+				{#if DailySpendingChart}
+					<DailySpendingChart data={data.dailySpending} currency={data.displayCurrency} />
+				{/if}
 			</Card.Content>
 		</Card.Root>
 
@@ -242,7 +261,9 @@
 				<Card.Description>Last 6 months</Card.Description>
 			</Card.Header>
 			<Card.Content>
-				<IncomeExpenseChart data={data.monthlyIncomeExpense} currency={data.displayCurrency} />
+				{#if IncomeExpenseChart}
+					<IncomeExpenseChart data={data.monthlyIncomeExpense} currency={data.displayCurrency} />
+				{/if}
 			</Card.Content>
 		</Card.Root>
 	</div>

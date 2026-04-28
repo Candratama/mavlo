@@ -1,7 +1,5 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { gsap } from 'gsap';
-	import { ScrollTrigger } from 'gsap/ScrollTrigger';
 	import { ArrowRight, ArrowUp, Heart } from 'lucide-svelte';
 
 	type Props = {
@@ -34,46 +32,54 @@
 	let linksEl: HTMLDivElement | undefined = $state();
 
 	onMount(() => {
-		gsap.registerPlugin(ScrollTrigger);
 		if (!wrapperEl) return;
+		let ctx: { revert: () => void } | undefined;
+		let cancelled = false;
+		Promise.all([import('gsap'), import('gsap/ScrollTrigger')]).then(
+			([{ gsap }, { ScrollTrigger }]) => {
+				if (cancelled || !wrapperEl) return;
+				gsap.registerPlugin(ScrollTrigger);
+				ctx = gsap.context(() => {
+					gsap.fromTo(
+						giantEl as HTMLElement,
+						{ y: '10vh', scale: 0.8, opacity: 0 },
+						{
+							y: '0vh',
+							scale: 1,
+							opacity: 1,
+							ease: 'power1.out',
+							scrollTrigger: {
+								trigger: wrapperEl,
+								start: 'top 80%',
+								end: 'bottom bottom',
+								scrub: 1
+							}
+						}
+					);
 
-		const ctx = gsap.context(() => {
-			gsap.fromTo(
-				giantEl as HTMLElement,
-				{ y: '10vh', scale: 0.8, opacity: 0 },
-				{
-					y: '0vh',
-					scale: 1,
-					opacity: 1,
-					ease: 'power1.out',
-					scrollTrigger: {
-						trigger: wrapperEl,
-						start: 'top 80%',
-						end: 'bottom bottom',
-						scrub: 1
-					}
-				}
-			);
-
-			gsap.fromTo(
-				[headingEl, linksEl],
-				{ y: 50, opacity: 0 },
-				{
-					y: 0,
-					opacity: 1,
-					stagger: 0.15,
-					ease: 'power3.out',
-					scrollTrigger: {
-						trigger: wrapperEl,
-						start: 'top 40%',
-						end: 'bottom bottom',
-						scrub: 1
-					}
-				}
-			);
-		}, wrapperEl);
-
-		return () => ctx.revert();
+					gsap.fromTo(
+						[headingEl, linksEl],
+						{ y: 50, opacity: 0 },
+						{
+							y: 0,
+							opacity: 1,
+							stagger: 0.15,
+							ease: 'power3.out',
+							scrollTrigger: {
+								trigger: wrapperEl,
+								start: 'top 40%',
+								end: 'bottom bottom',
+								scrub: 1
+							}
+						}
+					);
+				}, wrapperEl);
+			}
+		);
+		return () => {
+			cancelled = true;
+			ctx?.revert();
+		};
 	});
 
 	function scrollToTop() {

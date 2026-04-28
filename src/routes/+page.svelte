@@ -4,73 +4,79 @@
 	import { ArrowRight } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { setMode } from 'mode-watcher';
-	import { gsap } from 'gsap';
-	import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 	onMount(() => {
 		setMode('dark');
-		gsap.registerPlugin(ScrollTrigger);
+		let ctx: { revert: () => void } | undefined;
+		let cancelled = false;
+		Promise.all([import('gsap'), import('gsap/ScrollTrigger')]).then(
+			([{ gsap }, { ScrollTrigger }]) => {
+				if (cancelled) return;
+				gsap.registerPlugin(ScrollTrigger);
+				ctx = gsap.context(() => {
+					gsap.utils.toArray<HTMLElement>('[data-anim="fade-up"]').forEach((el) => {
+						gsap.fromTo(
+							el,
+							{ y: 40, opacity: 0 },
+							{
+								y: 0,
+								opacity: 1,
+								duration: 1,
+								ease: 'power3.out',
+								scrollTrigger: {
+									trigger: el,
+									start: 'top 85%',
+									toggleActions: 'play none none reverse'
+								}
+							}
+						);
+					});
 
-		const ctx = gsap.context(() => {
-			gsap.utils.toArray<HTMLElement>('[data-anim="fade-up"]').forEach((el) => {
-				gsap.fromTo(
-					el,
-					{ y: 40, opacity: 0 },
-					{
-						y: 0,
-						opacity: 1,
-						duration: 1,
-						ease: 'power3.out',
-						scrollTrigger: {
-							trigger: el,
-							start: 'top 85%',
-							toggleActions: 'play none none reverse'
-						}
-					}
-				);
-			});
+					gsap.utils.toArray<HTMLElement>('[data-stagger]').forEach((parent) => {
+						const items = parent.querySelectorAll<HTMLElement>('[data-stagger-item]');
+						gsap.fromTo(
+							items,
+							{ y: 30, opacity: 0 },
+							{
+								y: 0,
+								opacity: 1,
+								duration: 0.9,
+								stagger: 0.12,
+								ease: 'power3.out',
+								scrollTrigger: {
+									trigger: parent,
+									start: 'top 80%',
+									toggleActions: 'play none none reverse'
+								}
+							}
+						);
+					});
 
-			gsap.utils.toArray<HTMLElement>('[data-stagger]').forEach((parent) => {
-				const items = parent.querySelectorAll<HTMLElement>('[data-stagger-item]');
-				gsap.fromTo(
-					items,
-					{ y: 30, opacity: 0 },
-					{
-						y: 0,
-						opacity: 1,
-						duration: 0.9,
-						stagger: 0.12,
-						ease: 'power3.out',
-						scrollTrigger: {
-							trigger: parent,
-							start: 'top 80%',
-							toggleActions: 'play none none reverse'
-						}
+					const heroGiant = document.querySelector<HTMLElement>('[data-hero-giant]');
+					if (heroGiant) {
+						gsap.fromTo(
+							heroGiant,
+							{ y: '-5vh', scale: 0.95 },
+							{
+								y: '15vh',
+								scale: 1.05,
+								ease: 'none',
+								scrollTrigger: {
+									trigger: heroGiant.parentElement,
+									start: 'top top',
+									end: 'bottom top',
+									scrub: 1
+								}
+							}
+						);
 					}
-				);
-			});
-
-			const heroGiant = document.querySelector<HTMLElement>('[data-hero-giant]');
-			if (heroGiant) {
-				gsap.fromTo(
-					heroGiant,
-					{ y: '-5vh', scale: 0.95 },
-					{
-						y: '15vh',
-						scale: 1.05,
-						ease: 'none',
-						scrollTrigger: {
-							trigger: heroGiant.parentElement,
-							start: 'top top',
-							end: 'bottom top',
-							scrub: 1
-						}
-					}
-				);
+				});
 			}
-		});
-
-		return () => ctx.revert();
+		);
+		return () => {
+			cancelled = true;
+			ctx?.revert();
+		};
 	});
 
 	let scrolled = $state(false);
