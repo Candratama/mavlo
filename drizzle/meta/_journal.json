@@ -22,6 +22,13 @@
       "when": 1745625600000,
       "tag": "0002_accounts_sort_order",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1777387946232,
+      "tag": "0003_narrow_azazel",
+      "breakpoints": true
     }
   ]
 }

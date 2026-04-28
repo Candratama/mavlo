@@ -9,8 +9,8 @@
 
 <svelte:head><title>Sign up — Mavlo</title></svelte:head>
 
-<h1 class="mavlo-headline text-3xl font-black tracking-tight">Create account</h1>
-<p class="mt-2 text-sm text-muted-foreground">Track your finances on Mavlo.</p>
+<h1 class="mavlo-headline text-3xl font-black tracking-tight">Bikin akun</h1>
+<p class="mt-2 text-sm text-muted-foreground">Mulai lacak duit lo. Gratis selamanya.</p>
 
 <form
 	method="POST"
@@ -56,7 +56,7 @@
 			minlength={8}
 			autocomplete="new-password"
 		/>
-		<p class="text-xs text-muted-foreground">Minimum 8 characters.</p>
+		<p class="text-xs text-muted-foreground">Minimal 8 karakter.</p>
 	</div>
 
 	{#if form?.message}
@@ -67,6 +67,6 @@
 </form>
 
 <p class="mt-6 text-center text-xs text-muted-foreground">
-	Already have an account?
-	<a href="/sign-in" class="text-foreground hover:underline">Sign in</a>
+	Udah punya akun?
+	<a href="/sign-in" class="text-foreground hover:underline">Masuk</a>
 </p>

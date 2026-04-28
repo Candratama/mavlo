@@ -25,5 +25,8 @@ vite.config.ts.timestamp-*
 # Wrangler dev secrets
 .dev.vars
 
+# DB dumps
+remote-*.sql
+
 # Claude Code
 .claude/

@@ -257,44 +257,45 @@
 <!-- Desktop filter form -->
 <Card.Root class="mb-6 hidden md:block">
 	<Card.Content class="p-4">
-		<form
-			method="GET"
-			class="grid grid-cols-1 items-end gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
-		>
-			<div class="space-y-1">
-				<Label for="filter-from">From</Label>
-				<Input id="filter-from" type="date" name="from" value={data.filter.from} />
+		<form method="GET" class="space-y-3">
+			<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+				<div class="space-y-1">
+					<Label for="filter-from">From</Label>
+					<Input id="filter-from" type="date" name="from" value={data.filter.from} />
+				</div>
+				<div class="space-y-1">
+					<Label for="filter-to">To</Label>
+					<Input id="filter-to" type="date" name="to" value={data.filter.to} />
+				</div>
+				<div class="space-y-1">
+					<Label>Account</Label>
+					<PickerSheet
+						items={accountItems}
+						bind:value={fAccount}
+						name="account"
+						placeholder="All"
+						title="Account"
+					/>
+				</div>
+				<div class="space-y-1">
+					<Label>Category</Label>
+					<PickerSheet
+						groups={categoryItems}
+						bind:value={fCategory}
+						name="category"
+						placeholder="All"
+						title="Category"
+						searchable
+					/>
+				</div>
 			</div>
-			<div class="space-y-1">
-				<Label for="filter-to">To</Label>
-				<Input id="filter-to" type="date" name="to" value={data.filter.to} />
+			<div class="flex flex-col items-stretch gap-3 sm:flex-row sm:items-end">
+				<div class="flex-1 space-y-1">
+					<Label>Kind</Label>
+					<SegmentedControl options={filterKindOptions} bind:value={fKind} name="kind" />
+				</div>
+				<Button type="submit" class="sm:w-auto">Apply</Button>
 			</div>
-			<div class="space-y-1">
-				<Label>Account</Label>
-				<PickerSheet
-					items={accountItems}
-					bind:value={fAccount}
-					name="account"
-					placeholder="All"
-					title="Account"
-				/>
-			</div>
-			<div class="space-y-1">
-				<Label>Category</Label>
-				<PickerSheet
-					groups={categoryItems}
-					bind:value={fCategory}
-					name="category"
-					placeholder="All"
-					title="Category"
-					searchable
-				/>
-			</div>
-			<div class="space-y-1">
-				<Label>Kind</Label>
-				<SegmentedControl options={filterKindOptions} bind:value={fKind} name="kind" />
-			</div>
-			<Button type="submit" class="w-full md:w-auto">Apply</Button>
 		</form>
 	</Card.Content>
 </Card.Root>
@@ -403,10 +404,10 @@
 				<Table.Header>
 					<Table.Row>
 						<Table.Head>Date</Table.Head>
-						<Table.Head>Kind</Table.Head>
-						<Table.Head>Account</Table.Head>
 						<Table.Head>Category</Table.Head>
 						<Table.Head>Note</Table.Head>
+						<Table.Head>Kind</Table.Head>
+						<Table.Head>Account</Table.Head>
 						<Table.Head class="text-right">Amount</Table.Head>
 						<Table.Head class="w-12"></Table.Head>
 					</Table.Row>
@@ -420,6 +421,14 @@
 						{@const cat = tx.categoryId ? categoryById.get(tx.categoryId) : null}
 						<Table.Row>
 							<Table.Cell>{formatDate(tx.occurredAt)}</Table.Cell>
+							<Table.Cell>
+								{#if tx.kind === 'transfer'}
+									<span class="text-muted-foreground text-xs">—</span>
+								{:else}
+									{cat?.name ?? '—'}
+								{/if}
+							</Table.Cell>
+							<Table.Cell class="max-w-xs truncate">{tx.note ?? ''}</Table.Cell>
 							<Table.Cell class="capitalize">
 								{#if tx.kind === 'income'}
 									<span class="text-income">income</span>
@@ -436,14 +445,6 @@
 									{acc?.name ?? '—'}
 								{/if}
 							</Table.Cell>
-							<Table.Cell>
-								{#if tx.kind === 'transfer'}
-									<span class="text-muted-foreground text-xs">—</span>
-								{:else}
-									{cat?.name ?? '—'}
-								{/if}
-							</Table.Cell>
-							<Table.Cell class="max-w-xs truncate">{tx.note ?? ''}</Table.Cell>
 							<Table.Cell class="text-right tabular-nums">
 								{#if tx.kind === 'expense'}
 									<span class="text-expense"

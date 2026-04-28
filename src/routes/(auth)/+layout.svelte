@@ -22,7 +22,13 @@
 	<!-- Logo strip -->
 	<div class="relative z-10 flex flex-col items-center pt-10 pb-4">
 		<a href="/" class="flex items-center gap-2">
-			<img src="/icon-192.png" alt="Mavlo" class="size-8 rounded-xl" />
+			<span class="relative inline-flex">
+				<span
+					aria-hidden="true"
+					class="pointer-events-none absolute inset-0 -z-10 rounded-xl bg-emerald-500/30 blur-md"
+				></span>
+				<img src="/icon-192.png" alt="Mavlo" class="size-8 rounded-xl" />
+			</span>
 			<span class="text-xl font-bold text-foreground">Mavlo</span>
 		</a>
 		<div

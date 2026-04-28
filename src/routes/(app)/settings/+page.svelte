@@ -176,9 +176,10 @@
 
 <h1 class="mavlo-headline mb-6 text-2xl font-bold tracking-tight sm:text-3xl">Settings</h1>
 
-<div class="max-w-2xl space-y-6">
-	<!-- Account -->
-	<Card.Root>
+<div class="grid max-w-6xl gap-6 lg:grid-cols-[3fr_7fr]">
+	<div class="space-y-6">
+		<!-- Account -->
+		<Card.Root>
 		<Card.Header>
 			<Card.Title>Account</Card.Title>
 			<Card.Description>Your profile picture, identity, and session.</Card.Description>
@@ -237,6 +238,41 @@
 		</Card.Content>
 	</Card.Root>
 
+	<!-- Install -->
+	<Card.Root>
+		<Card.Header>
+			<Card.Title>Install app</Card.Title>
+			<Card.Description>Add Mavlo to your home screen for an app-like experience.</Card.Description>
+		</Card.Header>
+		<Card.Content>
+			{#if alreadyInstalled}
+				<div class="text-income flex items-center gap-2 text-sm">
+					<Check class="size-4" /> Already installed
+				</div>
+			{:else if pwa.canInstall}
+				<Button onclick={onInstall}>
+					<Download class="mr-1.5 size-4" /> Install Mavlo
+				</Button>
+				<p class="text-muted-foreground mt-2 text-xs">
+					Adds Mavlo to your home screen / app drawer.
+				</p>
+			{:else if iosDevice}
+				<div class="space-y-2 text-sm">
+					<p class="text-muted-foreground flex items-center gap-2">
+						<Smartphone class="size-4" /> On iOS Safari, tap <Share class="size-4" /> Share, then
+						<strong class="text-foreground">Add to Home Screen</strong>.
+					</p>
+				</div>
+			{:else}
+				<p class="text-muted-foreground text-sm">
+					Open Mavlo in Chrome / Edge / Safari. Browser will offer the install option when ready.
+				</p>
+			{/if}
+		</Card.Content>
+	</Card.Root>
+	</div>
+
+	<div class="space-y-6">
 	<!-- Preferences (general + cycle in one form) -->
 	<Card.Root>
 		<Card.Header>
@@ -362,36 +398,5 @@
 		</Card.Content>
 	</Card.Root>
 
-	<!-- Install -->
-	<Card.Root>
-		<Card.Header>
-			<Card.Title>Install app</Card.Title>
-			<Card.Description>Add Mavlo to your home screen for an app-like experience.</Card.Description>
-		</Card.Header>
-		<Card.Content>
-			{#if alreadyInstalled}
-				<div class="text-income flex items-center gap-2 text-sm">
-					<Check class="size-4" /> Already installed
-				</div>
-			{:else if pwa.canInstall}
-				<Button onclick={onInstall}>
-					<Download class="mr-1.5 size-4" /> Install Mavlo
-				</Button>
-				<p class="text-muted-foreground mt-2 text-xs">
-					Adds Mavlo to your home screen / app drawer.
-				</p>
-			{:else if iosDevice}
-				<div class="space-y-2 text-sm">
-					<p class="text-muted-foreground flex items-center gap-2">
-						<Smartphone class="size-4" /> On iOS Safari, tap <Share class="size-4" /> Share, then
-						<strong class="text-foreground">Add to Home Screen</strong>.
-					</p>
-				</div>
-			{:else}
-				<p class="text-muted-foreground text-sm">
-					Open Mavlo in Chrome / Edge / Safari. Browser will offer the install option when ready.
-				</p>
-			{/if}
-		</Card.Content>
-	</Card.Root>
+	</div>
 </div>

@@ -12,7 +12,7 @@
 	import * as Sheet from '$lib/components/ui/sheet';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
-	import { Plus, MoreHorizontal, Pencil, Trash2, PiggyBank, Tag } from 'lucide-svelte';
+	import { Plus, MoreHorizontal, Pencil, Trash2, Target, Tag } from 'lucide-svelte';
 	import { getIconByName } from '$lib/utils/category-icons.js';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
@@ -237,7 +237,7 @@
 	{:else}
 		<div class="md:col-span-2">
 			<EmptyState
-				icon={PiggyBank}
+				icon={Target}
 				title="No budgets for {data.periodMonth}"
 				description="Set a monthly limit per expense category to track your spending."
 			>

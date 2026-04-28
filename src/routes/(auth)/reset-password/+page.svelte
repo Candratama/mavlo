@@ -9,13 +9,13 @@
 
 <svelte:head><title>Reset password — Mavlo</title></svelte:head>
 
-<h1 class="mavlo-headline text-3xl font-black tracking-tight">New password</h1>
-<p class="mt-2 text-sm text-muted-foreground">Enter your new password below.</p>
+<h1 class="mavlo-headline text-3xl font-black tracking-tight">Password baru</h1>
+<p class="mt-2 text-sm text-muted-foreground">Set password baru lo di bawah.</p>
 
 {#if !data.token}
 	<p class="mt-6 text-destructive text-sm">
-		Reset token missing.
-		<a href="/forgot-password" class="underline hover:opacity-80">Request a new link.</a>
+		Token reset gak ada.
+		<a href="/forgot-password" class="underline hover:opacity-80">Minta link baru.</a>
 	</p>
 {:else}
 	<form
@@ -31,7 +31,7 @@
 	>
 		<input type="hidden" name="token" value={form?.token ?? data.token} />
 		<div class="space-y-1.5">
-			<Label for="password">New password</Label>
+			<Label for="password">Password baru</Label>
 			<Input
 				id="password"
 				name="password"
@@ -46,6 +46,6 @@
 			<p class="text-destructive text-sm">{form.message}</p>
 		{/if}
 
-		<SubmitButton {pending} class="lift w-full">Set new password</SubmitButton>
+		<SubmitButton {pending} class="lift w-full">Set password baru</SubmitButton>
 	</form>
 {/if}

@@ -17,15 +17,15 @@
 	};
 
 	let {
-		ctaTitle = 'Siap mulai lihat ke mana uangmu pergi?',
-		ctaDescription = 'No credit card. Tidak akan pernah.',
+		ctaTitle = 'Siap liat ke mana duit lo pergi?',
+		ctaDescription = 'Tanpa kartu kredit. Tanpa langganan. Selamanya.',
 		primaryHref = '/sign-up',
 		primaryLabel = 'Buat akun gratis',
 		secondaryHref = '/sign-in',
-		secondaryLabel = 'Saya sudah punya akun',
+		secondaryLabel = 'Udah punya akun',
 		brand = 'Mavlo',
 		giantText = 'MAVLO',
-		madeBy = 'Mavlo'
+		madeBy = 'Candratama'
 	}: Props = $props();
 
 	let wrapperEl: HTMLDivElement | undefined = $state();
@@ -80,13 +80,7 @@
 		window.scrollTo({ top: 0, behavior: 'smooth' });
 	}
 
-	const marqueeItems = [
-		'Personal Finance',
-		'Free Forever',
-		'No Ads',
-		'PWA-First',
-		'Open To Use'
-	];
+	const marqueeItems = ['Personal Finance', 'Free Forever', 'No Ads', 'PWA-First', 'Open To Use'];
 </script>
 
 <div
@@ -95,7 +89,7 @@
 	style="clip-path: polygon(0% 0, 100% 0%, 100% 100%, 0 100%);"
 >
 	<footer
-		class="fixed bottom-0 left-0 flex h-screen w-full flex-col justify-between overflow-hidden bg-[#020617] text-foreground"
+		class="text-foreground fixed bottom-0 left-0 flex h-screen w-full flex-col justify-between overflow-hidden bg-[#020617]"
 	>
 		<!-- Top fade: blend seamlessly with landing's emerald top glow -->
 		<div
@@ -106,7 +100,7 @@
 		<!-- Aurora -->
 		<div
 			aria-hidden="true"
-			class="mavlo-aurora pointer-events-none absolute top-1/2 left-1/2 z-0 h-[60vh] w-[80vw] -translate-x-1/2 -translate-y-1/2 animate-mavlo-breathe rounded-[50%] blur-[80px]"
+			class="mavlo-aurora animate-mavlo-breathe pointer-events-none absolute top-1/2 left-1/2 z-0 h-[60vh] w-[80vw] -translate-x-1/2 -translate-y-1/2 rounded-[50%] blur-[80px]"
 		></div>
 		<!-- Grid -->
 		<div aria-hidden="true" class="mavlo-grid pointer-events-none absolute inset-0 z-0"></div>
@@ -115,14 +109,14 @@
 		<div
 			bind:this={giantEl}
 			aria-hidden="true"
-			class="mavlo-giant-text pointer-events-none absolute -bottom-[5vh] left-1/2 z-0 -translate-x-1/2 select-none whitespace-nowrap"
+			class="mavlo-giant-text pointer-events-none absolute -bottom-[5vh] left-1/2 z-0 -translate-x-1/2 whitespace-nowrap select-none"
 		>
 			{giantText}
 		</div>
 
 		<!-- Diagonal marquee (top of footer) -->
 		<div
-			class="absolute top-12 left-0 z-10 w-full -rotate-2 scale-110 overflow-hidden border-y border-border/40 bg-[#020617]/60 py-4 shadow-2xl backdrop-blur-md"
+			class="border-border/40 absolute top-12 left-0 z-10 w-full scale-110 -rotate-2 overflow-hidden border-y bg-[#020617]/60 py-4 shadow-2xl backdrop-blur-md"
 		>
 			<div
 				class="text-muted-foreground animate-mavlo-scroll-marquee flex w-max text-xs font-bold tracking-[0.3em] uppercase md:text-sm"
@@ -159,7 +153,9 @@
 						class="mavlo-pill text-foreground group flex items-center gap-3 rounded-full px-10 py-5 text-sm font-bold transition-transform duration-300 ease-out hover:-translate-y-1 md:text-base"
 					>
 						{primaryLabel}
-						<ArrowRight class="size-4 transition-transform duration-300 group-hover:translate-x-1" />
+						<ArrowRight
+							class="size-4 transition-transform duration-300 group-hover:translate-x-1"
+						/>
 					</a>
 					<a
 						href={secondaryHref}
@@ -178,11 +174,12 @@
 			<div
 				class="text-muted-foreground order-2 text-[10px] font-semibold tracking-widest uppercase md:order-1 md:text-xs"
 			>
-				© {new Date().getFullYear()} {brand}. All rights reserved.
+				© {new Date().getFullYear()}
+				{brand}. All rights reserved.
 			</div>
 
 			<div
-				class="mavlo-pill order-1 flex cursor-default items-center gap-2 rounded-full border-border/50 px-6 py-3 md:order-2"
+				class="mavlo-pill border-border/50 order-1 flex cursor-default items-center gap-2 rounded-full px-6 py-3 md:order-2"
 			>
 				<span
 					class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase md:text-xs"

@@ -225,25 +225,27 @@
 			{@const IconComp = iconForType(account.type)}
 			{@const color = account.color || '#3b82f6'}
 			<div
-				class="group relative aspect-[1.586/1] overflow-hidden rounded-2xl p-5 text-white shadow-lg ring-1 ring-white/10 transition-transform hover:-translate-y-0.5 {account.archived
+				class="mavlo-pill text-foreground group relative aspect-[1.586/1] overflow-hidden rounded-2xl p-5 transition-transform hover:-translate-y-0.5 {account.archived
 					? 'opacity-60'
 					: ''}"
-				style="background: linear-gradient(135deg, {color} 0%, {color}cc 50%, {color}88 100%)"
 			>
 				<div
-					class="absolute inset-0 opacity-20"
-					style="background: radial-gradient(circle at top right, white, transparent 60%)"
+					aria-hidden="true"
+					class="pointer-events-none absolute inset-0 opacity-70"
+					style="background: radial-gradient(ellipse 70% 60% at 0% 0%, {color}33, transparent 60%), radial-gradient(circle 50% at 100% 100%, {color}22, transparent 70%);"
 				></div>
 				<div
-					class="absolute -right-8 -bottom-8 size-40 rounded-full opacity-15"
-					style="background: white"
+					aria-hidden="true"
+					class="pointer-events-none absolute -right-10 -bottom-10 size-40 rounded-full opacity-20 blur-2xl"
+					style="background: {color}"
 				></div>
 
 				<div class="relative flex h-full flex-col justify-between">
 					<div class="flex items-start justify-between">
 						<div class="flex items-center gap-2">
 							<div
-								class="flex size-9 items-center justify-center rounded-lg bg-white/20 backdrop-blur"
+								class="flex size-9 items-center justify-center rounded-lg border backdrop-blur"
+								style="background-color: {color}26; border-color: {color}40; color: {color}"
 							>
 								{#if IconComp}
 									<IconComp class="size-5" />
@@ -252,25 +254,27 @@
 								{/if}
 							</div>
 							<div>
-								<div class="text-xs tracking-wider uppercase opacity-80">{account.type}</div>
+								<div class="text-muted-foreground text-xs tracking-wider uppercase">
+									{account.type}
+								</div>
 								<div class="leading-tight font-semibold">{account.name}</div>
 							</div>
 						</div>
-						<div class="text-white">
-							{@render rowMenu(account)}
-						</div>
+						{@render rowMenu(account)}
 					</div>
 
 					<div>
-						<div class="text-xs tracking-wider uppercase opacity-80">Balance</div>
+						<div class="text-muted-foreground text-xs tracking-wider uppercase">Balance</div>
 						<div class="text-2xl font-semibold tracking-tight tabular-nums xl:text-3xl">
 							{formatBalance(account.balanceCents, account.currency)}
 						</div>
 					</div>
 
-					<div class="flex items-end justify-between text-xs opacity-80">
+					<div class="text-muted-foreground flex items-end justify-between text-xs">
 						<span class="tracking-[0.3em]">•••• ••••</span>
-						<span class="font-semibold tracking-wider">{account.currency}</span>
+						<span class="font-semibold tracking-wider" style="color: {color}">
+							{account.currency}
+						</span>
 					</div>
 				</div>
 			</div>

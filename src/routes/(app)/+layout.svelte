@@ -5,6 +5,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import Fab from '$lib/components/ui/fab.svelte';
+	import LimelightNav, { type LimelightNavItem } from '$lib/components/ui/limelight-nav.svelte';
 	import AddTransactionSheet from '$lib/components/forms/add-transaction-sheet.svelte';
 	import {
 		getAddTransactionState,
@@ -18,7 +19,7 @@
 		ArrowLeftRight,
 		Wallet,
 		Tag,
-		PiggyBank,
+		Target,
 		Settings,
 		LogOut
 	} from 'lucide-svelte';
@@ -76,7 +77,7 @@
 		{ href: '/dashboard', label: 'Home', icon: LayoutDashboard },
 		{ href: '/transactions', label: 'Tx', icon: ArrowLeftRight },
 		{ href: '/accounts', label: 'Accounts', icon: Wallet },
-		{ href: '/budgets', label: 'Budgets', icon: PiggyBank },
+		{ href: '/budgets', label: 'Budgets', icon: Target },
 		{ href: '/categories', label: 'Categories', icon: Tag }
 	];
 
@@ -85,11 +86,21 @@
 		{ href: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
 		{ href: '/accounts', label: 'Accounts', icon: Wallet },
 		{ href: '/categories', label: 'Categories', icon: Tag },
-		{ href: '/budgets', label: 'Budgets', icon: PiggyBank }
+		{ href: '/budgets', label: 'Budgets', icon: Target }
 	];
 
 	const isActive = (href: string) =>
 		page.url.pathname === href || page.url.pathname.startsWith(href + '/');
+
+	const limelightItems = $derived<LimelightNavItem[]>(
+		primaryNav.map((n) => ({
+			id: n.href,
+			icon: n.icon,
+			label: n.label,
+			href: n.href
+		}))
+	);
+	const limelightActive = $derived(primaryNav.findIndex((n) => isActive(n.href)));
 
 	const initials = $derived(
 		(data.user.name ?? 'U')
@@ -107,7 +118,13 @@
 		class="bg-sidebar text-sidebar-foreground border-sidebar-border hidden w-60 flex-col border-r p-4 lg:flex"
 	>
 		<div class="mb-6 flex items-center gap-2">
-			<img src="/icon-192.png" alt="Mavlo" class="h-7 w-7 rounded-md" />
+			<span class="relative inline-flex">
+				<span
+					aria-hidden="true"
+					class="pointer-events-none absolute inset-0 -z-10 rounded-md bg-emerald-500/10 blur-md"
+				></span>
+				<img src="/icon-192.png" alt="Mavlo" class="h-7 w-7 rounded-md" />
+			</span>
 			<h1 class="text-primary text-xl font-bold">Mavlo</h1>
 		</div>
 		<nav class="flex-1 space-y-1 text-sm">
@@ -134,13 +151,19 @@
 			class="pointer-events-none absolute inset-x-0 top-0 z-0 h-[40vh]"
 			style="background: radial-gradient(ellipse 60% 35% at 50% 0%, rgba(16,185,129,0.12), transparent 70%);"
 		></div>
-		<div aria-hidden="true" class="mavlo-grid-soft pointer-events-none absolute inset-x-0 top-0 z-0 h-[40vh]"></div>
+		<div aria-hidden="true" class="mavlo-grid-app pointer-events-none absolute inset-0 z-0"></div>
 		<header
-			class="relative z-10 bg-background/80 backdrop-blur-sm flex items-center justify-between gap-3 border-b px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]
+			class="bg-background/80 relative z-10 flex items-center justify-between gap-3 border-b px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm
 				sm:px-6"
 		>
 			<div class="flex items-center gap-1.5 lg:hidden">
-				<img src="/icon-192.png" alt="Mavlo" class="h-6 w-6 rounded-md" />
+				<span class="relative inline-flex">
+					<span
+						aria-hidden="true"
+						class="pointer-events-none absolute inset-0 -z-10 rounded-md bg-emerald-500/30 blur-md"
+					></span>
+					<img src="/icon-192.png" alt="Mavlo" class="h-6 w-6 rounded-md" />
+				</span>
 				<span class="text-primary text-base font-bold">Mavlo</span>
 			</div>
 
@@ -199,8 +222,6 @@
 		</div>
 	</main>
 
-	<Fab />
-
 	<AddTransactionSheet
 		bind:open={txState.open}
 		mode="create"
@@ -213,25 +234,15 @@
 		onSuccess={() => invalidateAll()}
 	/>
 
-	<nav
-		class="bg-background fixed inset-x-0 bottom-0 z-40 border-t pb-[env(safe-area-inset-bottom)] lg:hidden"
+	<div
+		class="fixed inset-x-0 bottom-0 z-40 flex items-center justify-center gap-2 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden"
 	>
-		<ul class="grid grid-cols-5">
-			{#each primaryNav as item}
-				<li>
-					<a
-						href={item.href}
-						class="relative flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition-colors {isActive(
-							item.href
-						)
-							? 'text-primary after:bg-primary after:absolute after:top-0 after:left-1/2 after:h-0.5 after:w-8 after:-translate-x-1/2 after:rounded-b-full'
-							: 'text-muted-foreground hover:text-foreground'}"
-					>
-						<item.icon class="h-5 w-5" />
-						<span>{item.label}</span>
-					</a>
-				</li>
-			{/each}
-		</ul>
-	</nav>
+		<LimelightNav
+			items={limelightItems}
+			activeIndex={limelightActive}
+			class="mavlo-pill bg-transparent"
+			iconContainerClass="px-4 py-5"
+		/>
+		<Fab />
+	</div>
 </div>

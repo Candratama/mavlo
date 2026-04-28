@@ -9,8 +9,8 @@
 
 <svelte:head><title>Sign in — Mavlo</title></svelte:head>
 
-<h1 class="mavlo-headline text-3xl font-black tracking-tight">Sign in</h1>
-<p class="mt-2 text-sm text-muted-foreground">Welcome back to Mavlo.</p>
+<h1 class="mavlo-headline text-3xl font-black tracking-tight">Masuk lagi</h1>
+<p class="mt-2 text-sm text-muted-foreground">Welcome back. Lanjut catat duit lo.</p>
 
 <form
 	method="POST"
@@ -53,6 +53,6 @@
 </form>
 
 <div class="mt-6 flex justify-between text-xs text-muted-foreground">
-	<a href="/sign-up" class="hover:text-foreground underline">Create account</a>
-	<a href="/forgot-password" class="hover:text-foreground underline">Forgot password?</a>
+	<a href="/sign-up" class="hover:text-foreground underline">Bikin akun</a>
+	<a href="/forgot-password" class="hover:text-foreground underline">Lupa password?</a>
 </div>

@@ -159,19 +159,37 @@
 }
 
 @keyframes mavlo-breathe {
-	0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
-	100% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+	0% {
+		transform: translate(-50%, -50%) scale(1);
+		opacity: 0.6;
+	}
+	100% {
+		transform: translate(-50%, -50%) scale(1.1);
+		opacity: 1;
+	}
 }
 
 @keyframes mavlo-scroll-marquee {
-	from { transform: translateX(0); }
-	to { transform: translateX(-50%); }
+	from {
+		transform: translateX(0);
+	}
+	to {
+		transform: translateX(-50%);
+	}
 }
 
 @keyframes mavlo-heartbeat {
-	0%, 100% { transform: scale(1); }
-	15%, 45% { transform: scale(1.25); }
-	30% { transform: scale(1); }
+	0%,
+	100% {
+		transform: scale(1);
+	}
+	15%,
+	45% {
+		transform: scale(1.25);
+	}
+	30% {
+		transform: scale(1);
+	}
 }
 
 .animate-mavlo-breathe {
@@ -187,8 +205,16 @@
 .mavlo-grid {
 	background-size: 60px 60px;
 	background-image:
-		linear-gradient(to right, color-mix(in oklch, var(--foreground) 3%, transparent) 1px, transparent 1px),
-		linear-gradient(to bottom, color-mix(in oklch, var(--foreground) 3%, transparent) 1px, transparent 1px);
+		linear-gradient(
+			to right,
+			color-mix(in oklch, var(--foreground) 3%, transparent) 1px,
+			transparent 1px
+		),
+		linear-gradient(
+			to bottom,
+			color-mix(in oklch, var(--foreground) 3%, transparent) 1px,
+			transparent 1px
+		);
 	mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
 	-webkit-mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
 }
@@ -196,10 +222,35 @@
 .mavlo-grid-soft {
 	background-size: 60px 60px;
 	background-image:
-		linear-gradient(to right, color-mix(in oklch, var(--foreground) 1.5%, transparent) 1px, transparent 1px),
-		linear-gradient(to bottom, color-mix(in oklch, var(--foreground) 1.5%, transparent) 1px, transparent 1px);
+		linear-gradient(
+			to right,
+			color-mix(in oklch, var(--foreground) 1.5%, transparent) 1px,
+			transparent 1px
+		),
+		linear-gradient(
+			to bottom,
+			color-mix(in oklch, var(--foreground) 1.5%, transparent) 1px,
+			transparent 1px
+		);
 	mask-image: linear-gradient(to bottom, black 0%, black 60%, transparent 100%);
 	-webkit-mask-image: linear-gradient(to bottom, black 0%, black 60%, transparent 100%);
+}
+
+.mavlo-grid-app {
+	background-size: 48px 48px;
+	background-image:
+		linear-gradient(
+			to right,
+			color-mix(in oklch, var(--foreground) 2%, transparent) 1px,
+			transparent 1px
+		),
+		linear-gradient(
+			to bottom,
+			color-mix(in oklch, var(--foreground) 2%, transparent) 1px,
+			transparent 1px
+		);
+	mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, black 30%, transparent 100%);
+	-webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, black 30%, transparent 100%);
 }
 
 .mavlo-aurora {
