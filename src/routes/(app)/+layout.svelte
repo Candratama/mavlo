@@ -176,7 +176,7 @@
 		</header>
 
 		<div
-			class="p-3 sm:p-4 md:p-6 flex-1 overflow-x-hidden pb-[calc(var(--bottom-nav-h)+var(--fab-h)+1.5rem+env(safe-area-inset-bottom))] lg:pb-6"
+			class="px-3 pt-3 sm:px-4 sm:pt-4 md:px-6 md:pt-6 flex-1 overflow-x-hidden pb-[calc(var(--bottom-nav-h)+var(--fab-h)+1.5rem+env(safe-area-inset-bottom))] lg:pb-6"
 		>
 			{@render children()}
 		</div>
