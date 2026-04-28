@@ -127,9 +127,16 @@
 		</nav>
 	</aside>
 
-	<main class="flex min-w-0 flex-1 flex-col">
+	<main class="relative flex min-w-0 flex-1 flex-col">
+		<!-- Subtle emerald wash at top of content area only -->
+		<div
+			aria-hidden="true"
+			class="pointer-events-none absolute inset-x-0 top-0 z-0 h-[40vh]"
+			style="background: radial-gradient(ellipse 60% 35% at 50% 0%, rgba(16,185,129,0.12), transparent 70%);"
+		></div>
+		<div aria-hidden="true" class="mavlo-grid-soft pointer-events-none absolute inset-x-0 top-0 z-0 h-[40vh]"></div>
 		<header
-			class="bg-background flex items-center justify-between gap-3 border-b px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]
+			class="relative z-10 bg-background/80 backdrop-blur-sm flex items-center justify-between gap-3 border-b px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]
 				sm:px-6"
 		>
 			<div class="flex items-center gap-1.5 lg:hidden">
@@ -186,7 +193,7 @@
 		</header>
 
 		<div
-			class="flex-1 overflow-x-hidden px-3 pt-3 pb-[calc(var(--bottom-nav-h)+var(--fab-h)+1.5rem+env(safe-area-inset-bottom))] sm:px-4 sm:pt-4 md:px-6 md:pt-6 lg:pb-6"
+			class="relative z-10 flex-1 overflow-x-hidden px-3 pt-3 pb-[calc(var(--bottom-nav-h)+var(--fab-h)+1.5rem+env(safe-area-inset-bottom))] sm:px-4 sm:pt-4 md:px-6 md:pt-6 lg:pb-6"
 		>
 			{@render children()}
 		</div>

@@ -70,9 +70,9 @@
 
 <div class="mb-6 flex items-center justify-between">
 	<div>
-		<h1 class="text-xl font-semibold tracking-tight sm:text-2xl">Budgets</h1>
+		<h1 class="mavlo-headline text-2xl font-bold tracking-tight sm:text-3xl">Budgets</h1>
 	</div>
-	<Button onclick={() => (createOpen = true)}>
+	<Button class="lift" onclick={() => (createOpen = true)}>
 		<Plus class="mr-1 size-4" /> New budget
 	</Button>
 </div>

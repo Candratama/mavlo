@@ -106,16 +106,16 @@
 		<!-- Aurora -->
 		<div
 			aria-hidden="true"
-			class="footer-aurora pointer-events-none absolute top-1/2 left-1/2 z-0 h-[60vh] w-[80vw] -translate-x-1/2 -translate-y-1/2 animate-footer-breathe rounded-[50%] blur-[80px]"
+			class="mavlo-aurora pointer-events-none absolute top-1/2 left-1/2 z-0 h-[60vh] w-[80vw] -translate-x-1/2 -translate-y-1/2 animate-mavlo-breathe rounded-[50%] blur-[80px]"
 		></div>
 		<!-- Grid -->
-		<div aria-hidden="true" class="footer-bg-grid pointer-events-none absolute inset-0 z-0"></div>
+		<div aria-hidden="true" class="mavlo-grid pointer-events-none absolute inset-0 z-0"></div>
 
 		<!-- Giant background text -->
 		<div
 			bind:this={giantEl}
 			aria-hidden="true"
-			class="footer-giant-bg-text pointer-events-none absolute -bottom-[5vh] left-1/2 z-0 -translate-x-1/2 select-none whitespace-nowrap"
+			class="mavlo-giant-text pointer-events-none absolute -bottom-[5vh] left-1/2 z-0 -translate-x-1/2 select-none whitespace-nowrap"
 		>
 			{giantText}
 		</div>
@@ -125,7 +125,7 @@
 			class="absolute top-12 left-0 z-10 w-full -rotate-2 scale-110 overflow-hidden border-y border-border/40 bg-[#020617]/60 py-4 shadow-2xl backdrop-blur-md"
 		>
 			<div
-				class="text-muted-foreground animate-footer-scroll-marquee flex w-max text-xs font-bold tracking-[0.3em] uppercase md:text-sm"
+				class="text-muted-foreground animate-mavlo-scroll-marquee flex w-max text-xs font-bold tracking-[0.3em] uppercase md:text-sm"
 			>
 				{#each [0, 1] as _ (_)}
 					<div class="flex items-center space-x-12 px-6">
@@ -144,7 +144,7 @@
 		>
 			<h2
 				bind:this={headingEl}
-				class="footer-text-glow mb-4 text-center text-5xl font-black tracking-tighter md:text-7xl"
+				class="mavlo-headline mb-4 text-center text-5xl font-black tracking-tighter md:text-7xl"
 			>
 				{ctaTitle}
 			</h2>
@@ -156,14 +156,14 @@
 				<div class="flex w-full flex-wrap justify-center gap-4">
 					<a
 						href={primaryHref}
-						class="footer-glass-pill text-foreground group flex items-center gap-3 rounded-full px-10 py-5 text-sm font-bold transition-transform duration-300 ease-out hover:-translate-y-1 md:text-base"
+						class="mavlo-pill text-foreground group flex items-center gap-3 rounded-full px-10 py-5 text-sm font-bold transition-transform duration-300 ease-out hover:-translate-y-1 md:text-base"
 					>
 						{primaryLabel}
 						<ArrowRight class="size-4 transition-transform duration-300 group-hover:translate-x-1" />
 					</a>
 					<a
 						href={secondaryHref}
-						class="footer-glass-pill text-muted-foreground hover:text-foreground rounded-full px-10 py-5 text-sm font-bold transition-transform duration-300 ease-out hover:-translate-y-1 md:text-base"
+						class="mavlo-pill text-muted-foreground hover:text-foreground rounded-full px-10 py-5 text-sm font-bold transition-transform duration-300 ease-out hover:-translate-y-1 md:text-base"
 					>
 						{secondaryLabel}
 					</a>
@@ -182,13 +182,13 @@
 			</div>
 
 			<div
-				class="footer-glass-pill order-1 flex cursor-default items-center gap-2 rounded-full border-border/50 px-6 py-3 md:order-2"
+				class="mavlo-pill order-1 flex cursor-default items-center gap-2 rounded-full border-border/50 px-6 py-3 md:order-2"
 			>
 				<span
 					class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase md:text-xs"
 					>Crafted with</span
 				>
-				<Heart class="animate-footer-heartbeat size-4 fill-rose-500 text-rose-500" />
+				<Heart class="animate-mavlo-heartbeat size-4 fill-rose-500 text-rose-500" />
 				<span
 					class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase md:text-xs"
 					>by</span
@@ -201,7 +201,7 @@
 			<button
 				type="button"
 				onclick={scrollToTop}
-				class="footer-glass-pill text-muted-foreground hover:text-foreground group order-3 flex size-12 items-center justify-center rounded-full transition-transform duration-300 ease-out hover:-translate-y-1"
+				class="mavlo-pill text-muted-foreground hover:text-foreground group order-3 flex size-12 items-center justify-center rounded-full transition-transform duration-300 ease-out hover:-translate-y-1"
 				aria-label="Back to top"
 			>
 				<ArrowUp class="size-5 transition-transform duration-300 group-hover:-translate-y-1" />
@@ -209,138 +209,3 @@
 		</div>
 	</footer>
 </div>
-
-<style>
-	.cinematic-footer-wrapper {
-		--pill-bg-1: color-mix(in oklch, var(--foreground) 3%, transparent);
-		--pill-bg-2: color-mix(in oklch, var(--foreground) 1%, transparent);
-		--pill-shadow: color-mix(in oklch, var(--background) 50%, transparent);
-		--pill-highlight: color-mix(in oklch, var(--foreground) 10%, transparent);
-		--pill-inset-shadow: color-mix(in oklch, var(--background) 80%, transparent);
-		--pill-border: color-mix(in oklch, var(--foreground) 8%, transparent);
-		--pill-bg-1-hover: color-mix(in oklch, var(--foreground) 8%, transparent);
-		--pill-bg-2-hover: color-mix(in oklch, var(--foreground) 2%, transparent);
-		--pill-border-hover: color-mix(in oklch, var(--foreground) 20%, transparent);
-		--pill-shadow-hover: color-mix(in oklch, var(--background) 70%, transparent);
-		--pill-highlight-hover: color-mix(in oklch, var(--foreground) 20%, transparent);
-	}
-
-	@keyframes footer-breathe {
-		0% {
-			transform: translate(-50%, -50%) scale(1);
-			opacity: 0.6;
-		}
-		100% {
-			transform: translate(-50%, -50%) scale(1.1);
-			opacity: 1;
-		}
-	}
-
-	@keyframes footer-scroll-marquee {
-		from {
-			transform: translateX(0);
-		}
-		to {
-			transform: translateX(-50%);
-		}
-	}
-
-	@keyframes footer-heartbeat {
-		0%,
-		100% {
-			transform: scale(1);
-		}
-		15%,
-		45% {
-			transform: scale(1.25);
-		}
-		30% {
-			transform: scale(1);
-		}
-	}
-
-	:global(.animate-footer-breathe) {
-		animation: footer-breathe 8s ease-in-out infinite alternate;
-	}
-	:global(.animate-footer-scroll-marquee) {
-		animation: footer-scroll-marquee 40s linear infinite;
-	}
-	:global(.animate-footer-heartbeat) {
-		animation: footer-heartbeat 1.6s cubic-bezier(0.25, 1, 0.5, 1) infinite;
-	}
-
-	:global(.footer-bg-grid) {
-		background-size: 60px 60px;
-		background-image:
-			linear-gradient(
-				to right,
-				color-mix(in oklch, var(--foreground) 3%, transparent) 1px,
-				transparent 1px
-			),
-			linear-gradient(
-				to bottom,
-				color-mix(in oklch, var(--foreground) 3%, transparent) 1px,
-				transparent 1px
-			);
-		mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
-		-webkit-mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
-	}
-
-	:global(.footer-aurora) {
-		background: radial-gradient(
-			circle at 50% 50%,
-			rgba(16, 185, 129, 0.22) 0%,
-			rgba(6, 182, 212, 0.16) 40%,
-			transparent 70%
-		);
-	}
-
-	:global(.footer-glass-pill) {
-		background: linear-gradient(145deg, var(--pill-bg-1) 0%, var(--pill-bg-2) 100%);
-		box-shadow:
-			0 10px 30px -10px var(--pill-shadow),
-			inset 0 1px 1px var(--pill-highlight),
-			inset 0 -1px 2px var(--pill-inset-shadow);
-		border: 1px solid var(--pill-border);
-		backdrop-filter: blur(16px);
-		-webkit-backdrop-filter: blur(16px);
-		transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-	}
-
-	:global(.footer-glass-pill:hover) {
-		background: linear-gradient(145deg, var(--pill-bg-1-hover) 0%, var(--pill-bg-2-hover) 100%);
-		border-color: var(--pill-border-hover);
-		box-shadow:
-			0 20px 40px -10px var(--pill-shadow-hover),
-			inset 0 1px 1px var(--pill-highlight-hover);
-		color: var(--foreground);
-	}
-
-	:global(.footer-giant-bg-text) {
-		font-size: 26vw;
-		line-height: 0.75;
-		font-weight: 900;
-		letter-spacing: -0.05em;
-		color: transparent;
-		-webkit-text-stroke: 1px color-mix(in oklch, var(--foreground) 5%, transparent);
-		background: linear-gradient(
-			180deg,
-			color-mix(in oklch, var(--foreground) 10%, transparent) 0%,
-			transparent 60%
-		);
-		-webkit-background-clip: text;
-		background-clip: text;
-	}
-
-	:global(.footer-text-glow) {
-		background: linear-gradient(
-			180deg,
-			var(--foreground) 0%,
-			color-mix(in oklch, var(--foreground) 40%, transparent) 100%
-		);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
-		filter: drop-shadow(0px 0px 20px color-mix(in oklch, var(--foreground) 15%, transparent));
-	}
-</style>

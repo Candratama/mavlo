@@ -140,7 +140,7 @@
 		class="pointer-events-none absolute inset-x-0 top-0 z-0 h-[120vh]"
 		style="background-image: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(16,185,129,0.28), transparent 70%), radial-gradient(ellipse 40% 35% at 80% 30%, rgba(6,182,212,0.18), transparent 60%);"
 	></div>
-	<div aria-hidden="true" class="footer-bg-grid pointer-events-none absolute inset-0 z-0"></div>
+	<div aria-hidden="true" class="mavlo-grid pointer-events-none absolute inset-0 z-0"></div>
 
 	<!-- Top bar -->
 	<header
@@ -156,13 +156,13 @@
 			<div class="flex items-center gap-2">
 				<a
 					href="/sign-in"
-					class="footer-glass-pill rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground transition-transform duration-300 ease-out hover:-translate-y-0.5 hover:text-foreground"
+					class="mavlo-pill rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground transition-transform duration-300 ease-out hover:-translate-y-0.5 hover:text-foreground"
 				>
 					Sign in
 				</a>
 				<a
 					href="/sign-up"
-					class="footer-glass-pill flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider text-foreground transition-transform duration-300 ease-out hover:-translate-y-0.5"
+					class="mavlo-pill flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider text-foreground transition-transform duration-300 ease-out hover:-translate-y-0.5"
 				>
 					Get started
 					<ArrowRight class="size-3.5" />
@@ -175,14 +175,14 @@
 	<section class="relative isolate px-4 pb-24 pt-20 sm:px-6 sm:pb-32 sm:pt-32">
 		<div class="pointer-events-none absolute inset-0 z-0">
 			<div
-				class="footer-aurora absolute left-1/2 top-1/2 h-[60vh] w-[80vw] -translate-x-1/2 -translate-y-1/2 animate-footer-breathe rounded-[50%] blur-[80px]"
+				class="mavlo-aurora absolute left-1/2 top-1/2 h-[60vh] w-[80vw] -translate-x-1/2 -translate-y-1/2 animate-mavlo-breathe rounded-[50%] blur-[80px]"
 			></div>
 		</div>
 
 		<div
 			data-hero-giant
 			aria-hidden="true"
-			class="footer-giant-bg-text pointer-events-none absolute -bottom-[8vh] left-1/2 z-0 -translate-x-1/2 select-none whitespace-nowrap"
+			class="mavlo-giant-text pointer-events-none absolute -bottom-[8vh] left-1/2 z-0 -translate-x-1/2 select-none whitespace-nowrap"
 		>
 			MAVLO
 		</div>
@@ -198,7 +198,7 @@
 
 			<h1
 				data-anim="fade-up"
-				class="footer-text-glow text-5xl font-black tracking-tighter sm:text-7xl"
+				class="mavlo-headline text-5xl font-black tracking-tighter sm:text-7xl"
 			>
 				Lacak uangmu<br />tanpa harus bayar.
 			</h1>
@@ -217,14 +217,14 @@
 			>
 				<a
 					href="/sign-up"
-					class="footer-glass-pill group flex items-center gap-3 rounded-full px-10 py-5 text-sm font-bold text-foreground transition-transform duration-300 ease-out hover:-translate-y-1 md:text-base"
+					class="mavlo-pill group flex items-center gap-3 rounded-full px-10 py-5 text-sm font-bold text-foreground transition-transform duration-300 ease-out hover:-translate-y-1 md:text-base"
 				>
 					Mulai gratis
 					<ArrowRight class="size-4 transition-transform duration-300 group-hover:translate-x-1" />
 				</a>
 				<a
 					href="/sign-in"
-					class="footer-glass-pill rounded-full px-10 py-5 text-sm font-bold text-muted-foreground transition-transform duration-300 ease-out hover:-translate-y-1 hover:text-foreground md:text-base"
+					class="mavlo-pill rounded-full px-10 py-5 text-sm font-bold text-muted-foreground transition-transform duration-300 ease-out hover:-translate-y-1 hover:text-foreground md:text-base"
 				>
 					Saya sudah punya akun
 				</a>
@@ -238,7 +238,7 @@
 		class="relative z-10 -my-2 overflow-hidden border-y border-border/30 bg-background/40 py-4 backdrop-blur-md"
 	>
 		<div
-			class="animate-footer-scroll-marquee flex w-max items-center text-xs font-medium tracking-[0.3em] text-muted-foreground/60 sm:text-sm"
+			class="animate-mavlo-scroll-marquee flex w-max items-center text-xs font-medium tracking-[0.3em] text-muted-foreground/60 sm:text-sm"
 		>
 			{#each [0, 1] as _ (_)}
 				<div class="flex items-center gap-10 px-6">
@@ -265,11 +265,11 @@
 			<div
 				data-anim="fade-up"
 				data-stagger
-				class="footer-glass-pill relative isolate overflow-hidden rounded-3xl p-8 sm:p-12"
+				class="mavlo-pill relative isolate overflow-hidden rounded-3xl p-8 sm:p-12"
 			>
 				<div
 					aria-hidden="true"
-					class="footer-aurora pointer-events-none absolute -left-20 -top-20 h-72 w-72 rounded-full blur-[80px] opacity-60"
+					class="mavlo-aurora pointer-events-none absolute -left-20 -top-20 h-72 w-72 rounded-full blur-[80px] opacity-60"
 				></div>
 				<div class="relative space-y-6 text-base leading-relaxed sm:text-lg">
 					<p data-stagger-item>
@@ -306,7 +306,7 @@
 
 			<h2
 				data-anim="fade-up"
-				class="footer-text-glow mb-10 text-4xl font-black tracking-tighter sm:text-5xl"
+				class="mavlo-headline mb-10 text-4xl font-black tracking-tighter sm:text-5xl"
 			>
 				Empat hal kecil<br />yang bikin beda.
 			</h2>
@@ -340,7 +340,7 @@
 		<div class="mx-auto max-w-3xl">
 			<div
 				data-anim="fade-up"
-				class="footer-glass-pill flex items-center gap-4 rounded-2xl p-5 sm:p-6"
+				class="mavlo-pill flex items-center gap-4 rounded-2xl p-5 sm:p-6"
 			>
 				<div
 					class="grid size-12 shrink-0 place-items-center rounded-xl border border-emerald-400/30 bg-emerald-500/10"
@@ -371,7 +371,7 @@
 
 			<div
 				data-anim="fade-up"
-				class="footer-glass-pill relative isolate overflow-hidden rounded-3xl p-8 text-center sm:p-12"
+				class="mavlo-pill relative isolate overflow-hidden rounded-3xl p-8 text-center sm:p-12"
 			>
 				<div
 					aria-hidden="true"
@@ -383,9 +383,9 @@
 					<div
 						class="mx-auto mb-5 grid size-14 place-items-center rounded-full border border-rose-400/30 bg-rose-500/15"
 					>
-						<Heart class="animate-footer-heartbeat size-6 fill-rose-400 text-rose-400" />
+						<Heart class="animate-mavlo-heartbeat size-6 fill-rose-400 text-rose-400" />
 					</div>
-					<h2 class="footer-text-glow text-3xl font-black tracking-tight sm:text-4xl">
+					<h2 class="mavlo-headline text-3xl font-black tracking-tight sm:text-4xl">
 						Suka Mavlo? Boleh traktir.
 					</h2>
 					<p class="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
@@ -422,7 +422,7 @@
 </div>
 
 <style>
-	.landing :global(.footer-glass-pill) {
+	.landing :global(.mavlo-pill) {
 		transform-style: preserve-3d;
 	}
 

@@ -185,9 +185,9 @@
 
 <div class="mb-6 flex items-center justify-between">
 	<div>
-		<h1 class="text-xl font-semibold tracking-tight sm:text-2xl">Transactions</h1>
+		<h1 class="mavlo-headline text-2xl font-bold tracking-tight sm:text-3xl">Transactions</h1>
 	</div>
-	<Button class="hidden md:inline-flex" onclick={() => openAddTransaction('expense')}>
+	<Button class="lift hidden md:inline-flex" onclick={() => openAddTransaction('expense')}>
 		<Plus class="mr-1 size-4" /> New transaction
 	</Button>
 </div>
