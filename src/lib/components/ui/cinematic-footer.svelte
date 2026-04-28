@@ -95,8 +95,14 @@
 	style="clip-path: polygon(0% 0, 100% 0%, 100% 100%, 0 100%);"
 >
 	<footer
-		class="fixed bottom-0 left-0 flex h-screen w-full flex-col justify-between overflow-hidden bg-background text-foreground"
+		class="fixed bottom-0 left-0 flex h-screen w-full flex-col justify-between overflow-hidden bg-[#020617] text-foreground"
 	>
+		<!-- Top fade: blend seamlessly with landing's emerald top glow -->
+		<div
+			aria-hidden="true"
+			class="pointer-events-none absolute inset-x-0 top-0 z-0 h-40"
+			style="background: linear-gradient(to bottom, rgba(2,6,23,0) 0%, rgba(2,6,23,0.9) 60%, #020617 100%);"
+		></div>
 		<!-- Aurora -->
 		<div
 			aria-hidden="true"
@@ -116,7 +122,7 @@
 
 		<!-- Diagonal marquee (top of footer) -->
 		<div
-			class="absolute top-12 left-0 z-10 w-full -rotate-2 scale-110 overflow-hidden border-y border-border/50 bg-background/60 py-4 shadow-2xl backdrop-blur-md"
+			class="absolute top-12 left-0 z-10 w-full -rotate-2 scale-110 overflow-hidden border-y border-border/40 bg-[#020617]/60 py-4 shadow-2xl backdrop-blur-md"
 		>
 			<div
 				class="text-muted-foreground animate-footer-scroll-marquee flex w-max text-xs font-bold tracking-[0.3em] uppercase md:text-sm"
@@ -283,8 +289,8 @@
 	:global(.footer-aurora) {
 		background: radial-gradient(
 			circle at 50% 50%,
-			color-mix(in oklch, var(--primary) 18%, transparent) 0%,
-			color-mix(in oklch, #06b6d4 14%, transparent) 40%,
+			rgba(16, 185, 129, 0.22) 0%,
+			rgba(6, 182, 212, 0.16) 40%,
 			transparent 70%
 		);
 	}
