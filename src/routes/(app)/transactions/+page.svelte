@@ -7,7 +7,7 @@
 	import * as Sheet from '$lib/components/ui/sheet';
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Plus, MoreHorizontal, Pencil, Trash2, ArrowLeftRight, Filter, X, Tag } from 'lucide-svelte';
+	import { Plus, MoreHorizontal, Pencil, Trash2, ArrowLeftRight, Filter, X, Tag, ArrowDown, ArrowUp } from 'lucide-svelte';
 	import { getIconByName } from '$lib/utils/category-icons.js';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
@@ -149,22 +149,30 @@
 	</Button>
 </div>
 
-<Card.Root class="mb-6">
-	<Card.Content class="grid grid-cols-2 gap-4 p-4">
-		<div>
-			<p class="text-xs text-muted-foreground">Income</p>
-			<p class="text-lg sm:text-xl font-semibold tabular-nums text-income">
-				{formatCentsAsCurrency(totalIncome, txCurrency)}
-			</p>
+<div class="mb-6 grid grid-cols-2 gap-3">
+	<div class="rounded-xl border bg-card p-4">
+		<div class="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+			<span class="size-6 rounded-full bg-income/15 inline-flex items-center justify-center">
+				<ArrowDown class="size-3.5 text-income" />
+			</span>
+			Income
 		</div>
-		<div>
-			<p class="text-xs text-muted-foreground">Expense</p>
-			<p class="text-lg sm:text-xl font-semibold tabular-nums text-expense">
-				{formatCentsAsCurrency(totalExpense, txCurrency)}
-			</p>
+		<p class="mt-2 text-lg sm:text-xl font-semibold tabular-nums">
+			{formatCentsAsCurrency(totalIncome, txCurrency)}
+		</p>
+	</div>
+	<div class="rounded-xl border bg-card p-4">
+		<div class="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+			<span class="size-6 rounded-full bg-expense/15 inline-flex items-center justify-center">
+				<ArrowUp class="size-3.5 text-expense" />
+			</span>
+			Expense
 		</div>
-	</Card.Content>
-</Card.Root>
+		<p class="mt-2 text-lg sm:text-xl font-semibold tabular-nums">
+			{formatCentsAsCurrency(totalExpense, txCurrency)}
+		</p>
+	</div>
+</div>
 
 {#if form?.message}
 	<p class="mb-4 text-sm text-destructive">{form.message}</p>

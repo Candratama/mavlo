@@ -122,15 +122,17 @@
 	</Button>
 </div>
 
-<Card.Root class="mb-6">
-	<Card.Header>
-		<Card.Description>Total balance</Card.Description>
-		<Card.Title class="text-2xl tabular-nums">{formatBalance(totalBalance, defaultCurrency)}</Card.Title>
-	</Card.Header>
-	<Card.Content class="text-xs text-muted-foreground -mt-2">
+<div class="mb-6 relative overflow-hidden rounded-2xl border bg-gradient-to-br from-emerald-500/15 via-background to-background p-5 sm:p-6 text-center">
+	<p class="text-xs uppercase tracking-wider text-muted-foreground">
+		Total Balance <span class="text-foreground/70">({defaultCurrency})</span>
+	</p>
+	<p class="mt-1 text-3xl sm:text-4xl font-semibold tabular-nums tracking-tight">
+		{formatBalance(totalBalance, defaultCurrency)}
+	</p>
+	<p class="mt-2 text-[10px] text-muted-foreground">
 		Across {data.accounts.length} {data.accounts.length === 1 ? 'account' : 'accounts'}
-	</Card.Content>
-</Card.Root>
+	</p>
+</div>
 
 {#if form?.message}
 	<p class="mb-4 text-sm text-destructive">{form.message}</p>

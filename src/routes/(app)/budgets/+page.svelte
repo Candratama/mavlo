@@ -75,22 +75,28 @@
 	</Button>
 </div>
 
-<Card.Root class="mb-6">
-	<Card.Content class="grid grid-cols-2 gap-4 p-4">
-		<div>
-			<p class="text-xs text-muted-foreground">Allocated</p>
-			<p class="text-lg sm:text-xl font-semibold tabular-nums">
-				{formatCents(totalAllocated)}
-			</p>
-		</div>
-		<div>
-			<p class="text-xs text-muted-foreground">Spent</p>
-			<p class="text-lg sm:text-xl font-semibold tabular-nums {totalSpent > totalAllocated ? 'text-expense' : 'text-income'}">
-				{formatCents(totalSpent)}
-			</p>
-		</div>
-	</Card.Content>
-</Card.Root>
+<div class="mb-6 rounded-xl border bg-card p-4">
+	<div class="flex items-center justify-between mb-2">
+		<span class="text-sm font-semibold">Total Budget</span>
+		<span
+			class="text-sm font-semibold tabular-nums {totalSpent > totalAllocated
+				? 'text-expense'
+				: 'text-muted-foreground'}"
+		>
+			{pct(totalSpent, totalAllocated)}%
+		</span>
+	</div>
+	<div class="h-2 rounded-full bg-muted overflow-hidden mb-2">
+		<div
+			class="h-full transition-all {totalSpent > totalAllocated ? 'bg-expense' : 'bg-primary'}"
+			style="width: {pct(totalSpent, totalAllocated)}%"
+		></div>
+	</div>
+	<div class="flex justify-between text-xs text-muted-foreground tabular-nums">
+		<span>{formatCents(totalSpent)}</span>
+		<span>{formatCents(totalAllocated)}</span>
+	</div>
+</div>
 
 <!-- Mobile: period chip -->
 <form method="GET" class="md:hidden mb-4 flex items-center gap-2">
