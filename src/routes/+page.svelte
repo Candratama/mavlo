@@ -1,15 +1,6 @@
 <script lang="ts">
 	import CinematicFooter from '$lib/components/ui/cinematic-footer.svelte';
-	import {
-		ArrowRight,
-		Wallet,
-		PiggyBank,
-		BarChart3,
-		Smartphone,
-		Heart,
-		Lock,
-		Sparkles
-	} from 'lucide-svelte';
+	import { ArrowRight } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { setMode } from 'mode-watcher';
 	import { gsap } from 'gsap';
@@ -95,22 +86,22 @@
 
 	const features = [
 		{
-			icon: Wallet,
+			icon: '/icons/wallet.png',
 			title: 'Multi-account',
 			body: 'Cash, bank, e-wallet, kartu kredit. Semua saldo di satu tempat.'
 		},
 		{
-			icon: PiggyBank,
+			icon: '/icons/dollar.png',
 			title: 'Budget per kategori',
 			body: 'Pasang limit bulanan. Bar progres + warning kalau over.'
 		},
 		{
-			icon: BarChart3,
+			icon: '/icons/chart.png',
 			title: 'Visualisasi pengeluaran',
 			body: 'Donut chart, daily flow, income vs expense 6 bulan.'
 		},
 		{
-			icon: Smartphone,
+			icon: '/icons/mobile.png',
 			title: 'PWA-first, offline-friendly',
 			body: 'Install di home screen. Pakai kayak app native, gratis.'
 		}
@@ -192,7 +183,7 @@
 				data-anim="fade-up"
 				class="mb-6 inline-flex items-center gap-2 rounded-full border border-border/40 bg-background/30 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground backdrop-blur-md"
 			>
-				<Sparkles class="size-3 text-primary" />
+				<img src="/icons/star.png" alt="" class="icon-3d-emerald size-4" />
 				Personal · Free · Open
 			</div>
 
@@ -317,11 +308,7 @@
 						data-stagger-item
 						class="feature-card group relative rounded-2xl border border-border/40 bg-gradient-to-br from-emerald-500/15 via-card/80 to-card/80 p-6 backdrop-blur-md transition-transform duration-300 ease-out hover:-translate-y-1"
 					>
-						<div
-							class="mb-4 inline-flex size-11 items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/15 backdrop-blur"
-						>
-							<f.icon class="size-5 text-emerald-300" />
-						</div>
+						<img src={f.icon} alt="" class="icon-3d-emerald mb-4 size-20" />
 						<div class="mb-1 flex items-baseline gap-2">
 							<span class="text-[10px] font-bold tracking-widest text-muted-foreground/60">
 								0{i + 1}
@@ -342,11 +329,7 @@
 				data-anim="fade-up"
 				class="mavlo-pill flex items-center gap-4 rounded-2xl p-5 sm:p-6"
 			>
-				<div
-					class="grid size-12 shrink-0 place-items-center rounded-xl border border-emerald-400/30 bg-emerald-500/10"
-				>
-					<Lock class="size-5 text-emerald-300" />
-				</div>
+				<img src="/icons/lock.png" alt="" class="icon-3d-emerald size-16 shrink-0" />
 				<p class="text-sm leading-relaxed text-muted-foreground sm:text-base">
 					Datamu disimpan terisolasi per akun. Tidak dijual, tidak dipakai untuk training, tidak
 					dishare ke pihak ketiga.
@@ -380,11 +363,11 @@
 				></div>
 
 				<div class="relative">
-					<div
-						class="mx-auto mb-5 grid size-14 place-items-center rounded-full border border-rose-400/30 bg-rose-500/15"
-					>
-						<Heart class="animate-mavlo-heartbeat size-6 fill-rose-400 text-rose-400" />
-					</div>
+					<img
+						src="/icons/heart.png"
+						alt=""
+						class="icon-3d-rose animate-mavlo-heartbeat mx-auto mb-5 size-20"
+					/>
 					<h2 class="mavlo-headline text-3xl font-black tracking-tight sm:text-4xl">
 						Suka Mavlo? Boleh traktir.
 					</h2>
