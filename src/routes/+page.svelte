@@ -220,19 +220,26 @@
 		</div>
 	</section>
 
-	<!-- Footer -->
-	<footer class="border-t border-border/40 px-4 sm:px-6 py-6">
+	<!-- Footer with ocean abyss glow -->
+	<div class="relative isolate overflow-hidden bg-black">
 		<div
-			class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground"
-		>
-			<div class="flex items-center gap-2">
-				<img src="/icon-192.png" alt="Mavlo" class="size-5 rounded" />
-				<span>Mavlo · Built solo, for solo.</span>
+			aria-hidden="true"
+			class="pointer-events-none absolute inset-0 z-0"
+			style="background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(6,182,212,0.25), transparent 70%);"
+		></div>
+		<footer class="relative z-10 border-t border-border/40 px-4 sm:px-6 py-6">
+			<div
+				class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground"
+			>
+				<div class="flex items-center gap-2">
+					<img src="/icon-192.png" alt="Mavlo" class="size-5 rounded" />
+					<span>Mavlo · Built solo, for solo.</span>
+				</div>
+				<div class="flex items-center gap-4">
+					<a href="/sign-in" class="hover:text-foreground transition-colors">Sign in</a>
+					<a href="/sign-up" class="hover:text-foreground transition-colors">Sign up</a>
+				</div>
 			</div>
-			<div class="flex items-center gap-4">
-				<a href="/sign-in" class="hover:text-foreground transition-colors">Sign in</a>
-				<a href="/sign-up" class="hover:text-foreground transition-colors">Sign up</a>
-			</div>
-		</div>
-	</footer>
+		</footer>
+	</div>
 </div>
