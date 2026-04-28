@@ -148,6 +148,7 @@
 
 			<div bind:this={linksEl} class="flex w-full flex-col items-center gap-6">
 				<div class="flex w-full flex-wrap justify-center gap-4">
+					<!-- eslint-disable svelte/no-navigation-without-resolve -->
 					<a
 						href={primaryHref}
 						class="mavlo-pill text-foreground group flex items-center gap-3 rounded-full px-10 py-5 text-sm font-bold transition-transform duration-300 ease-out hover:-translate-y-1 md:text-base"
@@ -163,6 +164,7 @@
 					>
 						{secondaryLabel}
 					</a>
+					<!-- eslint-enable svelte/no-navigation-without-resolve -->
 				</div>
 			</div>
 		</div>

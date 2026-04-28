@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { setMode } from 'mode-watcher';
+	import { resolve } from '$app/paths';
 	import { Sparkles } from 'lucide-svelte';
 	let { children } = $props();
 
@@ -9,7 +10,7 @@
 	});
 </script>
 
-<div class="dark relative min-h-screen w-full overflow-hidden bg-[#020617] text-foreground">
+<div class="dark text-foreground relative min-h-screen w-full overflow-hidden bg-[#020617]">
 	<!-- Top emerald radial glow -->
 	<div
 		aria-hidden="true"
@@ -21,7 +22,7 @@
 
 	<!-- Logo strip -->
 	<div class="relative z-10 flex flex-col items-center pt-10 pb-4">
-		<a href="/" class="flex items-center gap-2">
+		<a href={resolve('/')} class="flex items-center gap-2">
 			<span class="relative inline-flex">
 				<span
 					aria-hidden="true"
@@ -29,10 +30,10 @@
 				></span>
 				<img src="/icon-192.png" alt="Mavlo" class="size-8 rounded-xl" />
 			</span>
-			<span class="text-xl font-bold text-foreground">Mavlo</span>
+			<span class="text-foreground text-xl font-bold">Mavlo</span>
 		</a>
 		<div
-			class="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border/40 bg-background/20 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground backdrop-blur-md"
+			class="border-border/40 bg-background/20 text-muted-foreground mt-3 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-bold tracking-[0.3em] uppercase backdrop-blur-md"
 		>
 			<Sparkles class="size-2.5 text-emerald-400" />
 			Personal · Free · Open
@@ -47,7 +48,7 @@
 	</div>
 
 	<!-- Bottom credit -->
-	<p class="relative z-10 pb-8 text-center text-[10px] text-muted-foreground">
+	<p class="text-muted-foreground relative z-10 pb-8 text-center text-[10px]">
 		Crafted with ❤ by Mavlo
 	</p>
 </div>

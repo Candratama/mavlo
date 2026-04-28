@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import { Input } from '$lib/components/ui/input';
 	import SubmitButton from '$lib/components/forms/submit-button.svelte';
 	import { Label } from '$lib/components/ui/label';
@@ -10,12 +11,12 @@
 <svelte:head><title>Reset password — Mavlo</title></svelte:head>
 
 <h1 class="mavlo-headline text-3xl font-black tracking-tight">Password baru</h1>
-<p class="mt-2 text-sm text-muted-foreground">Set password baru lo di bawah.</p>
+<p class="text-muted-foreground mt-2 text-sm">Set password baru lo di bawah.</p>
 
 {#if !data.token}
-	<p class="mt-6 text-destructive text-sm">
+	<p class="text-destructive mt-6 text-sm">
 		Token reset gak ada.
-		<a href="/forgot-password" class="underline hover:opacity-80">Minta link baru.</a>
+		<a href={resolve('/forgot-password')} class="underline hover:opacity-80">Minta link baru.</a>
 	</p>
 {:else}
 	<form

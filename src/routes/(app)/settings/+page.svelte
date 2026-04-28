@@ -180,261 +180,267 @@
 	<div class="space-y-6">
 		<!-- Account -->
 		<Card.Root>
-		<Card.Header>
-			<Card.Title>Account</Card.Title>
-			<Card.Description>Your profile picture, identity, and session.</Card.Description>
-		</Card.Header>
-		<Card.Content class="space-y-5">
-			<div class="flex items-center gap-4">
-				{#if data.user.image}
-					<img
-						src={data.user.image}
-						alt="Current avatar"
-						class="size-16 shrink-0 rounded-full border object-cover"
-					/>
-				{:else}
-					<div
-						class="bg-muted flex size-16 shrink-0 items-center justify-center rounded-full border"
-					>
-						<UserIcon class="text-muted-foreground size-7" />
-					</div>
-				{/if}
-				<div class="min-w-0 flex-1">
-					<div class="truncate font-medium">{data.user.name ?? '—'}</div>
-					<div class="text-muted-foreground flex items-center gap-1.5 truncate text-xs">
-						<Mail class="size-3.5 shrink-0" />
-						<span class="truncate">{data.user.email}</span>
-					</div>
-					{#if data.user.username}
-						<div class="text-muted-foreground mt-0.5 truncate text-xs">@{data.user.username}</div>
+			<Card.Header>
+				<Card.Title>Account</Card.Title>
+				<Card.Description>Your profile picture, identity, and session.</Card.Description>
+			</Card.Header>
+			<Card.Content class="space-y-5">
+				<div class="flex items-center gap-4">
+					{#if data.user.image}
+						<img
+							src={data.user.image}
+							alt="Current avatar"
+							class="size-16 shrink-0 rounded-full border object-cover"
+						/>
+					{:else}
+						<div
+							class="bg-muted flex size-16 shrink-0 items-center justify-center rounded-full border"
+						>
+							<UserIcon class="text-muted-foreground size-7" />
+						</div>
 					{/if}
+					<div class="min-w-0 flex-1">
+						<div class="truncate font-medium">{data.user.name ?? '—'}</div>
+						<div class="text-muted-foreground flex items-center gap-1.5 truncate text-xs">
+							<Mail class="size-3.5 shrink-0" />
+							<span class="truncate">{data.user.email}</span>
+						</div>
+						{#if data.user.username}
+							<div class="text-muted-foreground mt-0.5 truncate text-xs">@{data.user.username}</div>
+						{/if}
+					</div>
 				</div>
-			</div>
 
-			<div class="space-y-2">
-				<Label for="username-input" class="text-muted-foreground text-xs tracking-wider uppercase">
-					Username
-				</Label>
-				<form
-					method="POST"
-					action="?/username"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							await update();
-							if (result.type === 'success') {
-								notify.success('Username updated');
-							} else if (result.type === 'failure') {
-								const msg = (result.data as { usernameError?: string } | undefined)?.usernameError;
-								notify.error(msg ?? 'Could not update username');
-							}
-						};
-					}}
-					class="flex items-center gap-2"
-				>
-					<Input
-						id="username-input"
-						name="username"
-						placeholder={data.user.username ?? 'your_username'}
-						maxlength={30}
-						required
-					/>
-					<Button type="submit">Save</Button>
-				</form>
-				<p class="text-muted-foreground text-xs">
-					3–30 characters, letters, numbers, dot, underscore.
-				</p>
-			</div>
-
-			<div class="space-y-2">
-				<Label class="text-muted-foreground text-xs tracking-wider uppercase">Profile picture</Label
-				>
-				<form
-					method="POST"
-					action="/settings/avatar"
-					enctype="multipart/form-data"
-					class="flex items-center gap-2"
-				>
-					<Input
-						type="file"
-						name="avatar"
-						accept="image/png,image/jpeg,image/webp,image/gif"
-						required
-					/>
-					<Button type="submit">Upload</Button>
-				</form>
-				<p class="text-muted-foreground text-xs">PNG, JPEG, WebP, or GIF; max 2 MB.</p>
-			</div>
-
-			<div class="border-t pt-4">
-				<form method="POST" action="/sign-out">
-					<Button type="submit" variant="outline" class="text-destructive w-full sm:w-auto">
-						<LogOut class="mr-1.5 size-4" /> Sign out
-					</Button>
-				</form>
-			</div>
-		</Card.Content>
-	</Card.Root>
-
-	<!-- Install -->
-	<Card.Root>
-		<Card.Header>
-			<Card.Title>Install app</Card.Title>
-			<Card.Description>Add Mavlo to your home screen for an app-like experience.</Card.Description>
-		</Card.Header>
-		<Card.Content>
-			{#if alreadyInstalled}
-				<div class="text-income flex items-center gap-2 text-sm">
-					<Check class="size-4" /> Already installed
-				</div>
-			{:else if pwa.canInstall}
-				<Button onclick={onInstall}>
-					<Download class="mr-1.5 size-4" /> Install Mavlo
-				</Button>
-				<p class="text-muted-foreground mt-2 text-xs">
-					Adds Mavlo to your home screen / app drawer.
-				</p>
-			{:else if iosDevice}
-				<div class="space-y-2 text-sm">
-					<p class="text-muted-foreground flex items-center gap-2">
-						<Smartphone class="size-4" /> On iOS Safari, tap <Share class="size-4" /> Share, then
-						<strong class="text-foreground">Add to Home Screen</strong>.
+				<div class="space-y-2">
+					<Label
+						for="username-input"
+						class="text-muted-foreground text-xs tracking-wider uppercase"
+					>
+						Username
+					</Label>
+					<form
+						method="POST"
+						action="?/username"
+						use:enhance={() => {
+							return async ({ result, update }) => {
+								await update();
+								if (result.type === 'success') {
+									notify.success('Username updated');
+								} else if (result.type === 'failure') {
+									const msg = (result.data as { usernameError?: string } | undefined)
+										?.usernameError;
+									notify.error(msg ?? 'Could not update username');
+								}
+							};
+						}}
+						class="flex items-center gap-2"
+					>
+						<Input
+							id="username-input"
+							name="username"
+							placeholder={data.user.username ?? 'your_username'}
+							maxlength={30}
+							required
+						/>
+						<Button type="submit">Save</Button>
+					</form>
+					<p class="text-muted-foreground text-xs">
+						3–30 characters, letters, numbers, dot, underscore.
 					</p>
 				</div>
-			{:else}
-				<p class="text-muted-foreground text-sm">
-					Open Mavlo in Chrome / Edge / Safari. Browser will offer the install option when ready.
-				</p>
-			{/if}
-		</Card.Content>
-	</Card.Root>
+
+				<div class="space-y-2">
+					<Label class="text-muted-foreground text-xs tracking-wider uppercase"
+						>Profile picture</Label
+					>
+					<form
+						method="POST"
+						action="/settings/avatar"
+						enctype="multipart/form-data"
+						class="flex items-center gap-2"
+					>
+						<Input
+							type="file"
+							name="avatar"
+							accept="image/png,image/jpeg,image/webp,image/gif"
+							required
+						/>
+						<Button type="submit">Upload</Button>
+					</form>
+					<p class="text-muted-foreground text-xs">PNG, JPEG, WebP, or GIF; max 2 MB.</p>
+				</div>
+
+				<div class="border-t pt-4">
+					<form method="POST" action="/sign-out">
+						<Button type="submit" variant="outline" class="text-destructive w-full sm:w-auto">
+							<LogOut class="mr-1.5 size-4" /> Sign out
+						</Button>
+					</form>
+				</div>
+			</Card.Content>
+		</Card.Root>
+
+		<!-- Install -->
+		<Card.Root>
+			<Card.Header>
+				<Card.Title>Install app</Card.Title>
+				<Card.Description
+					>Add Mavlo to your home screen for an app-like experience.</Card.Description
+				>
+			</Card.Header>
+			<Card.Content>
+				{#if alreadyInstalled}
+					<div class="text-income flex items-center gap-2 text-sm">
+						<Check class="size-4" /> Already installed
+					</div>
+				{:else if pwa.canInstall}
+					<Button onclick={onInstall}>
+						<Download class="mr-1.5 size-4" /> Install Mavlo
+					</Button>
+					<p class="text-muted-foreground mt-2 text-xs">
+						Adds Mavlo to your home screen / app drawer.
+					</p>
+				{:else if iosDevice}
+					<div class="space-y-2 text-sm">
+						<p class="text-muted-foreground flex items-center gap-2">
+							<Smartphone class="size-4" /> On iOS Safari, tap <Share class="size-4" /> Share, then
+							<strong class="text-foreground">Add to Home Screen</strong>.
+						</p>
+					</div>
+				{:else}
+					<p class="text-muted-foreground text-sm">
+						Open Mavlo in Chrome / Edge / Safari. Browser will offer the install option when ready.
+					</p>
+				{/if}
+			</Card.Content>
+		</Card.Root>
 	</div>
 
 	<div class="space-y-6">
-	<!-- Preferences (general + cycle in one form) -->
-	<Card.Root>
-		<Card.Header>
-			<Card.Title>Preferences</Card.Title>
-			<Card.Description>Currency, locale, timezone, theme, and cycle.</Card.Description>
-		</Card.Header>
-		<Card.Content>
-			<form
-				bind:this={formEl}
-				method="POST"
-				action="?/prefs"
-				use:enhance={() => {
-					saveState = 'saving';
-					if (savedTimer) clearTimeout(savedTimer);
-					return async ({ result }) => {
-						if (result.type === 'success') {
-							saveState = 'saved';
-							savedTimer = setTimeout(() => {
-								if (saveState === 'saved') saveState = 'idle';
-							}, 1500);
-						} else if (result.type === 'failure') {
-							saveState = 'error';
-							const message = (result.data as { message?: string } | undefined)?.message;
-							notify.error(message ?? 'Could not save preferences');
-						}
-					};
-				}}
-				class="space-y-6"
-			>
-				<section class="space-y-4">
-					<h2 class="text-muted-foreground text-xs tracking-wider uppercase">General</h2>
-					<div class="grid grid-cols-2 gap-3">
+		<!-- Preferences (general + cycle in one form) -->
+		<Card.Root>
+			<Card.Header>
+				<Card.Title>Preferences</Card.Title>
+				<Card.Description>Currency, locale, timezone, theme, and cycle.</Card.Description>
+			</Card.Header>
+			<Card.Content>
+				<form
+					bind:this={formEl}
+					method="POST"
+					action="?/prefs"
+					use:enhance={() => {
+						saveState = 'saving';
+						if (savedTimer) clearTimeout(savedTimer);
+						return async ({ result }) => {
+							if (result.type === 'success') {
+								saveState = 'saved';
+								savedTimer = setTimeout(() => {
+									if (saveState === 'saved') saveState = 'idle';
+								}, 1500);
+							} else if (result.type === 'failure') {
+								saveState = 'error';
+								const message = (result.data as { message?: string } | undefined)?.message;
+								notify.error(message ?? 'Could not save preferences');
+							}
+						};
+					}}
+					class="space-y-6"
+				>
+					<section class="space-y-4">
+						<h2 class="text-muted-foreground text-xs tracking-wider uppercase">General</h2>
+						<div class="grid grid-cols-2 gap-3">
+							<div class="space-y-1">
+								<Label>Default currency</Label>
+								<PickerSheet
+									items={currencyItems}
+									bind:value={selectedCurrency}
+									name="currency"
+									placeholder="Select currency"
+									title="Currency"
+									searchable
+								/>
+							</div>
+							<div class="space-y-1">
+								<Label>Locale</Label>
+								<PickerSheet
+									items={localeItems}
+									bind:value={selectedLocale}
+									name="locale"
+									placeholder="Select locale"
+									title="Locale"
+									searchable
+								/>
+							</div>
+						</div>
 						<div class="space-y-1">
-							<Label>Default currency</Label>
+							<Label>Timezone</Label>
 							<PickerSheet
-								items={currencyItems}
-								bind:value={selectedCurrency}
-								name="currency"
-								placeholder="Select currency"
-								title="Currency"
+								items={timezoneItems}
+								bind:value={selectedTimezone}
+								name="timezone"
+								placeholder="Select timezone"
+								title="Timezone"
 								searchable
 							/>
 						</div>
 						<div class="space-y-1">
-							<Label>Locale</Label>
-							<PickerSheet
-								items={localeItems}
-								bind:value={selectedLocale}
-								name="locale"
-								placeholder="Select locale"
-								title="Locale"
-								searchable
+							<Label>Theme</Label>
+							<SegmentedControl options={themeOptions} bind:value={selectedTheme} name="theme" />
+						</div>
+					</section>
+
+					<section class="space-y-4 border-t pt-5">
+						<h2 class="text-muted-foreground text-xs tracking-wider uppercase">Cycle</h2>
+						<div class="space-y-1">
+							<Label>Week starts on</Label>
+							<SegmentedControl
+								options={weekStartOptions}
+								bind:value={selectedWeekStart}
+								name="weekStartsOn"
 							/>
 						</div>
-					</div>
-					<div class="space-y-1">
-						<Label>Timezone</Label>
-						<PickerSheet
-							items={timezoneItems}
-							bind:value={selectedTimezone}
-							name="timezone"
-							placeholder="Select timezone"
-							title="Timezone"
-							searchable
-						/>
-					</div>
-					<div class="space-y-1">
-						<Label>Theme</Label>
-						<SegmentedControl options={themeOptions} bind:value={selectedTheme} name="theme" />
-					</div>
-				</section>
-
-				<section class="space-y-4 border-t pt-5">
-					<h2 class="text-muted-foreground text-xs tracking-wider uppercase">Cycle</h2>
-					<div class="space-y-1">
-						<Label>Week starts on</Label>
-						<SegmentedControl
-							options={weekStartOptions}
-							bind:value={selectedWeekStart}
-							name="weekStartsOn"
-						/>
-					</div>
-					<div class="space-y-2">
-						<Label>Cycle start (e.g. payday)</Label>
-						<div class="bg-muted grid grid-cols-7 gap-1.5 rounded-lg p-2">
-							{#each cycleDays as d (d)}
-								<button
-									type="button"
-									onclick={() => (selectedMonthStartDay = d)}
-									class="h-9 rounded-md text-sm tabular-nums transition-colors {selectedMonthStartDay ===
-									d
-										? 'bg-primary text-primary-foreground font-semibold'
-										: 'hover:bg-background text-foreground'}"
-									aria-pressed={selectedMonthStartDay === d}
-								>
-									{d}
-								</button>
-							{/each}
+						<div class="space-y-2">
+							<Label>Cycle start (e.g. payday)</Label>
+							<div class="bg-muted grid grid-cols-7 gap-1.5 rounded-lg p-2">
+								{#each cycleDays as d (d)}
+									<button
+										type="button"
+										onclick={() => (selectedMonthStartDay = d)}
+										class="h-9 rounded-md text-sm tabular-nums transition-colors {selectedMonthStartDay ===
+										d
+											? 'bg-primary text-primary-foreground font-semibold'
+											: 'hover:bg-background text-foreground'}"
+										aria-pressed={selectedMonthStartDay === d}
+									>
+										{d}
+									</button>
+								{/each}
+							</div>
+							<input type="hidden" name="monthStartDay" value={selectedMonthStartDay} />
+							<p class="text-muted-foreground text-xs">
+								Day 1 = calendar month. Day 25 = your month runs 25th to 24th. Affects current and
+								future periods.
+							</p>
 						</div>
-						<input type="hidden" name="monthStartDay" value={selectedMonthStartDay} />
-						<p class="text-muted-foreground text-xs">
-							Day 1 = calendar month. Day 25 = your month runs 25th to 24th. Affects current and
-							future periods.
-						</p>
+					</section>
+
+					<div class="flex h-5 items-center justify-end border-t pt-4 text-xs">
+						{#if saveState === 'saving'}
+							<span class="text-muted-foreground inline-flex items-center gap-1.5">
+								<Loader2 class="size-3.5 animate-spin" /> Saving…
+							</span>
+						{:else if saveState === 'saved'}
+							<span class="text-income inline-flex items-center gap-1.5">
+								<Check class="size-3.5" /> Saved
+							</span>
+						{:else if saveState === 'error'}
+							<span class="text-destructive">Could not save — try again</span>
+						{:else}
+							<span class="text-muted-foreground">Changes save automatically</span>
+						{/if}
 					</div>
-				</section>
-
-				<div class="flex h-5 items-center justify-end border-t pt-4 text-xs">
-					{#if saveState === 'saving'}
-						<span class="text-muted-foreground inline-flex items-center gap-1.5">
-							<Loader2 class="size-3.5 animate-spin" /> Saving…
-						</span>
-					{:else if saveState === 'saved'}
-						<span class="text-income inline-flex items-center gap-1.5">
-							<Check class="size-3.5" /> Saved
-						</span>
-					{:else if saveState === 'error'}
-						<span class="text-destructive">Could not save — try again</span>
-					{:else}
-						<span class="text-muted-foreground">Changes save automatically</span>
-					{/if}
-				</div>
-			</form>
-		</Card.Content>
-	</Card.Root>
-
+				</form>
+			</Card.Content>
+		</Card.Root>
 	</div>
 </div>

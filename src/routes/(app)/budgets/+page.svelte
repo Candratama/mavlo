@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
+	import { invalidateAll } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import MoneyInput from '$lib/components/forms/money-input.svelte';
@@ -181,12 +180,7 @@
 							action="?/delete"
 							use:enhance={() =>
 								async ({ result }) => {
-									await goto(page.url.pathname + page.url.search, {
-										invalidateAll: true,
-										replaceState: true,
-										keepFocus: true,
-										noScroll: true
-									});
+									await invalidateAll();
 									if (result.type === 'success') {
 										notify.success('Budget deleted');
 									} else if (result.type === 'failure') {
@@ -255,12 +249,7 @@
 		use:enhance={() => {
 			createPending = true;
 			return async ({ result }) => {
-				await goto(page.url.pathname + page.url.search, {
-					invalidateAll: true,
-					replaceState: true,
-					keepFocus: true,
-					noScroll: true
-				});
+				await invalidateAll();
 				createPending = false;
 				if (result.type === 'success') {
 					createOpen = false;
@@ -335,12 +324,7 @@
 			use:enhance={() => {
 				editPending = true;
 				return async ({ result }) => {
-					await goto(page.url.pathname + page.url.search, {
-						invalidateAll: true,
-						replaceState: true,
-						keepFocus: true,
-						noScroll: true
-					});
+					await invalidateAll();
 					editPending = false;
 					if (result.type === 'success') {
 						editOpen = false;

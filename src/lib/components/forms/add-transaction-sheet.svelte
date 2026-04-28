@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { invalidateAll, goto } from '$app/navigation';
-	import { page } from '$app/state';
+	import { invalidateAll } from '$app/navigation';
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -22,7 +21,6 @@
 		CircleEllipsis,
 		Tag
 	} from 'lucide-svelte';
-	import type { Component } from 'svelte';
 	import { setLastUsed } from '$lib/utils/last-used.js';
 	import { notify } from '$lib/utils/toast.js';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
@@ -198,12 +196,7 @@
 				pending = false;
 				if (result.type === 'success') {
 					setLastUsed({ accountId, kind });
-					await goto(page.url.pathname + page.url.search, {
-						invalidateAll: true,
-						replaceState: true,
-						keepFocus: true,
-						noScroll: true
-					});
+					await invalidateAll();
 					await onSuccess?.();
 					notify.success(mode === 'create' ? 'Transaction added' : 'Transaction updated');
 					onClosed();

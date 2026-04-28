@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
+	import { invalidateAll } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import MoneyInput from '$lib/components/forms/money-input.svelte';
@@ -10,7 +9,6 @@
 	import * as Card from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Sheet from '$lib/components/ui/sheet';
-	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
 	import {
@@ -24,7 +22,6 @@
 		Landmark,
 		CreditCard,
 		CircleEllipsis,
-		Tag,
 		GripVertical,
 		Scale
 	} from 'lucide-svelte';
@@ -184,12 +181,7 @@
 				action="?/{account.archived ? 'unarchive' : 'archive'}"
 				use:enhance={() =>
 					async ({ result }) => {
-						await goto(page.url.pathname + page.url.search, {
-							invalidateAll: true,
-							replaceState: true,
-							keepFocus: true,
-							noScroll: true
-						});
+						await invalidateAll();
 						if (result.type === 'success') {
 							notify.success(account.archived ? 'Account restored' : 'Account archived');
 						} else if (result.type === 'failure') {
@@ -390,12 +382,7 @@
 			return async ({ result }) => {
 				createPending = false;
 				if (result.type === 'success') {
-					await goto(page.url.pathname + page.url.search, {
-						invalidateAll: true,
-						replaceState: true,
-						keepFocus: true,
-						noScroll: true
-					});
+					await invalidateAll();
 					createOpen = false;
 					notify.success('Account created');
 				} else if (result.type === 'failure') {
@@ -527,12 +514,7 @@
 			return async ({ result }) => {
 				editPending = false;
 				if (result.type === 'success') {
-					await goto(page.url.pathname + page.url.search, {
-						invalidateAll: true,
-						replaceState: true,
-						keepFocus: true,
-						noScroll: true
-					});
+					await invalidateAll();
 					editOpen = false;
 					notify.success('Account updated');
 				} else if (result.type === 'failure') {
@@ -667,12 +649,7 @@
 			return async ({ result }) => {
 				adjustPending = false;
 				if (result.type === 'success') {
-					await goto(page.url.pathname + page.url.search, {
-						invalidateAll: true,
-						replaceState: true,
-						keepFocus: true,
-						noScroll: true
-					});
+					await invalidateAll();
 					adjustOpen = false;
 					notify.success('Balance adjusted');
 				} else if (result.type === 'failure') {

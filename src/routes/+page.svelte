@@ -1,5 +1,6 @@
 <script lang="ts">
 	import CinematicFooter from '$lib/components/ui/cinematic-footer.svelte';
+	import { resolve } from '$app/paths';
 	import { ArrowRight } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { setMode } from 'mode-watcher';
@@ -142,7 +143,7 @@
 			: 'border-b border-transparent bg-transparent'}"
 	>
 		<div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
-			<a href="/" class="flex items-center gap-2">
+			<a href={resolve('/')} class="flex items-center gap-2">
 				<span class="relative inline-flex">
 					<span
 						aria-hidden="true"
@@ -154,13 +155,13 @@
 			</a>
 			<div class="flex items-center gap-2">
 				<a
-					href="/sign-in"
+					href={resolve('/sign-in')}
 					class="mavlo-pill text-muted-foreground hover:text-foreground rounded-full px-4 py-2 text-xs font-bold tracking-wider uppercase transition-transform duration-300 ease-out hover:-translate-y-0.5"
 				>
 					Sign in
 				</a>
 				<a
-					href="/sign-up"
+					href={resolve('/sign-up')}
 					class="mavlo-pill text-foreground flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold tracking-wider uppercase transition-transform duration-300 ease-out hover:-translate-y-0.5"
 				>
 					Get started
@@ -213,14 +214,14 @@
 
 			<div data-anim="fade-up" class="mt-10 flex flex-wrap items-center justify-center gap-4">
 				<a
-					href="/sign-up"
+					href={resolve('/sign-up')}
 					class="mavlo-pill group text-foreground flex items-center gap-3 rounded-full px-10 py-5 text-sm font-bold transition-transform duration-300 ease-out hover:-translate-y-1 md:text-base"
 				>
 					Mulai gratis
 					<ArrowRight class="size-4 transition-transform duration-300 group-hover:translate-x-1" />
 				</a>
 				<a
-					href="/sign-in"
+					href={resolve('/sign-in')}
 					class="mavlo-pill text-muted-foreground hover:text-foreground rounded-full px-10 py-5 text-sm font-bold transition-transform duration-300 ease-out hover:-translate-y-1 md:text-base"
 				>
 					Udah punya akun

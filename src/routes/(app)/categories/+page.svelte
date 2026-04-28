@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
+	import { invalidateAll } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import SubmitButton from '$lib/components/forms/submit-button.svelte';
@@ -9,7 +8,6 @@
 	import * as Card from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Sheet from '$lib/components/ui/sheet';
-	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import {
 		Plus,
@@ -156,12 +154,7 @@
 				action="?/{category.archived ? 'unarchive' : 'archive'}"
 				use:enhance={() =>
 					async ({ result }) => {
-						await goto(page.url.pathname + page.url.search, {
-							invalidateAll: true,
-							replaceState: true,
-							keepFocus: true,
-							noScroll: true
-						});
+						await invalidateAll();
 						if (result.type === 'success') {
 							notify.success(category.archived ? 'Category restored' : 'Category archived');
 						} else if (result.type === 'failure') {
@@ -192,12 +185,7 @@
 				action="?/delete"
 				use:enhance={() =>
 					async ({ result }) => {
-						await goto(page.url.pathname + page.url.search, {
-							invalidateAll: true,
-							replaceState: true,
-							keepFocus: true,
-							noScroll: true
-						});
+						await invalidateAll();
 						if (result.type === 'success') {
 							notify.success('Category deleted');
 						} else if (result.type === 'failure') {
@@ -417,12 +405,7 @@
 			return async ({ result }) => {
 				createPending = false;
 				if (result.type === 'success') {
-					await goto(page.url.pathname + page.url.search, {
-						invalidateAll: true,
-						replaceState: true,
-						keepFocus: true,
-						noScroll: true
-					});
+					await invalidateAll();
 					createOpen = false;
 					notify.success('Category created');
 				} else if (result.type === 'failure') {
@@ -565,12 +548,7 @@
 			return async ({ result }) => {
 				editPending = false;
 				if (result.type === 'success') {
-					await goto(page.url.pathname + page.url.search, {
-						invalidateAll: true,
-						replaceState: true,
-						keepFocus: true,
-						noScroll: true
-					});
+					await invalidateAll();
 					editOpen = false;
 					notify.success('Category updated');
 				} else if (result.type === 'failure') {

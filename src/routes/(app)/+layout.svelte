@@ -2,7 +2,6 @@
 	import { page } from '$app/state';
 	import { untrack } from 'svelte';
 	import { setMode } from 'mode-watcher';
-	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import Fab from '$lib/components/ui/fab.svelte';
 	import LimelightNav, { type LimelightNavItem } from '$lib/components/ui/limelight-nav.svelte';
@@ -14,6 +13,7 @@
 	import { setupPwaCapture } from '$lib/stores/pwa-install.svelte.js';
 	import { getLastUsed } from '$lib/utils/last-used.js';
 	import { invalidateAll } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import {
 		LayoutDashboard,
 		ArrowLeftRight,
@@ -79,7 +79,7 @@
 		{ href: '/accounts', label: 'Accounts', icon: Wallet },
 		{ href: '/budgets', label: 'Budgets', icon: Target },
 		{ href: '/categories', label: 'Categories', icon: Tag }
-	];
+	] as const;
 
 	const sidebarNav = [
 		{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -87,7 +87,7 @@
 		{ href: '/accounts', label: 'Accounts', icon: Wallet },
 		{ href: '/categories', label: 'Categories', icon: Tag },
 		{ href: '/budgets', label: 'Budgets', icon: Target }
-	];
+	] as const;
 
 	const isActive = (href: string) =>
 		page.url.pathname === href || page.url.pathname.startsWith(href + '/');
@@ -128,9 +128,9 @@
 			<h1 class="text-primary text-xl font-bold">Mavlo</h1>
 		</div>
 		<nav class="flex-1 space-y-1 text-sm">
-			{#each sidebarNav as item}
+			{#each sidebarNav as item (item.href)}
 				<a
-					href={item.href}
+					href={resolve(item.href)}
 					class="flex items-center gap-2.5 rounded-md px-3 py-2 transition-colors {isActive(
 						item.href
 					)
@@ -187,7 +187,7 @@
 						{#snippet child({ props })}
 							<a
 								{...props}
-								href="/settings"
+								href={resolve('/settings')}
 								class="hover:bg-accent/50 flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
 							>
 								<Settings class="size-4" /> Settings

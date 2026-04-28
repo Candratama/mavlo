@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import { Input } from '$lib/components/ui/input';
 	import SubmitButton from '$lib/components/forms/submit-button.svelte';
 	import { Label } from '$lib/components/ui/label';
@@ -10,7 +11,7 @@
 <svelte:head><title>Sign up — Mavlo</title></svelte:head>
 
 <h1 class="mavlo-headline text-3xl font-black tracking-tight">Bikin akun</h1>
-<p class="mt-2 text-sm text-muted-foreground">Mulai lacak duit lo. Gratis selamanya.</p>
+<p class="text-muted-foreground mt-2 text-sm">Mulai lacak duit lo. Gratis selamanya.</p>
 
 <form
 	method="POST"
@@ -56,7 +57,7 @@
 			minlength={8}
 			autocomplete="new-password"
 		/>
-		<p class="text-xs text-muted-foreground">Minimal 8 karakter.</p>
+		<p class="text-muted-foreground text-xs">Minimal 8 karakter.</p>
 	</div>
 
 	{#if form?.message}
@@ -66,7 +67,7 @@
 	<SubmitButton {pending} class="lift w-full">Sign up</SubmitButton>
 </form>
 
-<p class="mt-6 text-center text-xs text-muted-foreground">
+<p class="text-muted-foreground mt-6 text-center text-xs">
 	Udah punya akun?
-	<a href="/sign-in" class="text-foreground hover:underline">Masuk</a>
+	<a href={resolve('/sign-in')} class="text-foreground hover:underline">Masuk</a>
 </p>

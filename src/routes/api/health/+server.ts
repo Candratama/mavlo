@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (event) => {
-	let dbStatus: 'up' | 'down' = 'down';
+	let dbStatus: 'up' | 'down';
 	try {
 		await event.platform!.env.DB.prepare('SELECT 1').first();
 		dbStatus = 'up';

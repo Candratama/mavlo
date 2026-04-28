@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import { Input } from '$lib/components/ui/input';
 	import SubmitButton from '$lib/components/forms/submit-button.svelte';
 	import { Label } from '$lib/components/ui/label';
@@ -10,14 +11,14 @@
 <svelte:head><title>Forgot password — Mavlo</title></svelte:head>
 
 <h1 class="mavlo-headline text-3xl font-black tracking-tight">Reset password</h1>
-<p class="mt-2 text-sm text-muted-foreground">Masukin email lo, kita kirim link reset-nya.</p>
+<p class="text-muted-foreground mt-2 text-sm">Masukin email lo, kita kirim link reset-nya.</p>
 
 {#if form?.sent}
-	<p class="mt-6 text-sm">
-		Kalau email lo terdaftar, link reset udah dikirim. Cek inbox.
-	</p>
+	<p class="mt-6 text-sm">Kalau email lo terdaftar, link reset udah dikirim. Cek inbox.</p>
 	<p class="mt-4 text-sm">
-		<a href="/sign-in" class="text-muted-foreground hover:text-foreground underline">Balik ke masuk</a>
+		<a href={resolve('/sign-in')} class="text-muted-foreground hover:text-foreground underline"
+			>Balik ke masuk</a
+		>
 	</p>
 {:else}
 	<form

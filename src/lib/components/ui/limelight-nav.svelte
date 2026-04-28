@@ -76,6 +76,7 @@
 	)}
 >
 	{#each items as item, index (item.id)}
+		<!-- eslint-disable svelte/no-navigation-without-resolve -->
 		<a
 			bind:this={itemRefs[index]}
 			href={item.href ?? '#'}
@@ -94,6 +95,7 @@
 				)}
 			/>
 		</a>
+		<!-- eslint-enable svelte/no-navigation-without-resolve -->
 	{/each}
 
 	<div

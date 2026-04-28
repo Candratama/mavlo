@@ -1,6 +1,7 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
+	import { resolve } from '$app/paths';
 	import { ArrowRight, ArrowLeftRight, ArrowUp, ArrowDown, Tag, Eye, EyeOff } from 'lucide-svelte';
 	import SpendingByCategoryChart from '$lib/components/charts/SpendingByCategoryChart.svelte';
 	import DailySpendingChart from '$lib/components/charts/DailySpendingChart.svelte';
@@ -8,7 +9,7 @@
 	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { formatCycleLabel } from '$lib/utils/cycle.js';
-	import { getIconByName } from '$lib/utils/category-icons.js';
+	import { getIconByName, type IconComponent } from '$lib/utils/category-icons.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
 	import { setupPullToRefresh } from '$lib/actions/pull-to-refresh.js';
 	import { openAddTransaction } from '$lib/stores/add-transaction.svelte.js';
@@ -149,7 +150,7 @@
 
 {#if data.budgetLimitCents > 0}
 	<a
-		href="/budgets"
+		href={resolve('/budgets')}
 		class="mt-4 block rounded-xl border bg-gradient-to-br {budgetOver
 			? 'from-rose-500/10'
 			: 'from-primary/10'} via-card to-card hover:bg-accent/20 p-4 transition-colors"
@@ -269,7 +270,7 @@
 				{#each data.recent as r (r.id)}
 					{@const IconComp = (
 						r.kind === 'transfer' ? ArrowLeftRight : (getIconByName(r.categoryIcon) ?? Tag)
-					) as any}
+					) as IconComponent}
 					{@const tint =
 						r.categoryColor ??
 						(r.kind === 'income' ? '#10b981' : r.kind === 'transfer' ? '#3b82f6' : '#94a3b8')}

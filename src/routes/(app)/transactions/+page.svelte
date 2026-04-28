@@ -28,8 +28,9 @@
 		type PickerItem,
 		type PickerGroup
 	} from '$lib/components/ui/picker-sheet.svelte';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
+	import { goto, invalidateAll } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { SvelteURLSearchParams, SvelteMap } from 'svelte/reactivity';
 	import AddTransactionSheet from '$lib/components/forms/add-transaction-sheet.svelte';
 	import { openAddTransaction } from '$lib/stores/add-transaction.svelte.js';
 
@@ -92,26 +93,28 @@
 	});
 
 	function removeParam(key: string) {
-		const params = new URLSearchParams(window.location.search);
+		const params = new SvelteURLSearchParams(window.location.search);
 		params.delete(key);
-		goto(`?${params.toString()}`, { keepFocus: true });
+		const qs = params.toString();
+		goto(resolve(qs ? `/transactions?${qs}` : '/transactions'), { keepFocus: true });
 	}
 
 	function applyFilters() {
-		const params = new URLSearchParams();
+		const params = new SvelteURLSearchParams();
 		if (fFrom) params.set('from', fFrom);
 		if (fTo) params.set('to', fTo);
 		if (fAccount) params.set('account', fAccount);
 		if (fCategory) params.set('category', fCategory);
 		if (fKind) params.set('kind', fKind);
 		filterOpen = false;
-		goto(`?${params.toString()}`);
+		const qs = params.toString();
+		goto(resolve(qs ? `/transactions?${qs}` : '/transactions'));
 	}
 
 	function resetFilters() {
 		fFrom = fTo = fAccount = fCategory = fKind = '';
 		filterOpen = false;
-		goto('?');
+		goto(resolve('/transactions'));
 	}
 
 	const accountItems = $derived<PickerItem[]>([
@@ -153,7 +156,7 @@
 	type DayGroup = { key: string; dateLabel: string; netCents: number; items: TxRow[] };
 
 	const groupedByDay = $derived.by<DayGroup[]>(() => {
-		const byDay = new Map<string, DayGroup>();
+		const byDay = new SvelteMap<string, DayGroup>();
 		for (const tx of data.transactions) {
 			const key = new Date(tx.occurredAt).toISOString().slice(0, 10);
 			let g = byDay.get(key);
@@ -366,12 +369,7 @@
 				action="?/delete"
 				use:enhance={() =>
 					async ({ result }) => {
-						await goto(page.url.pathname + page.url.search, {
-							invalidateAll: true,
-							replaceState: true,
-							keepFocus: true,
-							noScroll: true
-						});
+						await invalidateAll();
 						if (result.type === 'success') {
 							notify.success('Transaction deleted');
 						} else if (result.type === 'failure') {

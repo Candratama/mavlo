@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import { Input } from '$lib/components/ui/input';
 	import SubmitButton from '$lib/components/forms/submit-button.svelte';
 	import { Label } from '$lib/components/ui/label';
@@ -10,7 +11,7 @@
 <svelte:head><title>Sign in — Mavlo</title></svelte:head>
 
 <h1 class="mavlo-headline text-3xl font-black tracking-tight">Masuk lagi</h1>
-<p class="mt-2 text-sm text-muted-foreground">Welcome back. Lanjut catat duit lo.</p>
+<p class="text-muted-foreground mt-2 text-sm">Welcome back. Lanjut catat duit lo.</p>
 
 <form
 	method="POST"
@@ -36,13 +37,7 @@
 	</div>
 	<div class="space-y-1.5">
 		<Label for="password">Password</Label>
-		<Input
-			id="password"
-			name="password"
-			type="password"
-			required
-			autocomplete="current-password"
-		/>
+		<Input id="password" name="password" type="password" required autocomplete="current-password" />
 	</div>
 
 	{#if form?.message}
@@ -52,7 +47,7 @@
 	<SubmitButton {pending} class="lift w-full">Sign in</SubmitButton>
 </form>
 
-<div class="mt-6 flex justify-between text-xs text-muted-foreground">
-	<a href="/sign-up" class="hover:text-foreground underline">Bikin akun</a>
-	<a href="/forgot-password" class="hover:text-foreground underline">Lupa password?</a>
+<div class="text-muted-foreground mt-6 flex justify-between text-xs">
+	<a href={resolve('/sign-up')} class="hover:text-foreground underline">Bikin akun</a>
+	<a href={resolve('/forgot-password')} class="hover:text-foreground underline">Lupa password?</a>
 </div>

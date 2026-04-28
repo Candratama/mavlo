@@ -29,30 +29,28 @@
 
 <svelte:head><title>{title} — Mavlo</title></svelte:head>
 
-<main class="min-h-screen flex items-center justify-center bg-background px-4 py-10">
+<main class="bg-background flex min-h-screen items-center justify-center px-4 py-10">
 	<div class="w-full max-w-md text-center">
 		<div
-			class="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-rose-500/15 via-background to-background p-6 sm:p-8"
+			class="via-background to-background relative overflow-hidden rounded-2xl border bg-gradient-to-br from-rose-500/15 p-6 sm:p-8"
 		>
-			<div
-				class="size-12 rounded-full bg-expense/15 inline-flex items-center justify-center mb-4"
-			>
-				<AlertTriangle class="size-6 text-expense" />
+			<div class="bg-expense/15 mb-4 inline-flex size-12 items-center justify-center rounded-full">
+				<AlertTriangle class="text-expense size-6" />
 			</div>
-			<p class="text-xs uppercase tracking-wider text-muted-foreground">Error {status}</p>
-			<h1 class="mt-1 text-2xl sm:text-3xl font-semibold tracking-tight">{title}</h1>
-			<p class="mt-2 text-sm text-muted-foreground">{description}</p>
+			<p class="text-muted-foreground text-xs tracking-wider uppercase">Error {status}</p>
+			<h1 class="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
+			<p class="text-muted-foreground mt-2 text-sm">{description}</p>
 
 			{#if status !== 404 && message && message !== title}
-				<p class="mt-3 text-xs text-muted-foreground/80 font-mono break-words">{message}</p>
+				<p class="text-muted-foreground/80 mt-3 font-mono text-xs break-words">{message}</p>
 			{/if}
 
-			<div class="mt-6 flex flex-col sm:flex-row gap-2 justify-center">
+			<div class="mt-6 flex flex-col justify-center gap-2 sm:flex-row">
 				<Button variant="outline" onclick={goBack}>
-					<ArrowLeft class="size-4 mr-1.5" /> Balik
+					<ArrowLeft class="mr-1.5 size-4" /> Balik
 				</Button>
 				<Button href="/dashboard">
-					<Home class="size-4 mr-1.5" /> Dashboard
+					<Home class="mr-1.5 size-4" /> Dashboard
 				</Button>
 			</div>
 		</div>
