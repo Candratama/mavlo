@@ -48,7 +48,14 @@
 	/>
 </svelte:head>
 
-<div class="dark min-h-screen bg-background text-foreground">
+<div class="dark min-h-screen w-full bg-[#020617] text-foreground relative">
+	<!-- Emerald radial glow -->
+	<div
+		aria-hidden="true"
+		class="pointer-events-none absolute inset-0 z-0"
+		style="background-image: radial-gradient(circle 500px at 50% 300px, rgba(16,185,129,0.35), transparent);"
+	></div>
+
 	<!-- Top bar -->
 	<header class="border-b border-border/40 backdrop-blur sticky top-0 z-30 bg-background/80">
 		<div class="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
