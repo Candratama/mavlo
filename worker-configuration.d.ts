@@ -3,14 +3,14 @@
 // Runtime types generated with workerd@1.20260424.1 2026-04-25 nodejs_als
 declare namespace Cloudflare {
 	interface GlobalProps {
-		mainModule: typeof import('./.svelte-kit/cloudflare/_worker');
+		mainModule: typeof import("./.svelte-kit/cloudflare/_worker");
 	}
 	interface Env {
 		UPLOADS: R2Bucket;
 		DB: D1Database;
 		ASSETS: Fetcher;
-		ORIGIN: 'https://mavlo.wahyucandratama.workers.dev';
-		RESEND_FROM: 'Mavlo <onboarding@resend.dev>';
+		ORIGIN: "https://mavlo.wahyucandratama.workers.dev";
+		RESEND_FROM: "Mavlo <onboarding@resend.dev>";
 		BETTER_AUTH_SECRET: string;
 		RESEND_API_KEY: string;
 	}

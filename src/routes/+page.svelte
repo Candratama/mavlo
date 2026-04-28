@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
 	import CinematicFooter from '$lib/components/ui/cinematic-footer.svelte';
 	import {
 		ArrowRight,
@@ -8,13 +7,79 @@
 		BarChart3,
 		Smartphone,
 		Heart,
-		Lock
+		Lock,
+		Sparkles
 	} from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { setMode } from 'mode-watcher';
+	import { magnetic } from '$lib/actions/magnetic.js';
+	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 	onMount(() => {
 		setMode('dark');
+		gsap.registerPlugin(ScrollTrigger);
+
+		const ctx = gsap.context(() => {
+			gsap.utils.toArray<HTMLElement>('[data-anim="fade-up"]').forEach((el) => {
+				gsap.fromTo(
+					el,
+					{ y: 40, opacity: 0 },
+					{
+						y: 0,
+						opacity: 1,
+						duration: 1,
+						ease: 'power3.out',
+						scrollTrigger: {
+							trigger: el,
+							start: 'top 85%',
+							toggleActions: 'play none none reverse'
+						}
+					}
+				);
+			});
+
+			gsap.utils.toArray<HTMLElement>('[data-stagger]').forEach((parent) => {
+				const items = parent.querySelectorAll<HTMLElement>('[data-stagger-item]');
+				gsap.fromTo(
+					items,
+					{ y: 30, opacity: 0 },
+					{
+						y: 0,
+						opacity: 1,
+						duration: 0.9,
+						stagger: 0.12,
+						ease: 'power3.out',
+						scrollTrigger: {
+							trigger: parent,
+							start: 'top 80%',
+							toggleActions: 'play none none reverse'
+						}
+					}
+				);
+			});
+
+			const heroGiant = document.querySelector<HTMLElement>('[data-hero-giant]');
+			if (heroGiant) {
+				gsap.fromTo(
+					heroGiant,
+					{ y: '-5vh', scale: 0.95 },
+					{
+						y: '15vh',
+						scale: 1.05,
+						ease: 'none',
+						scrollTrigger: {
+							trigger: heroGiant.parentElement,
+							start: 'top top',
+							end: 'bottom top',
+							scrub: 1
+						}
+					}
+				);
+			}
+		});
+
+		return () => ctx.revert();
 	});
 
 	let scrolled = $state(false);
@@ -51,6 +116,14 @@
 			body: 'Install di home screen. Pakai kayak app native, gratis.'
 		}
 	];
+
+	const marqueeWords = [
+		'uangku habis ke mana?',
+		'gak inget beli apa aja',
+		'harus bayar buat fitur dasar',
+		'akhirnya bikin sendiri',
+		'gratis selamanya'
+	];
 </script>
 
 <svelte:head>
@@ -61,101 +134,214 @@
 	/>
 </svelte:head>
 
-<div class="dark min-h-screen w-full bg-[#020617] text-foreground relative">
-	<!-- Emerald radial glow -->
+<div class="dark relative min-h-screen w-full overflow-x-hidden bg-[#020617] text-foreground landing">
+	<!-- Global ambient glows -->
 	<div
 		aria-hidden="true"
-		class="pointer-events-none absolute inset-0 z-0"
-		style="background-image: radial-gradient(circle 500px at 50% 300px, rgba(16,185,129,0.35), transparent);"
+		class="pointer-events-none absolute inset-x-0 top-0 z-0 h-[120vh]"
+		style="background-image: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(16,185,129,0.28), transparent 70%), radial-gradient(ellipse 40% 35% at 80% 30%, rgba(6,182,212,0.18), transparent 60%);"
 	></div>
+	<div aria-hidden="true" class="footer-bg-grid pointer-events-none absolute inset-0 z-0"></div>
 
 	<!-- Top bar -->
 	<header
-		class="sticky top-0 z-30 transition-all duration-200 {scrolled
-			? 'border-b border-border/40 bg-background/50 backdrop-blur'
+		class="sticky top-0 z-30 transition-all duration-300 {scrolled
+			? 'border-b border-border/40 bg-background/40 backdrop-blur-md'
 			: 'border-b border-transparent bg-transparent'}"
 	>
-		<div class="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-			<div class="flex items-center gap-2">
+		<div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
+			<a href="/" class="flex items-center gap-2">
 				<img src="/icon-192.png" alt="Mavlo" class="size-7 rounded-md" />
-				<span class="font-bold text-lg text-primary">Mavlo</span>
-			</div>
+				<span class="text-lg font-bold text-primary">Mavlo</span>
+			</a>
 			<div class="flex items-center gap-2">
-				<Button variant="ghost" href="/sign-in" size="sm">Sign in</Button>
-				<Button href="/sign-up" size="sm">
-					Get started <ArrowRight class="size-4 ml-1" />
-				</Button>
+				<a
+					href="/sign-in"
+					use:magnetic={{ strength: 0.2, tilt: 0.05 }}
+					class="footer-glass-pill rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground"
+				>
+					Sign in
+				</a>
+				<a
+					href="/sign-up"
+					use:magnetic={{ strength: 0.25, tilt: 0.06 }}
+					class="footer-glass-pill flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider text-foreground"
+				>
+					Get started
+					<ArrowRight class="size-3.5" />
+				</a>
 			</div>
 		</div>
 	</header>
 
 	<!-- Hero -->
-	<section class="px-4 sm:px-6 pt-16 sm:pt-24 pb-12 sm:pb-20">
-		<div class="max-w-3xl mx-auto text-center">
-			<p class="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-4">
-				Personal · Free · Open
-			</p>
-			<h1
-				class="text-4xl sm:text-6xl font-bold tracking-tight bg-gradient-to-br from-foreground via-foreground to-foreground/60 bg-clip-text text-transparent"
+	<section class="relative isolate px-4 pb-24 pt-20 sm:px-6 sm:pb-32 sm:pt-32">
+		<div class="pointer-events-none absolute inset-0 z-0">
+			<div
+				class="footer-aurora absolute left-1/2 top-1/2 h-[60vh] w-[80vw] -translate-x-1/2 -translate-y-1/2 animate-footer-breathe rounded-[50%] blur-[80px]"
+			></div>
+		</div>
+
+		<div
+			data-hero-giant
+			aria-hidden="true"
+			class="footer-giant-bg-text pointer-events-none absolute -bottom-[8vh] left-1/2 z-0 -translate-x-1/2 select-none whitespace-nowrap"
+		>
+			MAVLO
+		</div>
+
+		<div class="relative z-10 mx-auto max-w-3xl text-center">
+			<div
+				data-anim="fade-up"
+				class="mb-6 inline-flex items-center gap-2 rounded-full border border-border/40 bg-background/30 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground backdrop-blur-md"
 			>
-				Lacak uangmu tanpa harus bayar.
+				<Sparkles class="size-3 text-primary" />
+				Personal · Free · Open
+			</div>
+
+			<h1
+				data-anim="fade-up"
+				class="footer-text-glow text-5xl font-black tracking-tighter sm:text-7xl"
+			>
+				Lacak uangmu<br />tanpa harus bayar.
 			</h1>
-			<p class="mt-6 text-base sm:text-lg text-muted-foreground leading-relaxed">
+
+			<p
+				data-anim="fade-up"
+				class="mx-auto mt-8 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg"
+			>
 				Mavlo lahir dari satu pertanyaan yang sering muncul tiap akhir bulan:
-				<span class="text-foreground font-medium">"uangku habis ke mana?"</span>
+				<span class="text-foreground font-medium italic">"uangku habis ke mana?"</span>
 			</p>
-			<div class="mt-8 flex items-center justify-center gap-3 flex-wrap">
-				<Button href="/sign-up" size="lg">
-					Mulai gratis <ArrowRight class="size-4 ml-1.5" />
-				</Button>
-				<Button href="/sign-in" variant="outline" size="lg">Saya sudah punya akun</Button>
+
+			<div
+				data-anim="fade-up"
+				class="mt-10 flex flex-wrap items-center justify-center gap-3"
+			>
+				<a
+					href="/sign-up"
+					use:magnetic={{ strength: 0.35, tilt: 0.1 }}
+					class="footer-glass-pill group flex items-center gap-3 rounded-full px-8 py-4 text-sm font-bold text-foreground"
+				>
+					Mulai gratis
+					<ArrowRight class="size-4 transition-transform group-hover:translate-x-1" />
+				</a>
+				<a
+					href="/sign-in"
+					use:magnetic={{ strength: 0.3, tilt: 0.08 }}
+					class="footer-glass-pill rounded-full px-8 py-4 text-sm font-bold text-muted-foreground hover:text-foreground"
+				>
+					Saya sudah punya akun
+				</a>
 			</div>
 		</div>
 	</section>
 
+	<!-- Marquee divider -->
+	<div
+		aria-hidden="true"
+		class="relative z-10 -my-2 overflow-hidden border-y border-border/30 bg-background/40 py-4 backdrop-blur-md"
+	>
+		<div
+			class="animate-footer-scroll-marquee flex w-max items-center text-xs font-medium tracking-[0.3em] text-muted-foreground/60 sm:text-sm"
+		>
+			{#each [0, 1] as _ (_)}
+				<div class="flex items-center gap-10 px-6">
+					{#each marqueeWords as w, i (i + '-' + _)}
+						<span class="whitespace-nowrap italic">"{w}"</span>
+						<span class="text-primary/60">✦</span>
+					{/each}
+				</div>
+			{/each}
+		</div>
+	</div>
+
 	<!-- Story -->
-	<section class="px-4 sm:px-6 pb-12 sm:pb-20">
-		<div class="max-w-3xl mx-auto">
+	<section class="relative z-10 px-4 py-20 sm:px-6 sm:py-28">
+		<div class="mx-auto max-w-3xl">
+			<div data-anim="fade-up" class="mb-6 flex items-center gap-3">
+				<span class="text-[10px] font-black tracking-[0.3em] text-primary/80">01</span>
+				<span class="h-px flex-1 bg-gradient-to-r from-primary/40 to-transparent"></span>
+				<span class="text-[10px] font-bold tracking-[0.3em] uppercase text-muted-foreground">
+					Cerita di balik Mavlo
+				</span>
+			</div>
+
 			<div
-				class="rounded-2xl border bg-gradient-to-br from-emerald-500/10 via-card to-card p-6 sm:p-10 space-y-5 text-base sm:text-lg leading-relaxed"
+				data-anim="fade-up"
+				data-stagger
+				class="footer-glass-pill relative isolate overflow-hidden rounded-3xl p-8 sm:p-12"
 			>
-				<p class="text-xs uppercase tracking-wider text-muted-foreground">Cerita di balik Mavlo</p>
-				<p>
-					Aku sering kebingungan tiap akhir bulan. Saldo tinggal sedikit, tapi gak inget
-					beli apa aja. Beberapa kali nyoba app pelacak keuangan yang populer — semuanya
-					bagus, tapi <span class="text-foreground font-medium">harus bayar</span> buat
-					fitur dasar kayak budget per kategori atau export data.
-				</p>
-				<p>
-					Akhirnya aku bikin sendiri. Fokusnya simpel:
-					<span class="text-foreground font-medium">catat transaksi cepat</span>,
-					<span class="text-foreground font-medium">lihat budget per kategori</span>, dan
-					<span class="text-foreground font-medium">grafik pengeluaran</span> yang
-					gampang dibaca. Tanpa fitur premium, tanpa iklan.
-				</p>
-				<p class="text-muted-foreground">
-					Kalau Mavlo bantu kamu juga, aku seneng banget. Gunakan sebebasnya.
-				</p>
+				<div
+					aria-hidden="true"
+					class="footer-aurora pointer-events-none absolute -left-20 -top-20 h-72 w-72 rounded-full blur-[80px] opacity-60"
+				></div>
+				<div class="relative space-y-6 text-base leading-relaxed sm:text-lg">
+					<p data-stagger-item>
+						Aku sering kebingungan tiap akhir bulan. Saldo tinggal sedikit, tapi gak inget
+						beli apa aja. Beberapa kali nyoba app pelacak keuangan yang populer — semuanya
+						bagus, tapi <span class="text-foreground font-semibold underline decoration-rose-400/60 decoration-2 underline-offset-4">harus bayar</span>
+						buat fitur dasar kayak budget per kategori atau export data.
+					</p>
+					<p data-stagger-item>
+						Akhirnya aku bikin sendiri. Fokusnya simpel:
+						<span class="text-foreground font-semibold underline decoration-emerald-400/60 decoration-2 underline-offset-4">catat transaksi cepat</span>,
+						<span class="text-foreground font-semibold underline decoration-cyan-400/60 decoration-2 underline-offset-4">lihat budget per kategori</span>, dan
+						<span class="text-foreground font-semibold underline decoration-violet-400/60 decoration-2 underline-offset-4">grafik pengeluaran</span>
+						yang gampang dibaca. Tanpa fitur premium, tanpa iklan.
+					</p>
+					<p data-stagger-item class="text-muted-foreground">
+						Kalau Mavlo bantu kamu juga, aku seneng banget. Gunakan sebebasnya.
+					</p>
+				</div>
 			</div>
 		</div>
 	</section>
 
 	<!-- Features -->
-	<section class="px-4 sm:px-6 pb-12 sm:pb-20">
-		<div class="max-w-5xl mx-auto">
-			<h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-center mb-10">
-				Yang kamu dapat
+	<section class="relative z-10 px-4 py-20 sm:px-6 sm:py-28">
+		<div class="mx-auto max-w-3xl">
+			<div data-anim="fade-up" class="mb-6 flex items-center gap-3">
+				<span class="text-[10px] font-black tracking-[0.3em] text-primary/80">02</span>
+				<span class="h-px flex-1 bg-gradient-to-r from-primary/40 to-transparent"></span>
+				<span class="text-[10px] font-bold tracking-[0.3em] uppercase text-muted-foreground">
+					Yang kamu dapat
+				</span>
+			</div>
+
+			<h2
+				data-anim="fade-up"
+				class="footer-text-glow mb-10 text-4xl font-black tracking-tighter sm:text-5xl"
+			>
+				Empat hal kecil<br />yang bikin beda.
 			</h2>
-			<div class="grid sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
-				{#each features as f (f.title)}
-					<div class="rounded-xl border bg-card p-5 hover:bg-accent/20 transition-colors">
+
+			<div data-stagger class="grid gap-4 sm:grid-cols-2">
+				{#each features as f, i (f.title)}
+					<div
+						data-stagger-item
+						use:magnetic={{ strength: 0.12, tilt: 0.04 }}
+						class="footer-glass-pill group relative isolate overflow-hidden rounded-2xl p-6"
+					>
 						<div
-							class="size-10 rounded-lg bg-primary/15 inline-flex items-center justify-center mb-3"
-						>
-							<f.icon class="size-5 text-primary" />
+							aria-hidden="true"
+							class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+							style="background: radial-gradient(circle at 30% 0%, rgba(16,185,129,0.18), transparent 60%);"
+						></div>
+						<div class="relative">
+							<div
+								class="mb-4 inline-flex size-11 items-center justify-center rounded-xl border border-border/40 bg-background/40 backdrop-blur"
+							>
+								<f.icon class="size-5 text-primary" />
+							</div>
+							<div class="mb-1 flex items-baseline gap-2">
+								<span class="text-[10px] font-bold tracking-widest text-muted-foreground/60">
+									0{i + 1}
+								</span>
+								<h3 class="text-lg font-bold tracking-tight">{f.title}</h3>
+							</div>
+							<p class="text-sm leading-relaxed text-muted-foreground">{f.body}</p>
 						</div>
-						<h3 class="font-semibold mb-1.5">{f.title}</h3>
-						<p class="text-sm text-muted-foreground leading-relaxed">{f.body}</p>
 					</div>
 				{/each}
 			</div>
@@ -163,47 +349,76 @@
 	</section>
 
 	<!-- Privacy strip -->
-	<section class="px-4 sm:px-6 pb-12 sm:pb-20">
-		<div class="max-w-3xl mx-auto">
-			<div class="rounded-xl border bg-card p-5 flex items-start gap-3 sm:items-center">
-				<div class="size-9 shrink-0 rounded-lg bg-emerald-500/15 flex items-center justify-center">
-					<Lock class="size-4 text-emerald-400" />
+	<section class="relative z-10 px-4 py-12 sm:px-6 sm:py-16">
+		<div class="mx-auto max-w-3xl">
+			<div
+				data-anim="fade-up"
+				class="footer-glass-pill flex items-center gap-4 rounded-2xl p-5 sm:p-6"
+			>
+				<div
+					class="grid size-12 shrink-0 place-items-center rounded-xl border border-emerald-400/30 bg-emerald-500/10"
+				>
+					<Lock class="size-5 text-emerald-300" />
 				</div>
-				<p class="text-sm text-muted-foreground">
-					Datamu disimpan terisolasi per akun. Tidak dijual, tidak dipakai untuk training,
-					tidak dishare ke pihak ketiga.
-					<span class="text-foreground">Tujuannya cuma satu: bantu kamu paham keuangan sendiri.</span>
+				<p class="text-sm leading-relaxed text-muted-foreground sm:text-base">
+					Datamu disimpan terisolasi per akun. Tidak dijual, tidak dipakai untuk training, tidak
+					dishare ke pihak ketiga.
+					<span class="text-foreground font-medium">
+						Tujuannya cuma satu: bantu kamu paham keuangan sendiri.
+					</span>
 				</p>
 			</div>
 		</div>
 	</section>
 
 	<!-- Donation -->
-	<section class="px-4 sm:px-6 pb-12 sm:pb-20">
-		<div class="max-w-3xl mx-auto">
+	<section class="relative z-10 px-4 py-20 sm:px-6 sm:py-28">
+		<div class="mx-auto max-w-3xl">
+			<div data-anim="fade-up" class="mb-6 flex items-center gap-3">
+				<span class="text-[10px] font-black tracking-[0.3em] text-rose-300/80">03</span>
+				<span class="h-px flex-1 bg-gradient-to-r from-rose-400/40 to-transparent"></span>
+				<span class="text-[10px] font-bold tracking-[0.3em] uppercase text-muted-foreground">
+					Dukungan
+				</span>
+			</div>
+
 			<div
-				class="rounded-2xl border bg-gradient-to-br from-rose-500/10 via-card to-card p-6 sm:p-10 text-center"
+				data-anim="fade-up"
+				class="footer-glass-pill relative isolate overflow-hidden rounded-3xl p-8 text-center sm:p-12"
 			>
 				<div
-					class="size-12 rounded-full bg-rose-500/15 inline-flex items-center justify-center mb-4"
-				>
-					<Heart class="size-6 text-rose-400" />
-				</div>
-				<h2 class="text-2xl sm:text-3xl font-bold tracking-tight">Suka Mavlo? Boleh traktir.</h2>
-				<p class="mt-3 text-muted-foreground leading-relaxed">
-					Mavlo gratis dan akan tetap gratis. Tapi kalau bantu kamu hemat ratusan ribu
-					per bulan, dukungan kecil bantu aku bayar server dan tetap waras ngembangin
-					fitur baru.
-				</p>
-				<div class="mt-6 rounded-xl border border-dashed bg-background/50 p-4 text-sm">
-					<p class="text-muted-foreground">
-						Platform donasi belum ditentukan. Stay tuned —
-						<span class="text-foreground">link akan diumumkan di sini</span>.
+					aria-hidden="true"
+					class="pointer-events-none absolute inset-0"
+					style="background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(244,63,94,0.18), transparent 70%);"
+				></div>
+
+				<div class="relative">
+					<div
+						class="mx-auto mb-5 grid size-14 place-items-center rounded-full border border-rose-400/30 bg-rose-500/15"
+					>
+						<Heart class="animate-footer-heartbeat size-6 fill-rose-400 text-rose-400" />
+					</div>
+					<h2 class="footer-text-glow text-3xl font-black tracking-tight sm:text-4xl">
+						Suka Mavlo? Boleh traktir.
+					</h2>
+					<p class="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
+						Mavlo gratis dan akan tetap gratis. Tapi kalau bantu kamu hemat ratusan ribu per
+						bulan, dukungan kecil bantu aku bayar server dan tetap waras ngembangin fitur baru.
+					</p>
+
+					<div
+						class="mx-auto mt-7 max-w-md rounded-2xl border border-dashed border-border/50 bg-background/30 p-4 text-sm backdrop-blur"
+					>
+						<p class="text-muted-foreground">
+							Platform donasi belum ditentukan. Stay tuned —
+							<span class="text-foreground font-medium">link akan diumumkan di sini.</span>
+						</p>
+					</div>
+
+					<p class="mt-5 text-xs text-muted-foreground">
+						Sementara, kamu bisa share Mavlo ke teman yang lagi pusing soal keuangan.
 					</p>
 				</div>
-				<p class="mt-4 text-xs text-muted-foreground">
-					Sementara, kamu bisa share Mavlo ke teman yang lagi pusing soal keuangan.
-				</p>
 			</div>
 		</div>
 	</section>
@@ -218,3 +433,9 @@
 		secondaryLabel="Saya sudah punya akun"
 	/>
 </div>
+
+<style>
+	.landing :global(.footer-glass-pill) {
+		transform-style: preserve-3d;
+	}
+</style>

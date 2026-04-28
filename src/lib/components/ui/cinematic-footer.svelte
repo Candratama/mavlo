@@ -3,6 +3,7 @@
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/ScrollTrigger';
 	import { ArrowRight, ArrowUp, Heart } from 'lucide-svelte';
+	import { magnetic } from '$lib/actions/magnetic.js';
 
 	type Props = {
 		ctaTitle?: string;
@@ -32,42 +33,6 @@
 	let giantEl: HTMLDivElement | undefined = $state();
 	let headingEl: HTMLHeadingElement | undefined = $state();
 	let linksEl: HTMLDivElement | undefined = $state();
-
-	function magnetic(node: HTMLElement) {
-		const onMove = (e: MouseEvent) => {
-			const rect = node.getBoundingClientRect();
-			const cx = e.clientX - rect.left - rect.width / 2;
-			const cy = e.clientY - rect.top - rect.height / 2;
-			gsap.to(node, {
-				x: cx * 0.35,
-				y: cy * 0.35,
-				rotationX: -cy * 0.12,
-				rotationY: cx * 0.12,
-				scale: 1.05,
-				ease: 'power2.out',
-				duration: 0.4
-			});
-		};
-		const onLeave = () => {
-			gsap.to(node, {
-				x: 0,
-				y: 0,
-				rotationX: 0,
-				rotationY: 0,
-				scale: 1,
-				ease: 'elastic.out(1, 0.3)',
-				duration: 1.2
-			});
-		};
-		node.addEventListener('mousemove', onMove);
-		node.addEventListener('mouseleave', onLeave);
-		return {
-			destroy() {
-				node.removeEventListener('mousemove', onMove);
-				node.removeEventListener('mouseleave', onLeave);
-			}
-		};
-	}
 
 	onMount(() => {
 		gsap.registerPlugin(ScrollTrigger);
