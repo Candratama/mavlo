@@ -283,6 +283,13 @@
 	color: var(--foreground);
 }
 
+.mavlo-pill-solid {
+	background: color-mix(in oklch, var(--card) 88%, transparent);
+}
+.mavlo-pill-solid:hover {
+	background: color-mix(in oklch, var(--card) 92%, transparent);
+}
+
 .mavlo-headline {
 	background: linear-gradient(
 		180deg,

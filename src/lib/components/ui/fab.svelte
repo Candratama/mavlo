@@ -12,7 +12,7 @@
 	aria-label="Add transaction"
 	onclick={() => openAddTransaction('expense')}
 	class={cn(
-		'mavlo-pill text-foreground flex size-16 shrink-0 items-center justify-center rounded-full border transition-transform hover:-translate-y-0.5 active:scale-95',
+		'mavlo-pill mavlo-pill-solid text-foreground flex size-16 shrink-0 items-center justify-center rounded-full border transition-transform hover:-translate-y-0.5 active:scale-95',
 		className
 	)}
 >

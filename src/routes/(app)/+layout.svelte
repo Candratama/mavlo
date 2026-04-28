@@ -240,7 +240,7 @@
 		<LimelightNav
 			items={limelightItems}
 			activeIndex={limelightActive}
-			class="mavlo-pill bg-transparent"
+			class="mavlo-pill mavlo-pill-solid"
 			iconContainerClass="px-4 py-5"
 		/>
 		<Fab />
