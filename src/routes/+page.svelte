@@ -98,24 +98,56 @@
 		{
 			icon: Wallet,
 			title: 'Multi-account',
-			body: 'Cash, bank, e-wallet, kartu kredit. Semua saldo di satu tempat.'
+			body: 'Cash, bank, e-wallet, kartu kredit. Semua saldo di satu tempat.',
+			accent: 'emerald'
 		},
 		{
 			icon: PiggyBank,
 			title: 'Budget per kategori',
-			body: 'Pasang limit bulanan. Bar progres + warning kalau over.'
+			body: 'Pasang limit bulanan. Bar progres + warning kalau over.',
+			accent: 'violet'
 		},
 		{
 			icon: BarChart3,
 			title: 'Visualisasi pengeluaran',
-			body: 'Donut chart, daily flow, income vs expense 6 bulan.'
+			body: 'Donut chart, daily flow, income vs expense 6 bulan.',
+			accent: 'cyan'
 		},
 		{
 			icon: Smartphone,
 			title: 'PWA-first, offline-friendly',
-			body: 'Install di home screen. Pakai kayak app native, gratis.'
+			body: 'Install di home screen. Pakai kayak app native, gratis.',
+			accent: 'rose'
 		}
-	];
+	] as const;
+
+	const accentBg = {
+		emerald: 'bg-gradient-to-br from-emerald-500/15 via-card/80 to-card/80',
+		violet: 'bg-gradient-to-br from-violet-500/15 via-card/80 to-card/80',
+		cyan: 'bg-gradient-to-br from-cyan-500/15 via-card/80 to-card/80',
+		rose: 'bg-gradient-to-br from-rose-500/15 via-card/80 to-card/80'
+	} as const;
+
+	const accentBorder = {
+		emerald: 'hover:border-emerald-400/50',
+		violet: 'hover:border-violet-400/50',
+		cyan: 'hover:border-cyan-400/50',
+		rose: 'hover:border-rose-400/50'
+	} as const;
+
+	const accentIcon = {
+		emerald: 'text-emerald-300',
+		violet: 'text-violet-300',
+		cyan: 'text-cyan-300',
+		rose: 'text-rose-300'
+	} as const;
+
+	const accentIconBg = {
+		emerald: 'bg-emerald-500/15 border-emerald-400/30',
+		violet: 'bg-violet-500/15 border-violet-400/30',
+		cyan: 'bg-cyan-500/15 border-cyan-400/30',
+		rose: 'bg-rose-500/15 border-rose-400/30'
+	} as const;
 
 	const marqueeWords = [
 		'uangku habis ke mana?',
@@ -320,13 +352,12 @@
 				{#each features as f, i (f.title)}
 					<div
 						data-stagger-item
-						use:magnetic={{ strength: 0.12, tilt: 0.04 }}
-						class="feature-card group relative rounded-2xl border border-border/40 bg-card/80 p-6 backdrop-blur-md transition-colors duration-300 hover:border-primary/50 hover:bg-card/90"
+						class="feature-card group relative rounded-2xl border border-border/40 p-6 backdrop-blur-md transition-[transform,border-color] duration-300 ease-out hover:scale-[1.02] {accentBg[f.accent]} {accentBorder[f.accent]}"
 					>
 						<div
-							class="mb-4 inline-flex size-11 items-center justify-center rounded-xl border border-border/40 bg-background/60 backdrop-blur transition-colors group-hover:border-primary/40 group-hover:bg-primary/10"
+							class="mb-4 inline-flex size-11 items-center justify-center rounded-xl border backdrop-blur {accentIconBg[f.accent]}"
 						>
-							<f.icon class="size-5 text-primary transition-transform duration-500 group-hover:scale-110" />
+							<f.icon class="size-5 {accentIcon[f.accent]}" />
 						</div>
 						<div class="mb-1 flex items-baseline gap-2">
 							<span class="text-[10px] font-bold tracking-widest text-muted-foreground/60">
