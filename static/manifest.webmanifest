@@ -1,4 +1,5 @@
 {
+	"id": "mavlo-app",
 	"name": "Mavlo",
 	"short_name": "Mavlo",
 	"description": "Personal finance tracker. Accounts, transactions, budgets.",
@@ -7,9 +8,10 @@
 	"display": "standalone",
 	"orientation": "portrait",
 	"theme_color": "#0a0a0a",
-	"background_color": "#fafafa",
+	"background_color": "#0a0a0a",
 	"categories": ["finance", "productivity"],
-	"lang": "id-ID",
+	"lang": "id",
+	"dir": "ltr",
 	"icons": [
 		{
 			"src": "/icon-192.png",
