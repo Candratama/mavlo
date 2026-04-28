@@ -10,15 +10,16 @@
 
 	let { data, currency = 'IDR' }: { data: CategoryRow[]; currency?: string } = $props();
 
+	// Brand-aligned palette in 800 shade
 	const PALETTE = [
-		'#047857', // emerald-700
-		'#1d4ed8', // blue-700
-		'#b45309', // amber-700
-		'#b91c1c', // red-700
-		'#6d28d9', // violet-700
-		'#be185d', // pink-700
-		'#0f766e', // teal-700
-		'#c2410c' // orange-700
+		'#065f46', // emerald-800
+		'#155e75', // cyan-800
+		'#5b21b6', // violet-800
+		'#9f1239', // rose-800
+		'#92400e', // amber-800
+		'#115e59', // teal-800
+		'#9d174d', // pink-800
+		'#075985' // sky-800
 	];
 
 	const formatCents = (cents: number) => formatCentsAsCurrency(cents, currency);

@@ -22,14 +22,24 @@
 		return date.toLocaleString('en', { month: 'short' });
 	};
 
+	const formatCompact = (cents: number) => {
+		const v = cents / 100;
+		if (v >= 1_000_000_000) return (v / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'B';
+		if (v >= 1_000_000) return (v / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+		if (v >= 1_000) return (v / 1_000).toFixed(0) + 'K';
+		return String(Math.round(v));
+	};
+
+	const activeData = $derived(data.filter((r) => r.incomeCents > 0 || r.expenseCents > 0));
+
 	const flat = $derived<FlatRow[]>(
-		data.flatMap((r) => [
+		activeData.flatMap((r) => [
 			{ periodMonth: r.periodMonth, kind: 'income' as const, amountCents: r.incomeCents },
 			{ periodMonth: r.periodMonth, kind: 'expense' as const, amountCents: r.expenseCents }
 		])
 	);
 
-	const hasData = $derived(data.some((r) => r.incomeCents > 0 || r.expenseCents > 0));
+	const hasData = $derived(activeData.length > 0);
 </script>
 
 {#if !hasData}
@@ -49,13 +59,26 @@
 			yDomain={[0, null]}
 			c="kind"
 			cDomain={['income', 'expense']}
-			cRange={['#10b981', '#f43f5e']}
-			padding={{ top: 8, right: 16, bottom: 24, left: 64 }}
+			cRange={['#047857', '#9f1239']}
+			padding={{ top: 8, right: 8, bottom: 24, left: 36 }}
 		>
 			<Svg>
-				<Axis placement="left" rule grid />
-				<Axis placement="bottom" format={formatMonth} />
-				<Bars radius={2} />
+				<Axis
+					placement="left"
+					format={formatCompact}
+					rule={{ class: 'stroke-border' }}
+					grid={{ class: 'stroke-border/50' }}
+					tickLabelProps={{ class: 'fill-muted-foreground stroke-none text-[10px]' }}
+					classes={{ tick: 'stroke-border' }}
+				/>
+				<Axis
+					placement="bottom"
+					format={formatMonth}
+					rule={{ class: 'stroke-border' }}
+					tickLabelProps={{ class: 'fill-muted-foreground stroke-none text-[10px]' }}
+					classes={{ tick: 'stroke-border' }}
+				/>
+				<Bars radius={14} rounded="top" />
 			</Svg>
 		</Chart>
 	</div>

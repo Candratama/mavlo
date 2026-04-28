@@ -10,11 +10,24 @@
 
 	let { data }: { data: Row[]; currency?: string } = $props();
 
-	const total = $derived(data.reduce((sum, r) => sum + r.amountCents, 0));
+	const todayUtcEnd = (() => {
+		const now = new Date();
+		return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999);
+	})();
+	const visibleData = $derived(data.filter((r) => r.dateMs <= todayUtcEnd));
+	const total = $derived(visibleData.reduce((sum, r) => sum + r.amountCents, 0));
 
 	const formatDay = (d: Date | number) => {
 		const date = d instanceof Date ? d : new Date(d);
 		return String(date.getUTCDate());
+	};
+
+	const formatCompact = (cents: number) => {
+		const v = cents / 100;
+		if (v >= 1_000_000_000) return (v / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'B';
+		if (v >= 1_000_000) return (v / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+		if (v >= 1_000) return (v / 1_000).toFixed(0) + 'K';
+		return String(Math.round(v));
 	};
 </script>
 
@@ -25,20 +38,33 @@
 {:else}
 	<div class="h-48 sm:h-56 md:h-64">
 		<Chart
-			{data}
+			data={visibleData}
 			x={(d: Row) => new Date(d.dateMs)}
 			xScale={scaleTime()}
 			y="amountCents"
 			yDomain={[0, null]}
-			padding={{ top: 8, right: 16, bottom: 24, left: 56 }}
+			padding={{ top: 8, right: 8, bottom: 24, left: 36 }}
 		>
 			<Svg>
-				<Axis placement="left" rule grid />
-				<Axis placement="bottom" format={formatDay} />
+				<Axis
+					placement="left"
+					format={formatCompact}
+					rule={{ class: 'stroke-border' }}
+					grid={{ class: 'stroke-border/50' }}
+					tickLabelProps={{ class: 'fill-muted-foreground stroke-none text-[10px]' }}
+					classes={{ tick: 'stroke-border' }}
+				/>
+				<Axis
+					placement="bottom"
+					format={formatDay}
+					rule={{ class: 'stroke-border' }}
+					tickLabelProps={{ class: 'fill-muted-foreground stroke-none text-[10px]' }}
+					classes={{ tick: 'stroke-border' }}
+				/>
 				<Area
 					curve={curveMonotoneX}
 					line={{ class: 'stroke-emerald-500 stroke-2' }}
-					class="fill-emerald-500/20"
+					class="fill-emerald-500/15"
 				/>
 			</Svg>
 		</Chart>
