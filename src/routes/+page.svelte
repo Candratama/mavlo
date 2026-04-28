@@ -62,9 +62,9 @@
 			if (heroGiant) {
 				gsap.fromTo(
 					heroGiant,
-					{ y: '-2vh', scale: 0.95 },
+					{ y: '-5vh', scale: 0.95 },
 					{
-						y: '6vh',
+						y: '15vh',
 						scale: 1.05,
 						ease: 'none',
 						scrollTrigger: {
@@ -172,7 +172,7 @@
 	</header>
 
 	<!-- Hero -->
-	<section class="relative isolate flex min-h-[90vh] flex-col justify-center px-4 py-12 sm:px-6 sm:py-16">
+	<section class="relative isolate px-4 pb-24 pt-20 sm:px-6 sm:pb-32 sm:pt-32">
 		<div class="pointer-events-none absolute inset-0 z-0">
 			<div
 				class="mavlo-aurora absolute left-1/2 top-1/2 h-[60vh] w-[80vw] -translate-x-1/2 -translate-y-1/2 animate-mavlo-breathe rounded-[50%] blur-[80px]"
@@ -182,7 +182,7 @@
 		<div
 			data-hero-giant
 			aria-hidden="true"
-			class="mavlo-giant-text pointer-events-none absolute bottom-0 left-1/2 z-0 -translate-x-1/2 select-none whitespace-nowrap"
+			class="mavlo-giant-text pointer-events-none absolute -bottom-[8vh] left-1/2 z-0 -translate-x-1/2 select-none whitespace-nowrap"
 		>
 			MAVLO
 		</div>
