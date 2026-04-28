@@ -18,7 +18,8 @@
 		{
 			"binding": "DB",
 			"database_name": "mavlo",
-			"database_id": "ebb62701-4f25-48e9-a687-9fa6724abb63"
+			"database_id": "ebb62701-4f25-48e9-a687-9fa6724abb63",
+			"migrations_dir": "drizzle"
 		}
 	],
 	"r2_buckets": [
