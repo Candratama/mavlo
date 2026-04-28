@@ -31,7 +31,13 @@ export const load: LayoutServerLoad = async (event) => {
 	}));
 
 	return {
-		user: { id: user.id, name: user.name, email: user.email, image: user.image },
+		user: {
+			id: user.id,
+			name: user.name,
+			username: (user as { username?: string | null }).username ?? null,
+			email: user.email,
+			image: user.image
+		},
 		preferences: prefs,
 		accounts: accountsWithBalance,
 		categories

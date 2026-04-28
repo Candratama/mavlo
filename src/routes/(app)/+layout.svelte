@@ -153,8 +153,7 @@
 		></div>
 		<div aria-hidden="true" class="mavlo-grid-app pointer-events-none absolute inset-0 z-0"></div>
 		<header
-			class="bg-background/80 relative z-10 flex items-center justify-between gap-3 border-b px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm
-				sm:px-6"
+			class="bg-background/80 relative z-10 flex items-center justify-between gap-3 border-b px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm sm:px-6 lg:justify-end"
 		>
 			<div class="flex items-center gap-1.5 lg:hidden">
 				<span class="relative inline-flex">
@@ -166,8 +165,6 @@
 				</span>
 				<span class="text-primary text-base font-bold">Mavlo</span>
 			</div>
-
-			<span class="text-muted-foreground hidden text-sm lg:inline">Hi, {data.user.name}</span>
 
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger>

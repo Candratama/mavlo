@@ -205,7 +205,44 @@
 						<Mail class="size-3.5 shrink-0" />
 						<span class="truncate">{data.user.email}</span>
 					</div>
+					{#if data.user.username}
+						<div class="text-muted-foreground mt-0.5 truncate text-xs">@{data.user.username}</div>
+					{/if}
 				</div>
+			</div>
+
+			<div class="space-y-2">
+				<Label for="username-input" class="text-muted-foreground text-xs tracking-wider uppercase">
+					Username
+				</Label>
+				<form
+					method="POST"
+					action="?/username"
+					use:enhance={() => {
+						return async ({ result, update }) => {
+							await update();
+							if (result.type === 'success') {
+								notify.success('Username updated');
+							} else if (result.type === 'failure') {
+								const msg = (result.data as { usernameError?: string } | undefined)?.usernameError;
+								notify.error(msg ?? 'Could not update username');
+							}
+						};
+					}}
+					class="flex items-center gap-2"
+				>
+					<Input
+						id="username-input"
+						name="username"
+						placeholder={data.user.username ?? 'your_username'}
+						maxlength={30}
+						required
+					/>
+					<Button type="submit">Save</Button>
+				</form>
+				<p class="text-muted-foreground text-xs">
+					3–30 characters, letters, numbers, dot, underscore.
+				</p>
 			</div>
 
 			<div class="space-y-2">
@@ -283,6 +320,7 @@
 			<form
 				bind:this={formEl}
 				method="POST"
+				action="?/prefs"
 				use:enhance={() => {
 					saveState = 'saving';
 					if (savedTimer) clearTimeout(savedTimer);

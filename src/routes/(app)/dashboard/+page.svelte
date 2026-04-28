@@ -77,12 +77,15 @@
 	});
 
 	const firstName = $derived(data.user.name?.split(' ')[0] ?? data.user.name ?? '');
+	const greetingName = $derived(data.user.username ?? firstName);
 </script>
 
 <svelte:head><title>Dashboard — Mavlo</title></svelte:head>
 
 <!-- Greeting -->
-<p class="text-muted-foreground mb-1 text-xs tracking-wider uppercase">Hi, {firstName}</p>
+<h2 class="mavlo-headline mb-3 text-2xl font-bold tracking-tight sm:text-3xl lg:text-xl">
+	~ Hi, {greetingName}
+</h2>
 
 <!-- Hero total balance -->
 <div

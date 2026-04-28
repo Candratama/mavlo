@@ -39,7 +39,12 @@ const authConfig = {
 		sendOnSignUp: true,
 		autoSignInAfterVerification: true
 	},
-	user: { modelName: 'users' },
+	user: {
+		modelName: 'users',
+		additionalFields: {
+			username: { type: 'string', required: false, input: true }
+		}
+	},
 	session: { modelName: 'sessions' },
 	account: { modelName: 'auth_accounts' },
 	verification: { modelName: 'verifications' },
