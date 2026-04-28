@@ -3,7 +3,6 @@
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/ScrollTrigger';
 	import { ArrowRight, ArrowUp, Heart } from 'lucide-svelte';
-	import { magnetic } from '$lib/actions/magnetic.js';
 
 	type Props = {
 		ctaTitle?: string;
@@ -151,16 +150,14 @@
 				<div class="flex w-full flex-wrap justify-center gap-4">
 					<a
 						href={primaryHref}
-						use:magnetic
-						class="footer-glass-pill text-foreground group flex items-center gap-3 rounded-full px-10 py-5 text-sm font-bold md:text-base"
+						class="footer-glass-pill text-foreground group flex items-center gap-3 rounded-full px-10 py-5 text-sm font-bold transition-transform duration-300 ease-out hover:-translate-y-1 md:text-base"
 					>
 						{primaryLabel}
-						<ArrowRight class="size-4" />
+						<ArrowRight class="size-4 transition-transform duration-300 group-hover:translate-x-1" />
 					</a>
 					<a
 						href={secondaryHref}
-						use:magnetic
-						class="footer-glass-pill text-muted-foreground hover:text-foreground rounded-full px-10 py-5 text-sm font-bold md:text-base"
+						class="footer-glass-pill text-muted-foreground hover:text-foreground rounded-full px-10 py-5 text-sm font-bold transition-transform duration-300 ease-out hover:-translate-y-1 md:text-base"
 					>
 						{secondaryLabel}
 					</a>
@@ -198,8 +195,7 @@
 			<button
 				type="button"
 				onclick={scrollToTop}
-				use:magnetic
-				class="footer-glass-pill text-muted-foreground hover:text-foreground group order-3 flex size-12 items-center justify-center rounded-full"
+				class="footer-glass-pill text-muted-foreground hover:text-foreground group order-3 flex size-12 items-center justify-center rounded-full transition-transform duration-300 ease-out hover:-translate-y-1"
 				aria-label="Back to top"
 			>
 				<ArrowUp class="size-5 transition-transform duration-300 group-hover:-translate-y-1" />

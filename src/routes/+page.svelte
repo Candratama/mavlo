@@ -12,7 +12,6 @@
 	} from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { setMode } from 'mode-watcher';
-	import { magnetic } from '$lib/actions/magnetic.js';
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -98,56 +97,24 @@
 		{
 			icon: Wallet,
 			title: 'Multi-account',
-			body: 'Cash, bank, e-wallet, kartu kredit. Semua saldo di satu tempat.',
-			accent: 'emerald'
+			body: 'Cash, bank, e-wallet, kartu kredit. Semua saldo di satu tempat.'
 		},
 		{
 			icon: PiggyBank,
 			title: 'Budget per kategori',
-			body: 'Pasang limit bulanan. Bar progres + warning kalau over.',
-			accent: 'violet'
+			body: 'Pasang limit bulanan. Bar progres + warning kalau over.'
 		},
 		{
 			icon: BarChart3,
 			title: 'Visualisasi pengeluaran',
-			body: 'Donut chart, daily flow, income vs expense 6 bulan.',
-			accent: 'cyan'
+			body: 'Donut chart, daily flow, income vs expense 6 bulan.'
 		},
 		{
 			icon: Smartphone,
 			title: 'PWA-first, offline-friendly',
-			body: 'Install di home screen. Pakai kayak app native, gratis.',
-			accent: 'rose'
+			body: 'Install di home screen. Pakai kayak app native, gratis.'
 		}
 	] as const;
-
-	const accentBg = {
-		emerald: 'bg-gradient-to-br from-emerald-500/15 via-card/80 to-card/80',
-		violet: 'bg-gradient-to-br from-violet-500/15 via-card/80 to-card/80',
-		cyan: 'bg-gradient-to-br from-cyan-500/15 via-card/80 to-card/80',
-		rose: 'bg-gradient-to-br from-rose-500/15 via-card/80 to-card/80'
-	} as const;
-
-	const accentBorder = {
-		emerald: 'hover:border-emerald-400/50',
-		violet: 'hover:border-violet-400/50',
-		cyan: 'hover:border-cyan-400/50',
-		rose: 'hover:border-rose-400/50'
-	} as const;
-
-	const accentIcon = {
-		emerald: 'text-emerald-300',
-		violet: 'text-violet-300',
-		cyan: 'text-cyan-300',
-		rose: 'text-rose-300'
-	} as const;
-
-	const accentIconBg = {
-		emerald: 'bg-emerald-500/15 border-emerald-400/30',
-		violet: 'bg-violet-500/15 border-violet-400/30',
-		cyan: 'bg-cyan-500/15 border-cyan-400/30',
-		rose: 'bg-rose-500/15 border-rose-400/30'
-	} as const;
 
 	const marqueeWords = [
 		'uangku habis ke mana?',
@@ -189,15 +156,13 @@
 			<div class="flex items-center gap-2">
 				<a
 					href="/sign-in"
-					use:magnetic={{ strength: 0.2, tilt: 0.05 }}
-					class="footer-glass-pill rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground"
+					class="footer-glass-pill rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground transition-transform duration-300 ease-out hover:-translate-y-0.5 hover:text-foreground"
 				>
 					Sign in
 				</a>
 				<a
 					href="/sign-up"
-					use:magnetic={{ strength: 0.25, tilt: 0.06 }}
-					class="footer-glass-pill flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider text-foreground"
+					class="footer-glass-pill flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider text-foreground transition-transform duration-300 ease-out hover:-translate-y-0.5"
 				>
 					Get started
 					<ArrowRight class="size-3.5" />
@@ -252,16 +217,14 @@
 			>
 				<a
 					href="/sign-up"
-					use:magnetic={{ strength: 0.3, tilt: 0.08 }}
-					class="footer-glass-pill group flex items-center gap-3 rounded-full px-10 py-5 text-sm font-bold text-foreground md:text-base"
+					class="footer-glass-pill group flex items-center gap-3 rounded-full px-10 py-5 text-sm font-bold text-foreground transition-transform duration-300 ease-out hover:-translate-y-1 md:text-base"
 				>
 					Mulai gratis
 					<ArrowRight class="size-4 transition-transform duration-300 group-hover:translate-x-1" />
 				</a>
 				<a
 					href="/sign-in"
-					use:magnetic={{ strength: 0.3, tilt: 0.08 }}
-					class="footer-glass-pill rounded-full px-10 py-5 text-sm font-bold text-muted-foreground hover:text-foreground md:text-base"
+					class="footer-glass-pill rounded-full px-10 py-5 text-sm font-bold text-muted-foreground transition-transform duration-300 ease-out hover:-translate-y-1 hover:text-foreground md:text-base"
 				>
 					Saya sudah punya akun
 				</a>
@@ -352,12 +315,12 @@
 				{#each features as f, i (f.title)}
 					<div
 						data-stagger-item
-						class="feature-card group relative rounded-2xl border border-border/40 p-6 backdrop-blur-md transition-[transform,border-color] duration-300 ease-out hover:scale-[1.02] {accentBg[f.accent]} {accentBorder[f.accent]}"
+						class="feature-card group relative rounded-2xl border border-border/40 bg-gradient-to-br from-emerald-500/15 via-card/80 to-card/80 p-6 backdrop-blur-md transition-transform duration-300 ease-out hover:-translate-y-1"
 					>
 						<div
-							class="mb-4 inline-flex size-11 items-center justify-center rounded-xl border backdrop-blur {accentIconBg[f.accent]}"
+							class="mb-4 inline-flex size-11 items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/15 backdrop-blur"
 						>
-							<f.icon class="size-5 {accentIcon[f.accent]}" />
+							<f.icon class="size-5 text-emerald-300" />
 						</div>
 						<div class="mb-1 flex items-baseline gap-2">
 							<span class="text-[10px] font-bold tracking-widest text-muted-foreground/60">
