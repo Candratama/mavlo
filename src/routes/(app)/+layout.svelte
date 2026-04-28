@@ -104,7 +104,7 @@
 
 <div class="min-h-screen flex bg-background">
 	<aside
-		class="w-60 border-r bg-sidebar text-sidebar-foreground border-sidebar-border p-4 hidden md:flex flex-col"
+		class="w-60 border-r bg-sidebar text-sidebar-foreground border-sidebar-border p-4 hidden lg:flex flex-col"
 	>
 		<div class="flex items-center gap-2 mb-6">
 			<img src="/icon-192.png" alt="Mavlo" class="h-7 w-7 rounded-md" />
@@ -130,12 +130,12 @@
 			class="border-b bg-background px-4 sm:px-6 py-3 flex items-center justify-between gap-3
 				pt-[max(0.75rem,env(safe-area-inset-top))]"
 		>
-			<div class="flex items-center gap-1.5 md:hidden">
+			<div class="flex items-center gap-1.5 lg:hidden">
 				<img src="/icon-192.png" alt="Mavlo" class="h-6 w-6 rounded-md" />
 				<span class="text-base font-bold text-primary">Mavlo</span>
 			</div>
 
-			<span class="text-sm text-muted-foreground hidden md:inline">Hi, {data.user.name}</span>
+			<span class="text-sm text-muted-foreground hidden lg:inline">Hi, {data.user.name}</span>
 
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger>
@@ -176,7 +176,7 @@
 		</header>
 
 		<div
-			class="p-3 sm:p-4 md:p-6 flex-1 overflow-x-hidden pb-[calc(var(--bottom-nav-h)+var(--fab-h)+1.5rem+env(safe-area-inset-bottom))] md:pb-6"
+			class="p-3 sm:p-4 md:p-6 flex-1 overflow-x-hidden pb-[calc(var(--bottom-nav-h)+var(--fab-h)+1.5rem+env(safe-area-inset-bottom))] lg:pb-6"
 		>
 			{@render children()}
 		</div>
@@ -197,7 +197,7 @@
 	/>
 
 	<nav
-		class="md:hidden fixed inset-x-0 bottom-0 z-40 border-t bg-background pb-[env(safe-area-inset-bottom)]"
+		class="lg:hidden fixed inset-x-0 bottom-0 z-40 border-t bg-background pb-[env(safe-area-inset-bottom)]"
 	>
 		<ul class="grid grid-cols-5">
 			{#each primaryNav as item}
