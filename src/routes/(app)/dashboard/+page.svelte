@@ -111,7 +111,7 @@
 
 <!-- Cycle dual-stat -->
 <div class="mt-4 grid grid-cols-2 gap-3">
-	<div class="rounded-xl border bg-card p-4">
+	<div class="rounded-xl border bg-gradient-to-br from-emerald-500/10 via-card to-card p-4">
 		<div class="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
 			<span class="size-6 rounded-full bg-income/15 inline-flex items-center justify-center">
 				<ArrowDown class="size-3.5 text-income" />
@@ -122,7 +122,7 @@
 			{hideBalance ? maskedAmount : formatCentsAsCurrency(data.monthIncomeCents, data.displayCurrency)}
 		</p>
 	</div>
-	<div class="rounded-xl border bg-card p-4">
+	<div class="rounded-xl border bg-gradient-to-br from-rose-500/10 via-card to-card p-4">
 		<div class="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
 			<span class="size-6 rounded-full bg-expense/15 inline-flex items-center justify-center">
 				<ArrowUp class="size-3.5 text-expense" />
@@ -136,7 +136,12 @@
 </div>
 
 {#if data.budgetLimitCents > 0}
-	<a href="/budgets" class="mt-4 block rounded-xl border bg-card p-4 hover:bg-accent/20 transition-colors">
+	<a
+		href="/budgets"
+		class="mt-4 block rounded-xl border bg-gradient-to-br {budgetOver
+			? 'from-rose-500/10'
+			: 'from-primary/10'} via-card to-card p-4 hover:bg-accent/20 transition-colors"
+	>
 		<div class="flex items-center justify-between mb-2">
 			<span class="text-sm font-semibold">Monthly Budget</span>
 			<span class="text-sm font-semibold tabular-nums {budgetOver ? 'text-expense' : 'text-muted-foreground'}">

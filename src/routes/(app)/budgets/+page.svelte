@@ -75,7 +75,7 @@
 	</Button>
 </div>
 
-<div class="mb-6 rounded-xl border bg-card p-4">
+<div class="mb-6 rounded-xl border bg-gradient-to-br {totalSpent > totalAllocated ? 'from-rose-500/10' : 'from-primary/10'} via-card to-card p-4">
 	<div class="flex items-center justify-between mb-2">
 		<span class="text-sm font-semibold">Total Budget</span>
 		<span

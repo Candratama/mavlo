@@ -150,7 +150,7 @@
 </div>
 
 <div class="mb-6 grid grid-cols-2 gap-3">
-	<div class="rounded-xl border bg-card p-4">
+	<div class="rounded-xl border bg-gradient-to-br from-emerald-500/10 via-card to-card p-4">
 		<div class="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
 			<span class="size-6 rounded-full bg-income/15 inline-flex items-center justify-center">
 				<ArrowDown class="size-3.5 text-income" />
@@ -161,7 +161,7 @@
 			{formatCentsAsCurrency(totalIncome, txCurrency)}
 		</p>
 	</div>
-	<div class="rounded-xl border bg-card p-4">
+	<div class="rounded-xl border bg-gradient-to-br from-rose-500/10 via-card to-card p-4">
 		<div class="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
 			<span class="size-6 rounded-full bg-expense/15 inline-flex items-center justify-center">
 				<ArrowUp class="size-3.5 text-expense" />
