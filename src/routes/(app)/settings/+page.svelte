@@ -1,24 +1,26 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
 	import { untrack } from 'svelte';
 	import { setMode } from 'mode-watcher';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
-	import SubmitButton from '$lib/components/forms/submit-button.svelte';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
-	import { Sun, Moon, Monitor, LogOut, User as UserIcon, Mail } from 'lucide-svelte';
+	import { Sun, Moon, Monitor, LogOut, User as UserIcon, Mail, Loader2 } from 'lucide-svelte';
 	import { notify } from '$lib/utils/toast.js';
 	import SegmentedControl, { type SegmentedOption } from '$lib/components/ui/segmented-control.svelte';
 	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
 	import { Smartphone, Download, Share, Check } from 'lucide-svelte';
 	import { getPwaInstallState, triggerInstall, isIOS, isStandalone } from '$lib/stores/pwa-install.svelte.js';
 
-	let { data, form } = $props();
+	let { data } = $props();
 	const prefs = $derived(data.preferences);
-	let pending = $state(false);
+
+	let saveState = $state<'idle' | 'saving' | 'saved' | 'error'>('idle');
+	let formEl: HTMLFormElement | undefined = $state();
+	let savedTimer: ReturnType<typeof setTimeout> | null = null;
+	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+	let prefsInitialized = false;
 
 	const currencyItems: PickerItem[] = [
 		{ value: 'IDR', label: 'IDR', description: 'Indonesian Rupiah' },
@@ -124,6 +126,26 @@
 		untrack(() => setMode(t as Theme));
 	});
 
+	$effect(() => {
+		// Track all preference fields
+		void selectedCurrency;
+		void selectedLocale;
+		void selectedTimezone;
+		void selectedTheme;
+		void selectedWeekStart;
+		void selectedMonthStartDay;
+
+		if (!prefsInitialized) {
+			prefsInitialized = true;
+			return;
+		}
+
+		if (debounceTimer) clearTimeout(debounceTimer);
+		debounceTimer = setTimeout(() => {
+			formEl?.requestSubmit();
+		}, 600);
+	});
+
 	const pwa = getPwaInstallState();
 	let iosDevice = $state(false);
 	let alreadyInstalled = $state(false);
@@ -213,20 +235,19 @@
 		</Card.Header>
 		<Card.Content>
 			<form
+				bind:this={formEl}
 				method="POST"
 				use:enhance={() => {
-					pending = true;
+					saveState = 'saving';
+					if (savedTimer) clearTimeout(savedTimer);
 					return async ({ result }) => {
-						await goto(page.url.pathname + page.url.search, {
-							invalidateAll: true,
-							replaceState: true,
-							keepFocus: true,
-							noScroll: true
-						});
-						pending = false;
 						if (result.type === 'success') {
-							notify.success('Preferences saved');
+							saveState = 'saved';
+							savedTimer = setTimeout(() => {
+								if (saveState === 'saved') saveState = 'idle';
+							}, 1500);
 						} else if (result.type === 'failure') {
+							saveState = 'error';
 							const message = (result.data as { message?: string } | undefined)?.message;
 							notify.error(message ?? 'Could not save preferences');
 						}
@@ -311,8 +332,20 @@
 					</div>
 				</section>
 
-				<div class="flex justify-end border-t pt-4">
-					<SubmitButton {pending}>Save</SubmitButton>
+				<div class="flex justify-end border-t pt-4 h-5 items-center text-xs">
+					{#if saveState === 'saving'}
+						<span class="inline-flex items-center gap-1.5 text-muted-foreground">
+							<Loader2 class="size-3.5 animate-spin" /> Saving…
+						</span>
+					{:else if saveState === 'saved'}
+						<span class="inline-flex items-center gap-1.5 text-income">
+							<Check class="size-3.5" /> Saved
+						</span>
+					{:else if saveState === 'error'}
+						<span class="text-destructive">Could not save — try again</span>
+					{:else}
+						<span class="text-muted-foreground">Changes save automatically</span>
+					{/if}
 				</div>
 			</form>
 		</Card.Content>
