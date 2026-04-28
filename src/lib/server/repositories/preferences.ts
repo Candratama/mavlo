@@ -16,11 +16,7 @@ export async function getPreferences(db: Db, userId: string) {
 	return row ?? null;
 }
 
-export async function updatePreferences(
-	db: Db,
-	userId: string,
-	input: PreferencesUpdateInput
-) {
+export async function updatePreferences(db: Db, userId: string, input: PreferencesUpdateInput) {
 	const [row] = await db
 		.update(userPreferences)
 		.set({

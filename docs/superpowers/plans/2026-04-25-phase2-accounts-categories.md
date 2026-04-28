@@ -9,6 +9,7 @@
 **Tech Stack:** Same as Phase 1 — SvelteKit 2, Svelte 5 runes, Drizzle ORM 0.45, Better Auth, Tailwind v4, shadcn-svelte, zod 4, Vitest 4. Add: shadcn `Dialog`, `Table`, `AlertDialog`, `DropdownMenu`, `Select`, `Switch`.
 
 **Conventions:**
+
 - `<NEW_REPO>` = `/Users/candratama/Project/WebDev/mavlo`
 - Branch: `main` (greenfield, branch strategy A continues)
 - Run from `<NEW_REPO>`
@@ -60,6 +61,7 @@ git commit -m "feat(ui): add shadcn dialog, table, dropdown, select, switch, too
 ## Task 2: Validation Schemas for Accounts + Categories
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/validation/account.ts`
 - Create: `<NEW_REPO>/src/lib/validation/account.test.ts`
 - Create: `<NEW_REPO>/src/lib/validation/category.ts`
@@ -75,10 +77,18 @@ import { accountCreateSchema, accountUpdateSchema } from './account';
 
 describe('account validation', () => {
 	it('create requires name + valid type + currency', () => {
-		expect(accountCreateSchema.safeParse({ name: 'Cash', type: 'cash', currency: 'IDR' }).success).toBe(true);
-		expect(accountCreateSchema.safeParse({ name: '', type: 'cash', currency: 'IDR' }).success).toBe(false);
-		expect(accountCreateSchema.safeParse({ name: 'X', type: 'invalid', currency: 'IDR' }).success).toBe(false);
-		expect(accountCreateSchema.safeParse({ name: 'X', type: 'cash', currency: '' }).success).toBe(false);
+		expect(
+			accountCreateSchema.safeParse({ name: 'Cash', type: 'cash', currency: 'IDR' }).success
+		).toBe(true);
+		expect(accountCreateSchema.safeParse({ name: '', type: 'cash', currency: 'IDR' }).success).toBe(
+			false
+		);
+		expect(
+			accountCreateSchema.safeParse({ name: 'X', type: 'invalid', currency: 'IDR' }).success
+		).toBe(false);
+		expect(accountCreateSchema.safeParse({ name: 'X', type: 'cash', currency: '' }).success).toBe(
+			false
+		);
 	});
 
 	it('create defaults initialBalanceCents to 0', () => {
@@ -99,7 +109,8 @@ describe('account validation', () => {
 
 	it('update requires id', () => {
 		expect(
-			accountUpdateSchema.safeParse({ id: 'abc', name: 'New', type: 'bank', currency: 'IDR' }).success
+			accountUpdateSchema.safeParse({ id: 'abc', name: 'New', type: 'bank', currency: 'IDR' })
+				.success
 		).toBe(true);
 		expect(
 			accountUpdateSchema.safeParse({ name: 'New', type: 'bank', currency: 'IDR' }).success
@@ -206,7 +217,12 @@ export const categoryCreateSchema = z.object({
 		.regex(/^#[0-9a-fA-F]{6}$/, 'Color must be #RRGGBB')
 		.optional()
 		.or(z.literal('').transform(() => undefined)),
-	icon: z.string().trim().max(60).optional().or(z.literal('').transform(() => undefined))
+	icon: z
+		.string()
+		.trim()
+		.max(60)
+		.optional()
+		.or(z.literal('').transform(() => undefined))
 });
 
 export const categoryUpdateSchema = categoryCreateSchema.extend({
@@ -249,6 +265,7 @@ git commit -m "feat(validation): zod schemas for accounts + categories"
 ## Task 3: Test Fixture for In-Memory DB
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/server/db/test-fixtures.ts`
 
 Shared test helper that builds an in-memory better-sqlite3 database, applies the SQL schema for the tables we want to test, and seeds two users. Used by repository tests in T4 and T5.
@@ -352,6 +369,7 @@ git commit -m "feat(test): in-memory db fixture for repository tests"
 ## Task 4: Accounts Repository
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/server/repositories/accounts.ts`
 - Create: `<NEW_REPO>/src/lib/server/repositories/accounts.test.ts`
 
@@ -480,11 +498,7 @@ import type { AccountCreateInput, AccountUpdateInput } from '$lib/validation/acc
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
 
-export async function listAccounts(
-	db: Db,
-	userId: string,
-	opts: { includeArchived: boolean }
-) {
+export async function listAccounts(db: Db, userId: string, opts: { includeArchived: boolean }) {
 	const where = opts.includeArchived
 		? eq(accounts.userId, userId)
 		: and(eq(accounts.userId, userId), eq(accounts.archived, false));
@@ -569,6 +583,7 @@ git commit -m "feat(repo): accounts repository with user-scoped queries"
 ## Task 5: Categories Repository
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/server/repositories/categories.ts`
 - Create: `<NEW_REPO>/src/lib/server/repositories/categories.test.ts`
 
@@ -608,7 +623,9 @@ describe('categories repository', () => {
 
 	it('updateCategory cross-user returns null', async () => {
 		const c = await createCategory(h.db, h.userId, { name: 'Food', kind: 'expense' });
-		expect(await updateCategory(h.db, h.otherUserId, { id: c.id, name: 'X', kind: 'expense' })).toBeNull();
+		expect(
+			await updateCategory(h.db, h.otherUserId, { id: c.id, name: 'X', kind: 'expense' })
+		).toBeNull();
 	});
 
 	it('archiveCategory + listCategories filter', async () => {
@@ -646,15 +663,15 @@ import type { CategoryCreateInput, CategoryUpdateInput } from '$lib/validation/c
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
 
-export async function listCategories(
-	db: Db,
-	userId: string,
-	opts: { includeArchived: boolean }
-) {
+export async function listCategories(db: Db, userId: string, opts: { includeArchived: boolean }) {
 	const where = opts.includeArchived
 		? eq(categories.userId, userId)
 		: and(eq(categories.userId, userId), eq(categories.archived, false));
-	return db.select().from(categories).where(where).orderBy(asc(categories.kind), asc(categories.name));
+	return db
+		.select()
+		.from(categories)
+		.where(where)
+		.orderBy(asc(categories.kind), asc(categories.name));
 }
 
 export async function getCategory(db: Db, userId: string, id: string) {
@@ -735,6 +752,7 @@ git commit -m "feat(repo): categories repository with user-scoped queries"
 ## Task 6: Accounts List Page + Server Actions
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/routes/(app)/accounts/+page.server.ts`
 - Create: `<NEW_REPO>/src/routes/(app)/accounts/+page.svelte`
 
@@ -755,11 +773,7 @@ import {
 	archiveAccount,
 	unarchiveAccount
 } from '$lib/server/repositories/accounts';
-import {
-	accountCreateSchema,
-	accountUpdateSchema,
-	accountIdSchema
-} from '$lib/validation/account';
+import { accountCreateSchema, accountUpdateSchema, accountIdSchema } from '$lib/validation/account';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
@@ -779,7 +793,10 @@ export const actions: Actions = {
 		const fd = await event.request.formData();
 		const parsed = accountCreateSchema.safeParse(formObject(fd));
 		if (!parsed.success) {
-			return fail(400, { action: 'create', message: parsed.error.issues[0]?.message ?? 'Invalid input' });
+			return fail(400, {
+				action: 'create',
+				message: parsed.error.issues[0]?.message ?? 'Invalid input'
+			});
 		}
 		await createAccount(db, user.id, parsed.data);
 		return { success: true, action: 'create' };
@@ -791,7 +808,10 @@ export const actions: Actions = {
 		const fd = await event.request.formData();
 		const parsed = accountUpdateSchema.safeParse(formObject(fd));
 		if (!parsed.success) {
-			return fail(400, { action: 'update', message: parsed.error.issues[0]?.message ?? 'Invalid input' });
+			return fail(400, {
+				action: 'update',
+				message: parsed.error.issues[0]?.message ?? 'Invalid input'
+			});
 		}
 		const updated = await updateAccount(db, user.id, parsed.data);
 		if (!updated) return fail(404, { action: 'update', message: 'Account not found' });
@@ -851,9 +871,11 @@ export const actions: Actions = {
 	] as const;
 
 	const formatBalance = (cents: number, currency: string) =>
-		new Intl.NumberFormat('id-ID', { style: 'currency', currency, minimumFractionDigits: 0 }).format(
-			cents / 100
-		);
+		new Intl.NumberFormat('id-ID', {
+			style: 'currency',
+			currency,
+			minimumFractionDigits: 0
+		}).format(cents / 100);
 
 	const openEdit = (a: AccountRow) => {
 		editTarget = a;
@@ -863,10 +885,10 @@ export const actions: Actions = {
 
 <svelte:head><title>Accounts — Mavlo</title></svelte:head>
 
-<div class="flex items-center justify-between mb-6">
+<div class="mb-6 flex items-center justify-between">
 	<div>
 		<h1 class="text-2xl font-semibold">Accounts</h1>
-		<p class="text-sm text-muted-foreground mt-1">
+		<p class="text-muted-foreground mt-1 text-sm">
 			{data.includeArchived ? 'Showing archived accounts.' : 'Active accounts.'}
 		</p>
 	</div>
@@ -875,13 +897,13 @@ export const actions: Actions = {
 			{data.includeArchived ? 'Hide archived' : 'Show archived'}
 		</Button>
 		<Button onclick={() => (createOpen = true)}>
-			<Plus class="size-4 mr-1" /> New account
+			<Plus class="mr-1 size-4" /> New account
 		</Button>
 	</div>
 </div>
 
 {#if form?.message}
-	<p class="mb-4 text-sm text-destructive">{form.message}</p>
+	<p class="text-destructive mb-4 text-sm">{form.message}</p>
 {/if}
 
 <Card.Root>
@@ -916,17 +938,21 @@ export const actions: Actions = {
 								</DropdownMenu.Trigger>
 								<DropdownMenu.Content align="end">
 									<DropdownMenu.Item onclick={() => openEdit(account)}>
-										<Pencil class="size-4 mr-2" /> Edit
+										<Pencil class="mr-2 size-4" /> Edit
 									</DropdownMenu.Item>
-									<form method="POST" action="?/{account.archived ? 'unarchive' : 'archive'}" use:enhance>
+									<form
+										method="POST"
+										action="?/{account.archived ? 'unarchive' : 'archive'}"
+										use:enhance
+									>
 										<input type="hidden" name="id" value={account.id} />
 										<DropdownMenu.Item>
 											{#snippet child({ props })}
 												<button {...props} type="submit" class="w-full text-left">
 													{#if account.archived}
-														<ArchiveRestore class="size-4 mr-2" /> Unarchive
+														<ArchiveRestore class="mr-2 size-4" /> Unarchive
 													{:else}
-														<Archive class="size-4 mr-2" /> Archive
+														<Archive class="mr-2 size-4" /> Archive
 													{/if}
 												</button>
 											{/snippet}
@@ -961,10 +987,11 @@ export const actions: Actions = {
 		<form
 			method="POST"
 			action="?/create"
-			use:enhance={() => async ({ update, result }) => {
-				await update();
-				if (result.type === 'success') createOpen = false;
-			}}
+			use:enhance={() =>
+				async ({ update, result }) => {
+					await update();
+					if (result.type === 'success') createOpen = false;
+				}}
 			class="space-y-4"
 		>
 			<div class="space-y-1">
@@ -977,7 +1004,7 @@ export const actions: Actions = {
 					id="create-type"
 					name="type"
 					required
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+					class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
 				>
 					{#each accountTypeOptions as opt}
 						<option value={opt.value}>{opt.label}</option>
@@ -1012,10 +1039,11 @@ export const actions: Actions = {
 			<form
 				method="POST"
 				action="?/update"
-				use:enhance={() => async ({ update, result }) => {
-					await update();
-					if (result.type === 'success') editOpen = false;
-				}}
+				use:enhance={() =>
+					async ({ update, result }) => {
+						await update();
+						if (result.type === 'success') editOpen = false;
+					}}
 				class="space-y-4"
 			>
 				<input type="hidden" name="id" value={editTarget.id} />
@@ -1029,17 +1057,24 @@ export const actions: Actions = {
 						id="edit-type"
 						name="type"
 						required
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+						class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
 					>
 						{#each accountTypeOptions as opt}
-							<option value={opt.value} selected={opt.value === editTarget.type}>{opt.label}</option>
+							<option value={opt.value} selected={opt.value === editTarget.type}>{opt.label}</option
+							>
 						{/each}
 					</select>
 				</div>
 				<div class="grid grid-cols-2 gap-3">
 					<div class="space-y-1">
 						<Label for="edit-currency">Currency</Label>
-						<Input id="edit-currency" name="currency" required maxlength={8} value={editTarget.currency} />
+						<Input
+							id="edit-currency"
+							name="currency"
+							required
+							maxlength={8}
+							value={editTarget.currency}
+						/>
 					</div>
 					<div class="space-y-1">
 						<Label for="edit-balance">Initial balance (cents)</Label>
@@ -1085,6 +1120,7 @@ git commit -m "feat(accounts): list page with CRUD via form actions + dialogs"
 ## Task 7: Categories List Page + Server Actions
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/routes/(app)/categories/+page.server.ts`
 - Create: `<NEW_REPO>/src/routes/(app)/categories/+page.svelte`
 
@@ -1127,7 +1163,10 @@ export const actions: Actions = {
 		const fd = await event.request.formData();
 		const parsed = categoryCreateSchema.safeParse(formObject(fd));
 		if (!parsed.success) {
-			return fail(400, { action: 'create', message: parsed.error.issues[0]?.message ?? 'Invalid input' });
+			return fail(400, {
+				action: 'create',
+				message: parsed.error.issues[0]?.message ?? 'Invalid input'
+			});
 		}
 		await createCategory(db, user.id, parsed.data);
 		return { success: true, action: 'create' };
@@ -1138,7 +1177,10 @@ export const actions: Actions = {
 		const fd = await event.request.formData();
 		const parsed = categoryUpdateSchema.safeParse(formObject(fd));
 		if (!parsed.success) {
-			return fail(400, { action: 'update', message: parsed.error.issues[0]?.message ?? 'Invalid input' });
+			return fail(400, {
+				action: 'update',
+				message: parsed.error.issues[0]?.message ?? 'Invalid input'
+			});
 		}
 		const updated = await updateCategory(db, user.id, parsed.data);
 		if (!updated) return fail(404, { action: 'update', message: 'Category not found' });
@@ -1200,25 +1242,28 @@ export const actions: Actions = {
 
 <svelte:head><title>Categories — Mavlo</title></svelte:head>
 
-<div class="flex items-center justify-between mb-6">
+<div class="mb-6 flex items-center justify-between">
 	<div>
 		<h1 class="text-2xl font-semibold">Categories</h1>
-		<p class="text-sm text-muted-foreground mt-1">
+		<p class="text-muted-foreground mt-1 text-sm">
 			{data.includeArchived ? 'Showing archived categories.' : 'Active categories.'}
 		</p>
 	</div>
 	<div class="flex items-center gap-2">
-		<Button variant="outline" href={data.includeArchived ? '/categories' : '/categories?archived=1'}>
+		<Button
+			variant="outline"
+			href={data.includeArchived ? '/categories' : '/categories?archived=1'}
+		>
 			{data.includeArchived ? 'Hide archived' : 'Show archived'}
 		</Button>
 		<Button onclick={() => (createOpen = true)}>
-			<Plus class="size-4 mr-1" /> New category
+			<Plus class="mr-1 size-4" /> New category
 		</Button>
 	</div>
 </div>
 
 {#if form?.message}
-	<p class="mb-4 text-sm text-destructive">{form.message}</p>
+	<p class="text-destructive mb-4 text-sm">{form.message}</p>
 {/if}
 
 <Card.Root>
@@ -1261,17 +1306,21 @@ export const actions: Actions = {
 								</DropdownMenu.Trigger>
 								<DropdownMenu.Content align="end">
 									<DropdownMenu.Item onclick={() => openEdit(category)}>
-										<Pencil class="size-4 mr-2" /> Edit
+										<Pencil class="mr-2 size-4" /> Edit
 									</DropdownMenu.Item>
-									<form method="POST" action="?/{category.archived ? 'unarchive' : 'archive'}" use:enhance>
+									<form
+										method="POST"
+										action="?/{category.archived ? 'unarchive' : 'archive'}"
+										use:enhance
+									>
 										<input type="hidden" name="id" value={category.id} />
 										<DropdownMenu.Item>
 											{#snippet child({ props })}
 												<button {...props} type="submit" class="w-full text-left">
 													{#if category.archived}
-														<ArchiveRestore class="size-4 mr-2" /> Unarchive
+														<ArchiveRestore class="mr-2 size-4" /> Unarchive
 													{:else}
-														<Archive class="size-4 mr-2" /> Archive
+														<Archive class="mr-2 size-4" /> Archive
 													{/if}
 												</button>
 											{/snippet}
@@ -1304,10 +1353,11 @@ export const actions: Actions = {
 		<form
 			method="POST"
 			action="?/create"
-			use:enhance={() => async ({ update, result }) => {
-				await update();
-				if (result.type === 'success') createOpen = false;
-			}}
+			use:enhance={() =>
+				async ({ update, result }) => {
+					await update();
+					if (result.type === 'success') createOpen = false;
+				}}
 			class="space-y-4"
 		>
 			<div class="space-y-1">
@@ -1320,7 +1370,7 @@ export const actions: Actions = {
 					id="cat-c-kind"
 					name="kind"
 					required
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+					class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
 				>
 					{#each kindOptions as opt}
 						<option value={opt.value}>{opt.label}</option>
@@ -1354,10 +1404,11 @@ export const actions: Actions = {
 			<form
 				method="POST"
 				action="?/update"
-				use:enhance={() => async ({ update, result }) => {
-					await update();
-					if (result.type === 'success') editOpen = false;
-				}}
+				use:enhance={() =>
+					async ({ update, result }) => {
+						await update();
+						if (result.type === 'success') editOpen = false;
+					}}
 				class="space-y-4"
 			>
 				<input type="hidden" name="id" value={editTarget.id} />
@@ -1371,21 +1422,32 @@ export const actions: Actions = {
 						id="cat-e-kind"
 						name="kind"
 						required
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+						class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
 					>
 						{#each kindOptions as opt}
-							<option value={opt.value} selected={opt.value === editTarget.kind}>{opt.label}</option>
+							<option value={opt.value} selected={opt.value === editTarget.kind}>{opt.label}</option
+							>
 						{/each}
 					</select>
 				</div>
 				<div class="grid grid-cols-2 gap-3">
 					<div class="space-y-1">
 						<Label for="cat-e-color">Color (hex)</Label>
-						<Input id="cat-e-color" name="color" value={editTarget.color ?? ''} placeholder="#10b981" />
+						<Input
+							id="cat-e-color"
+							name="color"
+							value={editTarget.color ?? ''}
+							placeholder="#10b981"
+						/>
 					</div>
 					<div class="space-y-1">
 						<Label for="cat-e-icon">Icon</Label>
-						<Input id="cat-e-icon" name="icon" value={editTarget.icon ?? ''} placeholder="utensils" />
+						<Input
+							id="cat-e-icon"
+							name="icon"
+							value={editTarget.icon ?? ''}
+							placeholder="utensils"
+						/>
 					</div>
 				</div>
 				<Dialog.Footer>

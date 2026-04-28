@@ -17,6 +17,7 @@ Personal finance tracker. SvelteKit on Cloudflare Workers + D1 + R2 + Better Aut
 Prerequisites: Node 20+, Cloudflare account, Resend account.
 
 1. Install:
+
    ```bash
    npm install
    ```
@@ -26,12 +27,14 @@ Prerequisites: Node 20+, Cloudflare account, Resend account.
    - Copy `.dev.vars.example` → `.dev.vars`, fill `BETTER_AUTH_SECRET` (same value), `RESEND_API_KEY`.
 
 3. Push schema to your D1:
+
    ```bash
    npm run auth:schema
    npm run db:push
    ```
 
 4. Run dev server (Vite + Miniflare via SvelteKit):
+
    ```bash
    npm run dev
    ```

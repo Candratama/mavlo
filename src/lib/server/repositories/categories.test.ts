@@ -27,7 +27,9 @@ describe('categories repository', () => {
 
 	it('updateCategory cross-user returns null', async () => {
 		const c = await createCategory(h.db, h.userId, { name: 'Food', kind: 'expense' });
-		expect(await updateCategory(h.db, h.otherUserId, { id: c.id, name: 'X', kind: 'expense' })).toBeNull();
+		expect(
+			await updateCategory(h.db, h.otherUserId, { id: c.id, name: 'X', kind: 'expense' })
+		).toBeNull();
 	});
 
 	it('archiveCategory + listCategories filter', async () => {

@@ -7,13 +7,27 @@
 	import * as Sheet from '$lib/components/ui/sheet';
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Plus, MoreHorizontal, Pencil, Trash2, ArrowLeftRight, Filter, X, Tag, ArrowDown, ArrowUp } from 'lucide-svelte';
+	import {
+		Plus,
+		MoreHorizontal,
+		Pencil,
+		Trash2,
+		ArrowLeftRight,
+		Filter,
+		X,
+		Tag,
+		ArrowDown,
+		ArrowUp
+	} from 'lucide-svelte';
 	import { getIconByName } from '$lib/utils/category-icons.js';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
 	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
-	import PickerSheet, { type PickerItem, type PickerGroup } from '$lib/components/ui/picker-sheet.svelte';
+	import PickerSheet, {
+		type PickerItem,
+		type PickerGroup
+	} from '$lib/components/ui/picker-sheet.svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import AddTransactionSheet from '$lib/components/forms/add-transaction-sheet.svelte';
@@ -48,17 +62,32 @@
 	type Chip = { key: string; label: string; remove: () => void };
 	const chips = $derived.by<Chip[]>(() => {
 		const out: Chip[] = [];
-		if (data.filter.from) out.push({ key: 'from', label: `From: ${data.filter.from}`, remove: () => removeParam('from') });
-		if (data.filter.to) out.push({ key: 'to', label: `To: ${data.filter.to}`, remove: () => removeParam('to') });
+		if (data.filter.from)
+			out.push({
+				key: 'from',
+				label: `From: ${data.filter.from}`,
+				remove: () => removeParam('from')
+			});
+		if (data.filter.to)
+			out.push({ key: 'to', label: `To: ${data.filter.to}`, remove: () => removeParam('to') });
 		if (data.filter.accountId) {
 			const a = accountById.get(data.filter.accountId);
-			out.push({ key: 'account', label: a?.name ?? 'Account', remove: () => removeParam('account') });
+			out.push({
+				key: 'account',
+				label: a?.name ?? 'Account',
+				remove: () => removeParam('account')
+			});
 		}
 		if (data.filter.categoryId) {
 			const c = categoryById.get(data.filter.categoryId);
-			out.push({ key: 'category', label: c?.name ?? 'Category', remove: () => removeParam('category') });
+			out.push({
+				key: 'category',
+				label: c?.name ?? 'Category',
+				remove: () => removeParam('category')
+			});
 		}
-		if (data.filter.kind) out.push({ key: 'kind', label: data.filter.kind, remove: () => removeParam('kind') });
+		if (data.filter.kind)
+			out.push({ key: 'kind', label: data.filter.kind, remove: () => removeParam('kind') });
 		return out;
 	});
 
@@ -92,8 +121,18 @@
 
 	const categoryItems = $derived<PickerGroup[]>([
 		{ label: 'All', items: [{ value: '', label: 'All categories' }] },
-		{ label: 'Expense', items: data.categories.filter((c) => c.kind === 'expense').map((c) => ({ value: c.id, label: c.name })) },
-		{ label: 'Income', items: data.categories.filter((c) => c.kind === 'income').map((c) => ({ value: c.id, label: c.name })) }
+		{
+			label: 'Expense',
+			items: data.categories
+				.filter((c) => c.kind === 'expense')
+				.map((c) => ({ value: c.id, label: c.name }))
+		},
+		{
+			label: 'Income',
+			items: data.categories
+				.filter((c) => c.kind === 'income')
+				.map((c) => ({ value: c.id, label: c.name }))
+		}
 	]);
 
 	const filterKindOptions = [
@@ -103,8 +142,12 @@
 		{ value: 'transfer', label: 'Transfer' }
 	];
 
-	const totalIncome = $derived(data.transactions.filter((t) => t.kind === 'income').reduce((s, t) => s + t.amountCents, 0));
-	const totalExpense = $derived(data.transactions.filter((t) => t.kind === 'expense').reduce((s, t) => s + t.amountCents, 0));
+	const totalIncome = $derived(
+		data.transactions.filter((t) => t.kind === 'income').reduce((s, t) => s + t.amountCents, 0)
+	);
+	const totalExpense = $derived(
+		data.transactions.filter((t) => t.kind === 'expense').reduce((s, t) => s + t.amountCents, 0)
+	);
 	const txCurrency = $derived(data.accounts[0]?.currency ?? 'IDR');
 
 	type DayGroup = { key: string; dateLabel: string; netCents: number; items: TxRow[] };
@@ -140,58 +183,60 @@
 
 <svelte:head><title>Transactions — Mavlo</title></svelte:head>
 
-<div class="flex items-center justify-between mb-6">
+<div class="mb-6 flex items-center justify-between">
 	<div>
-		<h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Transactions</h1>
+		<h1 class="text-xl font-semibold tracking-tight sm:text-2xl">Transactions</h1>
 	</div>
 	<Button class="hidden md:inline-flex" onclick={() => openAddTransaction('expense')}>
-		<Plus class="size-4 mr-1" /> New transaction
+		<Plus class="mr-1 size-4" /> New transaction
 	</Button>
 </div>
 
 <div class="mb-6 grid grid-cols-2 gap-3">
-	<div class="rounded-xl border bg-gradient-to-br from-emerald-500/10 via-card to-card p-4">
-		<div class="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-			<span class="size-6 rounded-full bg-income/15 inline-flex items-center justify-center">
-				<ArrowDown class="size-3.5 text-income" />
+	<div class="via-card to-card rounded-xl border bg-gradient-to-br from-emerald-500/10 p-4">
+		<div class="text-muted-foreground flex items-center gap-2 text-xs tracking-wider uppercase">
+			<span class="bg-income/15 inline-flex size-6 items-center justify-center rounded-full">
+				<ArrowDown class="text-income size-3.5" />
 			</span>
 			Income
 		</div>
-		<p class="mt-2 text-lg sm:text-xl font-semibold tabular-nums">
+		<p class="mt-2 text-lg font-semibold tabular-nums sm:text-xl">
 			{formatCentsAsCurrency(totalIncome, txCurrency)}
 		</p>
 	</div>
-	<div class="rounded-xl border bg-gradient-to-br from-rose-500/10 via-card to-card p-4">
-		<div class="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-			<span class="size-6 rounded-full bg-expense/15 inline-flex items-center justify-center">
-				<ArrowUp class="size-3.5 text-expense" />
+	<div class="via-card to-card rounded-xl border bg-gradient-to-br from-rose-500/10 p-4">
+		<div class="text-muted-foreground flex items-center gap-2 text-xs tracking-wider uppercase">
+			<span class="bg-expense/15 inline-flex size-6 items-center justify-center rounded-full">
+				<ArrowUp class="text-expense size-3.5" />
 			</span>
 			Expense
 		</div>
-		<p class="mt-2 text-lg sm:text-xl font-semibold tabular-nums">
+		<p class="mt-2 text-lg font-semibold tabular-nums sm:text-xl">
 			{formatCentsAsCurrency(totalExpense, txCurrency)}
 		</p>
 	</div>
 </div>
 
 {#if form?.message}
-	<p class="mb-4 text-sm text-destructive">{form.message}</p>
+	<p class="text-destructive mb-4 text-sm">{form.message}</p>
 {/if}
 
 <!-- Mobile chip bar -->
-<div class="md:hidden mb-4 flex items-center gap-2 overflow-x-auto">
+<div class="mb-4 flex items-center gap-2 overflow-x-auto md:hidden">
 	{#if chips.length === 0}
 		<button
 			type="button"
 			onclick={() => (filterOpen = true)}
-			class="inline-flex items-center gap-1.5 px-3 h-9 rounded-full border border-input bg-background text-sm shrink-0"
+			class="border-input bg-background inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm"
 		>
 			<Filter class="size-4" />
 			Filter
 		</button>
 	{:else}
 		{#each chips as chip (chip.key)}
-			<span class="inline-flex items-center gap-1 px-3 h-8 rounded-full bg-accent text-accent-foreground text-xs shrink-0">
+			<span
+				class="bg-accent text-accent-foreground inline-flex h-8 shrink-0 items-center gap-1 rounded-full px-3 text-xs"
+			>
 				{chip.label}
 				<button type="button" onclick={chip.remove} aria-label="Remove filter">
 					<X class="size-3" />
@@ -201,7 +246,7 @@
 		<button
 			type="button"
 			onclick={() => (filterOpen = true)}
-			class="inline-flex items-center gap-1.5 px-3 h-8 rounded-full border border-input text-xs shrink-0"
+			class="border-input inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs"
 		>
 			<Filter class="size-3" />
 			Edit
@@ -210,9 +255,12 @@
 </div>
 
 <!-- Desktop filter form -->
-<Card.Root class="hidden md:block mb-6">
+<Card.Root class="mb-6 hidden md:block">
 	<Card.Content class="p-4">
-		<form method="GET" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 items-end">
+		<form
+			method="GET"
+			class="grid grid-cols-1 items-end gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
+		>
 			<div class="space-y-1">
 				<Label for="filter-from">From</Label>
 				<Input id="filter-from" type="date" name="from" value={data.filter.from} />
@@ -223,11 +271,24 @@
 			</div>
 			<div class="space-y-1">
 				<Label>Account</Label>
-				<PickerSheet items={accountItems} bind:value={fAccount} name="account" placeholder="All" title="Account" />
+				<PickerSheet
+					items={accountItems}
+					bind:value={fAccount}
+					name="account"
+					placeholder="All"
+					title="Account"
+				/>
 			</div>
 			<div class="space-y-1">
 				<Label>Category</Label>
-				<PickerSheet groups={categoryItems} bind:value={fCategory} name="category" placeholder="All" title="Category" searchable />
+				<PickerSheet
+					groups={categoryItems}
+					bind:value={fCategory}
+					name="category"
+					placeholder="All"
+					title="Category"
+					searchable
+				/>
 			</div>
 			<div class="space-y-1">
 				<Label>Kind</Label>
@@ -240,11 +301,11 @@
 
 <!-- Mobile filter sheet -->
 <Sheet.Root bind:open={filterOpen}>
-	<Sheet.Content side="bottom" class="max-h-[calc(90dvh-var(--keyboard-h,0px))] flex flex-col p-0">
-		<Sheet.Header class="text-left p-4 pb-2">
+	<Sheet.Content side="bottom" class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0">
+		<Sheet.Header class="p-4 pb-2 text-left">
 			<Sheet.Title>Filter transactions</Sheet.Title>
 		</Sheet.Header>
-		<div class="flex-1 overflow-y-auto p-4 space-y-4">
+		<div class="flex-1 space-y-4 overflow-y-auto p-4">
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-1">
 					<Label for="m-from">From</Label>
@@ -257,18 +318,29 @@
 			</div>
 			<div class="space-y-1">
 				<Label>Account</Label>
-				<PickerSheet items={accountItems} bind:value={fAccount} placeholder="All accounts" title="Account" />
+				<PickerSheet
+					items={accountItems}
+					bind:value={fAccount}
+					placeholder="All accounts"
+					title="Account"
+				/>
 			</div>
 			<div class="space-y-1">
 				<Label>Category</Label>
-				<PickerSheet groups={categoryItems} bind:value={fCategory} placeholder="All categories" title="Category" searchable />
+				<PickerSheet
+					groups={categoryItems}
+					bind:value={fCategory}
+					placeholder="All categories"
+					title="Category"
+					searchable
+				/>
 			</div>
 			<div class="space-y-1">
 				<Label>Kind</Label>
 				<SegmentedControl options={filterKindOptions} bind:value={fKind} />
 			</div>
 		</div>
-		<div class="border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex gap-2">
+		<div class="flex gap-2 border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
 			<Button variant="outline" class="flex-1" onclick={resetFilters}>Reset</Button>
 			<Button class="flex-1" onclick={applyFilters}>Apply</Button>
 		</div>
@@ -279,36 +351,41 @@
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger>
 			{#snippet child({ props })}
-				<Button {...props} variant="ghost" size="icon" class="size-11 md:size-8 shrink-0">
+				<Button {...props} variant="ghost" size="icon" class="size-11 shrink-0 md:size-8">
 					<MoreHorizontal class="size-4" />
 				</Button>
 			{/snippet}
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content align="end">
 			<DropdownMenu.Item onclick={() => openEdit(tx)}>
-				<Pencil class="size-4 mr-2" /> Edit
+				<Pencil class="mr-2 size-4" /> Edit
 			</DropdownMenu.Item>
-			<form method="POST" action="?/delete" use:enhance={() => async ({ result }) => {
-					await goto(page.url.pathname + page.url.search, {
-						invalidateAll: true,
-						replaceState: true,
-						keepFocus: true,
-						noScroll: true
-					});
-					if (result.type === 'success') {
-						notify.success('Transaction deleted');
-					} else if (result.type === 'failure') {
-						const message = (result.data as { message?: string } | undefined)?.message;
-						notify.error(message ?? 'Could not delete transaction');
-					}
-				}}>
+			<form
+				method="POST"
+				action="?/delete"
+				use:enhance={() =>
+					async ({ result }) => {
+						await goto(page.url.pathname + page.url.search, {
+							invalidateAll: true,
+							replaceState: true,
+							keepFocus: true,
+							noScroll: true
+						});
+						if (result.type === 'success') {
+							notify.success('Transaction deleted');
+						} else if (result.type === 'failure') {
+							const message = (result.data as { message?: string } | undefined)?.message;
+							notify.error(message ?? 'Could not delete transaction');
+						}
+					}}
+			>
 				<input type="hidden" name="id" value={tx.id} />
 				<DropdownMenu.Item>
 					{#snippet child({ props })}
 						<button
 							{...props}
 							type="submit"
-							class="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-left text-destructive rounded-sm hover:bg-accent/50"
+							class="text-destructive hover:bg-accent/50 flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm"
 						>
 							<Trash2 class="size-4" /> Delete
 						</button>
@@ -337,7 +414,9 @@
 				<Table.Body>
 					{#each data.transactions as tx (tx.id)}
 						{@const acc = accountById.get(tx.accountId)}
-						{@const destAcc = tx.transferToAccountId ? accountById.get(tx.transferToAccountId) : null}
+						{@const destAcc = tx.transferToAccountId
+							? accountById.get(tx.transferToAccountId)
+							: null}
 						{@const cat = tx.categoryId ? categoryById.get(tx.categoryId) : null}
 						<Table.Row>
 							<Table.Cell>{formatDate(tx.occurredAt)}</Table.Cell>
@@ -367,11 +446,17 @@
 							<Table.Cell class="max-w-xs truncate">{tx.note ?? ''}</Table.Cell>
 							<Table.Cell class="text-right tabular-nums">
 								{#if tx.kind === 'expense'}
-									<span class="text-expense">−{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}</span>
+									<span class="text-expense"
+										>−{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}</span
+									>
 								{:else if tx.kind === 'income'}
-									<span class="text-income">+{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}</span>
+									<span class="text-income"
+										>+{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}</span
+									>
 								{:else}
-									<span class="text-transfer">{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}</span>
+									<span class="text-transfer"
+										>{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}</span
+									>
 								{/if}
 							</Table.Cell>
 							<Table.Cell>
@@ -381,7 +466,11 @@
 					{:else}
 						<Table.Row>
 							<Table.Cell colspan={7} class="p-0">
-								<EmptyState icon={ArrowLeftRight} title="No transactions in this range" description="Try a different date range or add a new transaction.">
+								<EmptyState
+									icon={ArrowLeftRight}
+									title="No transactions in this range"
+									description="Try a different date range or add a new transaction."
+								>
 									<Button onclick={() => openAddTransaction('expense')}>Add transaction</Button>
 								</EmptyState>
 							</Table.Cell>
@@ -393,13 +482,13 @@
 	</Card.Root>
 </div>
 
-<div class="md:hidden space-y-5">
+<div class="space-y-5 md:hidden">
 	{#each groupedByDay as group (group.key)}
 		<section>
-			<div class="flex items-baseline justify-between mb-2 px-1 gap-2">
-				<span class="text-xs text-muted-foreground truncate">{group.dateLabel}</span>
+			<div class="mb-2 flex items-baseline justify-between gap-2 px-1">
+				<span class="text-muted-foreground truncate text-xs">{group.dateLabel}</span>
 				<span
-					class="text-xs font-semibold tabular-nums whitespace-nowrap {group.netCents >= 0
+					class="text-xs font-semibold whitespace-nowrap tabular-nums {group.netCents >= 0
 						? 'text-income'
 						: 'text-expense'}"
 				>
@@ -409,37 +498,32 @@
 			<ul class="space-y-2">
 				{#each group.items as tx (tx.id)}
 					{@const acc = accountById.get(tx.accountId)}
-					{@const destAcc = tx.transferToAccountId
-						? accountById.get(tx.transferToAccountId)
-						: null}
+					{@const destAcc = tx.transferToAccountId ? accountById.get(tx.transferToAccountId) : null}
 					{@const cat = tx.categoryId ? categoryById.get(tx.categoryId) : null}
-					{@const IconComp = tx.kind === 'transfer'
-						? ArrowLeftRight
-						: (getIconByName(cat?.icon) ?? Tag)}
-					{@const tint = cat?.color ?? (tx.kind === 'income'
-						? '#10b981'
-						: tx.kind === 'transfer'
-							? '#3b82f6'
-							: '#94a3b8')}
-					<li class="rounded-lg border bg-card p-3 flex items-center gap-3">
+					{@const IconComp =
+						tx.kind === 'transfer' ? ArrowLeftRight : (getIconByName(cat?.icon) ?? Tag)}
+					{@const tint =
+						cat?.color ??
+						(tx.kind === 'income' ? '#10b981' : tx.kind === 'transfer' ? '#3b82f6' : '#94a3b8')}
+					<li class="bg-card flex items-center gap-3 rounded-lg border p-3">
 						<div
-							class="size-10 shrink-0 rounded-lg flex items-center justify-center"
+							class="flex size-10 shrink-0 items-center justify-center rounded-lg"
 							style="background-color: {tint}20; color: {tint}"
 						>
 							<IconComp class="size-5" />
 						</div>
-						<div class="flex-1 min-w-0">
-							<div class="text-sm font-medium truncate">
+						<div class="min-w-0 flex-1">
+							<div class="truncate text-sm font-medium">
 								{tx.note || cat?.name || acc?.name || 'Transaction'}
 							</div>
-							<div class="text-xs text-muted-foreground truncate">
-								{acc?.name ?? '—'}{#if tx.kind === 'transfer' && destAcc} → {destAcc.name}{/if}
+							<div class="text-muted-foreground truncate text-xs">
+								{acc?.name ?? '—'}{#if tx.kind === 'transfer' && destAcc}
+									→ {destAcc.name}{/if}
 							</div>
 						</div>
-						<div class="flex items-center gap-1 shrink-0">
+						<div class="flex shrink-0 items-center gap-1">
 							<span
-								class="text-sm font-semibold tabular-nums whitespace-nowrap {tx.kind ===
-								'expense'
+								class="text-sm font-semibold whitespace-nowrap tabular-nums {tx.kind === 'expense'
 									? 'text-expense'
 									: tx.kind === 'income'
 										? 'text-income'
@@ -473,16 +557,18 @@
 	mode="edit"
 	accounts={data.accounts}
 	categories={data.categories}
-	editTarget={editTarget ? {
-		id: editTarget.id,
-		kind: editTarget.kind,
-		amountCents: editTarget.amountCents,
-		accountId: editTarget.accountId,
-		transferToAccountId: editTarget.transferToAccountId,
-		categoryId: editTarget.categoryId,
-		occurredAt: editTarget.occurredAt,
-		note: editTarget.note
-	} : null}
+	editTarget={editTarget
+		? {
+				id: editTarget.id,
+				kind: editTarget.kind,
+				amountCents: editTarget.amountCents,
+				accountId: editTarget.accountId,
+				transferToAccountId: editTarget.transferToAccountId,
+				categoryId: editTarget.categoryId,
+				occurredAt: editTarget.occurredAt,
+				note: editTarget.note
+			}
+		: null}
 	actionUrl="?/update"
 	onClose={() => (editOpen = false)}
 />

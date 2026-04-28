@@ -8,10 +8,17 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Sun, Moon, Monitor, LogOut, User as UserIcon, Mail, Loader2 } from 'lucide-svelte';
 	import { notify } from '$lib/utils/toast.js';
-	import SegmentedControl, { type SegmentedOption } from '$lib/components/ui/segmented-control.svelte';
+	import SegmentedControl, {
+		type SegmentedOption
+	} from '$lib/components/ui/segmented-control.svelte';
 	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
 	import { Smartphone, Download, Share, Check } from 'lucide-svelte';
-	import { getPwaInstallState, triggerInstall, isIOS, isStandalone } from '$lib/stores/pwa-install.svelte.js';
+	import {
+		getPwaInstallState,
+		triggerInstall,
+		isIOS,
+		isStandalone
+	} from '$lib/stores/pwa-install.svelte.js';
 
 	let { data } = $props();
 	const prefs = $derived(data.preferences);
@@ -167,7 +174,7 @@
 
 <svelte:head><title>Settings — Mavlo</title></svelte:head>
 
-<h1 class="text-xl sm:text-2xl font-semibold tracking-tight mb-6">Settings</h1>
+<h1 class="mb-6 text-xl font-semibold tracking-tight sm:text-2xl">Settings</h1>
 
 <div class="max-w-2xl space-y-6">
 	<!-- Account -->
@@ -182,16 +189,18 @@
 					<img
 						src={data.user.image}
 						alt="Current avatar"
-						class="size-16 rounded-full object-cover border shrink-0"
+						class="size-16 shrink-0 rounded-full border object-cover"
 					/>
 				{:else}
-					<div class="size-16 rounded-full border bg-muted flex items-center justify-center shrink-0">
-						<UserIcon class="size-7 text-muted-foreground" />
+					<div
+						class="bg-muted flex size-16 shrink-0 items-center justify-center rounded-full border"
+					>
+						<UserIcon class="text-muted-foreground size-7" />
 					</div>
 				{/if}
 				<div class="min-w-0 flex-1">
-					<div class="font-medium truncate">{data.user.name ?? '—'}</div>
-					<div class="flex items-center gap-1.5 text-xs text-muted-foreground truncate">
+					<div class="truncate font-medium">{data.user.name ?? '—'}</div>
+					<div class="text-muted-foreground flex items-center gap-1.5 truncate text-xs">
 						<Mail class="size-3.5 shrink-0" />
 						<span class="truncate">{data.user.email}</span>
 					</div>
@@ -199,7 +208,8 @@
 			</div>
 
 			<div class="space-y-2">
-				<Label class="text-xs uppercase tracking-wider text-muted-foreground">Profile picture</Label>
+				<Label class="text-muted-foreground text-xs tracking-wider uppercase">Profile picture</Label
+				>
 				<form
 					method="POST"
 					action="/settings/avatar"
@@ -214,13 +224,13 @@
 					/>
 					<Button type="submit">Upload</Button>
 				</form>
-				<p class="text-xs text-muted-foreground">PNG, JPEG, WebP, or GIF; max 2 MB.</p>
+				<p class="text-muted-foreground text-xs">PNG, JPEG, WebP, or GIF; max 2 MB.</p>
 			</div>
 
 			<div class="border-t pt-4">
 				<form method="POST" action="/sign-out">
-					<Button type="submit" variant="outline" class="w-full sm:w-auto text-destructive">
-						<LogOut class="size-4 mr-1.5" /> Sign out
+					<Button type="submit" variant="outline" class="text-destructive w-full sm:w-auto">
+						<LogOut class="mr-1.5 size-4" /> Sign out
 					</Button>
 				</form>
 			</div>
@@ -256,7 +266,7 @@
 				class="space-y-6"
 			>
 				<section class="space-y-4">
-					<h2 class="text-xs uppercase tracking-wider text-muted-foreground">General</h2>
+					<h2 class="text-muted-foreground text-xs tracking-wider uppercase">General</h2>
 					<div class="grid grid-cols-2 gap-3">
 						<div class="space-y-1">
 							<Label>Default currency</Label>
@@ -299,7 +309,7 @@
 				</section>
 
 				<section class="space-y-4 border-t pt-5">
-					<h2 class="text-xs uppercase tracking-wider text-muted-foreground">Cycle</h2>
+					<h2 class="text-muted-foreground text-xs tracking-wider uppercase">Cycle</h2>
 					<div class="space-y-1">
 						<Label>Week starts on</Label>
 						<SegmentedControl
@@ -310,7 +320,7 @@
 					</div>
 					<div class="space-y-2">
 						<Label>Cycle start (e.g. payday)</Label>
-						<div class="grid grid-cols-7 gap-1.5 rounded-lg bg-muted p-2">
+						<div class="bg-muted grid grid-cols-7 gap-1.5 rounded-lg p-2">
 							{#each cycleDays as d (d)}
 								<button
 									type="button"
@@ -326,19 +336,20 @@
 							{/each}
 						</div>
 						<input type="hidden" name="monthStartDay" value={selectedMonthStartDay} />
-						<p class="text-xs text-muted-foreground">
-							Day 1 = calendar month. Day 25 = your month runs 25th to 24th. Affects current and future periods.
+						<p class="text-muted-foreground text-xs">
+							Day 1 = calendar month. Day 25 = your month runs 25th to 24th. Affects current and
+							future periods.
 						</p>
 					</div>
 				</section>
 
-				<div class="flex justify-end border-t pt-4 h-5 items-center text-xs">
+				<div class="flex h-5 items-center justify-end border-t pt-4 text-xs">
 					{#if saveState === 'saving'}
-						<span class="inline-flex items-center gap-1.5 text-muted-foreground">
+						<span class="text-muted-foreground inline-flex items-center gap-1.5">
 							<Loader2 class="size-3.5 animate-spin" /> Saving…
 						</span>
 					{:else if saveState === 'saved'}
-						<span class="inline-flex items-center gap-1.5 text-income">
+						<span class="text-income inline-flex items-center gap-1.5">
 							<Check class="size-3.5" /> Saved
 						</span>
 					{:else if saveState === 'error'}
@@ -359,25 +370,25 @@
 		</Card.Header>
 		<Card.Content>
 			{#if alreadyInstalled}
-				<div class="flex items-center gap-2 text-sm text-income">
+				<div class="text-income flex items-center gap-2 text-sm">
 					<Check class="size-4" /> Already installed
 				</div>
 			{:else if pwa.canInstall}
 				<Button onclick={onInstall}>
-					<Download class="size-4 mr-1.5" /> Install Mavlo
+					<Download class="mr-1.5 size-4" /> Install Mavlo
 				</Button>
-				<p class="mt-2 text-xs text-muted-foreground">
+				<p class="text-muted-foreground mt-2 text-xs">
 					Adds Mavlo to your home screen / app drawer.
 				</p>
 			{:else if iosDevice}
 				<div class="space-y-2 text-sm">
-					<p class="flex items-center gap-2 text-muted-foreground">
+					<p class="text-muted-foreground flex items-center gap-2">
 						<Smartphone class="size-4" /> On iOS Safari, tap <Share class="size-4" /> Share, then
 						<strong class="text-foreground">Add to Home Screen</strong>.
 					</p>
 				</div>
 			{:else}
-				<p class="text-sm text-muted-foreground">
+				<p class="text-muted-foreground text-sm">
 					Open Mavlo in Chrome / Edge / Safari. Browser will offer the install option when ready.
 				</p>
 			{/if}

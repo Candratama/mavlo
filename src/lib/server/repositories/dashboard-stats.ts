@@ -47,10 +47,7 @@ export async function computeSpendingByCategory(
 			)
 		);
 
-	const catRows = await db
-		.select()
-		.from(categories)
-		.where(eq(categories.userId, userId));
+	const catRows = await db.select().from(categories).where(eq(categories.userId, userId));
 
 	const nameById = new Map(catRows.map((c) => [c.id, c.name]));
 
@@ -144,10 +141,7 @@ export async function computeMonthlyIncomeExpense(
 		.select()
 		.from(transactions)
 		.where(
-			and(
-				eq(transactions.userId, userId),
-				between(transactions.occurredAt, earliest, latest)
-			)
+			and(eq(transactions.userId, userId), between(transactions.occurredAt, earliest, latest))
 		);
 
 	const result: MonthlyIncomeExpenseRow[] = windows.map((w) => ({

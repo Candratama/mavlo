@@ -82,55 +82,64 @@
 <svelte:head><title>Dashboard — Mavlo</title></svelte:head>
 
 <!-- Greeting -->
-<p class="text-xs uppercase tracking-wider text-muted-foreground mb-1">Hi, {firstName}</p>
+<p class="text-muted-foreground mb-1 text-xs tracking-wider uppercase">Hi, {firstName}</p>
 
 <!-- Hero total balance -->
-<div class="relative overflow-hidden rounded-2xl border bg-gradient-to-br {trendingUp ? 'from-emerald-500/15' : 'from-rose-500/15'} via-background to-background p-5 sm:p-6 text-center">
+<div
+	class="relative overflow-hidden rounded-2xl border bg-gradient-to-br {trendingUp
+		? 'from-emerald-500/15'
+		: 'from-rose-500/15'} via-background to-background p-5 text-center sm:p-6"
+>
 	<button
 		type="button"
 		onclick={toggleHideBalance}
 		aria-label={hideBalance ? 'Show balance' : 'Hide balance'}
-		class="absolute top-3 right-3 size-9 rounded-full inline-flex items-center justify-center text-muted-foreground hover:bg-accent/40 cursor-pointer"
+		class="text-muted-foreground hover:bg-accent/40 absolute top-3 right-3 inline-flex size-9 cursor-pointer items-center justify-center rounded-full"
 	>
 		{#if hideBalance}<EyeOff class="size-4" />{:else}<Eye class="size-4" />{/if}
 	</button>
-	<p class="text-xs uppercase tracking-wider text-muted-foreground">
+	<p class="text-muted-foreground text-xs tracking-wider uppercase">
 		Total Balance <span class="text-foreground/70">({data.displayCurrency})</span>
 	</p>
-	<p class="mt-1 text-4xl sm:text-5xl font-semibold tabular-nums tracking-tight">
+	<p class="mt-1 text-4xl font-semibold tracking-tight tabular-nums sm:text-5xl">
 		{hideBalance ? maskedAmount : formatCentsAsCurrency(data.netWorthCents, data.displayCurrency)}
 	</p>
 	{#if cycleLabel}
-		<div class="mt-4 h-1 rounded-full bg-muted overflow-hidden">
-			<div class="h-full bg-primary transition-all" style="width: {cycleProgress}%"></div>
+		<div class="bg-muted mt-4 h-1 overflow-hidden rounded-full">
+			<div class="bg-primary h-full transition-all" style="width: {cycleProgress}%"></div>
 		</div>
-		<p class="mt-2 text-[10px] text-muted-foreground">{cycleLabel} · {cycleProgress}% through cycle</p>
+		<p class="text-muted-foreground mt-2 text-[10px]">
+			{cycleLabel} · {cycleProgress}% through cycle
+		</p>
 	{/if}
 </div>
 
-
 <!-- Cycle dual-stat -->
 <div class="mt-4 grid grid-cols-2 gap-3">
-	<div class="rounded-xl border bg-gradient-to-br from-emerald-500/10 via-card to-card p-4">
-		<div class="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-			<span class="size-6 rounded-full bg-income/15 inline-flex items-center justify-center">
-				<ArrowDown class="size-3.5 text-income" />
+	<div class="via-card to-card rounded-xl border bg-gradient-to-br from-emerald-500/10 p-4">
+		<div class="text-muted-foreground flex items-center gap-2 text-xs tracking-wider uppercase">
+			<span class="bg-income/15 inline-flex size-6 items-center justify-center rounded-full">
+				<ArrowDown class="text-income size-3.5" />
 			</span>
 			Income
 		</div>
-		<p class="mt-2 text-lg sm:text-xl font-semibold tabular-nums">
-			{hideBalance ? maskedAmount : formatCentsAsCurrency(data.monthIncomeCents, data.displayCurrency)}
+		<p class="mt-2 text-lg font-semibold tabular-nums sm:text-xl">
+			{hideBalance
+				? maskedAmount
+				: formatCentsAsCurrency(data.monthIncomeCents, data.displayCurrency)}
 		</p>
 	</div>
-	<div class="rounded-xl border bg-gradient-to-br from-rose-500/10 via-card to-card p-4">
-		<div class="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-			<span class="size-6 rounded-full bg-expense/15 inline-flex items-center justify-center">
-				<ArrowUp class="size-3.5 text-expense" />
+	<div class="via-card to-card rounded-xl border bg-gradient-to-br from-rose-500/10 p-4">
+		<div class="text-muted-foreground flex items-center gap-2 text-xs tracking-wider uppercase">
+			<span class="bg-expense/15 inline-flex size-6 items-center justify-center rounded-full">
+				<ArrowUp class="text-expense size-3.5" />
 			</span>
 			Expense
 		</div>
-		<p class="mt-2 text-lg sm:text-xl font-semibold tabular-nums">
-			{hideBalance ? maskedAmount : formatCentsAsCurrency(data.monthExpenseCents, data.displayCurrency)}
+		<p class="mt-2 text-lg font-semibold tabular-nums sm:text-xl">
+			{hideBalance
+				? maskedAmount
+				: formatCentsAsCurrency(data.monthExpenseCents, data.displayCurrency)}
 		</p>
 	</div>
 </div>
@@ -140,23 +149,35 @@
 		href="/budgets"
 		class="mt-4 block rounded-xl border bg-gradient-to-br {budgetOver
 			? 'from-rose-500/10'
-			: 'from-primary/10'} via-card to-card p-4 hover:bg-accent/20 transition-colors"
+			: 'from-primary/10'} via-card to-card hover:bg-accent/20 p-4 transition-colors"
 	>
-		<div class="flex items-center justify-between mb-2">
+		<div class="mb-2 flex items-center justify-between">
 			<span class="text-sm font-semibold">Monthly Budget</span>
-			<span class="text-sm font-semibold tabular-nums {budgetOver ? 'text-expense' : 'text-muted-foreground'}">
+			<span
+				class="text-sm font-semibold tabular-nums {budgetOver
+					? 'text-expense'
+					: 'text-muted-foreground'}"
+			>
 				{budgetPercent}%
 			</span>
 		</div>
-		<div class="h-2 rounded-full bg-muted overflow-hidden mb-2">
+		<div class="bg-muted mb-2 h-2 overflow-hidden rounded-full">
 			<div
 				class="h-full transition-all {budgetOver ? 'bg-expense' : 'bg-primary'}"
 				style="width: {budgetPercent}%"
 			></div>
 		</div>
-		<div class="flex justify-between text-xs text-muted-foreground tabular-nums">
-			<span>{hideBalance ? maskedAmount : formatCentsAsCurrency(data.budgetSpentCents, data.displayCurrency)}</span>
-			<span>{hideBalance ? maskedAmount : formatCentsAsCurrency(data.budgetLimitCents, data.displayCurrency)}</span>
+		<div class="text-muted-foreground flex justify-between text-xs tabular-nums">
+			<span
+				>{hideBalance
+					? maskedAmount
+					: formatCentsAsCurrency(data.budgetSpentCents, data.displayCurrency)}</span
+			>
+			<span
+				>{hideBalance
+					? maskedAmount
+					: formatCentsAsCurrency(data.budgetLimitCents, data.displayCurrency)}</span
+			>
 		</div>
 	</a>
 {/if}
@@ -168,7 +189,11 @@
 		<Card.Root class="mt-3">
 			<Card.Header class="pb-2">
 				<Card.Title class="text-base">
-					{chartTab === 'category' ? 'Spending by category' : chartTab === 'daily' ? 'Daily spending' : 'Income vs expense'}
+					{chartTab === 'category'
+						? 'Spending by category'
+						: chartTab === 'daily'
+							? 'Daily spending'
+							: 'Income vs expense'}
 				</Card.Title>
 				<Card.Description>
 					{chartTab === 'trend' ? 'Last 6 months' : 'This cycle'}
@@ -186,7 +211,7 @@
 		</Card.Root>
 	</div>
 
-	<div class="hidden md:grid gap-4 lg:grid-cols-2">
+	<div class="hidden gap-4 md:grid lg:grid-cols-2">
 		<Card.Root>
 			<Card.Header>
 				<Card.Title>Spending by category</Card.Title>
@@ -224,39 +249,53 @@
 	<Card.Header class="flex flex-row items-center justify-between pb-2">
 		<Card.Title class="text-base">Recent</Card.Title>
 		<Button variant="ghost" size="sm" href="/transactions">
-			View all <ArrowRight class="size-4 ml-1" />
+			View all <ArrowRight class="ml-1 size-4" />
 		</Button>
 	</Card.Header>
 	<Card.Content class="p-0">
 		{#if data.recent.length === 0}
-			<EmptyState icon={ArrowLeftRight} title="No transactions yet" description="Add a transaction to see it here.">
+			<EmptyState
+				icon={ArrowLeftRight}
+				title="No transactions yet"
+				description="Add a transaction to see it here."
+			>
 				<Button onclick={() => openAddTransaction('expense')}>Add transaction</Button>
 			</EmptyState>
 		{:else}
 			<ul class="divide-y">
 				{#each data.recent as r (r.id)}
-					{@const IconComp = (r.kind === 'transfer' ? ArrowLeftRight : (getIconByName(r.categoryIcon) ?? Tag)) as any}
-					{@const tint = r.categoryColor ?? (r.kind === 'income' ? '#10b981' : r.kind === 'transfer' ? '#3b82f6' : '#94a3b8')}
-					<li class="px-4 sm:px-6 py-3 flex items-center gap-3">
-						<div class="size-9 shrink-0 rounded-lg flex items-center justify-center" style="background-color: {tint}20; color: {tint}">
+					{@const IconComp = (
+						r.kind === 'transfer' ? ArrowLeftRight : (getIconByName(r.categoryIcon) ?? Tag)
+					) as any}
+					{@const tint =
+						r.categoryColor ??
+						(r.kind === 'income' ? '#10b981' : r.kind === 'transfer' ? '#3b82f6' : '#94a3b8')}
+					<li class="flex items-center gap-3 px-4 py-3 sm:px-6">
+						<div
+							class="flex size-9 shrink-0 items-center justify-center rounded-lg"
+							style="background-color: {tint}20; color: {tint}"
+						>
 							<IconComp class="size-4" />
 						</div>
-						<div class="flex-1 min-w-0">
-							<p class="text-sm font-medium truncate">
+						<div class="min-w-0 flex-1">
+							<p class="truncate text-sm font-medium">
 								{r.note || r.categoryName || r.accountName || 'Transaction'}
 							</p>
-							<p class="text-xs text-muted-foreground truncate">
+							<p class="text-muted-foreground truncate text-xs">
 								{formatDate(r.occurredAt)} · {r.accountName ?? '—'}
 							</p>
 						</div>
 						<span
-							class="text-sm font-semibold tabular-nums whitespace-nowrap {r.kind === 'income'
+							class="text-sm font-semibold whitespace-nowrap tabular-nums {r.kind === 'income'
 								? 'text-income'
 								: r.kind === 'transfer'
 									? 'text-transfer'
 									: 'text-expense'}"
 						>
-							{r.kind === 'expense' ? '−' : r.kind === 'income' ? '+' : ''}{formatCentsAsCurrency(r.amountCents, r.accountCurrency)}
+							{r.kind === 'expense' ? '−' : r.kind === 'income' ? '+' : ''}{formatCentsAsCurrency(
+								r.amountCents,
+								r.accountCurrency
+							)}
 						</span>
 					</li>
 				{/each}

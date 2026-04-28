@@ -11,7 +11,16 @@
 	import * as Sheet from '$lib/components/ui/sheet';
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil, Trash2, Tag, GripVertical } from 'lucide-svelte';
+	import {
+		Plus,
+		MoreHorizontal,
+		Archive,
+		ArchiveRestore,
+		Pencil,
+		Trash2,
+		Tag,
+		GripVertical
+	} from 'lucide-svelte';
 	import { dndzone } from 'svelte-dnd-action';
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
@@ -81,7 +90,9 @@
 	];
 
 	let visibleCategories = $state<CategoryRow[]>(data.categories.filter((c) => c.kind === viewKind));
-	let expenseCategories = $state<CategoryRow[]>(data.categories.filter((c) => c.kind === 'expense'));
+	let expenseCategories = $state<CategoryRow[]>(
+		data.categories.filter((c) => c.kind === 'expense')
+	);
 	let incomeCategories = $state<CategoryRow[]>(data.categories.filter((c) => c.kind === 'income'));
 
 	$effect(() => {
@@ -110,20 +121,20 @@
 
 <svelte:head><title>Categories — Mavlo</title></svelte:head>
 
-<div class="flex items-center justify-between mb-6">
+<div class="mb-6 flex items-center justify-between">
 	<div>
-		<h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Categories</h1>
+		<h1 class="text-xl font-semibold tracking-tight sm:text-2xl">Categories</h1>
 	</div>
 	<Button onclick={() => (createOpen = true)}>
-		<Plus class="size-4 mr-1" /> New category
+		<Plus class="mr-1 size-4" /> New category
 	</Button>
 </div>
 
 {#if form?.message}
-	<p class="mb-4 text-sm text-destructive">{form.message}</p>
+	<p class="text-destructive mb-4 text-sm">{form.message}</p>
 {/if}
 
-<div class="md:hidden mb-4">
+<div class="mb-4 md:hidden">
 	<SegmentedControl options={viewKindOptions} bind:value={viewKind} ariaLabel="Category kind" />
 </div>
 
@@ -131,33 +142,42 @@
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger>
 			{#snippet child({ props })}
-				<Button {...props} variant="ghost" size="icon" class="size-11 md:size-8 shrink-0">
+				<Button {...props} variant="ghost" size="icon" class="size-11 shrink-0 md:size-8">
 					<MoreHorizontal class="size-4" />
 				</Button>
 			{/snippet}
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content align="end">
 			<DropdownMenu.Item onclick={() => openEdit(category)}>
-				<Pencil class="size-4 mr-2" /> Edit
+				<Pencil class="mr-2 size-4" /> Edit
 			</DropdownMenu.Item>
-			<form method="POST" action="?/{category.archived ? 'unarchive' : 'archive'}" use:enhance={() => async ({ result }) => {
-				await goto(page.url.pathname + page.url.search, {
-					invalidateAll: true,
-					replaceState: true,
-					keepFocus: true,
-					noScroll: true
-				});
-				if (result.type === 'success') {
-					notify.success(category.archived ? 'Category restored' : 'Category archived');
-				} else if (result.type === 'failure') {
-					const message = (result.data as { message?: string } | undefined)?.message;
-					notify.error(message ?? 'Could not save category');
-				}
-			}}>
+			<form
+				method="POST"
+				action="?/{category.archived ? 'unarchive' : 'archive'}"
+				use:enhance={() =>
+					async ({ result }) => {
+						await goto(page.url.pathname + page.url.search, {
+							invalidateAll: true,
+							replaceState: true,
+							keepFocus: true,
+							noScroll: true
+						});
+						if (result.type === 'success') {
+							notify.success(category.archived ? 'Category restored' : 'Category archived');
+						} else if (result.type === 'failure') {
+							const message = (result.data as { message?: string } | undefined)?.message;
+							notify.error(message ?? 'Could not save category');
+						}
+					}}
+			>
 				<input type="hidden" name="id" value={category.id} />
 				<DropdownMenu.Item>
 					{#snippet child({ props })}
-						<button {...props} type="submit" class="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-left rounded-sm hover:bg-accent/50">
+						<button
+							{...props}
+							type="submit"
+							class="hover:bg-accent/50 flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm"
+						>
 							{#if category.archived}
 								<ArchiveRestore class="size-4" /> Unarchive
 							{:else}
@@ -167,26 +187,41 @@
 					{/snippet}
 				</DropdownMenu.Item>
 			</form>
-			<form method="POST" action="?/delete" use:enhance={() => async ({ result }) => {
-				await goto(page.url.pathname + page.url.search, {
-					invalidateAll: true,
-					replaceState: true,
-					keepFocus: true,
-					noScroll: true
-				});
-				if (result.type === 'success') {
-					notify.success('Category deleted');
-				} else if (result.type === 'failure') {
-					const message = (result.data as { message?: string } | undefined)?.message;
-					notify.error(message ?? 'Could not delete category');
-				}
-			}} onsubmit={(e) => {
-				if (!confirm(`Delete category "${category.name}"? This will also delete its budgets. Transactions keep their amount but lose the category.`)) e.preventDefault();
-			}}>
+			<form
+				method="POST"
+				action="?/delete"
+				use:enhance={() =>
+					async ({ result }) => {
+						await goto(page.url.pathname + page.url.search, {
+							invalidateAll: true,
+							replaceState: true,
+							keepFocus: true,
+							noScroll: true
+						});
+						if (result.type === 'success') {
+							notify.success('Category deleted');
+						} else if (result.type === 'failure') {
+							const message = (result.data as { message?: string } | undefined)?.message;
+							notify.error(message ?? 'Could not delete category');
+						}
+					}}
+				onsubmit={(e) => {
+					if (
+						!confirm(
+							`Delete category "${category.name}"? This will also delete its budgets. Transactions keep their amount but lose the category.`
+						)
+					)
+						e.preventDefault();
+				}}
+			>
 				<input type="hidden" name="id" value={category.id} />
 				<DropdownMenu.Item>
 					{#snippet child({ props })}
-						<button {...props} type="submit" class="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-left text-destructive rounded-sm hover:bg-accent/50">
+						<button
+							{...props}
+							type="submit"
+							class="text-destructive hover:bg-accent/50 flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm"
+						>
 							<Trash2 class="size-4" /> Delete
 						</button>
 					{/snippet}
@@ -208,13 +243,22 @@
 		</Card.Header>
 		<Card.Content class="p-3">
 			{#if items.length === 0}
-				<EmptyState icon={Tag} title="No {label.toLowerCase()} categories" description="Add one to classify {label.toLowerCase()} transactions.">
+				<EmptyState
+					icon={Tag}
+					title="No {label.toLowerCase()} categories"
+					description="Add one to classify {label.toLowerCase()} transactions."
+				>
 					<Button onclick={() => (createOpen = true)}>Add category</Button>
 				</EmptyState>
 			{:else}
 				<ul
 					class="space-y-1.5"
-					use:dndzone={{ items, flipDurationMs: 150, dropTargetStyle: {}, dragDisabled: dndDisabled }}
+					use:dndzone={{
+						items,
+						flipDurationMs: 150,
+						dropTargetStyle: {},
+						dragDisabled: dndDisabled
+					}}
 					onconsider={(e) => onConsider(e.detail.items as CategoryRow[])}
 					onfinalize={(e) => {
 						onFinalize(e.detail.items as CategoryRow[]);
@@ -223,25 +267,35 @@
 				>
 					{#each items as category (category.id)}
 						{@const IconComp = getIconByName(category.icon)}
-						<li class="flex items-center gap-3 rounded-md p-2 hover:bg-accent/30 {category.archived ? 'opacity-60' : ''}">
+						<li
+							class="hover:bg-accent/30 flex items-center gap-3 rounded-md p-2 {category.archived
+								? 'opacity-60'
+								: ''}"
+						>
 							<button
 								type="button"
 								tabindex="-1"
 								aria-label="Drag to reorder"
 								onpointerdown={enableDrag}
 								ontouchstart={enableDrag}
-								class="shrink-0 touch-none cursor-grab active:cursor-grabbing"
+								class="shrink-0 cursor-grab touch-none active:cursor-grabbing"
 							>
-								<GripVertical class="size-4 text-muted-foreground" />
+								<GripVertical class="text-muted-foreground size-4" />
 							</button>
-							<div class="size-7 shrink-0 rounded-md flex items-center justify-center" style={category.color ? `background-color: ${category.color}20` : ''}>
+							<div
+								class="flex size-7 shrink-0 items-center justify-center rounded-md"
+								style={category.color ? `background-color: ${category.color}20` : ''}
+							>
 								{#if IconComp}
-									<IconComp class="size-4" style={category.color ? `color: ${category.color}` : ''} />
+									<IconComp
+										class="size-4"
+										style={category.color ? `color: ${category.color}` : ''}
+									/>
 								{:else}
-									<Tag class="size-4 text-muted-foreground" />
+									<Tag class="text-muted-foreground size-4" />
 								{/if}
 							</div>
-							<span class="font-medium flex-1 min-w-0 truncate">{category.name}</span>
+							<span class="min-w-0 flex-1 truncate font-medium">{category.name}</span>
 							{@render rowMenu(category)}
 						</li>
 					{/each}
@@ -251,7 +305,7 @@
 	</Card.Root>
 {/snippet}
 
-<div class="hidden md:grid md:grid-cols-2 gap-6">
+<div class="hidden gap-6 md:grid md:grid-cols-2">
 	{@render kindList(
 		expenseCategories,
 		'Expense',
@@ -274,8 +328,13 @@
 
 {#if visibleCategories.length > 0}
 	<ul
-		class="md:hidden space-y-2"
-		use:dndzone={{ items: visibleCategories, flipDurationMs: 150, dropTargetStyle: {}, dragDisabled: dndDisabled }}
+		class="space-y-2 md:hidden"
+		use:dndzone={{
+			items: visibleCategories,
+			flipDurationMs: 150,
+			dropTargetStyle: {},
+			dragDisabled: dndDisabled
+		}}
 		onconsider={(e) => (visibleCategories = e.detail.items)}
 		onfinalize={(e) => {
 			visibleCategories = e.detail.items;
@@ -285,28 +344,35 @@
 	>
 		{#each visibleCategories as category (category.id)}
 			{@const IconComp = getIconByName(category.icon)}
-			<li class="rounded-lg border bg-card p-3 flex items-center gap-3 {category.archived ? 'opacity-60' : ''}">
+			<li
+				class="bg-card flex items-center gap-3 rounded-lg border p-3 {category.archived
+					? 'opacity-60'
+					: ''}"
+			>
 				<button
 					type="button"
 					tabindex="-1"
 					aria-label="Drag to reorder"
 					onpointerdown={enableDrag}
 					ontouchstart={enableDrag}
-					class="shrink-0 touch-none cursor-grab active:cursor-grabbing"
+					class="shrink-0 cursor-grab touch-none active:cursor-grabbing"
 				>
-					<GripVertical class="size-4 text-muted-foreground" />
+					<GripVertical class="text-muted-foreground size-4" />
 				</button>
-				<div class="flex items-center gap-3 flex-1 min-w-0">
-					<div class="size-9 shrink-0 rounded-md flex items-center justify-center" style={category.color ? `background-color: ${category.color}20` : ''}>
+				<div class="flex min-w-0 flex-1 items-center gap-3">
+					<div
+						class="flex size-9 shrink-0 items-center justify-center rounded-md"
+						style={category.color ? `background-color: ${category.color}20` : ''}
+					>
 						{#if IconComp}
 							<IconComp class="size-4" style={category.color ? `color: ${category.color}` : ''} />
 						{:else}
-							<Tag class="size-4 text-muted-foreground" />
+							<Tag class="text-muted-foreground size-4" />
 						{/if}
 					</div>
-					<div class="flex-1 min-w-0">
-						<div class="font-medium truncate">{category.name}</div>
-						<div class="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+					<div class="min-w-0 flex-1">
+						<div class="truncate font-medium">{category.name}</div>
+						<div class="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
 							<span class="capitalize">{category.kind}</span>
 						</div>
 					</div>
@@ -316,9 +382,13 @@
 		{/each}
 	</ul>
 {:else}
-	<ul class="md:hidden space-y-2">
+	<ul class="space-y-2 md:hidden">
 		<li>
-			<EmptyState icon={Tag} title="No categories yet" description="Add your first category to classify income and expenses.">
+			<EmptyState
+				icon={Tag}
+				title="No categories yet"
+				description="Add your first category to classify income and expenses."
+			>
 				<Button onclick={() => (createOpen = true)}>Add category</Button>
 			</EmptyState>
 		</li>
@@ -326,7 +396,11 @@
 {/if}
 
 <div class="mt-6 flex justify-center">
-	<Button variant="ghost" size="sm" href={data.includeArchived ? '/categories' : '/categories?archived=1'}>
+	<Button
+		variant="ghost"
+		size="sm"
+		href={data.includeArchived ? '/categories' : '/categories?archived=1'}
+	>
 		{data.includeArchived ? 'Hide archived' : 'Show archived'}
 	</Button>
 </div>
@@ -370,17 +444,26 @@
 		<div class="space-y-2">
 			<div class="flex items-center justify-between">
 				<Label>Color</Label>
-				<span class="size-5 rounded border" style="background-color: {createColor || 'transparent'}" aria-hidden="true"></span>
+				<span
+					class="size-5 rounded border"
+					style="background-color: {createColor || 'transparent'}"
+					aria-hidden="true"
+				></span>
 			</div>
 			<div class="grid grid-cols-8 gap-2">
 				{#each PRESET_SWATCHES as swatch (swatch)}
 					<button
 						type="button"
-						onclick={() => { createColor = swatch; createCustomColor = false; }}
+						onclick={() => {
+							createColor = swatch;
+							createCustomColor = false;
+						}}
 						aria-pressed={createColor === swatch}
 						aria-label="Color {swatch}"
 						style="background-color: {swatch}; touch-action: manipulation; -webkit-tap-highlight-color: transparent;"
-						class="size-10 rounded-lg cursor-pointer outline-none {createColor === swatch ? 'ring-2 ring-offset-2 ring-foreground ring-offset-background' : ''}"
+						class="size-10 cursor-pointer rounded-lg outline-none {createColor === swatch
+							? 'ring-foreground ring-offset-background ring-2 ring-offset-2'
+							: ''}"
 					>
 						<span class="sr-only">{swatch}</span>
 					</button>
@@ -389,14 +472,17 @@
 			<button
 				type="button"
 				onclick={() => (createCustomColor = !createCustomColor)}
-				class="text-xs text-muted-foreground underline"
+				class="text-muted-foreground text-xs underline"
 			>
 				{createCustomColor ? 'Hide custom' : '+ Custom hex'}
 			</button>
 			{#if createCustomColor}
 				<div class="flex items-center gap-2">
 					<Input bind:value={createColor} placeholder="#10b981" maxlength={7} />
-					<span class="size-6 rounded border" style="background-color: {createColor || 'transparent'}"></span>
+					<span
+						class="size-6 rounded border"
+						style="background-color: {createColor || 'transparent'}"
+					></span>
 				</div>
 			{/if}
 		</div>
@@ -407,7 +493,10 @@
 					<button
 						type="button"
 						onclick={() => (createIcon = '')}
-						class="size-9 rounded-lg border flex items-center justify-center text-muted-foreground transition-shadow {createIcon === '' ? 'ring-2 ring-foreground' : ''}"
+						class="text-muted-foreground flex size-9 items-center justify-center rounded-lg border transition-shadow {createIcon ===
+						''
+							? 'ring-foreground ring-2'
+							: ''}"
 						aria-label="No icon"
 					>
 						<span class="text-xs">—</span>
@@ -416,7 +505,10 @@
 						<button
 							type="button"
 							onclick={() => (createIcon = ico.name)}
-							class="size-9 rounded-lg border flex items-center justify-center transition-shadow {createIcon === ico.name ? 'ring-2 ring-foreground bg-accent/30' : ''}"
+							class="flex size-9 items-center justify-center rounded-lg border transition-shadow {createIcon ===
+							ico.name
+								? 'ring-foreground bg-accent/30 ring-2'
+								: ''}"
 							aria-label={ico.label}
 							title={ico.label}
 						>
@@ -425,7 +517,14 @@
 					{/each}
 				</div>
 			</div>
-			<input type="text" name="icon" bind:value={createIcon} class="sr-only" tabindex="-1" aria-hidden="true" />
+			<input
+				type="text"
+				name="icon"
+				bind:value={createIcon}
+				class="sr-only"
+				tabindex="-1"
+				aria-hidden="true"
+			/>
 		</div>
 		<div class="flex justify-end gap-2">
 			<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
@@ -443,8 +542,12 @@
 	</Dialog.Root>
 {:else}
 	<Sheet.Root bind:open={createOpen}>
-		<Sheet.Content side="bottom" class="max-h-[calc(90dvh-var(--keyboard-h,0px))] flex flex-col p-0">
-			<Sheet.Header class="text-left p-4 pb-2"><Sheet.Title>New category</Sheet.Title></Sheet.Header>
+		<Sheet.Content
+			side="bottom"
+			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
+		>
+			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>New category</Sheet.Title></Sheet.Header
+			>
 			<div class="flex-1 overflow-y-auto">{@render createForm()}</div>
 		</Sheet.Content>
 	</Sheet.Root>
@@ -490,17 +593,26 @@
 		<div class="space-y-2">
 			<div class="flex items-center justify-between">
 				<Label>Color</Label>
-				<span class="size-5 rounded border" style="background-color: {editColor || 'transparent'}" aria-hidden="true"></span>
+				<span
+					class="size-5 rounded border"
+					style="background-color: {editColor || 'transparent'}"
+					aria-hidden="true"
+				></span>
 			</div>
 			<div class="grid grid-cols-8 gap-2">
 				{#each PRESET_SWATCHES as swatch (swatch)}
 					<button
 						type="button"
-						onclick={() => { editColor = swatch; editCustomColor = false; }}
+						onclick={() => {
+							editColor = swatch;
+							editCustomColor = false;
+						}}
 						aria-pressed={editColor === swatch}
 						aria-label="Color {swatch}"
 						style="background-color: {swatch}; touch-action: manipulation; -webkit-tap-highlight-color: transparent;"
-						class="size-10 rounded-lg cursor-pointer outline-none {editColor === swatch ? 'ring-2 ring-offset-2 ring-foreground ring-offset-background' : ''}"
+						class="size-10 cursor-pointer rounded-lg outline-none {editColor === swatch
+							? 'ring-foreground ring-offset-background ring-2 ring-offset-2'
+							: ''}"
 					>
 						<span class="sr-only">{swatch}</span>
 					</button>
@@ -509,14 +621,15 @@
 			<button
 				type="button"
 				onclick={() => (editCustomColor = !editCustomColor)}
-				class="text-xs text-muted-foreground underline"
+				class="text-muted-foreground text-xs underline"
 			>
 				{editCustomColor ? 'Hide custom' : '+ Custom hex'}
 			</button>
 			{#if editCustomColor}
 				<div class="flex items-center gap-2">
 					<Input bind:value={editColor} placeholder="#10b981" maxlength={7} />
-					<span class="size-6 rounded border" style="background-color: {editColor || 'transparent'}"></span>
+					<span class="size-6 rounded border" style="background-color: {editColor || 'transparent'}"
+					></span>
 				</div>
 			{/if}
 		</div>
@@ -527,7 +640,10 @@
 					<button
 						type="button"
 						onclick={() => (editIcon = '')}
-						class="size-9 rounded-lg border flex items-center justify-center text-muted-foreground transition-shadow {editIcon === '' ? 'ring-2 ring-foreground' : ''}"
+						class="text-muted-foreground flex size-9 items-center justify-center rounded-lg border transition-shadow {editIcon ===
+						''
+							? 'ring-foreground ring-2'
+							: ''}"
 						aria-label="No icon"
 					>
 						<span class="text-xs">—</span>
@@ -536,7 +652,10 @@
 						<button
 							type="button"
 							onclick={() => (editIcon = ico.name)}
-							class="size-9 rounded-lg border flex items-center justify-center transition-shadow {editIcon === ico.name ? 'ring-2 ring-foreground bg-accent/30' : ''}"
+							class="flex size-9 items-center justify-center rounded-lg border transition-shadow {editIcon ===
+							ico.name
+								? 'ring-foreground bg-accent/30 ring-2'
+								: ''}"
 							aria-label={ico.label}
 							title={ico.label}
 						>
@@ -545,7 +664,14 @@
 					{/each}
 				</div>
 			</div>
-			<input type="text" name="icon" bind:value={editIcon} class="sr-only" tabindex="-1" aria-hidden="true" />
+			<input
+				type="text"
+				name="icon"
+				bind:value={editIcon}
+				class="sr-only"
+				tabindex="-1"
+				aria-hidden="true"
+			/>
 		</div>
 		<div class="flex justify-end gap-2">
 			<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
@@ -563,8 +689,13 @@
 	</Dialog.Root>
 {:else}
 	<Sheet.Root bind:open={editOpen}>
-		<Sheet.Content side="bottom" class="max-h-[calc(90dvh-var(--keyboard-h,0px))] flex flex-col p-0">
-			<Sheet.Header class="text-left p-4 pb-2"><Sheet.Title>Edit category</Sheet.Title></Sheet.Header>
+		<Sheet.Content
+			side="bottom"
+			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
+		>
+			<Sheet.Header class="p-4 pb-2 text-left"
+				><Sheet.Title>Edit category</Sheet.Title></Sheet.Header
+			>
 			<div class="flex-1 overflow-y-auto">
 				{#if editTarget}{@render editForm(editTarget)}{/if}
 			</div>

@@ -2,7 +2,10 @@ import { integer, sqliteTable, text, index } from 'drizzle-orm/sqlite-core';
 import { createId } from '@paralleldrive/cuid2';
 import { users } from './auth.schema';
 
-const cuid = () => text().notNull().$defaultFn(() => createId());
+const cuid = () =>
+	text()
+		.notNull()
+		.$defaultFn(() => createId());
 const userIdFk = () =>
 	text('user_id')
 		.notNull()
@@ -98,7 +101,9 @@ export const userPreferences = sqliteTable('user_preferences', {
 	currency: text('currency').notNull().default('IDR'),
 	locale: text('locale').notNull().default('id-ID'),
 	timezone: text('timezone').notNull().default('Asia/Jakarta'),
-	theme: text('theme', { enum: ['light', 'dark', 'system'] }).notNull().default('system'),
+	theme: text('theme', { enum: ['light', 'dark', 'system'] })
+		.notNull()
+		.default('system'),
 	weekStartsOn: integer('week_starts_on', { mode: 'number' }).notNull().default(1),
 	monthStartDay: integer('month_start_day', { mode: 'number' }).notNull().default(1),
 	createdAt: epochMsNow('created_at'),

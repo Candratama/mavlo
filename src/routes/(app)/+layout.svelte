@@ -102,19 +102,21 @@
 
 <svelte:head><title>Mavlo</title></svelte:head>
 
-<div class="min-h-screen flex bg-background">
+<div class="bg-background flex min-h-screen">
 	<aside
-		class="w-60 border-r bg-sidebar text-sidebar-foreground border-sidebar-border p-4 hidden lg:flex flex-col"
+		class="bg-sidebar text-sidebar-foreground border-sidebar-border hidden w-60 flex-col border-r p-4 lg:flex"
 	>
-		<div class="flex items-center gap-2 mb-6">
+		<div class="mb-6 flex items-center gap-2">
 			<img src="/icon-192.png" alt="Mavlo" class="h-7 w-7 rounded-md" />
-			<h1 class="text-xl font-bold text-primary">Mavlo</h1>
+			<h1 class="text-primary text-xl font-bold">Mavlo</h1>
 		</div>
-		<nav class="space-y-1 text-sm flex-1">
+		<nav class="flex-1 space-y-1 text-sm">
 			{#each sidebarNav as item}
 				<a
 					href={item.href}
-					class="flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors {isActive(item.href)
+					class="flex items-center gap-2.5 rounded-md px-3 py-2 transition-colors {isActive(
+						item.href
+					)
 						? 'bg-accent text-accent-foreground font-medium'
 						: 'text-sidebar-foreground hover:bg-accent/50 hover:text-accent-foreground'}"
 				>
@@ -125,24 +127,24 @@
 		</nav>
 	</aside>
 
-	<main class="flex-1 flex flex-col min-w-0">
+	<main class="flex min-w-0 flex-1 flex-col">
 		<header
-			class="border-b bg-background px-4 sm:px-6 py-3 flex items-center justify-between gap-3
-				pt-[max(0.75rem,env(safe-area-inset-top))]"
+			class="bg-background flex items-center justify-between gap-3 border-b px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]
+				sm:px-6"
 		>
 			<div class="flex items-center gap-1.5 lg:hidden">
 				<img src="/icon-192.png" alt="Mavlo" class="h-6 w-6 rounded-md" />
-				<span class="text-base font-bold text-primary">Mavlo</span>
+				<span class="text-primary text-base font-bold">Mavlo</span>
 			</div>
 
-			<span class="text-sm text-muted-foreground hidden lg:inline">Hi, {data.user.name}</span>
+			<span class="text-muted-foreground hidden text-sm lg:inline">Hi, {data.user.name}</span>
 
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger>
 					{#snippet child({ props })}
 						<button
 							{...props}
-							class="size-9 rounded-full overflow-hidden border bg-muted hover:opacity-80 transition-opacity flex items-center justify-center text-sm font-semibold shrink-0"
+							class="bg-muted flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border text-sm font-semibold transition-opacity hover:opacity-80"
 							aria-label="Account menu"
 						>
 							{#if data.user.image}
@@ -156,7 +158,11 @@
 				<DropdownMenu.Content align="end" class="w-44">
 					<DropdownMenu.Item>
 						{#snippet child({ props })}
-							<a {...props} href="/settings" class="flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-sm hover:bg-accent/50 cursor-pointer">
+							<a
+								{...props}
+								href="/settings"
+								class="hover:bg-accent/50 flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
+							>
 								<Settings class="size-4" /> Settings
 							</a>
 						{/snippet}
@@ -165,7 +171,11 @@
 					<form method="POST" action="/sign-out">
 						<DropdownMenu.Item>
 							{#snippet child({ props })}
-								<button {...props} type="submit" class="flex items-center gap-2 w-full px-2 py-1.5 text-sm text-destructive rounded-sm hover:bg-accent/50 cursor-pointer">
+								<button
+									{...props}
+									type="submit"
+									class="text-destructive hover:bg-accent/50 flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
+								>
 									<LogOut class="size-4" /> Sign out
 								</button>
 							{/snippet}
@@ -176,7 +186,7 @@
 		</header>
 
 		<div
-			class="px-3 pt-3 sm:px-4 sm:pt-4 md:px-6 md:pt-6 flex-1 overflow-x-hidden pb-[calc(var(--bottom-nav-h)+var(--fab-h)+1.5rem+env(safe-area-inset-bottom))] lg:pb-6"
+			class="flex-1 overflow-x-hidden px-3 pt-3 pb-[calc(var(--bottom-nav-h)+var(--fab-h)+1.5rem+env(safe-area-inset-bottom))] sm:px-4 sm:pt-4 md:px-6 md:pt-6 lg:pb-6"
 		>
 			{@render children()}
 		</div>
@@ -197,15 +207,17 @@
 	/>
 
 	<nav
-		class="lg:hidden fixed inset-x-0 bottom-0 z-40 border-t bg-background pb-[env(safe-area-inset-bottom)]"
+		class="bg-background fixed inset-x-0 bottom-0 z-40 border-t pb-[env(safe-area-inset-bottom)] lg:hidden"
 	>
 		<ul class="grid grid-cols-5">
 			{#each primaryNav as item}
 				<li>
 					<a
 						href={item.href}
-						class="flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium relative transition-colors {isActive(item.href)
-							? 'text-primary after:absolute after:top-0 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:w-8 after:bg-primary after:rounded-b-full'
+						class="relative flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition-colors {isActive(
+							item.href
+						)
+							? 'text-primary after:bg-primary after:absolute after:top-0 after:left-1/2 after:h-0.5 after:w-8 after:-translate-x-1/2 after:rounded-b-full'
 							: 'text-muted-foreground hover:text-foreground'}"
 					>
 						<item.icon class="h-5 w-5" />

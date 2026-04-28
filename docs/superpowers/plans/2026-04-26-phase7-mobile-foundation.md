@@ -7,6 +7,7 @@
 **Architecture:** Existing `(app)/+layout.svelte` keeps the desktop sidebar; below `md` it hides and a bottom tab bar takes over. Tables get a sibling card-list layout for `<md` views. A reusable `<MoneyInput>` component handles localized number entry → integer cents.
 
 **Conventions:**
+
 - `<NEW_REPO>` = `/Users/candratama/Project/WebDev/mavlo`
 - Branch: `main` (greenfield, branch strategy A)
 - Mobile breakpoint: `md` (768px) — same as Tailwind default
@@ -17,9 +18,11 @@
 ## Task 1: Mobile Navigation (Bottom Tab Bar + Drawer Sheet)
 
 **Files:**
+
 - Modify: `<NEW_REPO>/src/routes/(app)/+layout.svelte`
 
 Strategy:
+
 - Desktop (`≥md`): keep existing sidebar; header gets a brand mark too for parity
 - Mobile (`<md`): no sidebar; header shows hamburger + brand + sign-out
 - Mobile bottom: fixed-position tab bar with the 5 most-used routes (Dashboard, Transactions, Accounts, Budgets, Settings — drop Categories from primary; it's still in the hamburger sheet)
@@ -80,20 +83,22 @@ If sheet asks about overwrites, answer No to keep existing components.
 
 <svelte:head><title>Mavlo</title></svelte:head>
 
-<div class="min-h-screen flex bg-background">
+<div class="bg-background flex min-h-screen">
 	<!-- Desktop sidebar -->
 	<aside
-		class="w-60 border-r bg-sidebar text-sidebar-foreground border-sidebar-border p-4 hidden md:flex flex-col"
+		class="bg-sidebar text-sidebar-foreground border-sidebar-border hidden w-60 flex-col border-r p-4 md:flex"
 	>
-		<div class="flex items-center gap-2 mb-6">
-			<Coins class="h-5 w-5 text-primary" />
-			<h1 class="text-xl font-bold text-primary">Mavlo</h1>
+		<div class="mb-6 flex items-center gap-2">
+			<Coins class="text-primary h-5 w-5" />
+			<h1 class="text-primary text-xl font-bold">Mavlo</h1>
 		</div>
-		<nav class="space-y-1 text-sm flex-1">
+		<nav class="flex-1 space-y-1 text-sm">
 			{#each allNav as item}
 				<a
 					href={item.href}
-					class="flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors {isActive(item.href)
+					class="flex items-center gap-2.5 rounded-md px-3 py-2 transition-colors {isActive(
+						item.href
+					)
 						? 'bg-accent text-accent-foreground font-medium'
 						: 'text-sidebar-foreground hover:bg-accent/50 hover:text-accent-foreground'}"
 				>
@@ -104,10 +109,10 @@ If sheet asks about overwrites, answer No to keep existing components.
 		</nav>
 	</aside>
 
-	<main class="flex-1 flex flex-col min-w-0">
+	<main class="flex min-w-0 flex-1 flex-col">
 		<header
-			class="border-b bg-background px-4 sm:px-6 py-3 flex items-center justify-between gap-3
-				pt-[max(0.75rem,env(safe-area-inset-top))]"
+			class="bg-background flex items-center justify-between gap-3 border-b px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]
+				sm:px-6"
 		>
 			<!-- Mobile brand + hamburger -->
 			<div class="flex items-center gap-2 md:hidden">
@@ -126,9 +131,9 @@ If sheet asks about overwrites, answer No to keep existing components.
 						{/snippet}
 					</Sheet.Trigger>
 					<Sheet.Content side="left" class="w-64 p-4">
-						<Sheet.Header class="text-left mb-4">
+						<Sheet.Header class="mb-4 text-left">
 							<Sheet.Title class="flex items-center gap-2">
-								<Coins class="h-5 w-5 text-primary" />
+								<Coins class="text-primary h-5 w-5" />
 								<span class="text-primary">Mavlo</span>
 							</Sheet.Title>
 						</Sheet.Header>
@@ -137,7 +142,9 @@ If sheet asks about overwrites, answer No to keep existing components.
 								<a
 									href={item.href}
 									onclick={() => (mobileNavOpen = false)}
-									class="flex items-center gap-2.5 px-3 py-3 rounded-md transition-colors {isActive(item.href)
+									class="flex items-center gap-2.5 rounded-md px-3 py-3 transition-colors {isActive(
+										item.href
+									)
 										? 'bg-accent text-accent-foreground font-medium'
 										: 'text-sidebar-foreground hover:bg-accent/50 hover:text-accent-foreground'}"
 								>
@@ -149,37 +156,41 @@ If sheet asks about overwrites, answer No to keep existing components.
 					</Sheet.Content>
 				</Sheet.Root>
 				<div class="flex items-center gap-1.5">
-					<Coins class="h-5 w-5 text-primary" />
-					<span class="text-base font-bold text-primary">Mavlo</span>
+					<Coins class="text-primary h-5 w-5" />
+					<span class="text-primary text-base font-bold">Mavlo</span>
 				</div>
 			</div>
 
-			<span class="text-sm text-muted-foreground hidden md:inline">Hi, {data.user.name}</span>
+			<span class="text-muted-foreground hidden text-sm md:inline">Hi, {data.user.name}</span>
 
 			<form method="POST" action="/sign-out">
-				<Button type="submit" variant="ghost" size="sm" class="gap-1.5 h-9 sm:h-8">
+				<Button type="submit" variant="ghost" size="sm" class="h-9 gap-1.5 sm:h-8">
 					<LogOut class="h-4 w-4" />
 					<span class="hidden sm:inline">Sign out</span>
 				</Button>
 			</form>
 		</header>
 
-		<div class="p-3 sm:p-4 md:p-6 flex-1 overflow-x-hidden pb-[max(5rem,calc(env(safe-area-inset-bottom)+5rem))] md:pb-6">
+		<div
+			class="flex-1 overflow-x-hidden p-3 pb-[max(5rem,calc(env(safe-area-inset-bottom)+5rem))] sm:p-4 md:p-6 md:pb-6"
+		>
 			{@render children()}
 		</div>
 	</main>
 
 	<!-- Mobile bottom tab bar -->
 	<nav
-		class="md:hidden fixed inset-x-0 bottom-0 z-40 border-t bg-background
-			pb-[env(safe-area-inset-bottom)]"
+		class="bg-background fixed inset-x-0 bottom-0 z-40 border-t pb-[env(safe-area-inset-bottom)]
+			md:hidden"
 	>
 		<ul class="grid grid-cols-5">
 			{#each primaryNav as item}
 				<li>
 					<a
 						href={item.href}
-						class="flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium {isActive(item.href)
+						class="flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium {isActive(
+							item.href
+						)
 							? 'text-primary'
 							: 'text-muted-foreground'}"
 					>
@@ -207,6 +218,7 @@ git commit -m "feat(mobile): bottom tab bar + hamburger sheet for mobile nav"
 ## Task 2: Money Input Component
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/components/forms/money-input.svelte`
 - Create: `<NEW_REPO>/src/lib/components/forms/money-input.test.ts` (logic-only test for parsing/formatting)
 - Create: `<NEW_REPO>/src/lib/utils/money.ts`
@@ -215,6 +227,7 @@ git commit -m "feat(mobile): bottom tab bar + hamburger sheet for mobile nav"
 UX: shows formatted Rupiah ("50.000") in the display field. Submits the underlying integer cents via a hidden field with the original `name`.
 
 For Indonesian formatting:
+
 - Input visible: "50.000" (no decimals, dot thousands separator)
 - Stored: `5000000` cents (Rp 50.000.00)
 
@@ -276,7 +289,10 @@ describe('formatCentsAsCurrency', () => {
  */
 export function parseRupiahToCents(input: string): number | null {
 	if (typeof input !== 'string') return null;
-	const cleaned = input.trim().replace(/^Rp\s?/i, '').trim();
+	const cleaned = input
+		.trim()
+		.replace(/^Rp\s?/i, '')
+		.trim();
 	if (cleaned === '') return null;
 	if (!/^\d{1,3}(\.\d{3})*$|^\d+$/.test(cleaned)) return null;
 	const digits = cleaned.replace(/\./g, '');
@@ -357,7 +373,7 @@ export function formatCentsAsCurrency(cents: number, currency: string): string {
 
 <div class="relative">
 	<span
-		class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+		class="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm"
 	>
 		Rp
 	</span>
@@ -375,9 +391,9 @@ export function formatCentsAsCurrency(cents: number, currency: string): string {
 	/>
 	<input type="hidden" {name} value={cents ?? ''} />
 	{#if required && cents === null && display !== ''}
-		<p class="mt-1 text-xs text-destructive">Invalid amount</p>
+		<p class="text-destructive mt-1 text-xs">Invalid amount</p>
 	{:else if min !== undefined && cents !== null && cents < min}
-		<p class="mt-1 text-xs text-destructive">Min Rp {formatCentsToRupiah(min)}</p>
+		<p class="text-destructive mt-1 text-xs">Min Rp {formatCentsToRupiah(min)}</p>
 	{/if}
 </div>
 ```
@@ -396,6 +412,7 @@ git commit -m "feat(forms): MoneyInput + parse/format utilities for Rupiah ↔ c
 ## Task 3: Wire MoneyInput Into All Money Forms
 
 **Files:**
+
 - Modify: accounts (initialBalanceCents), transactions (amountCents), budgets (limitCents)
 
 Replace plain `<Input type="number" name="...Cents" />` with `<MoneyInput name="..." value={...} />` in each create + edit dialog.
@@ -420,6 +437,7 @@ git commit -m "feat(forms): use MoneyInput in accounts/transactions/budgets dial
 ## Task 4: Responsive Tables (Card-List Below `md`)
 
 **Files:**
+
 - Modify: accounts, categories, transactions, budgets pages
 
 Strategy: same data renders twice — `<Table>` for `≥md`, `<ul>` of cards for `<md`. Both share data + actions; only layout differs.
@@ -470,6 +488,7 @@ git commit -m "feat(mobile): card-list layout below md for accounts/categories/t
 ## Task 5: Mobile-Friendly Filter Bar (Transactions)
 
 **Files:**
+
 - Modify: `<NEW_REPO>/src/routes/(app)/transactions/+page.svelte`
 
 Current: `grid-cols-2 md:grid-cols-6` — 5 fields cramped 2-up on mobile. Better: collapsible filter sheet on mobile (button "Filters" opens a sheet with the form), inline grid on desktop.
@@ -559,6 +578,7 @@ Capture new Version ID.
 - [ ] **Step 4: Manual mobile e2e (user-run)**
 
 User opens https://mavlo.wahyucandratama.workers.dev on phone. Verify:
+
 - Bottom tab bar shows 5 tabs, active tab highlighted
 - Hamburger opens sheet with full nav incl. Categories
 - Pages no horizontal scroll

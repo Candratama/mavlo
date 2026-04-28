@@ -18,10 +18,7 @@ type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema
  * Computed via JS fold over all user transactions (handles transfer's dual-account effect cleanly).
  * For typical personal-finance scale (<10k rows/user) the load-all cost is negligible.
  */
-export async function computeAccountBalances(
-	db: Db,
-	userId: string
-): Promise<Map<string, number>> {
+export async function computeAccountBalances(db: Db, userId: string): Promise<Map<string, number>> {
 	const ownedAccounts = await db.select().from(accounts).where(eq(accounts.userId, userId));
 	const ownTransactions = await db
 		.select()
@@ -44,10 +41,7 @@ export async function computeAccountBalances(
 		} else if (t.kind === 'transfer' && t.transferToAccountId) {
 			balances.set(t.accountId, balances.get(t.accountId)! - t.amountCents);
 			if (balances.has(t.transferToAccountId)) {
-				balances.set(
-					t.transferToAccountId,
-					balances.get(t.transferToAccountId)! + t.amountCents
-				);
+				balances.set(t.transferToAccountId, balances.get(t.transferToAccountId)! + t.amountCents);
 			}
 		}
 	}

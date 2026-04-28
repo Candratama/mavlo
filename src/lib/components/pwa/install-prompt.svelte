@@ -45,15 +45,15 @@
 
 {#if visible}
 	<div
-		class="fixed inset-x-3 bottom-3 z-50 rounded-lg border bg-background shadow-lg p-3 flex items-center gap-3
-			md:inset-x-auto md:right-6 md:max-w-sm
-			pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+		class="bg-background fixed inset-x-3 bottom-3 z-50 flex items-center gap-3 rounded-lg border p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]
+			shadow-lg md:inset-x-auto md:right-6
+			md:max-w-sm"
 		role="dialog"
 		aria-label="Install Mavlo"
 	>
-		<div class="flex-1 min-w-0">
+		<div class="min-w-0 flex-1">
 			<p class="text-sm font-medium">Install Mavlo</p>
-			<p class="text-xs text-muted-foreground mt-0.5">Add to home screen for one-tap access.</p>
+			<p class="text-muted-foreground mt-0.5 text-xs">Add to home screen for one-tap access.</p>
 		</div>
 		<Button onclick={install} size="sm" class="gap-1.5">
 			<Download class="size-4" />

@@ -13,7 +13,12 @@ export const accountCreateSchema = z.object({
 		.regex(/^#[0-9a-fA-F]{6}$/, 'Color must be #RRGGBB')
 		.optional()
 		.or(z.literal('').transform(() => undefined)),
-	icon: z.string().trim().max(60).optional().or(z.literal('').transform(() => undefined))
+	icon: z
+		.string()
+		.trim()
+		.max(60)
+		.optional()
+		.or(z.literal('').transform(() => undefined))
 });
 
 export const accountUpdateSchema = accountCreateSchema.extend({

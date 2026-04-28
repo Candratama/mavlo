@@ -19,9 +19,7 @@
 </script>
 
 {#if total === 0}
-	<div
-		class="flex h-48 sm:h-56 md:h-64 items-center justify-center text-sm text-muted-foreground"
-	>
+	<div class="text-muted-foreground flex h-48 items-center justify-center text-sm sm:h-56 md:h-64">
 		No expense data this month.
 	</div>
 {:else}

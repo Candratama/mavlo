@@ -3,6 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development. Steps use checkbox (`- [ ]`).
 
 **Goal:** Add three charts to the dashboard:
+
 1. **Spending by category** — donut chart of current-month expenses grouped by category
 2. **Daily spending over time** — area chart of daily expense totals for current month
 3. **Income vs expense (last 6 months)** — grouped bar chart
@@ -12,6 +13,7 @@
 **Architecture:** Add server-side aggregation queries (read-only, no schema changes). Pure Svelte components in dashboard page.
 
 **Conventions:**
+
 - `<NEW_REPO>` = `/Users/candratama/Project/WebDev/mavlo`
 - Branch: `main` (greenfield, branch strategy A)
 - All amounts in cents; charts label in IDR via existing `Intl.NumberFormat`
@@ -64,10 +66,12 @@ If layerchart was already installed, skip the commit.
 ## Task 2: Chart Data Aggregations
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/server/repositories/dashboard-stats.ts`
 - Create: `<NEW_REPO>/src/lib/server/repositories/dashboard-stats.test.ts`
 
 Three aggregation functions:
+
 - `computeSpendingByCategory(db, userId, periodMonth)` → `Array<{ categoryId, categoryName, amountCents }>` (sorted desc)
 - `computeDailySpending(db, userId, periodMonth)` → `Array<{ dateMs, amountCents }>` (one entry per day in month, zeros included)
 - `computeMonthlyIncomeExpense(db, userId, monthsBack)` → `Array<{ periodMonth, incomeCents, expenseCents }>` (last N months)
@@ -114,9 +118,7 @@ const insertTx = (
 ) => {
 	const cat = categoryId ? `'${categoryId}'` : 'NULL';
 	h.sqlite
-		.prepare(
-			`INSERT INTO transactions VALUES (?, ?, 'acc1', ${cat}, ?, ?, NULL, ?, ?, ?, NULL)`
-		)
+		.prepare(`INSERT INTO transactions VALUES (?, ?, 'acc1', ${cat}, ?, ?, NULL, ?, ?, ?, NULL)`)
 		.run(id, h.userId, amount, kind, occurredAt, occurredAt, occurredAt);
 };
 
@@ -237,10 +239,7 @@ export async function computeSpendingByCategory(
 			)
 		);
 
-	const catRows = await db
-		.select()
-		.from(categories)
-		.where(eq(categories.userId, userId));
+	const catRows = await db.select().from(categories).where(eq(categories.userId, userId));
 
 	const nameById = new Map(catRows.map((c) => [c.id, c.name]));
 
@@ -337,10 +336,7 @@ export async function computeMonthlyIncomeExpense(
 		.select()
 		.from(transactions)
 		.where(
-			and(
-				eq(transactions.userId, userId),
-				between(transactions.occurredAt, earliest, latest)
-			)
+			and(eq(transactions.userId, userId), between(transactions.occurredAt, earliest, latest))
 		);
 
 	const result: MonthlyIncomeExpenseRow[] = windows.map((w) => ({
@@ -389,6 +385,7 @@ git commit -m "feat(repo): dashboard stats — spending by category, daily, mont
 ## Task 3: Dashboard Chart Components
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/components/charts/SpendingByCategoryChart.svelte`
 - Create: `<NEW_REPO>/src/lib/components/charts/DailySpendingChart.svelte`
 - Create: `<NEW_REPO>/src/lib/components/charts/IncomeExpenseChart.svelte`
@@ -396,6 +393,7 @@ git commit -m "feat(repo): dashboard stats — spending by category, daily, mont
 Three Svelte components wrapping LayerChart primitives. Each takes data via props.
 
 LayerChart's general pattern:
+
 ```svelte
 <script>
 	import { Chart, Pie, Svg, Axis, Bars, Spline, Highlight, Tooltip } from 'layerchart';
@@ -430,15 +428,17 @@ Donut chart. If user has 0 expenses, show "No expense data" message.
 	let { data, currency = 'IDR' }: { data: CategoryRow[]; currency?: string } = $props();
 
 	const formatCents = (cents: number) =>
-		new Intl.NumberFormat('id-ID', { style: 'currency', currency, minimumFractionDigits: 0 }).format(
-			cents / 100
-		);
+		new Intl.NumberFormat('id-ID', {
+			style: 'currency',
+			currency,
+			minimumFractionDigits: 0
+		}).format(cents / 100);
 
 	const total = $derived(data.reduce((sum, r) => sum + r.amountCents, 0));
 </script>
 
 {#if data.length === 0}
-	<div class="flex items-center justify-center h-64 text-sm text-muted-foreground">
+	<div class="text-muted-foreground flex h-64 items-center justify-center text-sm">
 		No expense data this month.
 	</div>
 {:else}
@@ -453,13 +453,13 @@ Donut chart. If user has 0 expenses, show "No expense data" message.
 		{#each data.slice(0, 5) as row}
 			<div class="flex justify-between">
 				<span>{row.categoryName}</span>
-				<span class="tabular-nums text-muted-foreground">{formatCents(row.amountCents)}</span>
+				<span class="text-muted-foreground tabular-nums">{formatCents(row.amountCents)}</span>
 			</div>
 		{/each}
 		{#if data.length > 5}
-			<div class="text-xs text-muted-foreground pt-2">+{data.length - 5} more</div>
+			<div class="text-muted-foreground pt-2 text-xs">+{data.length - 5} more</div>
 		{/if}
-		<div class="flex justify-between border-t pt-2 mt-2 font-medium">
+		<div class="mt-2 flex justify-between border-t pt-2 font-medium">
 			<span>Total</span>
 			<span class="tabular-nums">{formatCents(total)}</span>
 		</div>
@@ -486,15 +486,17 @@ Area chart. X axis = day of month, Y axis = amount.
 	const total = $derived(data.reduce((sum, r) => sum + r.amountCents, 0));
 
 	const formatCents = (cents: number) =>
-		new Intl.NumberFormat('id-ID', { style: 'currency', currency, minimumFractionDigits: 0 }).format(
-			cents / 100
-		);
+		new Intl.NumberFormat('id-ID', {
+			style: 'currency',
+			currency,
+			minimumFractionDigits: 0
+		}).format(cents / 100);
 
 	const formatDay = (d: Date) => String(d.getUTCDate());
 </script>
 
 {#if total === 0}
-	<div class="flex items-center justify-center h-64 text-sm text-muted-foreground">
+	<div class="text-muted-foreground flex h-64 items-center justify-center text-sm">
 		No expense data this month.
 	</div>
 {:else}
@@ -538,9 +540,11 @@ Grouped bar chart. X = month (last 6), two bars per group (income green, expense
 	let { data, currency = 'IDR' }: { data: Row[]; currency?: string } = $props();
 
 	const formatCents = (cents: number) =>
-		new Intl.NumberFormat('id-ID', { style: 'currency', currency, minimumFractionDigits: 0 }).format(
-			cents / 100
-		);
+		new Intl.NumberFormat('id-ID', {
+			style: 'currency',
+			currency,
+			minimumFractionDigits: 0
+		}).format(cents / 100);
 
 	const formatMonth = (period: string) => {
 		const [y, m] = period.split('-');
@@ -560,7 +564,7 @@ Grouped bar chart. X = month (last 6), two bars per group (income green, expense
 </script>
 
 {#if !hasData}
-	<div class="flex items-center justify-center h-64 text-sm text-muted-foreground">
+	<div class="text-muted-foreground flex h-64 items-center justify-center text-sm">
 		No transaction history yet.
 	</div>
 {:else}
@@ -581,7 +585,9 @@ Grouped bar chart. X = month (last 6), two bars per group (income green, expense
 				<Bars groupBy="kind" groupPadding={0.1} radius={2} />
 			</Svg>
 			<Tooltip header={(d) => formatMonth(d.periodMonth)} let:data>
-				<div class="text-sm tabular-nums capitalize">{data.kind}: {formatCents(data.amountCents)}</div>
+				<div class="text-sm capitalize tabular-nums">
+					{data.kind}: {formatCents(data.amountCents)}
+				</div>
 			</Tooltip>
 		</Chart>
 	</div>
@@ -604,6 +610,7 @@ git commit -m "feat(charts): SpendingByCategory, DailySpending, IncomeExpense co
 ## Task 4: Wire Charts Into Dashboard
 
 **Files:**
+
 - Modify: `<NEW_REPO>/src/routes/(app)/dashboard/+page.server.ts`
 - Modify: `<NEW_REPO>/src/routes/(app)/dashboard/+page.svelte`
 
@@ -824,6 +831,7 @@ curl -sI https://mavlo.wahyucandratama.workers.dev/dashboard | head -5
 - [ ] **Step 5: Manual e2e**
 
 Sign in → /dashboard:
+
 - Three charts visible (some may show empty state if not enough data)
 - Spending by category: donut + ranked list with currency
 - Daily spending: area chart over the month

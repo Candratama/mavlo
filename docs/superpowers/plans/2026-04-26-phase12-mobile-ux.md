@@ -14,31 +14,31 @@
 
 ## File Structure
 
-| File | Responsibility | Status |
-|------|----------------|--------|
-| `src/lib/utils/cycle.ts` | Cycle math: getCurrentCycle, getCycleForPeriod, formatCycleLabel | Create |
-| `src/lib/utils/cycle.test.ts` | Cycle tests (vitest) | Create |
-| `src/lib/utils/last-used.ts` | localStorage wrapper for last account/kind | Create |
-| `src/lib/utils/last-used.test.ts` | last-used tests | Create |
-| `src/lib/components/ui/segmented-control.svelte` | Pill segmented control primitive | Create |
-| `src/lib/components/ui/segmented-control.test.ts` | Component tests | Create |
-| `src/lib/components/ui/picker-sheet.svelte` | Bottom-sheet list picker primitive | Create |
-| `src/lib/components/ui/picker-sheet.test.ts` | Component tests | Create |
-| `src/lib/components/ui/fab.svelte` | Floating action button primitive | Create |
-| `src/lib/stores/add-transaction.ts` | Module-scope $state for global add sheet | Create |
-| `src/lib/components/forms/add-transaction-sheet.svelte` | Add/Edit transaction Sheet+Dialog responsive form | Create |
-| `src/lib/server/db/schema.ts` | Add `monthStartDay` column | Modify |
-| `src/routes/(app)/+layout.svelte` | Mount global Fab + AddTransactionSheet | Modify |
-| `src/routes/(app)/dashboard/+page.svelte` | KPI typography + cycle label | Modify |
-| `src/routes/(app)/dashboard/+page.server.ts` | Cycle-aware aggregations | Modify |
-| `src/routes/(app)/transactions/+page.svelte` | Chip filter, FAB-driven add, sheet form | Modify |
-| `src/routes/(app)/transactions/+page.server.ts` | Cycle-aware default range | Modify |
-| `src/routes/(app)/accounts/+page.svelte` | Mobile sheet form, type PickerSheet, hero balance | Modify |
-| `src/routes/(app)/budgets/+page.svelte` | Period chip, mobile sheet form, category PickerSheet | Modify |
-| `src/routes/(app)/budgets/+page.server.ts` | Cycle-aware spent calculation | Modify |
-| `src/routes/(app)/categories/+page.svelte` | Mobile sheet form, kind segmented, swatch grid | Modify |
-| `src/routes/(app)/settings/+page.svelte` | Theme segmented + monthStartDay field | Modify |
-| `src/routes/(app)/settings/+page.server.ts` | Validate monthStartDay | Modify |
+| File                                                    | Responsibility                                                   | Status |
+| ------------------------------------------------------- | ---------------------------------------------------------------- | ------ |
+| `src/lib/utils/cycle.ts`                                | Cycle math: getCurrentCycle, getCycleForPeriod, formatCycleLabel | Create |
+| `src/lib/utils/cycle.test.ts`                           | Cycle tests (vitest)                                             | Create |
+| `src/lib/utils/last-used.ts`                            | localStorage wrapper for last account/kind                       | Create |
+| `src/lib/utils/last-used.test.ts`                       | last-used tests                                                  | Create |
+| `src/lib/components/ui/segmented-control.svelte`        | Pill segmented control primitive                                 | Create |
+| `src/lib/components/ui/segmented-control.test.ts`       | Component tests                                                  | Create |
+| `src/lib/components/ui/picker-sheet.svelte`             | Bottom-sheet list picker primitive                               | Create |
+| `src/lib/components/ui/picker-sheet.test.ts`            | Component tests                                                  | Create |
+| `src/lib/components/ui/fab.svelte`                      | Floating action button primitive                                 | Create |
+| `src/lib/stores/add-transaction.ts`                     | Module-scope $state for global add sheet                         | Create |
+| `src/lib/components/forms/add-transaction-sheet.svelte` | Add/Edit transaction Sheet+Dialog responsive form                | Create |
+| `src/lib/server/db/schema.ts`                           | Add `monthStartDay` column                                       | Modify |
+| `src/routes/(app)/+layout.svelte`                       | Mount global Fab + AddTransactionSheet                           | Modify |
+| `src/routes/(app)/dashboard/+page.svelte`               | KPI typography + cycle label                                     | Modify |
+| `src/routes/(app)/dashboard/+page.server.ts`            | Cycle-aware aggregations                                         | Modify |
+| `src/routes/(app)/transactions/+page.svelte`            | Chip filter, FAB-driven add, sheet form                          | Modify |
+| `src/routes/(app)/transactions/+page.server.ts`         | Cycle-aware default range                                        | Modify |
+| `src/routes/(app)/accounts/+page.svelte`                | Mobile sheet form, type PickerSheet, hero balance                | Modify |
+| `src/routes/(app)/budgets/+page.svelte`                 | Period chip, mobile sheet form, category PickerSheet             | Modify |
+| `src/routes/(app)/budgets/+page.server.ts`              | Cycle-aware spent calculation                                    | Modify |
+| `src/routes/(app)/categories/+page.svelte`              | Mobile sheet form, kind segmented, swatch grid                   | Modify |
+| `src/routes/(app)/settings/+page.svelte`                | Theme segmented + monthStartDay field                            | Modify |
+| `src/routes/(app)/settings/+page.server.ts`             | Validate monthStartDay                                           | Modify |
 
 ---
 
@@ -47,6 +47,7 @@
 **Why:** Pure logic. Foundation for every "this month" query. TDD locks the contract.
 
 **Files:**
+
 - Create: `src/lib/utils/cycle.ts`
 - Create: `src/lib/utils/cycle.test.ts`
 
@@ -170,7 +171,7 @@ function periodMonthStr(year: number, month1to12: number): string {
 }
 
 function addMonths(year: number, month1to12: number, delta: number): { y: number; m: number } {
-	const idx = (year * 12 + (month1to12 - 1)) + delta;
+	const idx = year * 12 + (month1to12 - 1) + delta;
 	return { y: Math.floor(idx / 12), m: (idx % 12) + 1 };
 }
 
@@ -237,6 +238,7 @@ startDay=1 and 'Sep 25 – Oct 24' otherwise."
 **Why:** Powers Q4-B defaults (last-used account, last-used kind). SSR-safe.
 
 **Files:**
+
 - Create: `src/lib/utils/last-used.ts`
 - Create: `src/lib/utils/last-used.test.ts`
 
@@ -338,6 +340,7 @@ with existing. Returns empty object for SSR or malformed JSON."
 **Why:** Replaces 2-3 option native selects (kind, theme).
 
 **Files:**
+
 - Create: `src/lib/components/ui/segmented-control.svelte`
 
 - [ ] **Step 1: Implement component**
@@ -390,10 +393,7 @@ Create `src/lib/components/ui/segmented-control.svelte`:
 <div
 	role="radiogroup"
 	aria-label={ariaLabel}
-	class={cn(
-		'inline-grid w-full rounded-lg bg-muted p-1 gap-1',
-		className
-	)}
+	class={cn('bg-muted inline-grid w-full gap-1 rounded-lg p-1', className)}
 	style="grid-template-columns: repeat({options.length}, minmax(0, 1fr));"
 	onkeydown={onKeydown}
 >
@@ -405,9 +405,9 @@ Create `src/lib/components/ui/segmented-control.svelte`:
 			tabindex={value === opt.value ? 0 : -1}
 			onclick={() => (value = opt.value)}
 			class={cn(
-				'flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm transition-all',
+				'flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm transition-all',
 				value === opt.value
-					? 'bg-background text-foreground shadow-sm font-medium'
+					? 'bg-background text-foreground font-medium shadow-sm'
 					: 'text-muted-foreground hover:text-foreground'
 			)}
 		>
@@ -447,6 +447,7 @@ theme."
 **Why:** Replaces long-list native selects (account, category, account-type).
 
 **Files:**
+
 - Create: `src/lib/components/ui/picker-sheet.svelte`
 
 - [ ] **Step 1: Implement component**
@@ -516,7 +517,9 @@ Create `src/lib/components/ui/picker-sheet.svelte`:
 
 	const filteredGroups = $derived<PickerGroup[]>(
 		groups
-			? groups.map((g) => ({ label: g.label, items: g.items.filter((i) => matches(i, query)) })).filter((g) => g.items.length)
+			? groups
+					.map((g) => ({ label: g.label, items: g.items.filter((i) => matches(i, query)) }))
+					.filter((g) => g.items.length)
 			: []
 	);
 
@@ -540,12 +543,12 @@ Create `src/lib/components/ui/picker-sheet.svelte`:
 				{id}
 				{disabled}
 				class={cn(
-					'flex h-9 md:h-8 w-full items-center justify-between rounded-md border border-input bg-background px-3 text-sm transition-colors disabled:opacity-50 hover:bg-accent/30',
+					'border-input bg-background hover:bg-accent/30 flex h-9 w-full items-center justify-between rounded-md border px-3 text-sm transition-colors disabled:opacity-50 md:h-8',
 					!selected && 'text-muted-foreground',
 					className
 				)}
 			>
-				<span class="flex items-center gap-2 min-w-0">
+				<span class="flex min-w-0 items-center gap-2">
 					{#if selected?.icon}
 						<selected.icon class="size-4 shrink-0" />
 					{/if}
@@ -555,26 +558,24 @@ Create `src/lib/components/ui/picker-sheet.svelte`:
 			</button>
 		{/snippet}
 	</Sheet.Trigger>
-	<Sheet.Content side="bottom" class="max-h-[80dvh] flex flex-col p-0">
-		<Sheet.Header class="text-left p-4 pb-2">
+	<Sheet.Content side="bottom" class="flex max-h-[80dvh] flex-col p-0">
+		<Sheet.Header class="p-4 pb-2 text-left">
 			<Sheet.Title>{title}</Sheet.Title>
 		</Sheet.Header>
 		{#if searchable}
-			<div class="px-4 pb-2 relative">
-				<Search class="absolute left-7 top-1/2 -translate-y-1/2 size-4 opacity-50 pointer-events-none" />
-				<Input
-					type="search"
-					placeholder="Search…"
-					bind:value={query}
-					class="pl-9"
-					autofocus
+			<div class="relative px-4 pb-2">
+				<Search
+					class="pointer-events-none absolute top-1/2 left-7 size-4 -translate-y-1/2 opacity-50"
 				/>
+				<Input type="search" placeholder="Search…" bind:value={query} class="pl-9" autofocus />
 			</div>
 		{/if}
 		<div class="flex-1 overflow-y-auto pb-[max(1rem,env(safe-area-inset-bottom))]">
 			{#if groups}
 				{#each filteredGroups as g (g.label)}
-					<div class="px-4 pt-3 pb-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+					<div
+						class="text-muted-foreground px-4 pt-3 pb-1 text-xs font-medium tracking-wide uppercase"
+					>
 						{g.label}
 					</div>
 					<ul>
@@ -584,18 +585,18 @@ Create `src/lib/components/ui/picker-sheet.svelte`:
 									type="button"
 									onclick={() => pick(it.value)}
 									class={cn(
-										'w-full flex items-center justify-between gap-2 px-4 py-3 text-left text-sm hover:bg-accent/50',
+										'hover:bg-accent/50 flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm',
 										value === it.value && 'bg-accent/30'
 									)}
 								>
-									<span class="flex items-center gap-2 min-w-0">
+									<span class="flex min-w-0 items-center gap-2">
 										{#if it.icon}
 											<it.icon class="size-4 shrink-0" />
 										{/if}
 										<span class="truncate">{it.label}</span>
 									</span>
 									{#if value === it.value}
-										<Check class="size-4 text-primary" />
+										<Check class="text-primary size-4" />
 									{/if}
 								</button>
 							</li>
@@ -610,23 +611,23 @@ Create `src/lib/components/ui/picker-sheet.svelte`:
 								type="button"
 								onclick={() => pick(it.value)}
 								class={cn(
-									'w-full flex items-center justify-between gap-2 px-4 py-3 text-left text-sm hover:bg-accent/50',
+									'hover:bg-accent/50 flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm',
 									value === it.value && 'bg-accent/30'
 								)}
 							>
-								<span class="flex items-center gap-2 min-w-0">
+								<span class="flex min-w-0 items-center gap-2">
 									{#if it.icon}
 										<it.icon class="size-4 shrink-0" />
 									{/if}
-									<span class="flex flex-col min-w-0">
+									<span class="flex min-w-0 flex-col">
 										<span class="truncate">{it.label}</span>
 										{#if it.description}
-											<span class="text-xs text-muted-foreground truncate">{it.description}</span>
+											<span class="text-muted-foreground truncate text-xs">{it.description}</span>
 										{/if}
 									</span>
 								</span>
 								{#if value === it.value}
-									<Check class="size-4 text-primary" />
+									<Check class="text-primary size-4" />
 								{/if}
 							</button>
 						</li>
@@ -665,6 +666,7 @@ for account, category, account type, transferTo selectors."
 **Why:** FAB invokes the Add-Transaction sheet from any page.
 
 **Files:**
+
 - Create: `src/lib/stores/add-transaction.ts`
 - Create: `src/lib/components/ui/fab.svelte`
 
@@ -713,7 +715,7 @@ Create `src/lib/components/ui/fab.svelte`:
 	aria-label="Add transaction"
 	onclick={() => openAddTransaction('expense')}
 	class={cn(
-		'md:hidden fixed right-4 z-30 size-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center active:scale-95 transition-transform',
+		'bg-primary text-primary-foreground fixed right-4 z-30 flex size-14 items-center justify-center rounded-full shadow-lg transition-transform active:scale-95 md:hidden',
 		'bottom-[calc(var(--bottom-nav-h)+1rem+env(safe-area-inset-bottom))]',
 		className
 	)}
@@ -746,6 +748,7 @@ safe-area-inset-bottom."
 **Why:** Persistence for cycle anchor.
 
 **Files:**
+
 - Modify: `src/lib/server/db/schema.ts:90-99`
 
 - [ ] **Step 1: Add column to schema**
@@ -801,6 +804,7 @@ to D1 via db:push."
 **Why:** Wire `monthStartDay` into "this month" aggregations.
 
 **Files:**
+
 - Modify: `src/routes/(app)/dashboard/+page.server.ts`
 
 - [ ] **Step 1: Read current loader**
@@ -858,6 +862,7 @@ client can render the cycle label."
 **Why:** Default transaction filter range and budget spent calc both depend on cycle.
 
 **Files:**
+
 - Modify: `src/routes/(app)/transactions/+page.server.ts`
 - Modify: `src/routes/(app)/budgets/+page.server.ts`
 
@@ -889,7 +894,7 @@ return {
 	// existing fields...,
 	filter: {
 		from: fromParam ?? '',
-		to: toParam ?? '',
+		to: toParam ?? ''
 		// ...
 	}
 };
@@ -928,8 +933,9 @@ for (const b of budgets) {
 Default `periodMonth` for the filter form (when no `?period=`) = current cycle's `periodMonth`:
 
 ```ts
-const periodMonth = url.searchParams.get('period')
-	?? getCurrentCycle(new Date(), preferences.monthStartDay, preferences.timezone).periodMonth;
+const periodMonth =
+	url.searchParams.get('period') ??
+	getCurrentCycle(new Date(), preferences.monthStartDay, preferences.timezone).periodMonth;
 ```
 
 Return cycle metadata so the page can render dual-label:
@@ -966,6 +972,7 @@ new budget filter = current cycle's periodMonth."
 **Why:** Single component renders the new form inside Sheet (mobile) or Dialog (desktop). Reused by Transactions page + global FAB.
 
 **Files:**
+
 - Create: `src/lib/components/forms/add-transaction-sheet.svelte`
 
 - [ ] **Step 1: Implement component**
@@ -983,7 +990,10 @@ Create `src/lib/components/forms/add-transaction-sheet.svelte`:
 	import MoneyInput from './money-input.svelte';
 	import SubmitButton from './submit-button.svelte';
 	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
-	import PickerSheet, { type PickerItem, type PickerGroup } from '$lib/components/ui/picker-sheet.svelte';
+	import PickerSheet, {
+		type PickerItem,
+		type PickerGroup
+	} from '$lib/components/ui/picker-sheet.svelte';
 	import { CalendarDays, StickyNote, Trash2 } from 'lucide-svelte';
 	import { setLastUsed } from '$lib/utils/last-used.js';
 	import { notify } from '$lib/utils/toast.js';
@@ -1089,7 +1099,9 @@ Create `src/lib/components/forms/add-transaction-sheet.svelte`:
 			label: 'Expense',
 			items: [
 				{ value: '', label: 'None' },
-				...categories.filter((c) => c.kind === 'expense').map((c) => ({ value: c.id, label: c.name }))
+				...categories
+					.filter((c) => c.kind === 'expense')
+					.map((c) => ({ value: c.id, label: c.name }))
 			]
 		},
 		{
@@ -1104,7 +1116,11 @@ Create `src/lib/components/forms/add-transaction-sheet.svelte`:
 	const dateLabel = $derived(
 		isToday
 			? 'Today'
-			: new Date(occurredAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+			: new Date(occurredAt).toLocaleDateString('en-US', {
+					month: 'short',
+					day: 'numeric',
+					year: 'numeric'
+				})
 	);
 
 	function onClosed() {
@@ -1139,25 +1155,21 @@ Create `src/lib/components/forms/add-transaction-sheet.svelte`:
 			<input type="hidden" name="id" value={editTarget.id} />
 		{/if}
 
-		<SegmentedControl
-			options={kindOptions}
-			bind:value={kind}
-			ariaLabel="Transaction kind"
-		/>
+		<SegmentedControl options={kindOptions} bind:value={kind} ariaLabel="Transaction kind" />
 		<input type="hidden" name="kind" value={kind} />
 
 		<div class="space-y-1">
-			<div class="text-xs text-muted-foreground">
+			<div class="text-muted-foreground text-xs">
 				{accounts.find((a) => a.id === accountId)?.currency ?? 'IDR'}
 			</div>
-			<div class="text-3xl md:text-2xl font-semibold tabular-nums">
+			<div class="text-3xl font-semibold tabular-nums md:text-2xl">
 				<MoneyInput
 					name="amountCents"
 					value={editTarget?.amountCents ?? null}
 					min={1}
 					required
 					placeholder="0"
-					class="text-3xl md:text-2xl h-14 md:h-12 font-semibold"
+					class="h-14 text-3xl font-semibold md:h-12 md:text-2xl"
 				/>
 			</div>
 		</div>
@@ -1198,22 +1210,24 @@ Create `src/lib/components/forms/add-transaction-sheet.svelte`:
 			</div>
 		{/if}
 
-		<div class="flex items-center gap-2 flex-wrap">
-			<label class="inline-flex items-center gap-1.5 px-3 h-9 rounded-full border border-input bg-background text-sm cursor-pointer hover:bg-accent/30 relative">
+		<div class="flex flex-wrap items-center gap-2">
+			<label
+				class="border-input bg-background hover:bg-accent/30 relative inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-sm"
+			>
 				<CalendarDays class="size-4" />
 				{dateLabel}
 				<input
 					type="date"
 					name="occurredAt"
 					bind:value={occurredAt}
-					class="absolute inset-0 opacity-0 cursor-pointer"
+					class="absolute inset-0 cursor-pointer opacity-0"
 				/>
 			</label>
 			{#if !showNote}
 				<button
 					type="button"
 					onclick={() => (showNote = true)}
-					class="inline-flex items-center gap-1.5 px-3 h-9 rounded-full border border-dashed border-input text-sm text-muted-foreground hover:bg-accent/30"
+					class="border-input text-muted-foreground hover:bg-accent/30 inline-flex h-9 items-center gap-1.5 rounded-full border border-dashed px-3 text-sm"
 				>
 					<StickyNote class="size-4" />
 					Add note
@@ -1225,7 +1239,13 @@ Create `src/lib/components/forms/add-transaction-sheet.svelte`:
 			<div class="space-y-1">
 				<Label for="tx-note">Note</Label>
 				<div class="flex items-center gap-2">
-					<Input id="tx-note" name="note" bind:value={note} maxlength={200} placeholder="Optional" />
+					<Input
+						id="tx-note"
+						name="note"
+						bind:value={note}
+						maxlength={200}
+						placeholder="Optional"
+					/>
 					<Button
 						type="button"
 						variant="ghost"
@@ -1242,12 +1262,14 @@ Create `src/lib/components/forms/add-transaction-sheet.svelte`:
 			</div>
 		{/if}
 
-		<div class="md:hidden sticky bottom-0 -mx-4 px-4 py-3 bg-background border-t pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+		<div
+			class="bg-background sticky bottom-0 -mx-4 border-t px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden"
+		>
 			<SubmitButton {pending} class="w-full">
 				{mode === 'create' ? 'Save' : 'Update'}
 			</SubmitButton>
 		</div>
-		<div class="hidden md:flex justify-end gap-2 pt-2">
+		<div class="hidden justify-end gap-2 pt-2 md:flex">
 			<Button type="button" variant="outline" onclick={onClosed}>Cancel</Button>
 			<SubmitButton {pending}>{mode === 'create' ? 'Save' : 'Update'}</SubmitButton>
 		</div>
@@ -1257,8 +1279,8 @@ Create `src/lib/components/forms/add-transaction-sheet.svelte`:
 <!-- Mobile Sheet -->
 <div class="md:hidden">
 	<Sheet.Root bind:open>
-		<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
-			<Sheet.Header class="text-left p-4 pb-2">
+		<Sheet.Content side="bottom" class="flex max-h-[90dvh] flex-col p-0">
+			<Sheet.Header class="p-4 pb-2 text-left">
 				<Sheet.Title>{mode === 'create' ? 'New transaction' : 'Edit transaction'}</Sheet.Title>
 			</Sheet.Header>
 			<div class="flex-1 overflow-y-auto">
@@ -1305,6 +1327,7 @@ last-used on success."
 **Why:** Single instance available from every page.
 
 **Files:**
+
 - Modify: `src/routes/(app)/+layout.svelte`
 
 - [ ] **Step 1: Add load data plumbing**
@@ -1320,10 +1343,7 @@ In `src/routes/(app)/+layout.svelte`, add imports and mount Fab + AddTransaction
 	// existing imports...
 	import Fab from '$lib/components/ui/fab.svelte';
 	import AddTransactionSheet from '$lib/components/forms/add-transaction-sheet.svelte';
-	import {
-		getAddTransactionState,
-		closeAddTransaction
-	} from '$lib/stores/add-transaction.js';
+	import { getAddTransactionState, closeAddTransaction } from '$lib/stores/add-transaction.js';
 	import { getLastUsed } from '$lib/utils/last-used.js';
 	import { invalidateAll } from '$app/navigation';
 
@@ -1364,6 +1384,7 @@ Expected: No NEW errors.
 - [ ] **Step 4: Manual visual check**
 
 Run: `npm run dev`. Sign in.
+
 - iPhone SE 375×667 → on `/dashboard`, FAB visible bottom-right above bottom nav.
 - Tap FAB → AddTransactionSheet slides up.
 - Submit a transaction → list invalidates, sheet closes, toast shown.
@@ -1389,6 +1410,7 @@ data on success."
 **Why:** Replace 5-field grid with mobile-friendly chip bar; replace inline create/edit dialogs with AddTransactionSheet.
 
 **Files:**
+
 - Modify: `src/routes/(app)/transactions/+page.svelte`
 
 - [ ] **Step 1: Build filter chips and filter sheet**
@@ -1400,7 +1422,10 @@ In `src/routes/(app)/transactions/+page.svelte`, replace the existing `<Card.Roo
 	// add to imports:
 	import * as Sheet from '$lib/components/ui/sheet';
 	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
-	import PickerSheet, { type PickerItem, type PickerGroup } from '$lib/components/ui/picker-sheet.svelte';
+	import PickerSheet, {
+		type PickerItem,
+		type PickerGroup
+	} from '$lib/components/ui/picker-sheet.svelte';
 	import { Filter, X } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 
@@ -1417,23 +1442,44 @@ In `src/routes/(app)/transactions/+page.svelte`, replace the existing `<Card.Roo
 	type Chip = { key: string; label: string; remove: () => void };
 	const chips = $derived<Chip[]>(() => {
 		const out: Chip[] = [];
-		if (data.filter.from) out.push({ key: 'from', label: `From: ${data.filter.from}`, remove: () => removeParam('from') });
-		if (data.filter.to) out.push({ key: 'to', label: `To: ${data.filter.to}`, remove: () => removeParam('to') });
+		if (data.filter.from)
+			out.push({
+				key: 'from',
+				label: `From: ${data.filter.from}`,
+				remove: () => removeParam('from')
+			});
+		if (data.filter.to)
+			out.push({ key: 'to', label: `To: ${data.filter.to}`, remove: () => removeParam('to') });
 		if (data.filter.accountId) {
 			const a = accountById.get(data.filter.accountId);
-			out.push({ key: 'account', label: a?.name ?? 'Account', remove: () => removeParam('account') });
+			out.push({
+				key: 'account',
+				label: a?.name ?? 'Account',
+				remove: () => removeParam('account')
+			});
 		}
 		if (data.filter.categoryId) {
 			const c = categoryById.get(data.filter.categoryId);
-			out.push({ key: 'category', label: c?.name ?? 'Category', remove: () => removeParam('category') });
+			out.push({
+				key: 'category',
+				label: c?.name ?? 'Category',
+				remove: () => removeParam('category')
+			});
 		}
-		if (data.filter.kind) out.push({ key: 'kind', label: data.filter.kind, remove: () => removeParam('kind') });
+		if (data.filter.kind)
+			out.push({ key: 'kind', label: data.filter.kind, remove: () => removeParam('kind') });
 		return out;
 	});
 
 	function removeParam(key: string) {
 		const params = new URLSearchParams(window.location.search);
-		const map: Record<string, string> = { from: 'from', to: 'to', account: 'account', category: 'category', kind: 'kind' };
+		const map: Record<string, string> = {
+			from: 'from',
+			to: 'to',
+			account: 'account',
+			category: 'category',
+			kind: 'kind'
+		};
 		params.delete(map[key]);
 		goto(`?${params.toString()}`, { keepFocus: true });
 	}
@@ -1462,8 +1508,18 @@ In `src/routes/(app)/transactions/+page.svelte`, replace the existing `<Card.Roo
 
 	const categoryItems = $derived<PickerGroup[]>([
 		{ label: 'All', items: [{ value: '', label: 'All categories' }] },
-		{ label: 'Expense', items: data.categories.filter((c) => c.kind === 'expense').map((c) => ({ value: c.id, label: c.name })) },
-		{ label: 'Income', items: data.categories.filter((c) => c.kind === 'income').map((c) => ({ value: c.id, label: c.name })) }
+		{
+			label: 'Expense',
+			items: data.categories
+				.filter((c) => c.kind === 'expense')
+				.map((c) => ({ value: c.id, label: c.name }))
+		},
+		{
+			label: 'Income',
+			items: data.categories
+				.filter((c) => c.kind === 'income')
+				.map((c) => ({ value: c.id, label: c.name }))
+		}
 	]);
 
 	const kindOptions = [
@@ -1479,19 +1535,21 @@ Replace the previous filter `<Card.Root>` markup with:
 
 ```svelte
 <!-- Mobile chip bar -->
-<div class="md:hidden mb-4 flex items-center gap-2 overflow-x-auto">
+<div class="mb-4 flex items-center gap-2 overflow-x-auto md:hidden">
 	{#if chips.length === 0}
 		<button
 			type="button"
 			onclick={() => (filterOpen = true)}
-			class="inline-flex items-center gap-1.5 px-3 h-9 rounded-full border border-input bg-background text-sm shrink-0"
+			class="border-input bg-background inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm"
 		>
 			<Filter class="size-4" />
 			Filter
 		</button>
 	{:else}
 		{#each chips as chip (chip.key)}
-			<span class="inline-flex items-center gap-1 px-3 h-8 rounded-full bg-accent text-accent-foreground text-xs shrink-0">
+			<span
+				class="bg-accent text-accent-foreground inline-flex h-8 shrink-0 items-center gap-1 rounded-full px-3 text-xs"
+			>
 				{chip.label}
 				<button type="button" onclick={chip.remove} aria-label="Remove filter">
 					<X class="size-3" />
@@ -1501,7 +1559,7 @@ Replace the previous filter `<Card.Root>` markup with:
 		<button
 			type="button"
 			onclick={() => (filterOpen = true)}
-			class="inline-flex items-center gap-1.5 px-3 h-8 rounded-full border border-input text-xs shrink-0"
+			class="border-input inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs"
 		>
 			<Filter class="size-3" />
 			Edit
@@ -1510,9 +1568,12 @@ Replace the previous filter `<Card.Root>` markup with:
 </div>
 
 <!-- Desktop filter form (existing layout, with new primitives) -->
-<Card.Root class="hidden md:block mb-6">
+<Card.Root class="mb-6 hidden md:block">
 	<Card.Content class="p-4">
-		<form method="GET" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 items-end">
+		<form
+			method="GET"
+			class="grid grid-cols-1 items-end gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
+		>
 			<div class="space-y-1">
 				<Label for="filter-from">From</Label>
 				<Input id="filter-from" type="date" name="from" value={data.filter.from} />
@@ -1523,11 +1584,24 @@ Replace the previous filter `<Card.Root>` markup with:
 			</div>
 			<div class="space-y-1">
 				<Label>Account</Label>
-				<PickerSheet items={accountItems} bind:value={fAccount} name="account" placeholder="All" title="Account" />
+				<PickerSheet
+					items={accountItems}
+					bind:value={fAccount}
+					name="account"
+					placeholder="All"
+					title="Account"
+				/>
 			</div>
 			<div class="space-y-1">
 				<Label>Category</Label>
-				<PickerSheet groups={categoryItems} bind:value={fCategory} name="category" placeholder="All" title="Category" searchable />
+				<PickerSheet
+					groups={categoryItems}
+					bind:value={fCategory}
+					name="category"
+					placeholder="All"
+					title="Category"
+					searchable
+				/>
 			</div>
 			<div class="space-y-1">
 				<Label>Kind</Label>
@@ -1540,11 +1614,11 @@ Replace the previous filter `<Card.Root>` markup with:
 
 <!-- Mobile filter sheet -->
 <Sheet.Root bind:open={filterOpen}>
-	<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
-		<Sheet.Header class="text-left p-4 pb-2">
+	<Sheet.Content side="bottom" class="flex max-h-[90dvh] flex-col p-0">
+		<Sheet.Header class="p-4 pb-2 text-left">
 			<Sheet.Title>Filter transactions</Sheet.Title>
 		</Sheet.Header>
-		<div class="flex-1 overflow-y-auto p-4 space-y-4">
+		<div class="flex-1 space-y-4 overflow-y-auto p-4">
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-1">
 					<Label for="m-from">From</Label>
@@ -1557,18 +1631,29 @@ Replace the previous filter `<Card.Root>` markup with:
 			</div>
 			<div class="space-y-1">
 				<Label>Account</Label>
-				<PickerSheet items={accountItems} bind:value={fAccount} placeholder="All accounts" title="Account" />
+				<PickerSheet
+					items={accountItems}
+					bind:value={fAccount}
+					placeholder="All accounts"
+					title="Account"
+				/>
 			</div>
 			<div class="space-y-1">
 				<Label>Category</Label>
-				<PickerSheet groups={categoryItems} bind:value={fCategory} placeholder="All categories" title="Category" searchable />
+				<PickerSheet
+					groups={categoryItems}
+					bind:value={fCategory}
+					placeholder="All categories"
+					title="Category"
+					searchable
+				/>
 			</div>
 			<div class="space-y-1">
 				<Label>Kind</Label>
 				<SegmentedControl options={kindOptions} bind:value={fKind} />
 			</div>
 		</div>
-		<div class="border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex gap-2">
+		<div class="flex gap-2 border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
 			<Button variant="outline" class="flex-1" onclick={resetFilters}>Reset</Button>
 			<Button class="flex-1" onclick={applyFilters}>Apply</Button>
 		</div>
@@ -1598,7 +1683,7 @@ Remove the existing `<!-- Create dialog -->` and `<!-- Edit dialog -->` blocks. 
 
 <!-- "New transaction" header button (desktop visible only) -->
 <Button class="hidden md:inline-flex" onclick={() => openAddTransaction('expense')}>
-	<Plus class="size-4 mr-1" /> New transaction
+	<Plus class="mr-1 size-4" /> New transaction
 </Button>
 ```
 
@@ -1612,16 +1697,18 @@ Mount the edit sheet locally (since edit needs page-local `editTarget`):
 	mode="edit"
 	accounts={data.accounts}
 	categories={data.categories}
-	editTarget={editTarget ? {
-		id: editTarget.id,
-		kind: editTarget.kind,
-		amountCents: editTarget.amountCents,
-		accountId: editTarget.accountId,
-		transferToAccountId: editTarget.transferToAccountId,
-		categoryId: editTarget.categoryId,
-		occurredAt: editTarget.occurredAt,
-		note: editTarget.note
-	} : null}
+	editTarget={editTarget
+		? {
+				id: editTarget.id,
+				kind: editTarget.kind,
+				amountCents: editTarget.amountCents,
+				accountId: editTarget.accountId,
+				transferToAccountId: editTarget.transferToAccountId,
+				categoryId: editTarget.categoryId,
+				occurredAt: editTarget.occurredAt,
+				note: editTarget.note
+			}
+		: null}
 	actionUrl="?/update"
 	onClose={() => (editOpen = false)}
 />
@@ -1652,6 +1739,7 @@ Dialog on desktop)."
 **Why:** Mobile-friendly period filter, replace native selects + dialog.
 
 **Files:**
+
 - Modify: `src/routes/(app)/budgets/+page.svelte`
 
 - [ ] **Step 1: Replace filter card with period chip / month input**
@@ -1744,16 +1832,29 @@ Replace the existing `<!-- Create dialog -->` block. Use a snippet for the form 
 	>
 		<div class="space-y-1">
 			<Label>Category</Label>
-			<PickerSheet items={expenseCategoryItems} bind:value={createCategoryId} name="categoryId" placeholder="Select category" title="Category" searchable />
+			<PickerSheet
+				items={expenseCategoryItems}
+				bind:value={createCategoryId}
+				name="categoryId"
+				placeholder="Select category"
+				title="Category"
+				searchable
+			/>
 		</div>
 		<div class="grid grid-cols-2 gap-3">
 			<div class="space-y-1">
 				<Label for="budget-c-period">Period</Label>
-				<Input id="budget-c-period" type="month" name="periodMonth" required value={data.periodMonth} />
+				<Input
+					id="budget-c-period"
+					type="month"
+					name="periodMonth"
+					required
+					value={data.periodMonth}
+				/>
 			</div>
 			<div class="space-y-1">
 				<Label for="budget-c-limit">Limit</Label>
-				<MoneyInput id="budget-c-limit" name="limitCents" min={1} required class="text-2xl h-12" />
+				<MoneyInput id="budget-c-limit" name="limitCents" min={1} required class="h-12 text-2xl" />
 			</div>
 		</div>
 		<div class="flex justify-end gap-2">
@@ -1766,8 +1867,8 @@ Replace the existing `<!-- Create dialog -->` block. Use a snippet for the form 
 <!-- Mobile Sheet -->
 <div class="md:hidden">
 	<Sheet.Root bind:open={createOpen}>
-		<Sheet.Content side="bottom" class="max-h-[90dvh] flex flex-col p-0">
-			<Sheet.Header class="text-left p-4 pb-2"><Sheet.Title>New budget</Sheet.Title></Sheet.Header>
+		<Sheet.Content side="bottom" class="flex max-h-[90dvh] flex-col p-0">
+			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>New budget</Sheet.Title></Sheet.Header>
 			<div class="flex-1 overflow-y-auto">{@render createForm()}</div>
 		</Sheet.Content>
 	</Sheet.Root>
@@ -1807,6 +1908,7 @@ mobile. Hero limit field via text-2xl h-12 MoneyInput."
 **Why:** Mobile-friendly create/edit; replace 5-option select with iconified PickerSheet.
 
 **Files:**
+
 - Modify: `src/routes/(app)/accounts/+page.svelte`
 
 - [ ] **Step 1: Add type PickerSheet + sheet/dialog split**
@@ -1838,6 +1940,7 @@ In `src/routes/(app)/accounts/+page.svelte`, add imports and convert dialogs:
 ```
 
 Replace `<!-- Create dialog -->` and `<!-- Edit dialog -->` blocks following the same Sheet/Dialog split pattern as Budgets. Inside each form body:
+
 - Replace native `<select>` for `type` with `<PickerSheet items={typeItems} bind:value={createType} name="type" placeholder="Select type" title="Account type" />` (and `editType` for edit form).
 - Wrap `Initial balance` `MoneyInput` with `class="text-2xl h-12"` for hero feel.
 - Currency `Input` unchanged.
@@ -1866,6 +1969,7 @@ Dialog → Sheet on mobile."
 **Why:** Replace 2-option kind select with segmented; replace hex text with swatch grid.
 
 **Files:**
+
 - Modify: `src/routes/(app)/categories/+page.svelte`
 
 - [ ] **Step 1: Add primitives + state**
@@ -1915,6 +2019,7 @@ Dialog → Sheet on mobile."
 Apply the Sheet/Dialog split snippet pattern. Inside each form body:
 
 For kind:
+
 ```svelte
 <div class="space-y-1">
 	<Label>Kind</Label>
@@ -1923,6 +2028,7 @@ For kind:
 ```
 
 For color:
+
 ```svelte
 <div class="space-y-2">
 	<Label>Color</Label>
@@ -1930,8 +2036,13 @@ For color:
 		{#each PRESET_SWATCHES as swatch (swatch)}
 			<button
 				type="button"
-				onclick={() => { createColor = swatch; createCustomColor = false; }}
-				class="size-8 rounded-lg border transition-shadow {createColor === swatch ? 'ring-2 ring-foreground' : ''}"
+				onclick={() => {
+					createColor = swatch;
+					createCustomColor = false;
+				}}
+				class="size-8 rounded-lg border transition-shadow {createColor === swatch
+					? 'ring-foreground ring-2'
+					: ''}"
 				style="background-color: {swatch}"
 				aria-label={swatch}
 			></button>
@@ -1940,14 +2051,15 @@ For color:
 	<button
 		type="button"
 		onclick={() => (createCustomColor = !createCustomColor)}
-		class="text-xs text-muted-foreground underline"
+		class="text-muted-foreground text-xs underline"
 	>
 		{createCustomColor ? 'Hide custom' : '+ Custom hex'}
 	</button>
 	{#if createCustomColor}
 		<div class="flex items-center gap-2">
 			<Input bind:value={createColor} placeholder="#10b981" maxlength={7} />
-			<span class="size-6 rounded border" style="background-color: {createColor || 'transparent'}"></span>
+			<span class="size-6 rounded border" style="background-color: {createColor || 'transparent'}"
+			></span>
 		</div>
 	{/if}
 	<input type="hidden" name="color" value={createColor} />
@@ -1978,6 +2090,7 @@ Dialog → Sheet on mobile."
 **Why:** Replace bespoke theme buttons with shared SegmentedControl, add cycle anchor field.
 
 **Files:**
+
 - Modify: `src/routes/(app)/settings/+page.svelte`
 - Modify: `src/routes/(app)/settings/+page.server.ts`
 
@@ -2035,8 +2148,9 @@ Insert before the `<SubmitButton>` line:
 		required
 		value={prefs.monthStartDay}
 	/>
-	<p class="text-xs text-muted-foreground">
-		Day 1 = calendar month. Day 25 = your month runs 25th to 24th. Affects current and future periods.
+	<p class="text-muted-foreground text-xs">
+		Day 1 = calendar month. Day 25 = your month runs 25th to 24th. Affects current and future
+		periods.
 	</p>
 </div>
 ```
@@ -2088,6 +2202,7 @@ range; commits to user_preferences."
 **Why:** Tighter density on mobile + dynamic cycle label.
 
 **Files:**
+
 - Modify: `src/routes/(app)/dashboard/+page.svelte`
 
 - [ ] **Step 1: Tighten KPI typography + show cycle label**
@@ -2123,7 +2238,10 @@ Show cycle label on "This month spending":
 Update the existing "This month spending" `Card.Description`:
 
 ```svelte
-<Card.Description>This month spending{#if cycleLabel} · {cycleLabel}{/if}</Card.Description>
+<Card.Description
+	>This month spending{#if cycleLabel}
+		· {cycleLabel}{/if}</Card.Description
+>
 ```
 
 (Or apply to whichever Card description currently reads "This month spending".)
@@ -2150,6 +2268,7 @@ px-4 sm:px-6. 'This month spending' description shows cycle label
 **Why:** Lock primitive contracts before they ship.
 
 **Files:**
+
 - Create: `src/lib/components/ui/segmented-control.test.ts`
 - Create: `src/lib/components/ui/picker-sheet.test.ts`
 
@@ -2183,8 +2302,12 @@ describe('SegmentedControl', () => {
 		let value = $state('a');
 		const { getByText } = render(SegmentedControl, {
 			options,
-			get value() { return value; },
-			set value(v) { value = v; }
+			get value() {
+				return value;
+			},
+			set value(v) {
+				value = v;
+			}
 		});
 		await fireEvent.click(getByText('C'));
 		expect(value).toBe('c');
@@ -2203,7 +2326,16 @@ describe('SegmentedControl (manual)', () => {
 	it('renders option labels', () => {
 		const target = document.createElement('div');
 		document.body.appendChild(target);
-		const cmp = mount(SegmentedControl, { target, props: { options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }], value: 'a' } });
+		const cmp = mount(SegmentedControl, {
+			target,
+			props: {
+				options: [
+					{ value: 'a', label: 'A' },
+					{ value: 'b', label: 'B' }
+				],
+				value: 'a'
+			}
+		});
 		flushSync();
 		expect(target.querySelectorAll('[role="radio"]').length).toBe(2);
 		unmount(cmp);
@@ -2229,7 +2361,10 @@ describe('PickerSheet (smoke)', () => {
 		const cmp = mount(PickerSheet, {
 			target,
 			props: {
-				items: [{ value: 'a', label: 'Apple' }, { value: 'b', label: 'Banana' }],
+				items: [
+					{ value: 'a', label: 'Apple' },
+					{ value: 'b', label: 'Banana' }
+				],
 				value: '',
 				placeholder: 'Choose…'
 			}
@@ -2245,7 +2380,10 @@ describe('PickerSheet (smoke)', () => {
 		const cmp = mount(PickerSheet, {
 			target,
 			props: {
-				items: [{ value: 'a', label: 'Apple' }, { value: 'b', label: 'Banana' }],
+				items: [
+					{ value: 'a', label: 'Apple' },
+					{ value: 'b', label: 'Banana' }
+				],
 				value: 'b',
 				placeholder: 'Choose…'
 			}
@@ -2299,27 +2437,33 @@ Expected: ≥ 79 + 8 (cycle) + 4 (last-used) + 5 (component tests) = ~96 passing
 Run: `npm run dev`. Sign in.
 
 Dashboard:
+
 - KPI cards stack 1-col, smaller titles.
 - "This month spending" description shows cycle label when monthStartDay != 1.
 - FAB visible bottom-right.
 
 Transactions:
+
 - Chip bar above list. No filters → "Filter" button. Add filters via sheet → chips render.
 - Tap × on chip removes one filter.
 - FAB → AddTransactionSheet bottom sheet. Hero amount autofocus, segmented kind, picker rows.
 - Edit row → edit sheet pre-populated.
 
 Accounts:
+
 - "+ New account" → bottom sheet. Type picker shows icons. Initial balance hero.
 
 Budgets:
+
 - Period chip mobile, tap → native month picker. Auto-submits.
 - "+ New budget" → bottom sheet. Category PickerSheet searchable.
 
 Categories:
+
 - "+ New category" → bottom sheet. Kind segmented. Swatch grid select. "+ Custom hex" expands.
 
 Settings:
+
 - Theme segmented switches mode immediately.
 - Cycle start field accepts 1-28; saves.
 

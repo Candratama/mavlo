@@ -17,8 +17,12 @@ describe('transaction validation', () => {
 		expect(transactionCreateSchema.safeParse(validBase).success).toBe(true);
 		expect(transactionCreateSchema.safeParse({ ...validBase, accountId: '' }).success).toBe(false);
 		expect(transactionCreateSchema.safeParse({ ...validBase, amountCents: 0 }).success).toBe(false);
-		expect(transactionCreateSchema.safeParse({ ...validBase, amountCents: -100 }).success).toBe(false);
-		expect(transactionCreateSchema.safeParse({ ...validBase, kind: 'invalid' }).success).toBe(false);
+		expect(transactionCreateSchema.safeParse({ ...validBase, amountCents: -100 }).success).toBe(
+			false
+		);
+		expect(transactionCreateSchema.safeParse({ ...validBase, kind: 'invalid' }).success).toBe(
+			false
+		);
 	});
 
 	it('create allows optional categoryId + note', () => {
@@ -34,9 +38,7 @@ describe('transaction validation', () => {
 	});
 
 	it('update requires id', () => {
-		expect(
-			transactionUpdateSchema.safeParse({ ...validBase, id: 'tx1' }).success
-		).toBe(true);
+		expect(transactionUpdateSchema.safeParse({ ...validBase, id: 'tx1' }).success).toBe(true);
 		expect(transactionUpdateSchema.safeParse(validBase).success).toBe(false);
 	});
 
@@ -50,15 +52,13 @@ describe('transaction validation', () => {
 				kind: 'income'
 			}).success
 		).toBe(true);
-		expect(
-			transactionListFilterSchema.safeParse({ kind: 'invalid' }).success
-		).toBe(false);
+		expect(transactionListFilterSchema.safeParse({ kind: 'invalid' }).success).toBe(false);
 	});
 
 	it('transfer requires transferToAccountId', () => {
-		expect(
-			transactionCreateSchema.safeParse({ ...validBase, kind: 'transfer' }).success
-		).toBe(false);
+		expect(transactionCreateSchema.safeParse({ ...validBase, kind: 'transfer' }).success).toBe(
+			false
+		);
 		expect(
 			transactionCreateSchema.safeParse({
 				...validBase,

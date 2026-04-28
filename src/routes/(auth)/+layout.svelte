@@ -3,11 +3,11 @@
 	let { children } = $props();
 </script>
 
-<div class="min-h-screen flex items-center justify-center bg-background p-4">
+<div class="bg-background flex min-h-screen items-center justify-center p-4">
 	<div class="w-full max-w-md">
-		<div class="flex items-center gap-2 mb-8 justify-center">
+		<div class="mb-8 flex items-center justify-center gap-2">
 			<img src="/icon-192.png" alt="Mavlo" class="h-10 w-10 rounded-xl" />
-			<span class="text-xl font-bold text-primary">Mavlo</span>
+			<span class="text-primary text-xl font-bold">Mavlo</span>
 		</div>
 		<Card.Root>
 			{@render children()}

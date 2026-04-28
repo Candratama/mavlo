@@ -11,11 +11,7 @@ import type {
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
 
-export async function listTransactions(
-	db: Db,
-	userId: string,
-	filter: TransactionListFilter
-) {
+export async function listTransactions(db: Db, userId: string, filter: TransactionListFilter) {
 	const conds: SQL[] = [eq(transactions.userId, userId)];
 	if (filter.fromMs !== undefined && filter.toMs !== undefined) {
 		conds.push(between(transactions.occurredAt, filter.fromMs, filter.toMs));
@@ -40,11 +36,7 @@ export async function getTransaction(db: Db, userId: string, id: string) {
 	return row ?? null;
 }
 
-export async function createTransaction(
-	db: Db,
-	userId: string,
-	input: TransactionCreateInput
-) {
+export async function createTransaction(db: Db, userId: string, input: TransactionCreateInput) {
 	const [row] = await db
 		.insert(transactions)
 		.values({
@@ -61,11 +53,7 @@ export async function createTransaction(
 	return row;
 }
 
-export async function updateTransaction(
-	db: Db,
-	userId: string,
-	input: TransactionUpdateInput
-) {
+export async function updateTransaction(db: Db, userId: string, input: TransactionUpdateInput) {
 	const [row] = await db
 		.update(transactions)
 		.set({

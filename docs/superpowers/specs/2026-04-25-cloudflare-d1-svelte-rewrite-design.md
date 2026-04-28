@@ -23,38 +23,38 @@
 
 ## 3. Stack
 
-| Layer | Choice |
-|---|---|
-| Framework | SvelteKit 2 + Svelte 5 (runes) |
-| Build / dev | Vite, TypeScript (strict) |
-| Styling | Tailwind v4, shadcn-svelte (bits-ui) |
-| Forms | Superforms + zod |
-| Theme | mode-watcher |
-| Charts | layerchart |
-| Server state | TanStack Query Svelte (only where SvelteKit `load` + `invalidate` is insufficient) |
-| PWA | `@vite-pwa/sveltekit` (workbox) |
-| Testing | Vitest unit; component tests via `@testing-library/svelte`. No e2e. |
-| Auth | Better Auth (Drizzle adapter) |
-| ORM | Drizzle ORM + `drizzle-kit` |
-| Database | Cloudflare D1 |
-| Object storage | Cloudflare R2 (avatars) |
-| Email | Resend (HTTP API; works in Workers) |
-| Runtime / deploy | Cloudflare Workers via `@sveltejs/adapter-cloudflare` |
-| Repository | Fresh git repo, separate from current `maflo` |
+| Layer            | Choice                                                                             |
+| ---------------- | ---------------------------------------------------------------------------------- |
+| Framework        | SvelteKit 2 + Svelte 5 (runes)                                                     |
+| Build / dev      | Vite, TypeScript (strict)                                                          |
+| Styling          | Tailwind v4, shadcn-svelte (bits-ui)                                               |
+| Forms            | Superforms + zod                                                                   |
+| Theme            | mode-watcher                                                                       |
+| Charts           | layerchart                                                                         |
+| Server state     | TanStack Query Svelte (only where SvelteKit `load` + `invalidate` is insufficient) |
+| PWA              | `@vite-pwa/sveltekit` (workbox)                                                    |
+| Testing          | Vitest unit; component tests via `@testing-library/svelte`. No e2e.                |
+| Auth             | Better Auth (Drizzle adapter)                                                      |
+| ORM              | Drizzle ORM + `drizzle-kit`                                                        |
+| Database         | Cloudflare D1                                                                      |
+| Object storage   | Cloudflare R2 (avatars)                                                            |
+| Email            | Resend (HTTP API; works in Workers)                                                |
+| Runtime / deploy | Cloudflare Workers via `@sveltejs/adapter-cloudflare`                              |
+| Repository       | Fresh git repo, separate from current `maflo`                                      |
 
 ## 4. Topology
 
 A single Worker serves SSR, static assets, form actions, and API endpoints. Bindings:
 
-| Binding | Resource | Purpose |
-|---|---|---|
-| `DB` | D1 database | Better Auth tables + app tables |
-| `BUCKET` | R2 bucket | Avatars |
-| `SESSION_SECRET` | secret | Better Auth |
-| `RESEND_API_KEY` | secret | Email send |
-| `RESEND_SENDER_EMAIL` | var | Sender address |
-| `RESEND_SENDER_NAME` | var | Sender display name |
-| `PUBLIC_APP_URL` | var | Origin for absolute URLs in emails |
+| Binding               | Resource    | Purpose                            |
+| --------------------- | ----------- | ---------------------------------- |
+| `DB`                  | D1 database | Better Auth tables + app tables    |
+| `BUCKET`              | R2 bucket   | Avatars                            |
+| `SESSION_SECRET`      | secret      | Better Auth                        |
+| `RESEND_API_KEY`      | secret      | Email send                         |
+| `RESEND_SENDER_EMAIL` | var         | Sender address                     |
+| `RESEND_SENDER_NAME`  | var         | Sender display name                |
+| `PUBLIC_APP_URL`      | var         | Origin for absolute URLs in emails |
 
 Two environments: `preview` (separate D1, R2) and `production`. Configured in `wrangler.toml`.
 

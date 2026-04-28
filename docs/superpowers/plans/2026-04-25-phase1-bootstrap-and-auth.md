@@ -52,6 +52,7 @@ The plan document itself stays in the legacy repo (`/Users/candratama/Project/We
 ### Task 1: Scaffold the SvelteKit project
 
 **Files:**
+
 - Create: `<NEW_REPO>/` (whole project tree from `sv create`)
 - Modify: `<NEW_REPO>/package.json`
 - Create: `<NEW_REPO>/.gitignore` (extended)
@@ -66,6 +67,7 @@ npx sv@latest create .   # scaffold into the current directory (already created 
 ```
 
 When prompted, choose:
+
 - Template: **SvelteKit minimal**
 - Type checking: **Yes, using TypeScript syntax**
 - Add to project: **prettier, eslint, vitest, tailwindcss**
@@ -73,6 +75,7 @@ When prompted, choose:
 - Package manager: **npm**
 
 ```bash
+
 ```
 
 Note: the `mavlo/` directory + `git init` already exist (created during planning). `sv create .` scaffolds in-place without re-initializing git. If `sv` refuses because the directory is non-empty, pass `--force`.
@@ -89,10 +92,10 @@ Add an `engines` block to `<NEW_REPO>/package.json` (merge into the existing obj
 
 ```json
 {
-  "engines": {
-    "node": ">=20.11.0",
-    "npm": ">=10.0.0"
-  }
+	"engines": {
+		"node": ">=20.11.0",
+		"npm": ">=10.0.0"
+	}
 }
 ```
 
@@ -154,6 +157,7 @@ git commit -m "chore: scaffold SvelteKit project"
 ### Task 2: Tailwind v4 + base styles
 
 **Files:**
+
 - Modify: `<NEW_REPO>/src/app.css`
 - Modify: `<NEW_REPO>/src/routes/+layout.svelte`
 - Verify: `<NEW_REPO>/vite.config.ts`
@@ -163,36 +167,41 @@ The `sv create` flow already installs `@tailwindcss/vite` and creates `src/app.c
 - [ ] **Step 2.1: Replace `src/app.css` content**
 
 ```css
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --border: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
-  }
+	:root {
+		--background: 0 0% 100%;
+		--foreground: 222.2 47.4% 11.2%;
+		--muted: 210 40% 96.1%;
+		--muted-foreground: 215.4 16.3% 46.9%;
+		--border: 214.3 31.8% 91.4%;
+		--ring: 222.2 84% 4.9%;
+		--radius: 0.5rem;
+	}
 
-  .dark {
-    --background: 222.2 47.4% 11.2%;
-    --foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --border: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-  }
+	.dark {
+		--background: 222.2 47.4% 11.2%;
+		--foreground: 210 40% 98%;
+		--muted: 217.2 32.6% 17.5%;
+		--muted-foreground: 215 20.2% 65.1%;
+		--border: 217.2 32.6% 17.5%;
+		--ring: 212.7 26.8% 83.9%;
+	}
 
-  html {
-    color-scheme: light dark;
-  }
+	html {
+		color-scheme: light dark;
+	}
 
-  body {
-    @apply bg-background text-foreground antialiased;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  }
+	body {
+		@apply bg-background text-foreground antialiased;
+		font-family:
+			system-ui,
+			-apple-system,
+			'Segoe UI',
+			Roboto,
+			sans-serif;
+	}
 }
 ```
 
@@ -202,9 +211,9 @@ Replace `<NEW_REPO>/src/routes/+layout.svelte` with:
 
 ```svelte
 <script lang="ts">
-  import "../app.css";
+	import '../app.css';
 
-  let { children } = $props();
+	let { children } = $props();
 </script>
 
 {@render children?.()}
@@ -230,6 +239,7 @@ git commit -m "feat(styles): wire Tailwind v4 base layer"
 ### Task 3: Install runtime dependencies
 
 **Files:**
+
 - Modify: `<NEW_REPO>/package.json`
 
 - [ ] **Step 3.1: Install runtime deps**
@@ -272,31 +282,32 @@ git commit -m "chore: install runtime + dev dependencies"
 ### Task 4: Switch to `adapter-cloudflare`
 
 **Files:**
+
 - Modify: `<NEW_REPO>/svelte.config.js`
 - Create: `<NEW_REPO>/src/app.d.ts` (extend if it already exists)
 
 - [ ] **Step 4.1: Replace `svelte.config.js`**
 
 ```js
-import adapter from "@sveltejs/adapter-cloudflare";
-import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
+import adapter from '@sveltejs/adapter-cloudflare';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-  preprocess: vitePreprocess(),
-  kit: {
-    adapter: adapter({
-      routes: {
-        include: ["/*"],
-        exclude: ["<all>"]
-      },
-      platformProxy: {
-        configPath: "wrangler.toml",
-        environment: undefined,
-        persist: true
-      }
-    })
-  }
+	preprocess: vitePreprocess(),
+	kit: {
+		adapter: adapter({
+			routes: {
+				include: ['/*'],
+				exclude: ['<all>']
+			},
+			platformProxy: {
+				configPath: 'wrangler.toml',
+				environment: undefined,
+				persist: true
+			}
+		})
+	}
 };
 
 export default config;
@@ -307,37 +318,37 @@ export default config;
 ```ts
 /// <reference types="@cloudflare/workers-types" />
 
-import type { Session, User } from "better-auth";
-import type { DrizzleD1 } from "$lib/server/db/types";
+import type { Session, User } from 'better-auth';
+import type { DrizzleD1 } from '$lib/server/db/types';
 
 declare global {
-  namespace App {
-    interface Error {
-      message: string;
-      code?: string;
-    }
-    interface Locals {
-      user: User | null;
-      session: Session | null;
-      db: DrizzleD1;
-    }
-    interface PageData {
-      user: User | null;
-    }
-    interface Platform {
-      env: {
-        DB: D1Database;
-        BUCKET: R2Bucket;
-        SESSION_SECRET: string;
-        RESEND_API_KEY: string;
-        RESEND_SENDER_EMAIL: string;
-        RESEND_SENDER_NAME: string;
-        PUBLIC_APP_URL: string;
-      };
-      cf?: IncomingRequestCfProperties;
-      ctx?: ExecutionContext;
-    }
-  }
+	namespace App {
+		interface Error {
+			message: string;
+			code?: string;
+		}
+		interface Locals {
+			user: User | null;
+			session: Session | null;
+			db: DrizzleD1;
+		}
+		interface PageData {
+			user: User | null;
+		}
+		interface Platform {
+			env: {
+				DB: D1Database;
+				BUCKET: R2Bucket;
+				SESSION_SECRET: string;
+				RESEND_API_KEY: string;
+				RESEND_SENDER_EMAIL: string;
+				RESEND_SENDER_NAME: string;
+				PUBLIC_APP_URL: string;
+			};
+			cf?: IncomingRequestCfProperties;
+			ctx?: ExecutionContext;
+		}
+	}
 }
 
 export {};
@@ -411,6 +422,7 @@ Leave secrets unset for now. Task 7 sets them.
 ### Task 6: Wrangler config + Drizzle config
 
 **Files:**
+
 - Create: `<NEW_REPO>/wrangler.toml`
 - Create: `<NEW_REPO>/.dev.vars`
 - Create: `<NEW_REPO>/drizzle.config.ts`
@@ -487,20 +499,20 @@ For local development, leave `RESEND_API_KEY` as the placeholder until Task 11 �
 - [ ] **Step 6.3: Write `drizzle.config.ts`**
 
 ```ts
-import { defineConfig } from "drizzle-kit";
+import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
-  schema: "./src/lib/server/db/schema.ts",
-  out: "./drizzle",
-  dialect: "sqlite",
-  driver: "d1-http",
-  dbCredentials: {
-    accountId: process.env.CLOUDFLARE_ACCOUNT_ID ?? "",
-    databaseId: process.env.CLOUDFLARE_D1_DATABASE_ID ?? "",
-    token: process.env.CLOUDFLARE_API_TOKEN ?? ""
-  },
-  verbose: true,
-  strict: true
+	schema: './src/lib/server/db/schema.ts',
+	out: './drizzle',
+	dialect: 'sqlite',
+	driver: 'd1-http',
+	dbCredentials: {
+		accountId: process.env.CLOUDFLARE_ACCOUNT_ID ?? '',
+		databaseId: process.env.CLOUDFLARE_D1_DATABASE_ID ?? '',
+		token: process.env.CLOUDFLARE_API_TOKEN ?? ''
+	},
+	verbose: true,
+	strict: true
 });
 ```
 
@@ -511,8 +523,8 @@ export default defineConfig({
 `<NEW_REPO>/src/lib/server/db/types.ts`:
 
 ```ts
-import type { DrizzleD1Database } from "drizzle-orm/d1";
-import type * as schema from "./schema";
+import type { DrizzleD1Database } from 'drizzle-orm/d1';
+import type * as schema from './schema';
 
 export type DrizzleD1 = DrizzleD1Database<typeof schema>;
 ```
@@ -559,6 +571,7 @@ Use a **different** `SESSION_SECRET` value for production than for preview.
 ### Task 8: Drizzle schema (auth + preferences)
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/server/db/schema.ts`
 - Create: `<NEW_REPO>/src/lib/server/db/schema/auth.ts`
 - Create: `<NEW_REPO>/src/lib/server/db/schema/preferences.ts`
@@ -569,71 +582,71 @@ Use a **different** `SESSION_SECRET` value for production than for preview.
 `<NEW_REPO>/src/lib/server/db/schema/auth.ts`:
 
 ```ts
-import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
 
-export const users = sqliteTable("users", {
-  id: text("id").primaryKey(),
-  email: text("email").notNull().unique(),
-  emailVerified: integer("email_verified", { mode: "boolean" }).notNull().default(false),
-  name: text("name"),
-  image: text("image"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull()
+export const users = sqliteTable('users', {
+	id: text('id').primaryKey(),
+	email: text('email').notNull().unique(),
+	emailVerified: integer('email_verified', { mode: 'boolean' }).notNull().default(false),
+	name: text('name'),
+	image: text('image'),
+	createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull()
 });
 
 export const sessions = sqliteTable(
-  "sessions",
-  {
-    id: text("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    token: text("token").notNull().unique(),
-    expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
-    ipAddress: text("ip_address"),
-    userAgent: text("user_agent"),
-    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull()
-  },
-  (t) => ({
-    byUser: index("idx_sessions_user").on(t.userId),
-    byToken: index("idx_sessions_token").on(t.token)
-  })
+	'sessions',
+	{
+		id: text('id').primaryKey(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		token: text('token').notNull().unique(),
+		expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+		ipAddress: text('ip_address'),
+		userAgent: text('user_agent'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull()
+	},
+	(t) => ({
+		byUser: index('idx_sessions_user').on(t.userId),
+		byToken: index('idx_sessions_token').on(t.token)
+	})
 );
 
 // Renamed from Better Auth's default `accounts` to avoid clash with the
 // future financial-accounts table.
 export const authAccounts = sqliteTable(
-  "auth_accounts",
-  {
-    id: text("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    accountId: text("account_id").notNull(),
-    providerId: text("provider_id").notNull(),
-    accessToken: text("access_token"),
-    refreshToken: text("refresh_token"),
-    idToken: text("id_token"),
-    accessTokenExpiresAt: integer("access_token_expires_at", { mode: "timestamp_ms" }),
-    refreshTokenExpiresAt: integer("refresh_token_expires_at", { mode: "timestamp_ms" }),
-    scope: text("scope"),
-    password: text("password"),
-    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull()
-  },
-  (t) => ({
-    byUser: index("idx_auth_accounts_user").on(t.userId)
-  })
+	'auth_accounts',
+	{
+		id: text('id').primaryKey(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		accountId: text('account_id').notNull(),
+		providerId: text('provider_id').notNull(),
+		accessToken: text('access_token'),
+		refreshToken: text('refresh_token'),
+		idToken: text('id_token'),
+		accessTokenExpiresAt: integer('access_token_expires_at', { mode: 'timestamp_ms' }),
+		refreshTokenExpiresAt: integer('refresh_token_expires_at', { mode: 'timestamp_ms' }),
+		scope: text('scope'),
+		password: text('password'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull()
+	},
+	(t) => ({
+		byUser: index('idx_auth_accounts_user').on(t.userId)
+	})
 );
 
-export const verifications = sqliteTable("verifications", {
-  id: text("id").primaryKey(),
-  identifier: text("identifier").notNull(),
-  value: text("value").notNull(),
-  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull()
+export const verifications = sqliteTable('verifications', {
+	id: text('id').primaryKey(),
+	identifier: text('identifier').notNull(),
+	value: text('value').notNull(),
+	expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+	createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull()
 });
 ```
 
@@ -642,18 +655,18 @@ export const verifications = sqliteTable("verifications", {
 `<NEW_REPO>/src/lib/server/db/schema/preferences.ts`:
 
 ```ts
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
-import { users } from "./auth";
+import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { users } from './auth';
 
-export const userPreferences = sqliteTable("user_preferences", {
-  userId: text("user_id")
-    .primaryKey()
-    .references(() => users.id, { onDelete: "cascade" }),
-  locale: text("locale").notNull().default("en"),
-  currencyDefault: text("currency_default").notNull().default("USD"),
-  theme: text("theme").notNull().default("system"),
-  weekStart: integer("week_start").notNull().default(1),
-  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull()
+export const userPreferences = sqliteTable('user_preferences', {
+	userId: text('user_id')
+		.primaryKey()
+		.references(() => users.id, { onDelete: 'cascade' }),
+	locale: text('locale').notNull().default('en'),
+	currencyDefault: text('currency_default').notNull().default('USD'),
+	theme: text('theme').notNull().default('system'),
+	weekStart: integer('week_start').notNull().default(1),
+	updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull()
 });
 ```
 
@@ -662,8 +675,8 @@ export const userPreferences = sqliteTable("user_preferences", {
 `<NEW_REPO>/src/lib/server/db/schema/index.ts`:
 
 ```ts
-export * from "./auth";
-export * from "./preferences";
+export * from './auth';
+export * from './preferences';
 ```
 
 - [ ] **Step 8.4: Top-level schema barrel**
@@ -671,7 +684,7 @@ export * from "./preferences";
 `<NEW_REPO>/src/lib/server/db/schema.ts`:
 
 ```ts
-export * from "./schema/index";
+export * from './schema/index';
 ```
 
 - [ ] **Step 8.5: Generate the initial migration**
@@ -710,6 +723,7 @@ git commit -m "feat(db): add auth + preferences schema and initial migration"
 ### Task 9: Drizzle factory + locals injection
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/server/db/index.ts`
 - Create: `<NEW_REPO>/src/hooks.server.ts`
 
@@ -718,12 +732,12 @@ git commit -m "feat(db): add auth + preferences schema and initial migration"
 `<NEW_REPO>/src/lib/server/db/index.ts`:
 
 ```ts
-import { drizzle } from "drizzle-orm/d1";
-import * as schema from "./schema";
-import type { DrizzleD1 } from "./types";
+import { drizzle } from 'drizzle-orm/d1';
+import * as schema from './schema';
+import type { DrizzleD1 } from './types';
 
 export function createDb(d1: D1Database): DrizzleD1 {
-  return drizzle(d1, { schema });
+	return drizzle(d1, { schema });
 }
 
 export { schema };
@@ -734,21 +748,21 @@ export { schema };
 `<NEW_REPO>/src/hooks.server.ts`:
 
 ```ts
-import type { Handle } from "@sveltejs/kit";
-import { createDb } from "$lib/server/db";
+import type { Handle } from '@sveltejs/kit';
+import { createDb } from '$lib/server/db';
 
 export const handle: Handle = async ({ event, resolve }) => {
-  const env = event.platform?.env;
-  if (!env) {
-    throw new Error("Cloudflare platform bindings missing — run via wrangler/vite-platform-proxy");
-  }
+	const env = event.platform?.env;
+	if (!env) {
+		throw new Error('Cloudflare platform bindings missing — run via wrangler/vite-platform-proxy');
+	}
 
-  event.locals.db = createDb(env.DB);
-  // user + session populated in Task 12 (after Better Auth is wired).
-  event.locals.user = null;
-  event.locals.session = null;
+	event.locals.db = createDb(env.DB);
+	// user + session populated in Task 12 (after Better Auth is wired).
+	event.locals.user = null;
+	event.locals.session = null;
 
-  return resolve(event);
+	return resolve(event);
 };
 ```
 
@@ -772,6 +786,7 @@ git commit -m "feat(server): drizzle factory + locals.db injection"
 ### Task 10: Better Auth — instance + endpoint mount
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/server/auth.ts`
 - Create: `<NEW_REPO>/src/routes/api/auth/[...all]/+server.ts`
 
@@ -780,55 +795,55 @@ git commit -m "feat(server): drizzle factory + locals.db injection"
 `<NEW_REPO>/src/lib/server/auth.ts`:
 
 ```ts
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { createDb, schema } from "./db";
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { createDb, schema } from './db';
 
 export interface AuthContext {
-  d1: D1Database;
-  sessionSecret: string;
-  appUrl: string;
+	d1: D1Database;
+	sessionSecret: string;
+	appUrl: string;
 }
 
 export function createAuth(ctx: AuthContext) {
-  const db = createDb(ctx.d1);
-  return betterAuth({
-    database: drizzleAdapter(db, {
-      provider: "sqlite",
-      schema: {
-        user: schema.users,
-        session: schema.sessions,
-        account: schema.authAccounts,
-        verification: schema.verifications
-      }
-    }),
-    secret: ctx.sessionSecret,
-    baseURL: ctx.appUrl,
-    emailAndPassword: {
-      enabled: true,
-      requireEmailVerification: false,
-      autoSignIn: true,
-      sendResetPassword: async ({ user, url }) => {
-        const { sendPasswordReset } = await import("./email/send");
-        await sendPasswordReset({ to: user.email, name: user.name, url });
-      }
-    },
-    emailVerification: {
-      sendOnSignUp: true,
-      autoSignInAfterVerification: true,
-      sendVerificationEmail: async ({ user, url }) => {
-        const { sendVerification } = await import("./email/send");
-        await sendVerification({ to: user.email, name: user.name, url });
-      }
-    },
-    session: {
-      expiresIn: 60 * 60 * 24 * 30,
-      updateAge: 60 * 60 * 24
-    },
-    advanced: {
-      cookiePrefix: "maflo"
-    }
-  });
+	const db = createDb(ctx.d1);
+	return betterAuth({
+		database: drizzleAdapter(db, {
+			provider: 'sqlite',
+			schema: {
+				user: schema.users,
+				session: schema.sessions,
+				account: schema.authAccounts,
+				verification: schema.verifications
+			}
+		}),
+		secret: ctx.sessionSecret,
+		baseURL: ctx.appUrl,
+		emailAndPassword: {
+			enabled: true,
+			requireEmailVerification: false,
+			autoSignIn: true,
+			sendResetPassword: async ({ user, url }) => {
+				const { sendPasswordReset } = await import('./email/send');
+				await sendPasswordReset({ to: user.email, name: user.name, url });
+			}
+		},
+		emailVerification: {
+			sendOnSignUp: true,
+			autoSignInAfterVerification: true,
+			sendVerificationEmail: async ({ user, url }) => {
+				const { sendVerification } = await import('./email/send');
+				await sendVerification({ to: user.email, name: user.name, url });
+			}
+		},
+		session: {
+			expiresIn: 60 * 60 * 24 * 30,
+			updateAge: 60 * 60 * 24
+		},
+		advanced: {
+			cookiePrefix: 'maflo'
+		}
+	});
 }
 
 export type Auth = ReturnType<typeof createAuth>;
@@ -841,19 +856,19 @@ The dynamic `import("./email/send")` keeps Task 10 standalone — the email modu
 `<NEW_REPO>/src/routes/api/auth/[...all]/+server.ts`:
 
 ```ts
-import type { RequestHandler } from "./$types";
-import { createAuth } from "$lib/server/auth";
+import type { RequestHandler } from './$types';
+import { createAuth } from '$lib/server/auth';
 
 const handler: RequestHandler = async ({ request, platform }) => {
-  if (!platform?.env) {
-    return new Response("Platform bindings unavailable", { status: 500 });
-  }
-  const auth = createAuth({
-    d1: platform.env.DB,
-    sessionSecret: platform.env.SESSION_SECRET,
-    appUrl: platform.env.PUBLIC_APP_URL
-  });
-  return auth.handler(request);
+	if (!platform?.env) {
+		return new Response('Platform bindings unavailable', { status: 500 });
+	}
+	const auth = createAuth({
+		d1: platform.env.DB,
+		sessionSecret: platform.env.SESSION_SECRET,
+		appUrl: platform.env.PUBLIC_APP_URL
+	});
+	return auth.handler(request);
 };
 
 export const GET = handler;
@@ -872,6 +887,7 @@ git commit -m "feat(auth): wire Better Auth handler with Drizzle D1 adapter"
 ### Task 11: Resend email wrapper + templates
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/server/email/resend.ts`
 - Create: `<NEW_REPO>/src/lib/server/email/send.ts`
 - Create: `<NEW_REPO>/src/lib/server/email/templates/verification.ts`
@@ -885,27 +901,27 @@ Better Auth's email callbacks (Task 10) don't receive the SvelteKit `event`, so 
 `<NEW_REPO>/src/lib/server/email/context.ts`:
 
 ```ts
-import { AsyncLocalStorage } from "node:async_hooks";
+import { AsyncLocalStorage } from 'node:async_hooks';
 
 export interface EmailContext {
-  apiKey: string;
-  senderEmail: string;
-  senderName: string;
-  appUrl: string;
+	apiKey: string;
+	senderEmail: string;
+	senderName: string;
+	appUrl: string;
 }
 
 const storage = new AsyncLocalStorage<EmailContext>();
 
 export function withEmailContext<T>(ctx: EmailContext, fn: () => Promise<T>): Promise<T> {
-  return storage.run(ctx, fn);
+	return storage.run(ctx, fn);
 }
 
 export function getEmailContext(): EmailContext {
-  const ctx = storage.getStore();
-  if (!ctx) {
-    throw new Error("Email context missing — wrap auth calls in withEmailContext");
-  }
-  return ctx;
+	const ctx = storage.getStore();
+	if (!ctx) {
+		throw new Error('Email context missing — wrap auth calls in withEmailContext');
+	}
+	return ctx;
 }
 ```
 
@@ -916,43 +932,43 @@ export function getEmailContext(): EmailContext {
 `<NEW_REPO>/src/lib/server/email/resend.ts`:
 
 ```ts
-import { getEmailContext } from "./context";
+import { getEmailContext } from './context';
 
 export interface SendInput {
-  to: string;
-  subject: string;
-  html: string;
-  text: string;
+	to: string;
+	subject: string;
+	html: string;
+	text: string;
 }
 
 export async function sendEmail(input: SendInput): Promise<void> {
-  const ctx = getEmailContext();
+	const ctx = getEmailContext();
 
-  if (!ctx.apiKey || ctx.apiKey === "re_dev_placeholder") {
-    console.info("[email:dev]", { to: input.to, subject: input.subject });
-    console.info(input.text);
-    return;
-  }
+	if (!ctx.apiKey || ctx.apiKey === 're_dev_placeholder') {
+		console.info('[email:dev]', { to: input.to, subject: input.subject });
+		console.info(input.text);
+		return;
+	}
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${ctx.apiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      from: `${ctx.senderName} <${ctx.senderEmail}>`,
-      to: [input.to],
-      subject: input.subject,
-      html: input.html,
-      text: input.text
-    })
-  });
+	const res = await fetch('https://api.resend.com/emails', {
+		method: 'POST',
+		headers: {
+			Authorization: `Bearer ${ctx.apiKey}`,
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({
+			from: `${ctx.senderName} <${ctx.senderEmail}>`,
+			to: [input.to],
+			subject: input.subject,
+			html: input.html,
+			text: input.text
+		})
+	});
 
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Resend error ${res.status}: ${body}`);
-  }
+	if (!res.ok) {
+		const body = await res.text();
+		throw new Error(`Resend error ${res.status}: ${body}`);
+	}
 }
 ```
 
@@ -962,14 +978,14 @@ export async function sendEmail(input: SendInput): Promise<void> {
 
 ```ts
 export interface VerificationTemplateInput {
-  name: string | null | undefined;
-  url: string;
+	name: string | null | undefined;
+	url: string;
 }
 
 export function verificationTemplate(input: VerificationTemplateInput) {
-  const greeting = input.name ? `Hi ${input.name},` : "Hi,";
-  const subject = "Verify your Mavlo email";
-  const text = `${greeting}
+	const greeting = input.name ? `Hi ${input.name},` : 'Hi,';
+	const subject = 'Verify your Mavlo email';
+	const text = `${greeting}
 
 Please confirm your email by visiting:
 ${input.url}
@@ -977,7 +993,7 @@ ${input.url}
 If you didn't sign up for Mavlo, ignore this message.
 
 — Mavlo`;
-  const html = `<!doctype html>
+	const html = `<!doctype html>
 <html><body style="font-family:system-ui,sans-serif;line-height:1.5;">
 <p>${greeting}</p>
 <p>Please confirm your email by clicking below.</p>
@@ -986,7 +1002,7 @@ If you didn't sign up for Mavlo, ignore this message.
 <p>If you didn't sign up for Mavlo, ignore this message.</p>
 <p>— Mavlo</p>
 </body></html>`;
-  return { subject, html, text };
+	return { subject, html, text };
 }
 ```
 
@@ -996,14 +1012,14 @@ If you didn't sign up for Mavlo, ignore this message.
 
 ```ts
 export interface ResetTemplateInput {
-  name: string | null | undefined;
-  url: string;
+	name: string | null | undefined;
+	url: string;
 }
 
 export function resetPasswordTemplate(input: ResetTemplateInput) {
-  const greeting = input.name ? `Hi ${input.name},` : "Hi,";
-  const subject = "Reset your Mavlo password";
-  const text = `${greeting}
+	const greeting = input.name ? `Hi ${input.name},` : 'Hi,';
+	const subject = 'Reset your Mavlo password';
+	const text = `${greeting}
 
 Use this link to reset your Mavlo password:
 ${input.url}
@@ -1011,7 +1027,7 @@ ${input.url}
 The link expires in 1 hour. If you didn't request this, you can ignore the message.
 
 — Mavlo`;
-  const html = `<!doctype html>
+	const html = `<!doctype html>
 <html><body style="font-family:system-ui,sans-serif;line-height:1.5;">
 <p>${greeting}</p>
 <p>Use the button below to reset your Mavlo password. The link expires in 1 hour.</p>
@@ -1020,7 +1036,7 @@ The link expires in 1 hour. If you didn't request this, you can ignore the messa
 <p>If you didn't request this, ignore the message.</p>
 <p>— Mavlo</p>
 </body></html>`;
-  return { subject, html, text };
+	return { subject, html, text };
 }
 ```
 
@@ -1029,18 +1045,18 @@ The link expires in 1 hour. If you didn't request this, you can ignore the messa
 `<NEW_REPO>/src/lib/server/email/send.ts`:
 
 ```ts
-import { sendEmail } from "./resend";
-import { verificationTemplate } from "./templates/verification";
-import { resetPasswordTemplate } from "./templates/reset-password";
+import { sendEmail } from './resend';
+import { verificationTemplate } from './templates/verification';
+import { resetPasswordTemplate } from './templates/reset-password';
 
 export async function sendVerification(args: { to: string; name: string | null; url: string }) {
-  const tpl = verificationTemplate({ name: args.name, url: args.url });
-  await sendEmail({ to: args.to, ...tpl });
+	const tpl = verificationTemplate({ name: args.name, url: args.url });
+	await sendEmail({ to: args.to, ...tpl });
 }
 
 export async function sendPasswordReset(args: { to: string; name: string | null; url: string }) {
-  const tpl = resetPasswordTemplate({ name: args.name, url: args.url });
-  await sendEmail({ to: args.to, ...tpl });
+	const tpl = resetPasswordTemplate({ name: args.name, url: args.url });
+	await sendEmail({ to: args.to, ...tpl });
 }
 ```
 
@@ -1049,29 +1065,29 @@ export async function sendPasswordReset(args: { to: string; name: string | null;
 Update `<NEW_REPO>/src/routes/api/auth/[...all]/+server.ts`:
 
 ```ts
-import type { RequestHandler } from "./$types";
-import { createAuth } from "$lib/server/auth";
-import { withEmailContext } from "$lib/server/email/context";
+import type { RequestHandler } from './$types';
+import { createAuth } from '$lib/server/auth';
+import { withEmailContext } from '$lib/server/email/context';
 
 const handler: RequestHandler = async ({ request, platform }) => {
-  if (!platform?.env) {
-    return new Response("Platform bindings unavailable", { status: 500 });
-  }
-  const env = platform.env;
-  const auth = createAuth({
-    d1: env.DB,
-    sessionSecret: env.SESSION_SECRET,
-    appUrl: env.PUBLIC_APP_URL
-  });
-  return withEmailContext(
-    {
-      apiKey: env.RESEND_API_KEY,
-      senderEmail: env.RESEND_SENDER_EMAIL,
-      senderName: env.RESEND_SENDER_NAME,
-      appUrl: env.PUBLIC_APP_URL
-    },
-    () => auth.handler(request)
-  );
+	if (!platform?.env) {
+		return new Response('Platform bindings unavailable', { status: 500 });
+	}
+	const env = platform.env;
+	const auth = createAuth({
+		d1: env.DB,
+		sessionSecret: env.SESSION_SECRET,
+		appUrl: env.PUBLIC_APP_URL
+	});
+	return withEmailContext(
+		{
+			apiKey: env.RESEND_API_KEY,
+			senderEmail: env.RESEND_SENDER_EMAIL,
+			senderName: env.RESEND_SENDER_NAME,
+			appUrl: env.PUBLIC_APP_URL
+		},
+		() => auth.handler(request)
+	);
 };
 
 export const GET = handler;
@@ -1090,45 +1106,46 @@ git commit -m "feat(email): resend wrapper + verification/reset templates"
 ### Task 12: Hook session injection + auth client
 
 **Files:**
+
 - Modify: `<NEW_REPO>/src/hooks.server.ts`
 - Create: `<NEW_REPO>/src/lib/auth-client.ts`
 
 - [ ] **Step 12.1: Replace `src/hooks.server.ts`**
 
 ```ts
-import type { Handle } from "@sveltejs/kit";
-import { createDb } from "$lib/server/db";
-import { createAuth } from "$lib/server/auth";
-import { withEmailContext } from "$lib/server/email/context";
+import type { Handle } from '@sveltejs/kit';
+import { createDb } from '$lib/server/db';
+import { createAuth } from '$lib/server/auth';
+import { withEmailContext } from '$lib/server/email/context';
 
 export const handle: Handle = async ({ event, resolve }) => {
-  const env = event.platform?.env;
-  if (!env) {
-    throw new Error("Cloudflare platform bindings missing — run via wrangler/vite-platform-proxy");
-  }
+	const env = event.platform?.env;
+	if (!env) {
+		throw new Error('Cloudflare platform bindings missing — run via wrangler/vite-platform-proxy');
+	}
 
-  event.locals.db = createDb(env.DB);
+	event.locals.db = createDb(env.DB);
 
-  const auth = createAuth({
-    d1: env.DB,
-    sessionSecret: env.SESSION_SECRET,
-    appUrl: env.PUBLIC_APP_URL
-  });
+	const auth = createAuth({
+		d1: env.DB,
+		sessionSecret: env.SESSION_SECRET,
+		appUrl: env.PUBLIC_APP_URL
+	});
 
-  const result = await withEmailContext(
-    {
-      apiKey: env.RESEND_API_KEY,
-      senderEmail: env.RESEND_SENDER_EMAIL,
-      senderName: env.RESEND_SENDER_NAME,
-      appUrl: env.PUBLIC_APP_URL
-    },
-    () => auth.api.getSession({ headers: event.request.headers })
-  );
+	const result = await withEmailContext(
+		{
+			apiKey: env.RESEND_API_KEY,
+			senderEmail: env.RESEND_SENDER_EMAIL,
+			senderName: env.RESEND_SENDER_NAME,
+			appUrl: env.PUBLIC_APP_URL
+		},
+		() => auth.api.getSession({ headers: event.request.headers })
+	);
 
-  event.locals.user = result?.user ?? null;
-  event.locals.session = result?.session ?? null;
+	event.locals.user = result?.user ?? null;
+	event.locals.session = result?.session ?? null;
 
-  return resolve(event);
+	return resolve(event);
 };
 ```
 
@@ -1137,10 +1154,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 `<NEW_REPO>/src/lib/auth-client.ts`:
 
 ```ts
-import { createAuthClient } from "better-auth/svelte";
+import { createAuthClient } from 'better-auth/svelte';
 
 export const authClient = createAuthClient({
-  baseURL: typeof window === "undefined" ? "" : window.location.origin
+	baseURL: typeof window === 'undefined' ? '' : window.location.origin
 });
 
 export const { signIn, signUp, signOut, useSession } = authClient;
@@ -1166,6 +1183,7 @@ git commit -m "feat(auth): inject locals.user/session via Better Auth"
 ### Task 13: Validation schemas + guards
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/validation/auth.ts`
 - Create: `<NEW_REPO>/src/lib/server/guards.ts`
 
@@ -1174,36 +1192,36 @@ git commit -m "feat(auth): inject locals.user/session via Better Auth"
 `<NEW_REPO>/src/lib/validation/auth.ts`:
 
 ```ts
-import { z } from "zod";
+import { z } from 'zod';
 
 export const signUpSchema = z.object({
-  name: z.string().min(1, "Name is required").max(120),
-  email: z.string().email().max(254),
-  password: z.string().min(8, "Min 8 characters").max(128)
+	name: z.string().min(1, 'Name is required').max(120),
+	email: z.string().email().max(254),
+	password: z.string().min(8, 'Min 8 characters').max(128)
 });
 export type SignUpInput = z.infer<typeof signUpSchema>;
 
 export const signInSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1)
+	email: z.string().email(),
+	password: z.string().min(1)
 });
 export type SignInInput = z.infer<typeof signInSchema>;
 
 export const forgotSchema = z.object({
-  email: z.string().email()
+	email: z.string().email()
 });
 export type ForgotInput = z.infer<typeof forgotSchema>;
 
 export const resetSchema = z
-  .object({
-    token: z.string().min(1),
-    password: z.string().min(8).max(128),
-    confirmPassword: z.string().min(8).max(128)
-  })
-  .refine((d) => d.password === d.confirmPassword, {
-    path: ["confirmPassword"],
-    message: "Passwords do not match"
-  });
+	.object({
+		token: z.string().min(1),
+		password: z.string().min(8).max(128),
+		confirmPassword: z.string().min(8).max(128)
+	})
+	.refine((d) => d.password === d.confirmPassword, {
+		path: ['confirmPassword'],
+		message: 'Passwords do not match'
+	});
 export type ResetInput = z.infer<typeof resetSchema>;
 ```
 
@@ -1212,15 +1230,15 @@ export type ResetInput = z.infer<typeof resetSchema>;
 `<NEW_REPO>/src/lib/server/guards.ts`:
 
 ```ts
-import { redirect } from "@sveltejs/kit";
-import type { RequestEvent } from "@sveltejs/kit";
-import type { User } from "better-auth";
+import { redirect } from '@sveltejs/kit';
+import type { RequestEvent } from '@sveltejs/kit';
+import type { User } from 'better-auth';
 
 export function requireUser(event: RequestEvent): User {
-  if (!event.locals.user) {
-    throw redirect(303, `/sign-in?next=${encodeURIComponent(event.url.pathname)}`);
-  }
-  return event.locals.user;
+	if (!event.locals.user) {
+		throw redirect(303, `/sign-in?next=${encodeURIComponent(event.url.pathname)}`);
+	}
+	return event.locals.user;
 }
 ```
 
@@ -1236,6 +1254,7 @@ git commit -m "feat: validation schemas + requireUser guard"
 ### Task 14: Sign-up page + action (TDD)
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/validation/auth.test.ts`
 - Create: `<NEW_REPO>/src/routes/(auth)/+layout.svelte`
 - Create: `<NEW_REPO>/src/routes/(auth)/sign-up/+page.svelte`
@@ -1246,50 +1265,50 @@ git commit -m "feat: validation schemas + requireUser guard"
 `<NEW_REPO>/src/lib/validation/auth.test.ts`:
 
 ```ts
-import { describe, it, expect } from "vitest";
-import { signUpSchema, resetSchema } from "./auth";
+import { describe, it, expect } from 'vitest';
+import { signUpSchema, resetSchema } from './auth';
 
-describe("signUpSchema", () => {
-  it("accepts valid input", () => {
-    const r = signUpSchema.safeParse({
-      name: "Asep",
-      email: "asep@example.com",
-      password: "longenough"
-    });
-    expect(r.success).toBe(true);
-  });
+describe('signUpSchema', () => {
+	it('accepts valid input', () => {
+		const r = signUpSchema.safeParse({
+			name: 'Asep',
+			email: 'asep@example.com',
+			password: 'longenough'
+		});
+		expect(r.success).toBe(true);
+	});
 
-  it("rejects short passwords", () => {
-    const r = signUpSchema.safeParse({
-      name: "Asep",
-      email: "asep@example.com",
-      password: "short"
-    });
-    expect(r.success).toBe(false);
-    if (!r.success) {
-      expect(r.error.issues.some((i) => i.path[0] === "password")).toBe(true);
-    }
-  });
+	it('rejects short passwords', () => {
+		const r = signUpSchema.safeParse({
+			name: 'Asep',
+			email: 'asep@example.com',
+			password: 'short'
+		});
+		expect(r.success).toBe(false);
+		if (!r.success) {
+			expect(r.error.issues.some((i) => i.path[0] === 'password')).toBe(true);
+		}
+	});
 
-  it("rejects bad email", () => {
-    const r = signUpSchema.safeParse({
-      name: "Asep",
-      email: "not-an-email",
-      password: "longenough"
-    });
-    expect(r.success).toBe(false);
-  });
+	it('rejects bad email', () => {
+		const r = signUpSchema.safeParse({
+			name: 'Asep',
+			email: 'not-an-email',
+			password: 'longenough'
+		});
+		expect(r.success).toBe(false);
+	});
 });
 
-describe("resetSchema", () => {
-  it("rejects mismatched passwords", () => {
-    const r = resetSchema.safeParse({
-      token: "tok",
-      password: "longenough",
-      confirmPassword: "different1"
-    });
-    expect(r.success).toBe(false);
-  });
+describe('resetSchema', () => {
+	it('rejects mismatched passwords', () => {
+		const r = resetSchema.safeParse({
+			token: 'tok',
+			password: 'longenough',
+			confirmPassword: 'different1'
+		});
+		expect(r.success).toBe(false);
+	});
 });
 ```
 
@@ -1307,12 +1326,12 @@ Expected: PASS (the schemas were written in Task 13). If they fail, fix the sche
 
 ```svelte
 <script lang="ts">
-  let { children } = $props();
+	let { children } = $props();
 </script>
 
 <main class="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-10">
-  <h1 class="mb-6 text-2xl font-semibold">Mavlo</h1>
-  {@render children?.()}
+	<h1 class="mb-6 text-2xl font-semibold">Mavlo</h1>
+	{@render children?.()}
 </main>
 ```
 
@@ -1321,73 +1340,73 @@ Expected: PASS (the schemas were written in Task 13). If they fail, fix the sche
 `<NEW_REPO>/src/routes/(auth)/sign-up/+page.server.ts`:
 
 ```ts
-import type { Actions, PageServerLoad } from "./$types";
-import { fail, redirect } from "@sveltejs/kit";
-import { superValidate } from "sveltekit-superforms";
-import { zod } from "sveltekit-superforms/adapters";
-import { signUpSchema } from "$lib/validation/auth";
-import { createAuth } from "$lib/server/auth";
-import { withEmailContext } from "$lib/server/email/context";
-import { userPreferences } from "$lib/server/db/schema";
+import type { Actions, PageServerLoad } from './$types';
+import { fail, redirect } from '@sveltejs/kit';
+import { superValidate } from 'sveltekit-superforms';
+import { zod } from 'sveltekit-superforms/adapters';
+import { signUpSchema } from '$lib/validation/auth';
+import { createAuth } from '$lib/server/auth';
+import { withEmailContext } from '$lib/server/email/context';
+import { userPreferences } from '$lib/server/db/schema';
 
 export const load: PageServerLoad = async ({ locals }) => {
-  if (locals.user) throw redirect(303, "/dashboard");
-  const form = await superValidate(zod(signUpSchema));
-  return { form };
+	if (locals.user) throw redirect(303, '/dashboard');
+	const form = await superValidate(zod(signUpSchema));
+	return { form };
 };
 
 export const actions: Actions = {
-  default: async ({ request, platform, locals }) => {
-    const env = platform!.env;
-    const form = await superValidate(request, zod(signUpSchema));
-    if (!form.valid) return fail(400, { form });
+	default: async ({ request, platform, locals }) => {
+		const env = platform!.env;
+		const form = await superValidate(request, zod(signUpSchema));
+		if (!form.valid) return fail(400, { form });
 
-    const auth = createAuth({
-      d1: env.DB,
-      sessionSecret: env.SESSION_SECRET,
-      appUrl: env.PUBLIC_APP_URL
-    });
+		const auth = createAuth({
+			d1: env.DB,
+			sessionSecret: env.SESSION_SECRET,
+			appUrl: env.PUBLIC_APP_URL
+		});
 
-    let userId: string | null = null;
-    try {
-      const result = await withEmailContext(
-        {
-          apiKey: env.RESEND_API_KEY,
-          senderEmail: env.RESEND_SENDER_EMAIL,
-          senderName: env.RESEND_SENDER_NAME,
-          appUrl: env.PUBLIC_APP_URL
-        },
-        () =>
-          auth.api.signUpEmail({
-            body: {
-              email: form.data.email,
-              password: form.data.password,
-              name: form.data.name
-            }
-          })
-      );
-      userId = result?.user?.id ?? null;
-    } catch (e) {
-      const message = e instanceof Error ? e.message : "Sign-up failed";
-      return fail(400, { form, message });
-    }
+		let userId: string | null = null;
+		try {
+			const result = await withEmailContext(
+				{
+					apiKey: env.RESEND_API_KEY,
+					senderEmail: env.RESEND_SENDER_EMAIL,
+					senderName: env.RESEND_SENDER_NAME,
+					appUrl: env.PUBLIC_APP_URL
+				},
+				() =>
+					auth.api.signUpEmail({
+						body: {
+							email: form.data.email,
+							password: form.data.password,
+							name: form.data.name
+						}
+					})
+			);
+			userId = result?.user?.id ?? null;
+		} catch (e) {
+			const message = e instanceof Error ? e.message : 'Sign-up failed';
+			return fail(400, { form, message });
+		}
 
-    if (userId) {
-      await locals.db
-        .insert(userPreferences)
-        .values({
-          userId,
-          locale: "en",
-          currencyDefault: "USD",
-          theme: "system",
-          weekStart: 1,
-          updatedAt: new Date()
-        })
-        .onConflictDoNothing();
-    }
+		if (userId) {
+			await locals.db
+				.insert(userPreferences)
+				.values({
+					userId,
+					locale: 'en',
+					currencyDefault: 'USD',
+					theme: 'system',
+					weekStart: 1,
+					updatedAt: new Date()
+				})
+				.onConflictDoNothing();
+		}
 
-    throw redirect(303, "/sign-in?registered=1");
-  }
+		throw redirect(303, '/sign-in?registered=1');
+	}
 };
 ```
 
@@ -1397,68 +1416,68 @@ export const actions: Actions = {
 
 ```svelte
 <script lang="ts">
-  import { superForm } from "sveltekit-superforms";
+	import { superForm } from 'sveltekit-superforms';
 
-  let { data } = $props();
-  const { form, errors, enhance, message, submitting } = superForm(data.form);
+	let { data } = $props();
+	const { form, errors, enhance, message, submitting } = superForm(data.form);
 </script>
 
 <h2 class="mb-4 text-lg font-medium">Create account</h2>
 
 {#if $message}
-  <p class="mb-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{$message}</p>
+	<p class="mb-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{$message}</p>
 {/if}
 
 <form method="POST" use:enhance class="space-y-4">
-  <label class="block">
-    <span class="mb-1 block text-sm">Name</span>
-    <input
-      class="w-full rounded border px-3 py-2"
-      name="name"
-      bind:value={$form.name}
-      autocomplete="name"
-      required
-    />
-    {#if $errors.name}<small class="text-red-600">{$errors.name}</small>{/if}
-  </label>
+	<label class="block">
+		<span class="mb-1 block text-sm">Name</span>
+		<input
+			class="w-full rounded border px-3 py-2"
+			name="name"
+			bind:value={$form.name}
+			autocomplete="name"
+			required
+		/>
+		{#if $errors.name}<small class="text-red-600">{$errors.name}</small>{/if}
+	</label>
 
-  <label class="block">
-    <span class="mb-1 block text-sm">Email</span>
-    <input
-      class="w-full rounded border px-3 py-2"
-      name="email"
-      type="email"
-      bind:value={$form.email}
-      autocomplete="email"
-      required
-    />
-    {#if $errors.email}<small class="text-red-600">{$errors.email}</small>{/if}
-  </label>
+	<label class="block">
+		<span class="mb-1 block text-sm">Email</span>
+		<input
+			class="w-full rounded border px-3 py-2"
+			name="email"
+			type="email"
+			bind:value={$form.email}
+			autocomplete="email"
+			required
+		/>
+		{#if $errors.email}<small class="text-red-600">{$errors.email}</small>{/if}
+	</label>
 
-  <label class="block">
-    <span class="mb-1 block text-sm">Password</span>
-    <input
-      class="w-full rounded border px-3 py-2"
-      name="password"
-      type="password"
-      bind:value={$form.password}
-      autocomplete="new-password"
-      required
-    />
-    {#if $errors.password}<small class="text-red-600">{$errors.password}</small>{/if}
-  </label>
+	<label class="block">
+		<span class="mb-1 block text-sm">Password</span>
+		<input
+			class="w-full rounded border px-3 py-2"
+			name="password"
+			type="password"
+			bind:value={$form.password}
+			autocomplete="new-password"
+			required
+		/>
+		{#if $errors.password}<small class="text-red-600">{$errors.password}</small>{/if}
+	</label>
 
-  <button
-    class="w-full rounded bg-black px-4 py-2 text-white disabled:opacity-50"
-    type="submit"
-    disabled={$submitting}
-  >
-    {$submitting ? "Creating…" : "Create account"}
-  </button>
+	<button
+		class="w-full rounded bg-black px-4 py-2 text-white disabled:opacity-50"
+		type="submit"
+		disabled={$submitting}
+	>
+		{$submitting ? 'Creating…' : 'Create account'}
+	</button>
 </form>
 
 <p class="mt-4 text-sm">
-  Have an account? <a href="/sign-in" class="underline">Sign in</a>
+	Have an account? <a href="/sign-in" class="underline">Sign in</a>
 </p>
 ```
 
@@ -1469,6 +1488,7 @@ npm run dev
 ```
 
 Visit `http://localhost:5173/sign-up`, submit the form. Expected:
+
 - Local terminal logs `[email:dev] { to: ..., subject: "Verify your Mavlo email" }` and the verification URL.
 - Browser is redirected to `/sign-in?registered=1` (404 until Task 15 is complete).
 
@@ -1486,6 +1506,7 @@ git commit -m "feat(auth): sign-up page + server action"
 ### Task 15: Sign-in page + action
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/routes/(auth)/sign-in/+page.svelte`
 - Create: `<NEW_REPO>/src/routes/(auth)/sign-in/+page.server.ts`
 
@@ -1494,15 +1515,15 @@ git commit -m "feat(auth): sign-up page + server action"
 `<NEW_REPO>/src/routes/(auth)/sign-in/+page.server.ts`:
 
 ```ts
-import type { PageServerLoad } from "./$types";
-import { redirect } from "@sveltejs/kit";
+import type { PageServerLoad } from './$types';
+import { redirect } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
-  if (locals.user) throw redirect(303, url.searchParams.get("next") ?? "/dashboard");
-  return {
-    justRegistered: url.searchParams.get("registered") === "1",
-    justReset: url.searchParams.get("reset") === "1"
-  };
+	if (locals.user) throw redirect(303, url.searchParams.get('next') ?? '/dashboard');
+	return {
+		justRegistered: url.searchParams.get('registered') === '1',
+		justReset: url.searchParams.get('reset') === '1'
+	};
 };
 ```
 
@@ -1514,83 +1535,83 @@ The page calls `authClient.signIn.email(...)` from the browser. Better Auth's cl
 
 ```svelte
 <script lang="ts">
-  import { goto } from "$app/navigation";
-  import { signIn } from "$lib/auth-client";
+	import { goto } from '$app/navigation';
+	import { signIn } from '$lib/auth-client';
 
-  let { data } = $props();
-  let email = $state("");
-  let password = $state("");
-  let submitting = $state(false);
-  let errorMsg = $state<string | null>(null);
+	let { data } = $props();
+	let email = $state('');
+	let password = $state('');
+	let submitting = $state(false);
+	let errorMsg = $state<string | null>(null);
 
-  async function onSubmit(e: Event) {
-    e.preventDefault();
-    submitting = true;
-    errorMsg = null;
-    try {
-      const res = await signIn.email({ email, password });
-      if (res.error) {
-        errorMsg = res.error.message ?? "Sign-in failed";
-        return;
-      }
-      const next = new URL(window.location.href).searchParams.get("next") ?? "/dashboard";
-      goto(next);
-    } finally {
-      submitting = false;
-    }
-  }
+	async function onSubmit(e: Event) {
+		e.preventDefault();
+		submitting = true;
+		errorMsg = null;
+		try {
+			const res = await signIn.email({ email, password });
+			if (res.error) {
+				errorMsg = res.error.message ?? 'Sign-in failed';
+				return;
+			}
+			const next = new URL(window.location.href).searchParams.get('next') ?? '/dashboard';
+			goto(next);
+		} finally {
+			submitting = false;
+		}
+	}
 </script>
 
 <h2 class="mb-4 text-lg font-medium">Sign in</h2>
 
 {#if data.justRegistered}
-  <p class="mb-4 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">
-    Account created. Check your email to verify, then sign in.
-  </p>
+	<p class="mb-4 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">
+		Account created. Check your email to verify, then sign in.
+	</p>
 {/if}
 {#if data.justReset}
-  <p class="mb-4 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">
-    Password updated. Sign in with your new password.
-  </p>
+	<p class="mb-4 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">
+		Password updated. Sign in with your new password.
+	</p>
 {/if}
 
 {#if errorMsg}
-  <p class="mb-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{errorMsg}</p>
+	<p class="mb-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{errorMsg}</p>
 {/if}
 
 <form onsubmit={onSubmit} class="space-y-4">
-  <label class="block">
-    <span class="mb-1 block text-sm">Email</span>
-    <input
-      class="w-full rounded border px-3 py-2"
-      type="email"
-      bind:value={email}
-      autocomplete="email"
-      required
-    />
-  </label>
-  <label class="block">
-    <span class="mb-1 block text-sm">Password</span>
-    <input
-      class="w-full rounded border px-3 py-2"
-      type="password"
-      bind:value={password}
-      autocomplete="current-password"
-      required
-    />
-  </label>
-  <button
-    class="w-full rounded bg-black px-4 py-2 text-white disabled:opacity-50"
-    type="submit"
-    disabled={submitting}
-  >
-    {submitting ? "Signing in…" : "Sign in"}
-  </button>
+	<label class="block">
+		<span class="mb-1 block text-sm">Email</span>
+		<input
+			class="w-full rounded border px-3 py-2"
+			type="email"
+			bind:value={email}
+			autocomplete="email"
+			required
+		/>
+	</label>
+	<label class="block">
+		<span class="mb-1 block text-sm">Password</span>
+		<input
+			class="w-full rounded border px-3 py-2"
+			type="password"
+			bind:value={password}
+			autocomplete="current-password"
+			required
+		/>
+	</label>
+	<button
+		class="w-full rounded bg-black px-4 py-2 text-white disabled:opacity-50"
+		type="submit"
+		disabled={submitting}
+	>
+		{submitting ? 'Signing in…' : 'Sign in'}
+	</button>
 </form>
 
 <p class="mt-4 text-sm">
-  No account? <a href="/sign-up" class="underline">Create one</a><br>
-  <a href="/forgot-password" class="underline">Forgot password?</a>
+	No account? <a href="/sign-up" class="underline">Create one</a><br />
+	<a href="/forgot-password" class="underline">Forgot password?</a>
 </p>
 ```
 
@@ -1614,6 +1635,7 @@ git commit -m "feat(auth): sign-in page using Better Auth client"
 ### Task 16: Forgot + reset password pages
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/routes/(auth)/forgot-password/+page.svelte`
 - Create: `<NEW_REPO>/src/routes/(auth)/forgot-password/+page.server.ts`
 - Create: `<NEW_REPO>/src/routes/(auth)/reset-password/+page.svelte`
@@ -1623,44 +1645,44 @@ git commit -m "feat(auth): sign-in page using Better Auth client"
 
 ```ts
 // src/routes/(auth)/forgot-password/+page.server.ts
-import type { Actions, PageServerLoad } from "./$types";
-import { fail } from "@sveltejs/kit";
-import { superValidate, message } from "sveltekit-superforms";
-import { zod } from "sveltekit-superforms/adapters";
-import { forgotSchema } from "$lib/validation/auth";
-import { createAuth } from "$lib/server/auth";
-import { withEmailContext } from "$lib/server/email/context";
+import type { Actions, PageServerLoad } from './$types';
+import { fail } from '@sveltejs/kit';
+import { superValidate, message } from 'sveltekit-superforms';
+import { zod } from 'sveltekit-superforms/adapters';
+import { forgotSchema } from '$lib/validation/auth';
+import { createAuth } from '$lib/server/auth';
+import { withEmailContext } from '$lib/server/email/context';
 
 export const load: PageServerLoad = async () => ({ form: await superValidate(zod(forgotSchema)) });
 
 export const actions: Actions = {
-  default: async ({ request, platform }) => {
-    const env = platform!.env;
-    const form = await superValidate(request, zod(forgotSchema));
-    if (!form.valid) return fail(400, { form });
+	default: async ({ request, platform }) => {
+		const env = platform!.env;
+		const form = await superValidate(request, zod(forgotSchema));
+		if (!form.valid) return fail(400, { form });
 
-    const auth = createAuth({
-      d1: env.DB,
-      sessionSecret: env.SESSION_SECRET,
-      appUrl: env.PUBLIC_APP_URL
-    });
+		const auth = createAuth({
+			d1: env.DB,
+			sessionSecret: env.SESSION_SECRET,
+			appUrl: env.PUBLIC_APP_URL
+		});
 
-    await withEmailContext(
-      {
-        apiKey: env.RESEND_API_KEY,
-        senderEmail: env.RESEND_SENDER_EMAIL,
-        senderName: env.RESEND_SENDER_NAME,
-        appUrl: env.PUBLIC_APP_URL
-      },
-      () =>
-        auth.api.forgetPassword({
-          body: { email: form.data.email, redirectTo: `${env.PUBLIC_APP_URL}/reset-password` }
-        })
-    );
+		await withEmailContext(
+			{
+				apiKey: env.RESEND_API_KEY,
+				senderEmail: env.RESEND_SENDER_EMAIL,
+				senderName: env.RESEND_SENDER_NAME,
+				appUrl: env.PUBLIC_APP_URL
+			},
+			() =>
+				auth.api.forgetPassword({
+					body: { email: form.data.email, redirectTo: `${env.PUBLIC_APP_URL}/reset-password` }
+				})
+		);
 
-    // Always return success to avoid email enumeration.
-    return message(form, "If that email exists, a reset link is on its way.");
-  }
+		// Always return success to avoid email enumeration.
+		return message(form, 'If that email exists, a reset link is on its way.');
+	}
 };
 ```
 
@@ -1669,27 +1691,37 @@ export const actions: Actions = {
 ```svelte
 <!-- src/routes/(auth)/forgot-password/+page.svelte -->
 <script lang="ts">
-  import { superForm } from "sveltekit-superforms";
+	import { superForm } from 'sveltekit-superforms';
 
-  let { data } = $props();
-  const { form, errors, enhance, message: msg, submitting } = superForm(data.form);
+	let { data } = $props();
+	const { form, errors, enhance, message: msg, submitting } = superForm(data.form);
 </script>
 
 <h2 class="mb-4 text-lg font-medium">Forgot password</h2>
 
 {#if $msg}
-  <p class="mb-4 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">{$msg}</p>
+	<p class="mb-4 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-800">{$msg}</p>
 {/if}
 
 <form method="POST" use:enhance class="space-y-4">
-  <label class="block">
-    <span class="mb-1 block text-sm">Email</span>
-    <input class="w-full rounded border px-3 py-2" name="email" type="email" bind:value={$form.email} required />
-    {#if $errors.email}<small class="text-red-600">{$errors.email}</small>{/if}
-  </label>
-  <button class="w-full rounded bg-black px-4 py-2 text-white disabled:opacity-50" type="submit" disabled={$submitting}>
-    {$submitting ? "Sending…" : "Send reset link"}
-  </button>
+	<label class="block">
+		<span class="mb-1 block text-sm">Email</span>
+		<input
+			class="w-full rounded border px-3 py-2"
+			name="email"
+			type="email"
+			bind:value={$form.email}
+			required
+		/>
+		{#if $errors.email}<small class="text-red-600">{$errors.email}</small>{/if}
+	</label>
+	<button
+		class="w-full rounded bg-black px-4 py-2 text-white disabled:opacity-50"
+		type="submit"
+		disabled={$submitting}
+	>
+		{$submitting ? 'Sending…' : 'Send reset link'}
+	</button>
 </form>
 
 <p class="mt-4 text-sm"><a href="/sign-in" class="underline">Back to sign in</a></p>
@@ -1699,51 +1731,54 @@ export const actions: Actions = {
 
 ```ts
 // src/routes/(auth)/reset-password/+page.server.ts
-import type { Actions, PageServerLoad } from "./$types";
-import { fail, redirect } from "@sveltejs/kit";
-import { superValidate } from "sveltekit-superforms";
-import { zod } from "sveltekit-superforms/adapters";
-import { resetSchema } from "$lib/validation/auth";
-import { createAuth } from "$lib/server/auth";
-import { withEmailContext } from "$lib/server/email/context";
+import type { Actions, PageServerLoad } from './$types';
+import { fail, redirect } from '@sveltejs/kit';
+import { superValidate } from 'sveltekit-superforms';
+import { zod } from 'sveltekit-superforms/adapters';
+import { resetSchema } from '$lib/validation/auth';
+import { createAuth } from '$lib/server/auth';
+import { withEmailContext } from '$lib/server/email/context';
 
 export const load: PageServerLoad = async ({ url }) => {
-  const token = url.searchParams.get("token") ?? "";
-  const form = await superValidate({ token, password: "", confirmPassword: "" }, zod(resetSchema), {
-    errors: false
-  });
-  return { form, token };
+	const token = url.searchParams.get('token') ?? '';
+	const form = await superValidate({ token, password: '', confirmPassword: '' }, zod(resetSchema), {
+		errors: false
+	});
+	return { form, token };
 };
 
 export const actions: Actions = {
-  default: async ({ request, platform }) => {
-    const env = platform!.env;
-    const form = await superValidate(request, zod(resetSchema));
-    if (!form.valid) return fail(400, { form });
+	default: async ({ request, platform }) => {
+		const env = platform!.env;
+		const form = await superValidate(request, zod(resetSchema));
+		if (!form.valid) return fail(400, { form });
 
-    const auth = createAuth({
-      d1: env.DB,
-      sessionSecret: env.SESSION_SECRET,
-      appUrl: env.PUBLIC_APP_URL
-    });
+		const auth = createAuth({
+			d1: env.DB,
+			sessionSecret: env.SESSION_SECRET,
+			appUrl: env.PUBLIC_APP_URL
+		});
 
-    try {
-      await withEmailContext(
-        {
-          apiKey: env.RESEND_API_KEY,
-          senderEmail: env.RESEND_SENDER_EMAIL,
-          senderName: env.RESEND_SENDER_NAME,
-          appUrl: env.PUBLIC_APP_URL
-        },
-        () => auth.api.resetPassword({ body: { token: form.data.token, newPassword: form.data.password } })
-      );
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Reset failed";
-      return fail(400, { form, message: msg });
-    }
+		try {
+			await withEmailContext(
+				{
+					apiKey: env.RESEND_API_KEY,
+					senderEmail: env.RESEND_SENDER_EMAIL,
+					senderName: env.RESEND_SENDER_NAME,
+					appUrl: env.PUBLIC_APP_URL
+				},
+				() =>
+					auth.api.resetPassword({
+						body: { token: form.data.token, newPassword: form.data.password }
+					})
+			);
+		} catch (e) {
+			const msg = e instanceof Error ? e.message : 'Reset failed';
+			return fail(400, { form, message: msg });
+		}
 
-    throw redirect(303, "/sign-in?reset=1");
-  }
+		throw redirect(303, '/sign-in?reset=1');
+	}
 };
 ```
 
@@ -1752,35 +1787,45 @@ export const actions: Actions = {
 ```svelte
 <!-- src/routes/(auth)/reset-password/+page.svelte -->
 <script lang="ts">
-  import { superForm } from "sveltekit-superforms";
+	import { superForm } from 'sveltekit-superforms';
 
-  let { data } = $props();
-  const { form, errors, enhance, submitting } = superForm(data.form);
+	let { data } = $props();
+	const { form, errors, enhance, submitting } = superForm(data.form);
 </script>
 
 <h2 class="mb-4 text-lg font-medium">Choose a new password</h2>
 
 <form method="POST" use:enhance class="space-y-4">
-  <input type="hidden" name="token" bind:value={$form.token} />
-  <label class="block">
-    <span class="mb-1 block text-sm">New password</span>
-    <input class="w-full rounded border px-3 py-2" name="password" type="password" bind:value={$form.password} required />
-    {#if $errors.password}<small class="text-red-600">{$errors.password}</small>{/if}
-  </label>
-  <label class="block">
-    <span class="mb-1 block text-sm">Confirm password</span>
-    <input
-      class="w-full rounded border px-3 py-2"
-      name="confirmPassword"
-      type="password"
-      bind:value={$form.confirmPassword}
-      required
-    />
-    {#if $errors.confirmPassword}<small class="text-red-600">{$errors.confirmPassword}</small>{/if}
-  </label>
-  <button class="w-full rounded bg-black px-4 py-2 text-white disabled:opacity-50" type="submit" disabled={$submitting}>
-    {$submitting ? "Saving…" : "Save new password"}
-  </button>
+	<input type="hidden" name="token" bind:value={$form.token} />
+	<label class="block">
+		<span class="mb-1 block text-sm">New password</span>
+		<input
+			class="w-full rounded border px-3 py-2"
+			name="password"
+			type="password"
+			bind:value={$form.password}
+			required
+		/>
+		{#if $errors.password}<small class="text-red-600">{$errors.password}</small>{/if}
+	</label>
+	<label class="block">
+		<span class="mb-1 block text-sm">Confirm password</span>
+		<input
+			class="w-full rounded border px-3 py-2"
+			name="confirmPassword"
+			type="password"
+			bind:value={$form.confirmPassword}
+			required
+		/>
+		{#if $errors.confirmPassword}<small class="text-red-600">{$errors.confirmPassword}</small>{/if}
+	</label>
+	<button
+		class="w-full rounded bg-black px-4 py-2 text-white disabled:opacity-50"
+		type="submit"
+		disabled={$submitting}
+	>
+		{$submitting ? 'Saving…' : 'Save new password'}
+	</button>
 </form>
 ```
 
@@ -1802,6 +1847,7 @@ git commit -m "feat(auth): forgot + reset password flows"
 ### Task 17: Verify-email page
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/routes/(auth)/verify-email/+page.svelte`
 - Create: `<NEW_REPO>/src/routes/(auth)/verify-email/+page.server.ts`
 
@@ -1809,37 +1855,37 @@ git commit -m "feat(auth): forgot + reset password flows"
 
 ```ts
 // src/routes/(auth)/verify-email/+page.server.ts
-import type { PageServerLoad } from "./$types";
-import { redirect } from "@sveltejs/kit";
-import { createAuth } from "$lib/server/auth";
-import { withEmailContext } from "$lib/server/email/context";
+import type { PageServerLoad } from './$types';
+import { redirect } from '@sveltejs/kit';
+import { createAuth } from '$lib/server/auth';
+import { withEmailContext } from '$lib/server/email/context';
 
 export const load: PageServerLoad = async ({ url, platform }) => {
-  const env = platform!.env;
-  const token = url.searchParams.get("token");
-  if (!token) return { ok: false as const, error: "Missing verification token." };
+	const env = platform!.env;
+	const token = url.searchParams.get('token');
+	if (!token) return { ok: false as const, error: 'Missing verification token.' };
 
-  const auth = createAuth({
-    d1: env.DB,
-    sessionSecret: env.SESSION_SECRET,
-    appUrl: env.PUBLIC_APP_URL
-  });
+	const auth = createAuth({
+		d1: env.DB,
+		sessionSecret: env.SESSION_SECRET,
+		appUrl: env.PUBLIC_APP_URL
+	});
 
-  try {
-    await withEmailContext(
-      {
-        apiKey: env.RESEND_API_KEY,
-        senderEmail: env.RESEND_SENDER_EMAIL,
-        senderName: env.RESEND_SENDER_NAME,
-        appUrl: env.PUBLIC_APP_URL
-      },
-      () => auth.api.verifyEmail({ query: { token } })
-    );
-  } catch (e) {
-    return { ok: false as const, error: e instanceof Error ? e.message : "Verification failed." };
-  }
+	try {
+		await withEmailContext(
+			{
+				apiKey: env.RESEND_API_KEY,
+				senderEmail: env.RESEND_SENDER_EMAIL,
+				senderName: env.RESEND_SENDER_NAME,
+				appUrl: env.PUBLIC_APP_URL
+			},
+			() => auth.api.verifyEmail({ query: { token } })
+		);
+	} catch (e) {
+		return { ok: false as const, error: e instanceof Error ? e.message : 'Verification failed.' };
+	}
 
-  throw redirect(303, "/dashboard");
+	throw redirect(303, '/dashboard');
 };
 ```
 
@@ -1848,13 +1894,13 @@ export const load: PageServerLoad = async ({ url, platform }) => {
 ```svelte
 <!-- src/routes/(auth)/verify-email/+page.svelte -->
 <script lang="ts">
-  let { data } = $props();
+	let { data } = $props();
 </script>
 
 <h2 class="mb-4 text-lg font-medium">Email verification</h2>
 {#if !data.ok}
-  <p class="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{data.error}</p>
-  <p class="mt-4 text-sm"><a href="/sign-in" class="underline">Back to sign in</a></p>
+	<p class="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{data.error}</p>
+	<p class="mt-4 text-sm"><a href="/sign-in" class="underline">Back to sign in</a></p>
 {/if}
 ```
 
@@ -1870,6 +1916,7 @@ git commit -m "feat(auth): verify-email page"
 ### Task 18: App shell + dashboard placeholder
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/routes/(app)/+layout.server.ts`
 - Create: `<NEW_REPO>/src/routes/(app)/+layout.svelte`
 - Create: `<NEW_REPO>/src/routes/(app)/dashboard/+page.svelte`
@@ -1882,30 +1929,30 @@ git commit -m "feat(auth): verify-email page"
 `<NEW_REPO>/src/lib/server/services/preferences.ts`:
 
 ```ts
-import { eq } from "drizzle-orm";
-import type { DrizzleD1 } from "$lib/server/db/types";
-import { userPreferences } from "$lib/server/db/schema";
+import { eq } from 'drizzle-orm';
+import type { DrizzleD1 } from '$lib/server/db/types';
+import { userPreferences } from '$lib/server/db/schema';
 
 export async function getOrCreatePreferences(db: DrizzleD1, userId: string) {
-  const existing = await db
-    .select()
-    .from(userPreferences)
-    .where(eq(userPreferences.userId, userId))
-    .limit(1);
+	const existing = await db
+		.select()
+		.from(userPreferences)
+		.where(eq(userPreferences.userId, userId))
+		.limit(1);
 
-  if (existing[0]) return existing[0];
+	if (existing[0]) return existing[0];
 
-  const now = new Date();
-  const row = {
-    userId,
-    locale: "en",
-    currencyDefault: "USD",
-    theme: "system",
-    weekStart: 1,
-    updatedAt: now
-  };
-  await db.insert(userPreferences).values(row).onConflictDoNothing();
-  return row;
+	const now = new Date();
+	const row = {
+		userId,
+		locale: 'en',
+		currencyDefault: 'USD',
+		theme: 'system',
+		weekStart: 1,
+		updatedAt: now
+	};
+	await db.insert(userPreferences).values(row).onConflictDoNothing();
+	return row;
 }
 ```
 
@@ -1914,14 +1961,14 @@ export async function getOrCreatePreferences(db: DrizzleD1, userId: string) {
 `<NEW_REPO>/src/routes/(app)/+layout.server.ts`:
 
 ```ts
-import type { LayoutServerLoad } from "./$types";
-import { requireUser } from "$lib/server/guards";
-import { getOrCreatePreferences } from "$lib/server/services/preferences";
+import type { LayoutServerLoad } from './$types';
+import { requireUser } from '$lib/server/guards';
+import { getOrCreatePreferences } from '$lib/server/services/preferences';
 
 export const load: LayoutServerLoad = async (event) => {
-  const user = requireUser(event);
-  const preferences = await getOrCreatePreferences(event.locals.db, user.id);
-  return { user, preferences };
+	const user = requireUser(event);
+	const preferences = await getOrCreatePreferences(event.locals.db, user.id);
+	return { user, preferences };
 };
 ```
 
@@ -1931,36 +1978,36 @@ export const load: LayoutServerLoad = async (event) => {
 
 ```svelte
 <script lang="ts">
-  import { signOut } from "$lib/auth-client";
-  import { goto } from "$app/navigation";
+	import { signOut } from '$lib/auth-client';
+	import { goto } from '$app/navigation';
 
-  let { data, children } = $props();
+	let { data, children } = $props();
 
-  async function onSignOut() {
-    await signOut();
-    goto("/sign-in");
-  }
+	async function onSignOut() {
+		await signOut();
+		goto('/sign-in');
+	}
 </script>
 
 <div class="flex min-h-screen flex-col">
-  <header class="flex items-center justify-between border-b px-4 py-3">
-    <a href="/dashboard" class="font-semibold">Mavlo</a>
-    <div class="flex items-center gap-3 text-sm">
-      <span>{data.user?.email}</span>
-      <button class="underline" onclick={onSignOut}>Sign out</button>
-    </div>
-  </header>
+	<header class="flex items-center justify-between border-b px-4 py-3">
+		<a href="/dashboard" class="font-semibold">Mavlo</a>
+		<div class="flex items-center gap-3 text-sm">
+			<span>{data.user?.email}</span>
+			<button class="underline" onclick={onSignOut}>Sign out</button>
+		</div>
+	</header>
 
-  <main class="mx-auto w-full max-w-3xl flex-1 p-4">
-    {@render children?.()}
-  </main>
+	<main class="mx-auto w-full max-w-3xl flex-1 p-4">
+		{@render children?.()}
+	</main>
 
-  <nav class="border-t bg-white">
-    <ul class="mx-auto flex max-w-3xl items-center justify-around py-2 text-sm">
-      <li><a href="/dashboard">Dashboard</a></li>
-      <li><a href="/settings">Settings</a></li>
-    </ul>
-  </nav>
+	<nav class="border-t bg-white">
+		<ul class="mx-auto flex max-w-3xl items-center justify-around py-2 text-sm">
+			<li><a href="/dashboard">Dashboard</a></li>
+			<li><a href="/settings">Settings</a></li>
+		</ul>
+	</nav>
 </div>
 ```
 
@@ -1969,11 +2016,11 @@ export const load: LayoutServerLoad = async (event) => {
 `<NEW_REPO>/src/routes/(app)/dashboard/+page.server.ts`:
 
 ```ts
-import type { PageServerLoad } from "./$types";
+import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ parent }) => {
-  const { user, preferences } = await parent();
-  return { user, preferences };
+	const { user, preferences } = await parent();
+	return { user, preferences };
 };
 ```
 
@@ -1981,16 +2028,16 @@ export const load: PageServerLoad = async ({ parent }) => {
 
 ```svelte
 <script lang="ts">
-  let { data } = $props();
+	let { data } = $props();
 </script>
 
 <h1 class="mb-4 text-xl font-semibold">Welcome, {data.user.name ?? data.user.email}</h1>
-<p class="text-sm text-muted-foreground">
-  Locale: {data.preferences.locale} · Currency: {data.preferences.currencyDefault}
+<p class="text-muted-foreground text-sm">
+	Locale: {data.preferences.locale} · Currency: {data.preferences.currencyDefault}
 </p>
 <p class="mt-6 text-sm">
-  This shell is ready for accounts, categories, transactions, budgets, and dashboards in
-  subsequent plans.
+	This shell is ready for accounts, categories, transactions, budgets, and dashboards in subsequent
+	plans.
 </p>
 ```
 
@@ -2000,9 +2047,9 @@ Replace `<NEW_REPO>/src/routes/+page.svelte` with:
 
 ```svelte
 <script lang="ts">
-  import { onMount } from "svelte";
-  import { goto } from "$app/navigation";
-  onMount(() => goto("/dashboard"));
+	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	onMount(() => goto('/dashboard'));
 </script>
 ```
 
@@ -2026,6 +2073,7 @@ git commit -m "feat(app): guarded layout shell + dashboard placeholder"
 ### Task 19: Vitest infra + preferences test
 
 **Files:**
+
 - Create: `<NEW_REPO>/vitest.config.ts` (or update existing from `sv create`)
 - Create: `<NEW_REPO>/src/lib/server/db/__tests__/test-db.ts`
 - Create: `<NEW_REPO>/src/lib/server/services/preferences.test.ts`
@@ -2035,16 +2083,16 @@ git commit -m "feat(app): guarded layout shell + dashboard placeholder"
 `<NEW_REPO>/vitest.config.ts`:
 
 ```ts
-import { defineConfig } from "vitest/config";
-import { sveltekit } from "@sveltejs/kit/vite";
+import { defineConfig } from 'vitest/config';
+import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
-  plugins: [sveltekit()],
-  test: {
-    include: ["src/**/*.{test,spec}.{ts,svelte}"],
-    environment: "node",
-    setupFiles: []
-  }
+	plugins: [sveltekit()],
+	test: {
+		include: ['src/**/*.{test,spec}.{ts,svelte}'],
+		environment: 'node',
+		setupFiles: []
+	}
 });
 ```
 
@@ -2053,23 +2101,23 @@ export default defineConfig({
 `<NEW_REPO>/src/lib/server/db/__tests__/test-db.ts`:
 
 ```ts
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import { migrate } from "drizzle-orm/better-sqlite3/migrator";
-import { resolve } from "node:path";
-import * as schema from "../schema";
-import type { DrizzleD1 } from "../types";
+import Database from 'better-sqlite3';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
+import { resolve } from 'node:path';
+import * as schema from '../schema';
+import type { DrizzleD1 } from '../types';
 
 export function createTestDb(): DrizzleD1 {
-  const sqlite = new Database(":memory:");
-  const db = drizzle(sqlite, { schema });
+	const sqlite = new Database(':memory:');
+	const db = drizzle(sqlite, { schema });
 
-  migrate(db, { migrationsFolder: resolve(process.cwd(), "drizzle") });
+	migrate(db, { migrationsFolder: resolve(process.cwd(), 'drizzle') });
 
-  // Both better-sqlite3 and D1 use Drizzle's SQLite dialect, so the runtime
-  // shape is compatible for the queries used in services. Cast keeps the
-  // service signatures DB-agnostic for tests.
-  return db as unknown as DrizzleD1;
+	// Both better-sqlite3 and D1 use Drizzle's SQLite dialect, so the runtime
+	// shape is compatible for the queries used in services. Cast keeps the
+	// service signatures DB-agnostic for tests.
+	return db as unknown as DrizzleD1;
 }
 ```
 
@@ -2078,33 +2126,33 @@ export function createTestDb(): DrizzleD1 {
 `<NEW_REPO>/src/lib/server/services/preferences.test.ts`:
 
 ```ts
-import { describe, it, expect } from "vitest";
-import { createTestDb } from "$lib/server/db/__tests__/test-db";
-import { getOrCreatePreferences } from "./preferences";
-import { users } from "$lib/server/db/schema";
+import { describe, it, expect } from 'vitest';
+import { createTestDb } from '$lib/server/db/__tests__/test-db';
+import { getOrCreatePreferences } from './preferences';
+import { users } from '$lib/server/db/schema';
 
-describe("getOrCreatePreferences", () => {
-  it("creates a default row on first call and returns it on subsequent calls", async () => {
-    const db = createTestDb();
-    const now = new Date();
-    await db.insert(users).values({
-      id: "u_1",
-      email: "u1@example.com",
-      emailVerified: false,
-      name: "U1",
-      image: null,
-      createdAt: now,
-      updatedAt: now
-    });
+describe('getOrCreatePreferences', () => {
+	it('creates a default row on first call and returns it on subsequent calls', async () => {
+		const db = createTestDb();
+		const now = new Date();
+		await db.insert(users).values({
+			id: 'u_1',
+			email: 'u1@example.com',
+			emailVerified: false,
+			name: 'U1',
+			image: null,
+			createdAt: now,
+			updatedAt: now
+		});
 
-    const first = await getOrCreatePreferences(db, "u_1");
-    expect(first.userId).toBe("u_1");
-    expect(first.locale).toBe("en");
-    expect(first.currencyDefault).toBe("USD");
+		const first = await getOrCreatePreferences(db, 'u_1');
+		expect(first.userId).toBe('u_1');
+		expect(first.locale).toBe('en');
+		expect(first.currencyDefault).toBe('USD');
 
-    const second = await getOrCreatePreferences(db, "u_1");
-    expect(second.userId).toBe("u_1");
-  });
+		const second = await getOrCreatePreferences(db, 'u_1');
+		expect(second.userId).toBe('u_1');
+	});
 });
 ```
 
@@ -2128,19 +2176,20 @@ git commit -m "test: vitest infra + preferences service test"
 ### Task 20: Health check endpoint
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/routes/api/health/+server.ts`
 
 - [ ] **Step 20.1: Implement**
 
 ```ts
-import type { RequestHandler } from "./$types";
-import { json } from "@sveltejs/kit";
-import { sql } from "drizzle-orm";
+import type { RequestHandler } from './$types';
+import { json } from '@sveltejs/kit';
+import { sql } from 'drizzle-orm';
 
 export const GET: RequestHandler = async ({ locals }) => {
-  // Cheap probe: confirm the DB binding answers a trivial query.
-  const rows = await locals.db.run(sql`select 1 as ok`);
-  return json({ ok: rows?.success ?? true });
+	// Cheap probe: confirm the DB binding answers a trivial query.
+	const rows = await locals.db.run(sql`select 1 as ok`);
+	return json({ ok: rows?.success ?? true });
 };
 ```
 
@@ -2213,6 +2262,7 @@ git commit --allow-empty -m "chore: phase 1 deployed to preview"
 ### Task 22: README + handoff notes
 
 **Files:**
+
 - Create: `<NEW_REPO>/README.md`
 
 - [ ] **Step 22.1: Write README**

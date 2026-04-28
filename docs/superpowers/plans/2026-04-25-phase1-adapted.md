@@ -9,6 +9,7 @@
 **Tech Stack:** SvelteKit 2.57, Svelte 5.55, drizzle-orm 0.45, drizzle-kit 0.31, better-auth ~1.4.21, wrangler ^4.81, vitest 4.1, tailwindcss 4.2, typescript 6.0.
 
 **Conventions:**
+
 - `<NEW_REPO>` = `/Users/candratama/Project/WebDev/mavlo`
 - All `wrangler` invocations: `npx wrangler ...`
 - Money: INTEGER cents
@@ -22,6 +23,7 @@
 ## What `sv create` Already Did (Skip / Reference Only)
 
 Scaffold at `<NEW_REPO>` already provides:
+
 - ✅ SvelteKit 2 + Svelte 5 runes (`svelte.config.js` forces runes mode)
 - ✅ `@sveltejs/adapter-cloudflare` configured in `svelte.config.js`
 - ✅ Tailwind v4 + `@tailwindcss/typography`
@@ -75,6 +77,7 @@ drizzle (D1), better-auth (email/password demo)."
 ## Task 1: Add Project Dependencies
 
 **Files:**
+
 - Modify: `<NEW_REPO>/package.json`
 
 Adds runtime deps (shadcn-svelte foundation + Resend + cuid2 + zod + vite-pwa + dev tooling for in-memory DB tests).
@@ -145,12 +148,14 @@ npx wrangler d1 create mavlo
 ```
 
 Capture from output:
+
 - `database_name = "mavlo"`
 - `database_id = "<UUID>"` ← record this
 
 - [ ] **Step 2: Create D1 API token (Cloudflare dashboard)**
 
 Dashboard → My Profile → API Tokens → Create Token → Custom token:
+
 - Account → D1 → Edit (account: your account)
 - Save token value as `CLOUDFLARE_D1_TOKEN`
 
@@ -186,6 +191,7 @@ User pastes IDs/secrets to controller; controller injects into T3.
 ## Task 3: Wire Bindings + Secrets Files
 
 **Files:**
+
 - Modify: `<NEW_REPO>/wrangler.jsonc`
 - Modify: `<NEW_REPO>/.env`
 - Modify: `<NEW_REPO>/.env.example`
@@ -199,34 +205,34 @@ Adds D1, R2, vars to `wrangler.jsonc`. `.env` populated for `drizzle-kit` (HTTP 
 
 ```jsonc
 {
-  "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "mavlo",
-  "compatibility_date": "2026-04-25",
-  "compatibility_flags": ["nodejs_als"],
-  "main": ".svelte-kit/cloudflare/_worker.js",
-  "assets": {
-    "binding": "ASSETS",
-    "directory": ".svelte-kit/cloudflare"
-  },
-  "workers_dev": true,
-  "preview_urls": true,
-  "vars": {
-    "ORIGIN": "https://mavlo.<your-subdomain>.workers.dev",
-    "RESEND_FROM": "Mavlo <noreply@mavlo.app>"
-  },
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "mavlo",
-      "database_id": "<DATABASE_ID_FROM_T2>"
-    }
-  ],
-  "r2_buckets": [
-    {
-      "binding": "UPLOADS",
-      "bucket_name": "mavlo-uploads"
-    }
-  ]
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "mavlo",
+	"compatibility_date": "2026-04-25",
+	"compatibility_flags": ["nodejs_als"],
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	},
+	"workers_dev": true,
+	"preview_urls": true,
+	"vars": {
+		"ORIGIN": "https://mavlo.<your-subdomain>.workers.dev",
+		"RESEND_FROM": "Mavlo <noreply@mavlo.app>"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "mavlo",
+			"database_id": "<DATABASE_ID_FROM_T2>"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "UPLOADS",
+			"bucket_name": "mavlo-uploads"
+		}
+	]
 }
 ```
 
@@ -311,6 +317,7 @@ git commit -m "feat(infra): bind D1, R2, vars; add dev.vars template"
 ## Task 4: Replace Demo Schema with App Schema
 
 **Files:**
+
 - Modify: `<NEW_REPO>/src/lib/server/db/schema.ts`
 - Test: `<NEW_REPO>/src/lib/server/db/schema.test.ts`
 
@@ -325,18 +332,18 @@ import { describe, it, expect } from 'vitest';
 import * as schema from './schema';
 
 describe('app schema exports', () => {
-  it('exports all required app tables', () => {
-    expect(schema.accounts).toBeDefined();
-    expect(schema.categories).toBeDefined();
-    expect(schema.transactions).toBeDefined();
-    expect(schema.budgets).toBeDefined();
-    expect(schema.userPreferences).toBeDefined();
-  });
+	it('exports all required app tables', () => {
+		expect(schema.accounts).toBeDefined();
+		expect(schema.categories).toBeDefined();
+		expect(schema.transactions).toBeDefined();
+		expect(schema.budgets).toBeDefined();
+		expect(schema.userPreferences).toBeDefined();
+	});
 
-  it('does not export the demo task table', () => {
-    // @ts-expect-error: should be removed
-    expect(schema.task).toBeUndefined();
-  });
+	it('does not export the demo task table', () => {
+		// @ts-expect-error: should be removed
+		expect(schema.task).toBeUndefined();
+	});
 });
 ```
 
@@ -357,95 +364,103 @@ import { integer, real, sqliteTable, text, index } from 'drizzle-orm/sqlite-core
 import { createId } from '@paralleldrive/cuid2';
 import { users } from './auth.schema';
 
-const cuid = () => text().notNull().$defaultFn(() => createId());
+const cuid = () =>
+	text()
+		.notNull()
+		.$defaultFn(() => createId());
 const userIdFk = () =>
-  text('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' });
-const epochMsNow = () => integer({ mode: 'number' }).notNull().$defaultFn(() => Date.now());
+	text('user_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade' });
+const epochMsNow = () =>
+	integer({ mode: 'number' })
+		.notNull()
+		.$defaultFn(() => Date.now());
 
 export const accounts = sqliteTable(
-  'accounts',
-  {
-    id: cuid().primaryKey(),
-    userId: userIdFk(),
-    name: text('name').notNull(),
-    type: text('type', { enum: ['cash', 'bank', 'credit', 'wallet', 'other'] }).notNull(),
-    currency: text('currency').notNull().default('IDR'),
-    initialBalanceCents: integer('initial_balance_cents', { mode: 'number' }).notNull().default(0),
-    archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
-    createdAt: epochMsNow(),
-    updatedAt: epochMsNow()
-  },
-  (t) => [index('accounts_user_idx').on(t.userId)]
+	'accounts',
+	{
+		id: cuid().primaryKey(),
+		userId: userIdFk(),
+		name: text('name').notNull(),
+		type: text('type', { enum: ['cash', 'bank', 'credit', 'wallet', 'other'] }).notNull(),
+		currency: text('currency').notNull().default('IDR'),
+		initialBalanceCents: integer('initial_balance_cents', { mode: 'number' }).notNull().default(0),
+		archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
+		createdAt: epochMsNow(),
+		updatedAt: epochMsNow()
+	},
+	(t) => [index('accounts_user_idx').on(t.userId)]
 );
 
 export const categories = sqliteTable(
-  'categories',
-  {
-    id: cuid().primaryKey(),
-    userId: userIdFk(),
-    name: text('name').notNull(),
-    kind: text('kind', { enum: ['income', 'expense'] }).notNull(),
-    color: text('color'),
-    icon: text('icon'),
-    archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
-    createdAt: epochMsNow(),
-    updatedAt: epochMsNow()
-  },
-  (t) => [index('categories_user_idx').on(t.userId)]
+	'categories',
+	{
+		id: cuid().primaryKey(),
+		userId: userIdFk(),
+		name: text('name').notNull(),
+		kind: text('kind', { enum: ['income', 'expense'] }).notNull(),
+		color: text('color'),
+		icon: text('icon'),
+		archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
+		createdAt: epochMsNow(),
+		updatedAt: epochMsNow()
+	},
+	(t) => [index('categories_user_idx').on(t.userId)]
 );
 
 export const transactions = sqliteTable(
-  'transactions',
-  {
-    id: cuid().primaryKey(),
-    userId: userIdFk(),
-    accountId: text('account_id')
-      .notNull()
-      .references(() => accounts.id, { onDelete: 'cascade' }),
-    categoryId: text('category_id').references(() => categories.id, { onDelete: 'set null' }),
-    amountCents: integer('amount_cents', { mode: 'number' }).notNull(),
-    kind: text('kind', { enum: ['income', 'expense', 'transfer'] }).notNull(),
-    note: text('note'),
-    occurredAt: integer('occurred_at', { mode: 'number' }).notNull(),
-    createdAt: epochMsNow(),
-    updatedAt: epochMsNow()
-  },
-  (t) => [
-    index('tx_user_idx').on(t.userId),
-    index('tx_user_occurred_idx').on(t.userId, t.occurredAt),
-    index('tx_account_idx').on(t.accountId)
-  ]
+	'transactions',
+	{
+		id: cuid().primaryKey(),
+		userId: userIdFk(),
+		accountId: text('account_id')
+			.notNull()
+			.references(() => accounts.id, { onDelete: 'cascade' }),
+		categoryId: text('category_id').references(() => categories.id, { onDelete: 'set null' }),
+		amountCents: integer('amount_cents', { mode: 'number' }).notNull(),
+		kind: text('kind', { enum: ['income', 'expense', 'transfer'] }).notNull(),
+		note: text('note'),
+		occurredAt: integer('occurred_at', { mode: 'number' }).notNull(),
+		createdAt: epochMsNow(),
+		updatedAt: epochMsNow()
+	},
+	(t) => [
+		index('tx_user_idx').on(t.userId),
+		index('tx_user_occurred_idx').on(t.userId, t.occurredAt),
+		index('tx_account_idx').on(t.accountId)
+	]
 );
 
 export const budgets = sqliteTable(
-  'budgets',
-  {
-    id: cuid().primaryKey(),
-    userId: userIdFk(),
-    categoryId: text('category_id')
-      .notNull()
-      .references(() => categories.id, { onDelete: 'cascade' }),
-    periodMonth: text('period_month').notNull(), // 'YYYY-MM'
-    limitCents: integer('limit_cents', { mode: 'number' }).notNull(),
-    createdAt: epochMsNow(),
-    updatedAt: epochMsNow()
-  },
-  (t) => [index('budgets_user_period_idx').on(t.userId, t.periodMonth)]
+	'budgets',
+	{
+		id: cuid().primaryKey(),
+		userId: userIdFk(),
+		categoryId: text('category_id')
+			.notNull()
+			.references(() => categories.id, { onDelete: 'cascade' }),
+		periodMonth: text('period_month').notNull(), // 'YYYY-MM'
+		limitCents: integer('limit_cents', { mode: 'number' }).notNull(),
+		createdAt: epochMsNow(),
+		updatedAt: epochMsNow()
+	},
+	(t) => [index('budgets_user_period_idx').on(t.userId, t.periodMonth)]
 );
 
 export const userPreferences = sqliteTable('user_preferences', {
-  userId: text('user_id')
-    .primaryKey()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  currency: text('currency').notNull().default('IDR'),
-  locale: text('locale').notNull().default('id-ID'),
-  timezone: text('timezone').notNull().default('Asia/Jakarta'),
-  theme: text('theme', { enum: ['light', 'dark', 'system'] }).notNull().default('system'),
-  weekStartsOn: integer('week_starts_on', { mode: 'number' }).notNull().default(1),
-  createdAt: epochMsNow(),
-  updatedAt: epochMsNow()
+	userId: text('user_id')
+		.primaryKey()
+		.references(() => users.id, { onDelete: 'cascade' }),
+	currency: text('currency').notNull().default('IDR'),
+	locale: text('locale').notNull().default('id-ID'),
+	timezone: text('timezone').notNull().default('Asia/Jakarta'),
+	theme: text('theme', { enum: ['light', 'dark', 'system'] })
+		.notNull()
+		.default('system'),
+	weekStartsOn: integer('week_starts_on', { mode: 'number' }).notNull().default(1),
+	createdAt: epochMsNow(),
+	updatedAt: epochMsNow()
 });
 
 export * from './auth.schema';
@@ -484,6 +499,7 @@ git commit -m "feat(db): replace demo task table with mavlo app schema"
 ## Task 5: Configure Better Auth (verification, password reset, callbacks)
 
 **Files:**
+
 - Modify: `<NEW_REPO>/src/lib/server/auth.ts`
 - Create: `<NEW_REPO>/src/lib/server/email/resend.ts`
 - Create: `<NEW_REPO>/src/lib/server/email/templates.ts`
@@ -502,50 +518,50 @@ import { sendEmail } from './resend';
 const fetchMock = vi.fn();
 
 beforeEach(() => {
-  fetchMock.mockReset();
-  vi.stubGlobal('fetch', fetchMock);
+	fetchMock.mockReset();
+	vi.stubGlobal('fetch', fetchMock);
 });
 
 describe('sendEmail', () => {
-  it('POSTs to Resend with bearer auth and payload', async () => {
-    fetchMock.mockResolvedValueOnce(
-      new Response(JSON.stringify({ id: 'msg_123' }), { status: 200 })
-    );
+	it('POSTs to Resend with bearer auth and payload', async () => {
+		fetchMock.mockResolvedValueOnce(
+			new Response(JSON.stringify({ id: 'msg_123' }), { status: 200 })
+		);
 
-    await sendEmail({
-      apiKey: 'test_key',
-      from: 'Mavlo <noreply@mavlo.app>',
-      to: 'user@example.com',
-      subject: 'Hi',
-      text: 'Body'
-    });
+		await sendEmail({
+			apiKey: 'test_key',
+			from: 'Mavlo <noreply@mavlo.app>',
+			to: 'user@example.com',
+			subject: 'Hi',
+			text: 'Body'
+		});
 
-    expect(fetchMock).toHaveBeenCalledOnce();
-    const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe('https://api.resend.com/emails');
-    expect(init.method).toBe('POST');
-    expect(init.headers.Authorization).toBe('Bearer test_key');
-    const body = JSON.parse(init.body);
-    expect(body).toEqual({
-      from: 'Mavlo <noreply@mavlo.app>',
-      to: 'user@example.com',
-      subject: 'Hi',
-      text: 'Body'
-    });
-  });
+		expect(fetchMock).toHaveBeenCalledOnce();
+		const [url, init] = fetchMock.mock.calls[0];
+		expect(url).toBe('https://api.resend.com/emails');
+		expect(init.method).toBe('POST');
+		expect(init.headers.Authorization).toBe('Bearer test_key');
+		const body = JSON.parse(init.body);
+		expect(body).toEqual({
+			from: 'Mavlo <noreply@mavlo.app>',
+			to: 'user@example.com',
+			subject: 'Hi',
+			text: 'Body'
+		});
+	});
 
-  it('throws on non-2xx response', async () => {
-    fetchMock.mockResolvedValueOnce(new Response('rate limited', { status: 429 }));
-    await expect(
-      sendEmail({
-        apiKey: 'k',
-        from: 'a',
-        to: 'b',
-        subject: 's',
-        text: 't'
-      })
-    ).rejects.toThrow(/resend.*429/i);
-  });
+	it('throws on non-2xx response', async () => {
+		fetchMock.mockResolvedValueOnce(new Response('rate limited', { status: 429 }));
+		await expect(
+			sendEmail({
+				apiKey: 'k',
+				from: 'a',
+				to: 'b',
+				subject: 's',
+				text: 't'
+			})
+		).rejects.toThrow(/resend.*429/i);
+	});
 });
 ```
 
@@ -562,29 +578,29 @@ Expected: FAIL — `Cannot find module './resend'`.
 
 ```typescript
 export interface SendEmailArgs {
-  apiKey: string;
-  from: string;
-  to: string;
-  subject: string;
-  text: string;
-  html?: string;
+	apiKey: string;
+	from: string;
+	to: string;
+	subject: string;
+	text: string;
+	html?: string;
 }
 
 export async function sendEmail(args: SendEmailArgs): Promise<void> {
-  const { apiKey, from, to, subject, text, html } = args;
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ from, to, subject, text, ...(html ? { html } : {}) })
-  });
+	const { apiKey, from, to, subject, text, html } = args;
+	const res = await fetch('https://api.resend.com/emails', {
+		method: 'POST',
+		headers: {
+			Authorization: `Bearer ${apiKey}`,
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({ from, to, subject, text, ...(html ? { html } : {}) })
+	});
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new Error(`Resend error ${res.status}: ${body}`);
-  }
+	if (!res.ok) {
+		const body = await res.text().catch(() => '');
+		throw new Error(`Resend error ${res.status}: ${body}`);
+	}
 }
 ```
 
@@ -592,8 +608,8 @@ export async function sendEmail(args: SendEmailArgs): Promise<void> {
 
 ```typescript
 export const verifyEmailTemplate = (url: string, name?: string) => ({
-  subject: 'Verify your Mavlo email',
-  text: `Hi${name ? ` ${name}` : ''},
+	subject: 'Verify your Mavlo email',
+	text: `Hi${name ? ` ${name}` : ''},
 
 Confirm your Mavlo email by visiting:
 ${url}
@@ -602,8 +618,8 @@ If you didn't create a Mavlo account, ignore this message.`
 });
 
 export const resetPasswordTemplate = (url: string, name?: string) => ({
-  subject: 'Reset your Mavlo password',
-  text: `Hi${name ? ` ${name}` : ''},
+	subject: 'Reset your Mavlo password',
+	text: `Hi${name ? ` ${name}` : ''},
 
 We received a request to reset your Mavlo password. Click below within the next hour:
 ${url}
@@ -633,50 +649,46 @@ import { getDb } from '$lib/server/db';
 import { sendEmail } from '$lib/server/email/resend';
 import { verifyEmailTemplate, resetPasswordTemplate } from '$lib/server/email/templates';
 
-const sendFromRequest = async (
-  to: string,
-  subject: string,
-  text: string
-) => {
-  const event = getRequestEvent();
-  const platformEnv = event.platform?.env;
-  if (!platformEnv) throw new Error('platform.env unavailable in auth email callback');
-  await sendEmail({
-    apiKey: platformEnv.RESEND_API_KEY,
-    from: platformEnv.RESEND_FROM,
-    to,
-    subject,
-    text
-  });
+const sendFromRequest = async (to: string, subject: string, text: string) => {
+	const event = getRequestEvent();
+	const platformEnv = event.platform?.env;
+	if (!platformEnv) throw new Error('platform.env unavailable in auth email callback');
+	await sendEmail({
+		apiKey: platformEnv.RESEND_API_KEY,
+		from: platformEnv.RESEND_FROM,
+		to,
+		subject,
+		text
+	});
 };
 
 const authConfig = {
-  baseURL: env.ORIGIN,
-  secret: env.BETTER_AUTH_SECRET,
-  emailAndPassword: {
-    enabled: true,
-    requireEmailVerification: true,
-    sendResetPassword: async ({ user, url }) => {
-      const tpl = resetPasswordTemplate(url, user.name);
-      await sendFromRequest(user.email, tpl.subject, tpl.text);
-    }
-  },
-  emailVerification: {
-    sendVerificationEmail: async ({ user, url }) => {
-      const tpl = verifyEmailTemplate(url, user.name);
-      await sendFromRequest(user.email, tpl.subject, tpl.text);
-    },
-    sendOnSignUp: true,
-    autoSignInAfterVerification: true
-  },
-  plugins: [sveltekitCookies(getRequestEvent)] // last
+	baseURL: env.ORIGIN,
+	secret: env.BETTER_AUTH_SECRET,
+	emailAndPassword: {
+		enabled: true,
+		requireEmailVerification: true,
+		sendResetPassword: async ({ user, url }) => {
+			const tpl = resetPasswordTemplate(url, user.name);
+			await sendFromRequest(user.email, tpl.subject, tpl.text);
+		}
+	},
+	emailVerification: {
+		sendVerificationEmail: async ({ user, url }) => {
+			const tpl = verifyEmailTemplate(url, user.name);
+			await sendFromRequest(user.email, tpl.subject, tpl.text);
+		},
+		sendOnSignUp: true,
+		autoSignInAfterVerification: true
+	},
+	plugins: [sveltekitCookies(getRequestEvent)] // last
 } satisfies Omit<Parameters<typeof betterAuth>[0], 'database'>;
 
 export const createAuth = (d1: D1Database) =>
-  betterAuth({
-    ...authConfig,
-    database: drizzleAdapter(getDb(d1), { provider: 'sqlite' })
-  });
+	betterAuth({
+		...authConfig,
+		database: drizzleAdapter(getDb(d1), { provider: 'sqlite' })
+	});
 
 /**
  * DO NOT USE!
@@ -709,6 +721,7 @@ git commit -m "feat(auth): require email verification, wire Resend for verify+re
 ## Task 6: Generate Better Auth Schema + Push to D1
 
 **Files:**
+
 - Modify (regenerated): `<NEW_REPO>/src/lib/server/db/auth.schema.ts`
 
 Runs `npm run auth:schema` to populate the auth tables (`users`, `sessions`, `accounts` ← will rename to `auth_accounts` in adapter to avoid clash with our app `accounts`, `verifications`).
@@ -775,6 +788,7 @@ git commit -m "feat(auth): generate auth schema with namespaced auth_accounts ta
 ## Task 7: Validation Schemas + Auth Form Helpers
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/validation/auth.ts`
 - Test: `<NEW_REPO>/src/lib/validation/auth.test.ts`
 
@@ -789,25 +803,31 @@ import { describe, it, expect } from 'vitest';
 import { signInSchema, signUpSchema, forgotPasswordSchema, resetPasswordSchema } from './auth';
 
 describe('auth validation', () => {
-  it('signUp requires name + email + password >= 8', () => {
-    expect(signUpSchema.safeParse({ name: 'A', email: 'a@b.co', password: 'short' }).success).toBe(false);
-    expect(signUpSchema.safeParse({ name: 'Ada', email: 'a@b.co', password: 'longenough1' }).success).toBe(true);
-  });
+	it('signUp requires name + email + password >= 8', () => {
+		expect(signUpSchema.safeParse({ name: 'A', email: 'a@b.co', password: 'short' }).success).toBe(
+			false
+		);
+		expect(
+			signUpSchema.safeParse({ name: 'Ada', email: 'a@b.co', password: 'longenough1' }).success
+		).toBe(true);
+	});
 
-  it('signIn requires email + non-empty password', () => {
-    expect(signInSchema.safeParse({ email: 'a@b.co', password: '' }).success).toBe(false);
-    expect(signInSchema.safeParse({ email: 'a@b.co', password: 'x' }).success).toBe(true);
-  });
+	it('signIn requires email + non-empty password', () => {
+		expect(signInSchema.safeParse({ email: 'a@b.co', password: '' }).success).toBe(false);
+		expect(signInSchema.safeParse({ email: 'a@b.co', password: 'x' }).success).toBe(true);
+	});
 
-  it('forgotPassword requires email', () => {
-    expect(forgotPasswordSchema.safeParse({ email: 'invalid' }).success).toBe(false);
-    expect(forgotPasswordSchema.safeParse({ email: 'a@b.co' }).success).toBe(true);
-  });
+	it('forgotPassword requires email', () => {
+		expect(forgotPasswordSchema.safeParse({ email: 'invalid' }).success).toBe(false);
+		expect(forgotPasswordSchema.safeParse({ email: 'a@b.co' }).success).toBe(true);
+	});
 
-  it('resetPassword requires token + password >= 8', () => {
-    expect(resetPasswordSchema.safeParse({ token: 't', password: 'short' }).success).toBe(false);
-    expect(resetPasswordSchema.safeParse({ token: 't', password: 'longenough1' }).success).toBe(true);
-  });
+	it('resetPassword requires token + password >= 8', () => {
+		expect(resetPasswordSchema.safeParse({ token: 't', password: 'short' }).success).toBe(false);
+		expect(resetPasswordSchema.safeParse({ token: 't', password: 'longenough1' }).success).toBe(
+			true
+		);
+	});
 });
 ```
 
@@ -829,23 +849,23 @@ export const emailField = z.string().trim().toLowerCase().email('Invalid email')
 export const passwordField = z.string().min(8, 'Password must be at least 8 characters');
 
 export const signUpSchema = z.object({
-  name: z.string().trim().min(1, 'Name required').max(100),
-  email: emailField,
-  password: passwordField
+	name: z.string().trim().min(1, 'Name required').max(100),
+	email: emailField,
+	password: passwordField
 });
 
 export const signInSchema = z.object({
-  email: emailField,
-  password: z.string().min(1, 'Password required')
+	email: emailField,
+	password: z.string().min(1, 'Password required')
 });
 
 export const forgotPasswordSchema = z.object({
-  email: emailField
+	email: emailField
 });
 
 export const resetPasswordSchema = z.object({
-  token: z.string().min(1, 'Reset token required'),
-  password: passwordField
+	token: z.string().min(1, 'Reset token required'),
+	password: passwordField
 });
 
 export type SignUpInput = z.infer<typeof signUpSchema>;
@@ -876,6 +896,7 @@ git commit -m "feat(validation): zod schemas for auth forms"
 ## Task 8: Sign-Up Page (server-action form)
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/routes/(auth)/+layout.svelte`
 - Create: `<NEW_REPO>/src/routes/(auth)/sign-up/+page.svelte`
 - Create: `<NEW_REPO>/src/routes/(auth)/sign-up/+page.server.ts`
@@ -886,13 +907,13 @@ Centered auth layout (no app shell). Form action calls `auth.api.signUpEmail`. O
 
 ```svelte
 <script lang="ts">
-  let { children } = $props();
+	let { children } = $props();
 </script>
 
-<div class="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 p-4">
-  <div class="w-full max-w-md rounded-lg border bg-white dark:bg-zinc-900 p-8 shadow-sm">
-    {@render children()}
-  </div>
+<div class="flex min-h-screen items-center justify-center bg-zinc-50 p-4 dark:bg-zinc-950">
+	<div class="w-full max-w-md rounded-lg border bg-white p-8 shadow-sm dark:bg-zinc-900">
+		{@render children()}
+	</div>
 </div>
 ```
 
@@ -905,46 +926,46 @@ import { signUpSchema } from '$lib/validation/auth';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = (event) => {
-  if (event.locals.user) throw redirect(302, '/dashboard');
-  return {};
+	if (event.locals.user) throw redirect(302, '/dashboard');
+	return {};
 };
 
 export const actions: Actions = {
-  default: async (event) => {
-    const formData = await event.request.formData();
-    const parsed = signUpSchema.safeParse({
-      name: formData.get('name'),
-      email: formData.get('email'),
-      password: formData.get('password')
-    });
+	default: async (event) => {
+		const formData = await event.request.formData();
+		const parsed = signUpSchema.safeParse({
+			name: formData.get('name'),
+			email: formData.get('email'),
+			password: formData.get('password')
+		});
 
-    if (!parsed.success) {
-      return fail(400, {
-        message: parsed.error.issues[0]?.message ?? 'Invalid input',
-        email: formData.get('email')?.toString() ?? '',
-        name: formData.get('name')?.toString() ?? ''
-      });
-    }
+		if (!parsed.success) {
+			return fail(400, {
+				message: parsed.error.issues[0]?.message ?? 'Invalid input',
+				email: formData.get('email')?.toString() ?? '',
+				name: formData.get('name')?.toString() ?? ''
+			});
+		}
 
-    try {
-      await event.locals.auth.api.signUpEmail({ body: parsed.data });
-    } catch (err) {
-      if (err instanceof APIError) {
-        return fail(400, {
-          message: err.message || 'Sign-up failed',
-          email: parsed.data.email,
-          name: parsed.data.name
-        });
-      }
-      return fail(500, {
-        message: 'Unexpected error',
-        email: parsed.data.email,
-        name: parsed.data.name
-      });
-    }
+		try {
+			await event.locals.auth.api.signUpEmail({ body: parsed.data });
+		} catch (err) {
+			if (err instanceof APIError) {
+				return fail(400, {
+					message: err.message || 'Sign-up failed',
+					email: parsed.data.email,
+					name: parsed.data.name
+				});
+			}
+			return fail(500, {
+				message: 'Unexpected error',
+				email: parsed.data.email,
+				name: parsed.data.name
+			});
+		}
 
-    throw redirect(302, '/auth/verify-sent');
-  }
+		throw redirect(302, '/auth/verify-sent');
+	}
 };
 ```
 
@@ -952,65 +973,65 @@ export const actions: Actions = {
 
 ```svelte
 <script lang="ts">
-  import { enhance } from '$app/forms';
-  let { form } = $props();
+	import { enhance } from '$app/forms';
+	let { form } = $props();
 </script>
 
 <svelte:head><title>Sign up — Mavlo</title></svelte:head>
 
-<h1 class="text-2xl font-semibold mb-6">Create your Mavlo account</h1>
+<h1 class="mb-6 text-2xl font-semibold">Create your Mavlo account</h1>
 
 <form method="POST" use:enhance class="space-y-4">
-  <label class="block">
-    <span class="text-sm font-medium">Name</span>
-    <input
-      name="name"
-      type="text"
-      required
-      maxlength="100"
-      autocomplete="name"
-      value={form?.name ?? ''}
-      class="mt-1 w-full rounded border px-3 py-2 dark:bg-zinc-800"
-    />
-  </label>
-  <label class="block">
-    <span class="text-sm font-medium">Email</span>
-    <input
-      name="email"
-      type="email"
-      required
-      autocomplete="email"
-      value={form?.email ?? ''}
-      class="mt-1 w-full rounded border px-3 py-2 dark:bg-zinc-800"
-    />
-  </label>
-  <label class="block">
-    <span class="text-sm font-medium">Password</span>
-    <input
-      name="password"
-      type="password"
-      required
-      minlength="8"
-      autocomplete="new-password"
-      class="mt-1 w-full rounded border px-3 py-2 dark:bg-zinc-800"
-    />
-    <span class="text-xs text-zinc-500">Minimum 8 characters.</span>
-  </label>
+	<label class="block">
+		<span class="text-sm font-medium">Name</span>
+		<input
+			name="name"
+			type="text"
+			required
+			maxlength="100"
+			autocomplete="name"
+			value={form?.name ?? ''}
+			class="mt-1 w-full rounded border px-3 py-2 dark:bg-zinc-800"
+		/>
+	</label>
+	<label class="block">
+		<span class="text-sm font-medium">Email</span>
+		<input
+			name="email"
+			type="email"
+			required
+			autocomplete="email"
+			value={form?.email ?? ''}
+			class="mt-1 w-full rounded border px-3 py-2 dark:bg-zinc-800"
+		/>
+	</label>
+	<label class="block">
+		<span class="text-sm font-medium">Password</span>
+		<input
+			name="password"
+			type="password"
+			required
+			minlength="8"
+			autocomplete="new-password"
+			class="mt-1 w-full rounded border px-3 py-2 dark:bg-zinc-800"
+		/>
+		<span class="text-xs text-zinc-500">Minimum 8 characters.</span>
+	</label>
 
-  {#if form?.message}
-    <p class="text-sm text-red-600">{form.message}</p>
-  {/if}
+	{#if form?.message}
+		<p class="text-sm text-red-600">{form.message}</p>
+	{/if}
 
-  <button
-    type="submit"
-    class="w-full rounded bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 text-white py-2 font-medium hover:opacity-90"
-  >
-    Sign up
-  </button>
+	<button
+		type="submit"
+		class="w-full rounded bg-zinc-900 py-2 font-medium text-white hover:opacity-90 dark:bg-zinc-100 dark:text-zinc-900"
+	>
+		Sign up
+	</button>
 </form>
 
-<p class="mt-6 text-sm text-center text-zinc-600 dark:text-zinc-400">
-  Already have an account? <a href="/sign-in" class="underline">Sign in</a>
+<p class="mt-6 text-center text-sm text-zinc-600 dark:text-zinc-400">
+	Already have an account? <a href="/sign-in" class="underline">Sign in</a>
 </p>
 ```
 
@@ -1036,6 +1057,7 @@ git commit -m "feat(auth): sign-up page with form action"
 ## Task 9: Sign-In Page
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/routes/(auth)/sign-in/+page.svelte`
 - Create: `<NEW_REPO>/src/routes/(auth)/sign-in/+page.server.ts`
 
@@ -1050,39 +1072,39 @@ import { signInSchema } from '$lib/validation/auth';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = (event) => {
-  if (event.locals.user) throw redirect(302, '/dashboard');
-  return {};
+	if (event.locals.user) throw redirect(302, '/dashboard');
+	return {};
 };
 
 export const actions: Actions = {
-  default: async (event) => {
-    const formData = await event.request.formData();
-    const parsed = signInSchema.safeParse({
-      email: formData.get('email'),
-      password: formData.get('password')
-    });
+	default: async (event) => {
+		const formData = await event.request.formData();
+		const parsed = signInSchema.safeParse({
+			email: formData.get('email'),
+			password: formData.get('password')
+		});
 
-    if (!parsed.success) {
-      return fail(400, {
-        message: parsed.error.issues[0]?.message ?? 'Invalid input',
-        email: formData.get('email')?.toString() ?? ''
-      });
-    }
+		if (!parsed.success) {
+			return fail(400, {
+				message: parsed.error.issues[0]?.message ?? 'Invalid input',
+				email: formData.get('email')?.toString() ?? ''
+			});
+		}
 
-    try {
-      await event.locals.auth.api.signInEmail({ body: parsed.data });
-    } catch (err) {
-      if (err instanceof APIError) {
-        return fail(400, {
-          message: err.message || 'Invalid email or password',
-          email: parsed.data.email
-        });
-      }
-      return fail(500, { message: 'Unexpected error', email: parsed.data.email });
-    }
+		try {
+			await event.locals.auth.api.signInEmail({ body: parsed.data });
+		} catch (err) {
+			if (err instanceof APIError) {
+				return fail(400, {
+					message: err.message || 'Invalid email or password',
+					email: parsed.data.email
+				});
+			}
+			return fail(500, { message: 'Unexpected error', email: parsed.data.email });
+		}
 
-    throw redirect(302, '/dashboard');
-  }
+		throw redirect(302, '/dashboard');
+	}
 };
 ```
 
@@ -1090,52 +1112,52 @@ export const actions: Actions = {
 
 ```svelte
 <script lang="ts">
-  import { enhance } from '$app/forms';
-  let { form } = $props();
+	import { enhance } from '$app/forms';
+	let { form } = $props();
 </script>
 
 <svelte:head><title>Sign in — Mavlo</title></svelte:head>
 
-<h1 class="text-2xl font-semibold mb-6">Sign in to Mavlo</h1>
+<h1 class="mb-6 text-2xl font-semibold">Sign in to Mavlo</h1>
 
 <form method="POST" use:enhance class="space-y-4">
-  <label class="block">
-    <span class="text-sm font-medium">Email</span>
-    <input
-      name="email"
-      type="email"
-      required
-      autocomplete="email"
-      value={form?.email ?? ''}
-      class="mt-1 w-full rounded border px-3 py-2 dark:bg-zinc-800"
-    />
-  </label>
-  <label class="block">
-    <span class="text-sm font-medium">Password</span>
-    <input
-      name="password"
-      type="password"
-      required
-      autocomplete="current-password"
-      class="mt-1 w-full rounded border px-3 py-2 dark:bg-zinc-800"
-    />
-  </label>
+	<label class="block">
+		<span class="text-sm font-medium">Email</span>
+		<input
+			name="email"
+			type="email"
+			required
+			autocomplete="email"
+			value={form?.email ?? ''}
+			class="mt-1 w-full rounded border px-3 py-2 dark:bg-zinc-800"
+		/>
+	</label>
+	<label class="block">
+		<span class="text-sm font-medium">Password</span>
+		<input
+			name="password"
+			type="password"
+			required
+			autocomplete="current-password"
+			class="mt-1 w-full rounded border px-3 py-2 dark:bg-zinc-800"
+		/>
+	</label>
 
-  {#if form?.message}
-    <p class="text-sm text-red-600">{form.message}</p>
-  {/if}
+	{#if form?.message}
+		<p class="text-sm text-red-600">{form.message}</p>
+	{/if}
 
-  <button
-    type="submit"
-    class="w-full rounded bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 text-white py-2 font-medium hover:opacity-90"
-  >
-    Sign in
-  </button>
+	<button
+		type="submit"
+		class="w-full rounded bg-zinc-900 py-2 font-medium text-white hover:opacity-90 dark:bg-zinc-100 dark:text-zinc-900"
+	>
+		Sign in
+	</button>
 </form>
 
 <div class="mt-6 flex justify-between text-sm text-zinc-600 dark:text-zinc-400">
-  <a href="/sign-up" class="underline">Create account</a>
-  <a href="/forgot-password" class="underline">Forgot password?</a>
+	<a href="/sign-up" class="underline">Create account</a>
+	<a href="/forgot-password" class="underline">Forgot password?</a>
 </div>
 ```
 
@@ -1152,6 +1174,7 @@ git commit -m "feat(auth): sign-in page with form action"
 ## Task 10: Forgot Password + Reset Password Pages
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/routes/(auth)/forgot-password/+page.svelte`
 - Create: `<NEW_REPO>/src/routes/(auth)/forgot-password/+page.server.ts`
 - Create: `<NEW_REPO>/src/routes/(auth)/reset-password/+page.svelte`
@@ -1167,31 +1190,31 @@ import { forgotPasswordSchema } from '$lib/validation/auth';
 import type { Actions } from './$types';
 
 export const actions: Actions = {
-  default: async (event) => {
-    const formData = await event.request.formData();
-    const parsed = forgotPasswordSchema.safeParse({ email: formData.get('email') });
+	default: async (event) => {
+		const formData = await event.request.formData();
+		const parsed = forgotPasswordSchema.safeParse({ email: formData.get('email') });
 
-    if (!parsed.success) {
-      return fail(400, {
-        message: parsed.error.issues[0]?.message ?? 'Invalid email',
-        email: formData.get('email')?.toString() ?? ''
-      });
-    }
+		if (!parsed.success) {
+			return fail(400, {
+				message: parsed.error.issues[0]?.message ?? 'Invalid email',
+				email: formData.get('email')?.toString() ?? ''
+			});
+		}
 
-    // Better Auth handles enumeration safety; we always claim success regardless.
-    try {
-      await event.locals.auth.api.forgetPassword({
-        body: {
-          email: parsed.data.email,
-          redirectTo: '/reset-password'
-        }
-      });
-    } catch {
-      // swallow — never reveal whether email exists
-    }
+		// Better Auth handles enumeration safety; we always claim success regardless.
+		try {
+			await event.locals.auth.api.forgetPassword({
+				body: {
+					email: parsed.data.email,
+					redirectTo: '/reset-password'
+				}
+			});
+		} catch {
+			// swallow — never reveal whether email exists
+		}
 
-    return { sent: true };
-  }
+		return { sent: true };
+	}
 };
 ```
 
@@ -1199,42 +1222,44 @@ export const actions: Actions = {
 
 ```svelte
 <script lang="ts">
-  import { enhance } from '$app/forms';
-  let { form } = $props();
+	import { enhance } from '$app/forms';
+	let { form } = $props();
 </script>
 
 <svelte:head><title>Forgot password — Mavlo</title></svelte:head>
 
-<h1 class="text-2xl font-semibold mb-6">Reset your password</h1>
+<h1 class="mb-6 text-2xl font-semibold">Reset your password</h1>
 
 {#if form?.sent}
-  <p class="text-sm">If an account exists for that email, we've sent a reset link. Check your inbox.</p>
-  <p class="mt-4 text-sm"><a href="/sign-in" class="underline">Back to sign in</a></p>
+	<p class="text-sm">
+		If an account exists for that email, we've sent a reset link. Check your inbox.
+	</p>
+	<p class="mt-4 text-sm"><a href="/sign-in" class="underline">Back to sign in</a></p>
 {:else}
-  <form method="POST" use:enhance class="space-y-4">
-    <label class="block">
-      <span class="text-sm font-medium">Email</span>
-      <input
-        name="email"
-        type="email"
-        required
-        autocomplete="email"
-        value={form?.email ?? ''}
-        class="mt-1 w-full rounded border px-3 py-2 dark:bg-zinc-800"
-      />
-    </label>
+	<form method="POST" use:enhance class="space-y-4">
+		<label class="block">
+			<span class="text-sm font-medium">Email</span>
+			<input
+				name="email"
+				type="email"
+				required
+				autocomplete="email"
+				value={form?.email ?? ''}
+				class="mt-1 w-full rounded border px-3 py-2 dark:bg-zinc-800"
+			/>
+		</label>
 
-    {#if form?.message}
-      <p class="text-sm text-red-600">{form.message}</p>
-    {/if}
+		{#if form?.message}
+			<p class="text-sm text-red-600">{form.message}</p>
+		{/if}
 
-    <button
-      type="submit"
-      class="w-full rounded bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 text-white py-2 font-medium hover:opacity-90"
-    >
-      Send reset link
-    </button>
-  </form>
+		<button
+			type="submit"
+			class="w-full rounded bg-zinc-900 py-2 font-medium text-white hover:opacity-90 dark:bg-zinc-100 dark:text-zinc-900"
+		>
+			Send reset link
+		</button>
+	</form>
 {/if}
 ```
 
@@ -1247,41 +1272,41 @@ import { resetPasswordSchema } from '$lib/validation/auth';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = (event) => {
-  const token = event.url.searchParams.get('token') ?? '';
-  return { token };
+	const token = event.url.searchParams.get('token') ?? '';
+	return { token };
 };
 
 export const actions: Actions = {
-  default: async (event) => {
-    const formData = await event.request.formData();
-    const parsed = resetPasswordSchema.safeParse({
-      token: formData.get('token'),
-      password: formData.get('password')
-    });
+	default: async (event) => {
+		const formData = await event.request.formData();
+		const parsed = resetPasswordSchema.safeParse({
+			token: formData.get('token'),
+			password: formData.get('password')
+		});
 
-    if (!parsed.success) {
-      return fail(400, {
-        message: parsed.error.issues[0]?.message ?? 'Invalid input',
-        token: formData.get('token')?.toString() ?? ''
-      });
-    }
+		if (!parsed.success) {
+			return fail(400, {
+				message: parsed.error.issues[0]?.message ?? 'Invalid input',
+				token: formData.get('token')?.toString() ?? ''
+			});
+		}
 
-    try {
-      await event.locals.auth.api.resetPassword({
-        body: { newPassword: parsed.data.password, token: parsed.data.token }
-      });
-    } catch (err) {
-      if (err instanceof APIError) {
-        return fail(400, {
-          message: err.message || 'Reset failed — request a new link',
-          token: parsed.data.token
-        });
-      }
-      return fail(500, { message: 'Unexpected error', token: parsed.data.token });
-    }
+		try {
+			await event.locals.auth.api.resetPassword({
+				body: { newPassword: parsed.data.password, token: parsed.data.token }
+			});
+		} catch (err) {
+			if (err instanceof APIError) {
+				return fail(400, {
+					message: err.message || 'Reset failed — request a new link',
+					token: parsed.data.token
+				});
+			}
+			return fail(500, { message: 'Unexpected error', token: parsed.data.token });
+		}
 
-    throw redirect(302, '/sign-in?reset=ok');
-  }
+		throw redirect(302, '/sign-in?reset=ok');
+	}
 };
 ```
 
@@ -1289,42 +1314,44 @@ export const actions: Actions = {
 
 ```svelte
 <script lang="ts">
-  import { enhance } from '$app/forms';
-  let { data, form } = $props();
+	import { enhance } from '$app/forms';
+	let { data, form } = $props();
 </script>
 
 <svelte:head><title>Reset password — Mavlo</title></svelte:head>
 
-<h1 class="text-2xl font-semibold mb-6">Choose a new password</h1>
+<h1 class="mb-6 text-2xl font-semibold">Choose a new password</h1>
 
 {#if !data.token}
-  <p class="text-sm text-red-600">Reset token missing. <a href="/forgot-password" class="underline">Request a new link.</a></p>
+	<p class="text-sm text-red-600">
+		Reset token missing. <a href="/forgot-password" class="underline">Request a new link.</a>
+	</p>
 {:else}
-  <form method="POST" use:enhance class="space-y-4">
-    <input type="hidden" name="token" value={form?.token ?? data.token} />
-    <label class="block">
-      <span class="text-sm font-medium">New password</span>
-      <input
-        name="password"
-        type="password"
-        required
-        minlength="8"
-        autocomplete="new-password"
-        class="mt-1 w-full rounded border px-3 py-2 dark:bg-zinc-800"
-      />
-    </label>
+	<form method="POST" use:enhance class="space-y-4">
+		<input type="hidden" name="token" value={form?.token ?? data.token} />
+		<label class="block">
+			<span class="text-sm font-medium">New password</span>
+			<input
+				name="password"
+				type="password"
+				required
+				minlength="8"
+				autocomplete="new-password"
+				class="mt-1 w-full rounded border px-3 py-2 dark:bg-zinc-800"
+			/>
+		</label>
 
-    {#if form?.message}
-      <p class="text-sm text-red-600">{form.message}</p>
-    {/if}
+		{#if form?.message}
+			<p class="text-sm text-red-600">{form.message}</p>
+		{/if}
 
-    <button
-      type="submit"
-      class="w-full rounded bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 text-white py-2 font-medium hover:opacity-90"
-    >
-      Set new password
-    </button>
-  </form>
+		<button
+			type="submit"
+			class="w-full rounded bg-zinc-900 py-2 font-medium text-white hover:opacity-90 dark:bg-zinc-100 dark:text-zinc-900"
+		>
+			Set new password
+		</button>
+	</form>
 {/if}
 ```
 
@@ -1341,6 +1368,7 @@ git commit -m "feat(auth): forgot-password + reset-password flows"
 ## Task 11: Verify-Sent + Verify-Success Pages
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/routes/(auth)/verify-sent/+page.svelte`
 - Create: `<NEW_REPO>/src/routes/(auth)/verify-success/+page.svelte`
 
@@ -1351,9 +1379,9 @@ Static informational pages. The `verify-sent` page is shown after sign-up. The `
 ```svelte
 <svelte:head><title>Check your email — Mavlo</title></svelte:head>
 
-<h1 class="text-2xl font-semibold mb-4">Verify your email</h1>
+<h1 class="mb-4 text-2xl font-semibold">Verify your email</h1>
 <p class="text-sm text-zinc-600 dark:text-zinc-400">
-  We sent you a link. Click it to finish signing up. The link expires in 24 hours.
+	We sent you a link. Click it to finish signing up. The link expires in 24 hours.
 </p>
 <p class="mt-6 text-sm"><a href="/sign-in" class="underline">Back to sign in</a></p>
 ```
@@ -1362,14 +1390,14 @@ Static informational pages. The `verify-sent` page is shown after sign-up. The `
 
 ```svelte
 <script lang="ts">
-  // After Better Auth verifies, autoSignInAfterVerification=true means session cookie is set.
+	// After Better Auth verifies, autoSignInAfterVerification=true means session cookie is set.
 </script>
 
 <svelte:head><title>Email verified — Mavlo</title></svelte:head>
 
-<h1 class="text-2xl font-semibold mb-4">You're in</h1>
+<h1 class="mb-4 text-2xl font-semibold">You're in</h1>
 <p class="text-sm text-zinc-600 dark:text-zinc-400">
-  Email verified. <a href="/dashboard" class="underline">Go to dashboard</a>
+	Email verified. <a href="/dashboard" class="underline">Go to dashboard</a>
 </p>
 ```
 
@@ -1386,6 +1414,7 @@ git commit -m "feat(auth): verify-sent + verify-success pages"
 ## Task 12: Auth Route Guards Helper
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/server/auth/guards.ts`
 - Test: `<NEW_REPO>/src/lib/server/auth/guards.test.ts`
 
@@ -1399,28 +1428,29 @@ Create `<NEW_REPO>/src/lib/server/auth/guards.test.ts`:
 import { describe, it, expect } from 'vitest';
 import { requireUser } from './guards';
 
-const makeEvent = (user: any, pathname = '/dashboard') => ({
-  locals: { user },
-  url: new URL(`http://localhost${pathname}`)
-}) as any;
+const makeEvent = (user: any, pathname = '/dashboard') =>
+	({
+		locals: { user },
+		url: new URL(`http://localhost${pathname}`)
+	}) as any;
 
 describe('requireUser', () => {
-  it('returns the user when present', () => {
-    const u = { id: 'u1', email: 'a@b.co' };
-    expect(requireUser(makeEvent(u))).toBe(u);
-  });
+	it('returns the user when present', () => {
+		const u = { id: 'u1', email: 'a@b.co' };
+		expect(requireUser(makeEvent(u))).toBe(u);
+	});
 
-  it('throws a redirect when no user', () => {
-    let caught: any;
-    try {
-      requireUser(makeEvent(undefined, '/dashboard'));
-    } catch (e) {
-      caught = e;
-    }
-    expect(caught).toBeDefined();
-    expect(caught.status).toBe(302);
-    expect(caught.location).toBe('/sign-in?next=%2Fdashboard');
-  });
+	it('throws a redirect when no user', () => {
+		let caught: any;
+		try {
+			requireUser(makeEvent(undefined, '/dashboard'));
+		} catch (e) {
+			caught = e;
+		}
+		expect(caught).toBeDefined();
+		expect(caught.status).toBe(302);
+		expect(caught.location).toBe('/sign-in?next=%2Fdashboard');
+	});
 });
 ```
 
@@ -1440,11 +1470,11 @@ import { redirect, type RequestEvent } from '@sveltejs/kit';
 import type { User } from 'better-auth/minimal';
 
 export function requireUser(event: RequestEvent): User {
-  if (!event.locals.user) {
-    const next = encodeURIComponent(event.url.pathname + event.url.search);
-    throw redirect(302, `/sign-in?next=${next}`);
-  }
-  return event.locals.user;
+	if (!event.locals.user) {
+		const next = encodeURIComponent(event.url.pathname + event.url.search);
+		throw redirect(302, `/sign-in?next=${next}`);
+	}
+	return event.locals.user;
 }
 ```
 
@@ -1470,6 +1500,7 @@ git commit -m "feat(auth): requireUser guard helper"
 ## Task 13: App Shell Layout (`(app)` group)
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/routes/(app)/+layout.server.ts`
 - Create: `<NEW_REPO>/src/routes/(app)/+layout.svelte`
 
@@ -1485,26 +1516,23 @@ import { userPreferences } from '$lib/server/db/schema';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async (event) => {
-  const user = requireUser(event);
-  const db = getDb(event.platform!.env.DB);
+	const user = requireUser(event);
+	const db = getDb(event.platform!.env.DB);
 
-  let [prefs] = await db
-    .select()
-    .from(userPreferences)
-    .where(eq(userPreferences.userId, user.id))
-    .limit(1);
+	let [prefs] = await db
+		.select()
+		.from(userPreferences)
+		.where(eq(userPreferences.userId, user.id))
+		.limit(1);
 
-  if (!prefs) {
-    [prefs] = await db
-      .insert(userPreferences)
-      .values({ userId: user.id })
-      .returning();
-  }
+	if (!prefs) {
+		[prefs] = await db.insert(userPreferences).values({ userId: user.id }).returning();
+	}
 
-  return {
-    user: { id: user.id, name: user.name, email: user.email },
-    preferences: prefs
-  };
+	return {
+		user: { id: user.id, name: user.name, email: user.email },
+		preferences: prefs
+	};
 };
 ```
 
@@ -1512,37 +1540,53 @@ export const load: LayoutServerLoad = async (event) => {
 
 ```svelte
 <script lang="ts">
-  let { children, data } = $props();
+	let { children, data } = $props();
 </script>
 
 <svelte:head><title>Mavlo</title></svelte:head>
 
-<div class="min-h-screen flex bg-zinc-50 dark:bg-zinc-950">
-  <aside class="w-60 border-r bg-white dark:bg-zinc-900 p-4 hidden md:block">
-    <div class="font-semibold text-lg mb-6">Mavlo</div>
-    <nav class="space-y-1 text-sm">
-      <a href="/dashboard" class="block px-3 py-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800">Dashboard</a>
-      <a href="/transactions" class="block px-3 py-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800">Transactions</a>
-      <a href="/accounts" class="block px-3 py-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800">Accounts</a>
-      <a href="/categories" class="block px-3 py-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800">Categories</a>
-      <a href="/budgets" class="block px-3 py-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800">Budgets</a>
-      <a href="/settings" class="block px-3 py-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800">Settings</a>
-    </nav>
-  </aside>
+<div class="flex min-h-screen bg-zinc-50 dark:bg-zinc-950">
+	<aside class="hidden w-60 border-r bg-white p-4 md:block dark:bg-zinc-900">
+		<div class="mb-6 text-lg font-semibold">Mavlo</div>
+		<nav class="space-y-1 text-sm">
+			<a href="/dashboard" class="block rounded px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+				>Dashboard</a
+			>
+			<a
+				href="/transactions"
+				class="block rounded px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800">Transactions</a
+			>
+			<a href="/accounts" class="block rounded px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+				>Accounts</a
+			>
+			<a href="/categories" class="block rounded px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+				>Categories</a
+			>
+			<a href="/budgets" class="block rounded px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+				>Budgets</a
+			>
+			<a href="/settings" class="block rounded px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+				>Settings</a
+			>
+		</nav>
+	</aside>
 
-  <main class="flex-1 flex flex-col">
-    <header class="border-b bg-white dark:bg-zinc-900 px-6 py-3 flex items-center justify-between">
-      <span class="text-sm text-zinc-600 dark:text-zinc-400">Hi, {data.user.name}</span>
-      <form method="POST" action="/sign-out">
-        <button type="submit" class="text-sm underline text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100">
-          Sign out
-        </button>
-      </form>
-    </header>
-    <div class="p-6 flex-1">
-      {@render children()}
-    </div>
-  </main>
+	<main class="flex flex-1 flex-col">
+		<header class="flex items-center justify-between border-b bg-white px-6 py-3 dark:bg-zinc-900">
+			<span class="text-sm text-zinc-600 dark:text-zinc-400">Hi, {data.user.name}</span>
+			<form method="POST" action="/sign-out">
+				<button
+					type="submit"
+					class="text-sm text-zinc-600 underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+				>
+					Sign out
+				</button>
+			</form>
+		</header>
+		<div class="flex-1 p-6">
+			{@render children()}
+		</div>
+	</main>
 </div>
 ```
 
@@ -1568,6 +1612,7 @@ git commit -m "feat(app): app-shell layout with sidebar + preferences upsert"
 ## Task 14: Sign-Out Action
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/routes/sign-out/+page.server.ts`
 
 Standalone POST endpoint. Calls `auth.api.signOut`, redirects to `/sign-in`.
@@ -1579,14 +1624,14 @@ import { redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = () => {
-  throw redirect(302, '/sign-in');
+	throw redirect(302, '/sign-in');
 };
 
 export const actions: Actions = {
-  default: async (event) => {
-    await event.locals.auth.api.signOut({ headers: event.request.headers });
-    throw redirect(302, '/sign-in');
-  }
+	default: async (event) => {
+		await event.locals.auth.api.signOut({ headers: event.request.headers });
+		throw redirect(302, '/sign-in');
+	}
 };
 ```
 
@@ -1603,6 +1648,7 @@ git commit -m "feat(auth): sign-out form action"
 ## Task 15: Dashboard Placeholder
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/routes/(app)/dashboard/+page.svelte`
 - Create: `<NEW_REPO>/src/routes/(app)/dashboard/+page.server.ts`
 
@@ -1614,7 +1660,7 @@ Reads parent `data.user/preferences`, shows hello + "Phase 2 coming soon" stubs.
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
-  return {};
+	return {};
 };
 ```
 
@@ -1622,32 +1668,33 @@ export const load: PageServerLoad = async () => {
 
 ```svelte
 <script lang="ts">
-  let { data } = $props();
+	let { data } = $props();
 </script>
 
 <svelte:head><title>Dashboard — Mavlo</title></svelte:head>
 
 <h1 class="text-2xl font-semibold">Dashboard</h1>
 <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-  Welcome, {data.user.name}. Currency: {data.preferences.currency} · Locale: {data.preferences.locale}
+	Welcome, {data.user.name}. Currency: {data.preferences.currency} · Locale: {data.preferences
+		.locale}
 </p>
 
 <div class="mt-8 grid gap-4 md:grid-cols-3">
-  <div class="rounded-lg border bg-white dark:bg-zinc-900 p-6">
-    <h2 class="text-sm font-medium text-zinc-500">Net worth</h2>
-    <p class="mt-2 text-2xl">—</p>
-    <p class="text-xs text-zinc-400 mt-1">Coming in Phase 2</p>
-  </div>
-  <div class="rounded-lg border bg-white dark:bg-zinc-900 p-6">
-    <h2 class="text-sm font-medium text-zinc-500">This month</h2>
-    <p class="mt-2 text-2xl">—</p>
-    <p class="text-xs text-zinc-400 mt-1">Coming in Phase 2</p>
-  </div>
-  <div class="rounded-lg border bg-white dark:bg-zinc-900 p-6">
-    <h2 class="text-sm font-medium text-zinc-500">Recent activity</h2>
-    <p class="mt-2 text-2xl">—</p>
-    <p class="text-xs text-zinc-400 mt-1">Coming in Phase 2</p>
-  </div>
+	<div class="rounded-lg border bg-white p-6 dark:bg-zinc-900">
+		<h2 class="text-sm font-medium text-zinc-500">Net worth</h2>
+		<p class="mt-2 text-2xl">—</p>
+		<p class="mt-1 text-xs text-zinc-400">Coming in Phase 2</p>
+	</div>
+	<div class="rounded-lg border bg-white p-6 dark:bg-zinc-900">
+		<h2 class="text-sm font-medium text-zinc-500">This month</h2>
+		<p class="mt-2 text-2xl">—</p>
+		<p class="mt-1 text-xs text-zinc-400">Coming in Phase 2</p>
+	</div>
+	<div class="rounded-lg border bg-white p-6 dark:bg-zinc-900">
+		<h2 class="text-sm font-medium text-zinc-500">Recent activity</h2>
+		<p class="mt-2 text-2xl">—</p>
+		<p class="mt-1 text-xs text-zinc-400">Coming in Phase 2</p>
+	</div>
 </div>
 ```
 
@@ -1664,6 +1711,7 @@ git commit -m "feat(dashboard): placeholder welcome page"
 ## Task 16: Root Redirect
 
 **Files:**
+
 - Modify: `<NEW_REPO>/src/routes/+page.svelte` → delete
 - Create: `<NEW_REPO>/src/routes/+page.server.ts`
 
@@ -1683,7 +1731,7 @@ import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = (event) => {
-  throw redirect(302, event.locals.user ? '/dashboard' : '/sign-in');
+	throw redirect(302, event.locals.user ? '/dashboard' : '/sign-in');
 };
 ```
 
@@ -1700,6 +1748,7 @@ git commit -m "feat(routing): root redirects based on session"
 ## Task 17: Remove Demo Better-Auth Routes
 
 **Files:**
+
 - Delete: `<NEW_REPO>/src/routes/demo/`
 
 Scaffold's `/demo/better-auth*` routes are no longer needed.
@@ -1733,6 +1782,7 @@ git commit -m "chore: remove sv create demo better-auth routes"
 ## Task 18: Health Endpoint
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/routes/api/health/+server.ts`
 
 Lightweight readiness check. Returns 200 with `{ ok: true, db: 'up' | 'down' }` after a `SELECT 1`. Used by uptime monitors and deployment smoke tests.
@@ -1744,15 +1794,15 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (event) => {
-  let dbStatus: 'up' | 'down' = 'down';
-  try {
-    await event.platform!.env.DB.prepare('SELECT 1').first();
-    dbStatus = 'up';
-  } catch {
-    dbStatus = 'down';
-  }
+	let dbStatus: 'up' | 'down' = 'down';
+	try {
+		await event.platform!.env.DB.prepare('SELECT 1').first();
+		dbStatus = 'up';
+	} catch {
+		dbStatus = 'down';
+	}
 
-  return json({ ok: dbStatus === 'up', db: dbStatus, ts: Date.now() });
+	return json({ ok: dbStatus === 'up', db: dbStatus, ts: Date.now() });
 };
 ```
 
@@ -1887,13 +1937,14 @@ Visit `/sign-up`, register a real test user, check email, click verify link, sig
 ## Task 22: README
 
 **Files:**
+
 - Modify: `<NEW_REPO>/README.md`
 
 Replaces scaffold's stub with project-specific runbook.
 
 - [ ] **Step 1: Overwrite `README.md`**
 
-```markdown
+````markdown
 # Mavlo
 
 Personal finance tracker. SvelteKit on Cloudflare Workers + D1 + R2 + Better Auth + Drizzle ORM.
@@ -1916,18 +1967,21 @@ Prerequisites: Node 20+, Cloudflare account, Resend account.
    ```bash
    npm install
    ```
+````
 
 2. Set up secrets:
    - Copy `.env.example` → `.env`, fill `CLOUDFLARE_*`, `BETTER_AUTH_SECRET`, `ORIGIN`.
    - Copy `.dev.vars.example` → `.dev.vars`, fill `BETTER_AUTH_SECRET` (same value), `RESEND_API_KEY`.
 
 3. Push schema:
+
    ```bash
    npm run auth:schema
    npm run db:push
    ```
 
 4. Run dev server (Vite + Miniflare via SvelteKit):
+
    ```bash
    npm run dev
    ```
@@ -1997,7 +2051,8 @@ src/
   hooks.server.ts         # session injection
   app.d.ts
 ```
-```
+
+````
 
 - [ ] **Step 2: Commit**
 
@@ -2005,7 +2060,7 @@ src/
 cd /Users/candratama/Project/WebDev/mavlo
 git add README.md
 git commit -m "docs: project README with runbook"
-```
+````
 
 ---
 

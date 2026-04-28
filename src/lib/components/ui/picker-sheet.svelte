@@ -92,14 +92,16 @@
 
 {#snippet listBody()}
 	{#if searchable}
-		<div class="px-2 pt-2 pb-2 relative">
-			<Search class="absolute left-5 top-1/2 -translate-y-1/2 size-4 opacity-50 pointer-events-none" />
+		<div class="relative px-2 pt-2 pb-2">
+			<Search
+				class="pointer-events-none absolute top-1/2 left-5 size-4 -translate-y-1/2 opacity-50"
+			/>
 			<Input type="search" placeholder="Search…" bind:value={query} class="pl-9" />
 		</div>
 	{/if}
 	{#if groups}
 		{#each filteredGroups as g (g.label)}
-			<div class="px-3 pt-3 pb-1 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+			<div class="text-muted-foreground px-3 pt-3 pb-1 text-xs font-medium tracking-wide uppercase">
 				{g.label}
 			</div>
 			<ul>
@@ -109,23 +111,23 @@
 							type="button"
 							onclick={() => pick(it.value)}
 							class={cn(
-								'w-full flex items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-accent/50',
+								'hover:bg-accent/50 flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm',
 								value === it.value && 'bg-accent/30'
 							)}
 						>
-							<span class="flex items-center gap-2 min-w-0">
+							<span class="flex min-w-0 items-center gap-2">
 								{#if it.icon}
 									<it.icon class="size-4 shrink-0" />
 								{/if}
-								<span class="flex flex-col min-w-0">
+								<span class="flex min-w-0 flex-col">
 									<span class="truncate">{it.label}</span>
 									{#if it.description}
-										<span class="text-xs text-muted-foreground truncate">{it.description}</span>
+										<span class="text-muted-foreground truncate text-xs">{it.description}</span>
 									{/if}
 								</span>
 							</span>
 							{#if value === it.value}
-								<Check class="size-4 text-primary" />
+								<Check class="text-primary size-4" />
 							{/if}
 						</button>
 					</li>
@@ -140,23 +142,23 @@
 						type="button"
 						onclick={() => pick(it.value)}
 						class={cn(
-							'w-full flex items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-accent/50',
+							'hover:bg-accent/50 flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm',
 							value === it.value && 'bg-accent/30'
 						)}
 					>
-						<span class="flex items-center gap-2 min-w-0">
+						<span class="flex min-w-0 items-center gap-2">
 							{#if it.icon}
 								<it.icon class="size-4 shrink-0" />
 							{/if}
-							<span class="flex flex-col min-w-0">
+							<span class="flex min-w-0 flex-col">
 								<span class="truncate">{it.label}</span>
 								{#if it.description}
-									<span class="text-xs text-muted-foreground truncate">{it.description}</span>
+									<span class="text-muted-foreground truncate text-xs">{it.description}</span>
 								{/if}
 							</span>
 						</span>
 						{#if value === it.value}
-							<Check class="size-4 text-primary" />
+							<Check class="text-primary size-4" />
 						{/if}
 					</button>
 				</li>
@@ -170,7 +172,7 @@
 		<Popover.Trigger>
 			{#snippet child({ props })}
 				<button {...props} type="button" {id} {disabled} class={triggerClass}>
-					<span class="flex items-center gap-2 min-w-0">
+					<span class="flex min-w-0 items-center gap-2">
 						{#if selected?.icon}
 							<selected.icon class="size-4 shrink-0" />
 						{/if}
@@ -185,7 +187,7 @@
 			align="start"
 			sideOffset={4}
 			onOpenAutoFocus={(e) => e.preventDefault()}
-			class="z-50 rounded-md border bg-popover text-popover-foreground shadow-md outline-none max-h-80 overflow-y-auto"
+			class="bg-popover text-popover-foreground z-50 max-h-80 overflow-y-auto rounded-md border shadow-md outline-none"
 			style="width: var(--bits-popover-anchor-width)"
 		>
 			{@render listBody()}
@@ -196,7 +198,7 @@
 		<Sheet.Trigger>
 			{#snippet child({ props })}
 				<button {...props} type="button" {id} {disabled} class={triggerClass}>
-					<span class="flex items-center gap-2 min-w-0">
+					<span class="flex min-w-0 items-center gap-2">
 						{#if selected?.icon}
 							<selected.icon class="size-4 shrink-0" />
 						{/if}
@@ -209,9 +211,9 @@
 		<Sheet.Content
 			side="bottom"
 			onOpenAutoFocus={(e) => e.preventDefault()}
-			class="max-h-[calc(80dvh-var(--keyboard-h,0px))] flex flex-col p-0"
+			class="flex max-h-[calc(80dvh-var(--keyboard-h,0px))] flex-col p-0"
 		>
-			<Sheet.Header class="text-left p-4 pb-2">
+			<Sheet.Header class="p-4 pb-2 text-left">
 				<Sheet.Title>{title}</Sheet.Title>
 			</Sheet.Header>
 			<div class="flex-1 overflow-y-auto pb-[max(1rem,env(safe-area-inset-bottom))]">

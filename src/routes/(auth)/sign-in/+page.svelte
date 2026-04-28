@@ -17,7 +17,17 @@
 </Card.Header>
 
 <Card.Content>
-	<form method="POST" use:enhance={() => { pending = true; return async ({ update }) => { await update(); pending = false; }; }} class="space-y-4">
+	<form
+		method="POST"
+		use:enhance={() => {
+			pending = true;
+			return async ({ update }) => {
+				await update();
+				pending = false;
+			};
+		}}
+		class="space-y-4"
+	>
 		<div class="space-y-1.5">
 			<Label for="email">Email</Label>
 			<Input
@@ -41,7 +51,7 @@
 		</div>
 
 		{#if form?.message}
-			<p class="text-sm text-destructive">{form.message}</p>
+			<p class="text-destructive text-sm">{form.message}</p>
 		{/if}
 
 		<SubmitButton {pending} class="w-full">Sign in</SubmitButton>
@@ -49,6 +59,9 @@
 </Card.Content>
 
 <Card.Footer class="flex justify-between text-sm">
-	<a href="/sign-up" class="text-muted-foreground hover:text-foreground underline">Create account</a>
-	<a href="/forgot-password" class="text-muted-foreground hover:text-foreground underline">Forgot password?</a>
+	<a href="/sign-up" class="text-muted-foreground hover:text-foreground underline">Create account</a
+	>
+	<a href="/forgot-password" class="text-muted-foreground hover:text-foreground underline"
+		>Forgot password?</a
+	>
 </Card.Footer>

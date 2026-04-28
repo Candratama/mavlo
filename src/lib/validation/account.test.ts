@@ -3,10 +3,18 @@ import { accountCreateSchema, accountUpdateSchema } from './account';
 
 describe('account validation', () => {
 	it('create requires name + valid type + currency', () => {
-		expect(accountCreateSchema.safeParse({ name: 'Cash', type: 'cash', currency: 'IDR' }).success).toBe(true);
-		expect(accountCreateSchema.safeParse({ name: '', type: 'cash', currency: 'IDR' }).success).toBe(false);
-		expect(accountCreateSchema.safeParse({ name: 'X', type: 'invalid', currency: 'IDR' }).success).toBe(false);
-		expect(accountCreateSchema.safeParse({ name: 'X', type: 'cash', currency: '' }).success).toBe(false);
+		expect(
+			accountCreateSchema.safeParse({ name: 'Cash', type: 'cash', currency: 'IDR' }).success
+		).toBe(true);
+		expect(accountCreateSchema.safeParse({ name: '', type: 'cash', currency: 'IDR' }).success).toBe(
+			false
+		);
+		expect(
+			accountCreateSchema.safeParse({ name: 'X', type: 'invalid', currency: 'IDR' }).success
+		).toBe(false);
+		expect(accountCreateSchema.safeParse({ name: 'X', type: 'cash', currency: '' }).success).toBe(
+			false
+		);
 	});
 
 	it('create defaults initialBalanceCents to 0', () => {
@@ -27,7 +35,8 @@ describe('account validation', () => {
 
 	it('update requires id', () => {
 		expect(
-			accountUpdateSchema.safeParse({ id: 'abc', name: 'New', type: 'bank', currency: 'IDR' }).success
+			accountUpdateSchema.safeParse({ id: 'abc', name: 'New', type: 'bank', currency: 'IDR' })
+				.success
 		).toBe(true);
 		expect(
 			accountUpdateSchema.safeParse({ name: 'New', type: 'bank', currency: 'IDR' }).success

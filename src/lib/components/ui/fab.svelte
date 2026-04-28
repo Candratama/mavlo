@@ -12,7 +12,7 @@
 	aria-label="Add transaction"
 	onclick={() => openAddTransaction('expense')}
 	class={cn(
-		'lg:hidden fixed right-4 z-30 size-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center active:scale-95 transition-transform',
+		'bg-primary text-primary-foreground fixed right-4 z-30 flex size-14 items-center justify-center rounded-full shadow-lg transition-transform active:scale-95 lg:hidden',
 		'bottom-[calc(var(--bottom-nav-h)+1rem+env(safe-area-inset-bottom))]',
 		className
 	)}

@@ -23,9 +23,7 @@
 		class: className = ''
 	}: Props = $props();
 
-	let display = $state(
-		value !== null && value !== undefined ? formatCentsToRupiah(value) : ''
-	);
+	let display = $state(value !== null && value !== undefined ? formatCentsToRupiah(value) : '');
 
 	const cents = $derived(parseRupiahToCents(display));
 
@@ -81,7 +79,7 @@
 
 <div class="relative">
 	<span
-		class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+		class="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm"
 	>
 		Rp
 	</span>
@@ -98,8 +96,8 @@
 	/>
 	<input type="hidden" {name} value={cents ?? ''} />
 	{#if required && cents === null && display !== ''}
-		<p class="mt-1 text-xs text-destructive">Invalid amount</p>
+		<p class="text-destructive mt-1 text-xs">Invalid amount</p>
 	{:else if min !== undefined && cents !== null && cents < min}
-		<p class="mt-1 text-xs text-destructive">Min Rp {formatCentsToRupiah(min)}</p>
+		<p class="text-destructive mt-1 text-xs">Min Rp {formatCentsToRupiah(min)}</p>
 	{/if}
 </div>

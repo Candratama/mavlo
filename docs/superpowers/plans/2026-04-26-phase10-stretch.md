@@ -7,6 +7,7 @@
 **Architecture:** Reuse the existing shadcn-svelte `Sheet` (already installed in P7T1) for mobile-side dialogs, keeping `Dialog` for desktop. A `<ResponsiveDialog>` wrapper picks the right component by breakpoint. Pull-to-refresh via a small custom action. Skeleton loaders via shadcn `Skeleton` already installed.
 
 **Conventions:**
+
 - `<NEW_REPO>` = `/Users/candratama/Project/WebDev/mavlo`
 - Branch: `main` (greenfield, branch strategy A)
 
@@ -15,6 +16,7 @@
 ## Task 1: ResponsiveDialog Wrapper (Sheet on Mobile, Dialog on Desktop)
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/components/forms/responsive-dialog.svelte`
 
 A thin wrapper that exposes the same API as `Dialog.Root + Dialog.Content + Dialog.Header + Dialog.Title + Dialog.Footer` but renders `Sheet.Root + Sheet.Content side="bottom"` etc. when `<md`.
@@ -57,14 +59,17 @@ Actually simpler: don't try to share state between Sheet + Dialog (state syncing
 <!-- Mobile: bottom sheet -->
 <div class="md:hidden">
 	<Sheet.Root bind:open>
-		<Sheet.Content side="bottom" class="rounded-t-2xl pb-[max(1rem,env(safe-area-inset-bottom))] {className}">
+		<Sheet.Content
+			side="bottom"
+			class="rounded-t-2xl pb-[max(1rem,env(safe-area-inset-bottom))] {className}"
+		>
 			<Sheet.Header class="text-left">
 				<Sheet.Title>{title}</Sheet.Title>
 				{#if description}<Sheet.Description>{description}</Sheet.Description>{/if}
 			</Sheet.Header>
 			{@render body()}
 			{#if footer}
-				<Sheet.Footer class="flex-col-reverse gap-2 sm:flex-row sm:justify-end mt-4">
+				<Sheet.Footer class="mt-4 flex-col-reverse gap-2 sm:flex-row sm:justify-end">
 					{@render footer()}
 				</Sheet.Footer>
 			{/if}
@@ -105,7 +110,7 @@ For each page that uses `<Dialog.Root bind:open={createOpen}>...<Dialog.Content>
 	description="Add a new financial account to track."
 >
 	{#snippet body()}
-		<form ... class="space-y-4 mt-4">
+		<form ... class="mt-4 space-y-4">
 			<!-- existing form fields -->
 		</form>
 	{/snippet}
@@ -162,6 +167,7 @@ git commit -m "feat(mobile): bottom sheet on mobile / dialog on desktop"
 ## Task 2: Pull-to-Refresh Action
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/actions/pull-to-refresh.ts`
 - Modify: `<NEW_REPO>/src/routes/(app)/dashboard/+page.svelte`
 
@@ -181,10 +187,7 @@ type Options = {
 
 const DEFAULT_THRESHOLD = 80;
 
-export function setupPullToRefresh(
-	target: HTMLElement,
-	opts: Options = {}
-): () => void {
+export function setupPullToRefresh(target: HTMLElement, opts: Options = {}): () => void {
 	if (typeof window === 'undefined') return () => undefined;
 	if (!('ontouchstart' in window)) return () => undefined;
 
@@ -293,6 +296,7 @@ git commit -m "feat(mobile): pull-to-refresh on dashboard"
 ## Task 3: Skeleton Loaders for Route Transitions
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/components/skeletons/dashboard-skeleton.svelte`
 - Create: `<NEW_REPO>/src/lib/components/skeletons/list-skeleton.svelte`
 - Create: `<NEW_REPO>/src/lib/components/skeletons/+page-skeleton.svelte`
@@ -311,16 +315,22 @@ A thin progress bar at the top of the screen during navigation, using the `navig
 </script>
 
 {#if navigating.to}
-	<div class="fixed top-0 left-0 right-0 z-50 h-0.5 overflow-hidden bg-transparent">
-		<div class="h-full bg-primary animate-loading-bar"></div>
+	<div class="fixed top-0 right-0 left-0 z-50 h-0.5 overflow-hidden bg-transparent">
+		<div class="bg-primary animate-loading-bar h-full"></div>
 	</div>
 {/if}
 
 <style>
 	@keyframes loading-bar {
-		0% { transform: translateX(-100%); }
-		50% { transform: translateX(0); }
-		100% { transform: translateX(100%); }
+		0% {
+			transform: translateX(-100%);
+		}
+		50% {
+			transform: translateX(0);
+		}
+		100% {
+			transform: translateX(100%);
+		}
 	}
 	.animate-loading-bar {
 		animation: loading-bar 1.4s linear infinite;
@@ -358,7 +368,7 @@ For the dashboard's "Recent transactions" Card, while data loads (only happens o
 </Card.Content>
 ```
 
-Already covered by SSR — Svelte's existing flow handles this via `data` props from `+page.server.ts`. No skeleton needed for fully-loaded data, just for the *transition between pages*.
+Already covered by SSR — Svelte's existing flow handles this via `data` props from `+page.server.ts`. No skeleton needed for fully-loaded data, just for the _transition between pages_.
 
 So Step 3 reduces to: only the loading bar (Step 1+2). No per-page skeletons. SvelteKit's SSR pre-renders the data, so client-side navigation only blocks for the duration of the load function on the server side.
 
@@ -404,11 +414,13 @@ cd /Users/candratama/Project/WebDev/mavlo
 - [ ] **Step 4: Manual e2e**
 
 User on mobile:
+
 - Open create dialog on /accounts → it slides up from the bottom (sheet) instead of centered modal
 - Pull down on /dashboard → indicator shows; release past threshold triggers refresh
 - Navigate between pages → top progress bar pulses
 
 User on desktop:
+
 - Open create dialog → centered modal as before (Dialog, not Sheet)
 
 - [ ] **Step 5: NO commit** (verification only).

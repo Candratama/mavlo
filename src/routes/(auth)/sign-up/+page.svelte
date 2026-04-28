@@ -17,7 +17,17 @@
 </Card.Header>
 
 <Card.Content>
-	<form method="POST" use:enhance={() => { pending = true; return async ({ update }) => { await update(); pending = false; }; }} class="space-y-4">
+	<form
+		method="POST"
+		use:enhance={() => {
+			pending = true;
+			return async ({ update }) => {
+				await update();
+				pending = false;
+			};
+		}}
+		class="space-y-4"
+	>
 		<div class="space-y-1.5">
 			<Label for="name">Name</Label>
 			<Input
@@ -51,11 +61,11 @@
 				minlength={8}
 				autocomplete="new-password"
 			/>
-			<p class="text-xs text-muted-foreground">Minimum 8 characters.</p>
+			<p class="text-muted-foreground text-xs">Minimum 8 characters.</p>
 		</div>
 
 		{#if form?.message}
-			<p class="text-sm text-destructive">{form.message}</p>
+			<p class="text-destructive text-sm">{form.message}</p>
 		{/if}
 
 		<SubmitButton {pending} class="w-full">Sign up</SubmitButton>
@@ -64,5 +74,5 @@
 
 <Card.Footer class="justify-center text-sm">
 	<span class="text-muted-foreground">Already have an account?</span>
-	<a href="/sign-in" class="ml-1 text-muted-foreground hover:text-foreground underline">Sign in</a>
+	<a href="/sign-in" class="text-muted-foreground hover:text-foreground ml-1 underline">Sign in</a>
 </Card.Footer>

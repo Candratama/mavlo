@@ -24,7 +24,10 @@ export async function computeBudgetSpent(
 		between(transactions.occurredAt, fromMs, toMs)
 	];
 
-	const rows = await db.select().from(transactions).where(and(...conds));
+	const rows = await db
+		.select()
+		.from(transactions)
+		.where(and(...conds));
 
 	const map = new Map<string, number>();
 	for (const r of rows) {

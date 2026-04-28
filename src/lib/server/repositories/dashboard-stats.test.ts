@@ -33,9 +33,7 @@ const insertTx = (
 ) => {
 	const cat = categoryId ? `'${categoryId}'` : 'NULL';
 	h.sqlite
-		.prepare(
-			`INSERT INTO transactions VALUES (?, ?, 'acc1', ${cat}, ?, ?, NULL, ?, ?, ?, NULL)`
-		)
+		.prepare(`INSERT INTO transactions VALUES (?, ?, 'acc1', ${cat}, ?, ?, NULL, ?, ?, ?, NULL)`)
 		.run(id, h.userId, amount, kind, occurredAt, occurredAt, occurredAt);
 };
 

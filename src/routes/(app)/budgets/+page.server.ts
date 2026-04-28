@@ -10,11 +10,7 @@ import {
 import { listCategories } from '$lib/server/repositories/categories';
 import { computeBudgetSpent } from '$lib/server/repositories/budget-spent';
 import { getPreferences } from '$lib/server/repositories/preferences';
-import {
-	budgetCreateSchema,
-	budgetUpdateSchema,
-	budgetIdSchema
-} from '$lib/validation/budget';
+import { budgetCreateSchema, budgetUpdateSchema, budgetIdSchema } from '$lib/validation/budget';
 import { getCycleForPeriod, getCurrentCycle } from '$lib/utils/cycle.js';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -61,7 +57,10 @@ export const actions: Actions = {
 		const fd = await event.request.formData();
 		const parsed = budgetCreateSchema.safeParse(formObject(fd));
 		if (!parsed.success) {
-			return fail(400, { action: 'create', message: parsed.error.issues[0]?.message ?? 'Invalid input' });
+			return fail(400, {
+				action: 'create',
+				message: parsed.error.issues[0]?.message ?? 'Invalid input'
+			});
 		}
 		await createBudget(db, user.id, parsed.data);
 		return { success: true, action: 'create' };
@@ -72,7 +71,10 @@ export const actions: Actions = {
 		const fd = await event.request.formData();
 		const parsed = budgetUpdateSchema.safeParse(formObject(fd));
 		if (!parsed.success) {
-			return fail(400, { action: 'update', message: parsed.error.issues[0]?.message ?? 'Invalid input' });
+			return fail(400, {
+				action: 'update',
+				message: parsed.error.issues[0]?.message ?? 'Invalid input'
+			});
 		}
 		const updated = await updateBudget(db, user.id, parsed.data);
 		if (!updated) return fail(404, { action: 'update', message: 'Budget not found' });

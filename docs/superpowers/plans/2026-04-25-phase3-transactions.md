@@ -7,6 +7,7 @@
 **Architecture:** New `(app)/transactions` route. Reuses dialogs + table + repository pattern from Phase 2. Balance computation is a Drizzle aggregate query: `initial_balance_cents + SUM(income) - SUM(expense)` per account. Dashboard pulls from the same balance helper plus a fresh "this month" + "recent" query.
 
 **Out of scope (deferred):**
+
 - `transfer` kind (Phase 4 — needs schema field `transfer_to_account_id` OR paired-rows pattern)
 - Editable transactions (edit lands here; delete is hard-delete, no soft-archive — atomic data)
 - Recurring transactions (Phase 5 if at all)
@@ -15,6 +16,7 @@
 **Tech Stack:** Same as Phase 2.
 
 **Conventions:**
+
 - `<NEW_REPO>` = `/Users/candratama/Project/WebDev/mavlo`
 - Branch: `main` (greenfield, branch strategy A)
 - Money: integer cents
@@ -25,6 +27,7 @@
 ## Task 1: Transactions Validation Schemas
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/validation/transaction.ts`
 - Create: `<NEW_REPO>/src/lib/validation/transaction.test.ts`
 
@@ -52,8 +55,12 @@ describe('transaction validation', () => {
 		expect(transactionCreateSchema.safeParse(validBase).success).toBe(true);
 		expect(transactionCreateSchema.safeParse({ ...validBase, accountId: '' }).success).toBe(false);
 		expect(transactionCreateSchema.safeParse({ ...validBase, amountCents: 0 }).success).toBe(false);
-		expect(transactionCreateSchema.safeParse({ ...validBase, amountCents: -100 }).success).toBe(false);
-		expect(transactionCreateSchema.safeParse({ ...validBase, kind: 'transfer' }).success).toBe(false);
+		expect(transactionCreateSchema.safeParse({ ...validBase, amountCents: -100 }).success).toBe(
+			false
+		);
+		expect(transactionCreateSchema.safeParse({ ...validBase, kind: 'transfer' }).success).toBe(
+			false
+		);
 	});
 
 	it('create allows optional categoryId + note', () => {
@@ -69,9 +76,7 @@ describe('transaction validation', () => {
 	});
 
 	it('update requires id', () => {
-		expect(
-			transactionUpdateSchema.safeParse({ ...validBase, id: 'tx1' }).success
-		).toBe(true);
+		expect(transactionUpdateSchema.safeParse({ ...validBase, id: 'tx1' }).success).toBe(true);
 		expect(transactionUpdateSchema.safeParse(validBase).success).toBe(false);
 	});
 
@@ -85,9 +90,7 @@ describe('transaction validation', () => {
 				kind: 'income'
 			}).success
 		).toBe(true);
-		expect(
-			transactionListFilterSchema.safeParse({ kind: 'invalid' }).success
-		).toBe(false);
+		expect(transactionListFilterSchema.safeParse({ kind: 'invalid' }).success).toBe(false);
 	});
 });
 ```
@@ -160,6 +163,7 @@ git commit -m "feat(validation): zod schemas for transactions"
 ## Task 2: Extend Test Fixture for Transactions
 
 **Files:**
+
 - Modify: `<NEW_REPO>/src/lib/server/db/test-fixtures.ts`
 
 Add `transactions` table to the in-memory fixture so the transactions repo can test against it. Also seed accounts + categories on demand for tests that need them.
@@ -286,6 +290,7 @@ git commit -m "feat(test): add transactions table to in-memory fixture"
 ## Task 3: Transactions Repository
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/server/repositories/transactions.ts`
 - Create: `<NEW_REPO>/src/lib/server/repositories/transactions.test.ts`
 
@@ -310,14 +315,10 @@ beforeEach(() => {
 	h = createTestDb({ tables: ['accounts', 'categories', 'transactions'] });
 	const now = Date.now();
 	h.sqlite
-		.prepare(
-			'INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)'
-		)
+		.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)')
 		.run('acc1', h.userId, 'Cash', 'cash', 'IDR', 0, now, now);
 	h.sqlite
-		.prepare(
-			'INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)'
-		)
+		.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)')
 		.run('acc2', h.otherUserId, 'Other Cash', 'cash', 'IDR', 0, now, now);
 	h.sqlite
 		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
@@ -442,11 +443,7 @@ import type {
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
 
-export async function listTransactions(
-	db: Db,
-	userId: string,
-	filter: TransactionListFilter
-) {
+export async function listTransactions(db: Db, userId: string, filter: TransactionListFilter) {
 	const conds: SQL[] = [eq(transactions.userId, userId)];
 	if (filter.fromMs !== undefined && filter.toMs !== undefined) {
 		conds.push(between(transactions.occurredAt, filter.fromMs, filter.toMs));
@@ -473,11 +470,7 @@ export async function getTransaction(db: Db, userId: string, id: string) {
 	return row ?? null;
 }
 
-export async function createTransaction(
-	db: Db,
-	userId: string,
-	input: TransactionCreateInput
-) {
+export async function createTransaction(db: Db, userId: string, input: TransactionCreateInput) {
 	const [row] = await db
 		.insert(transactions)
 		.values({
@@ -493,11 +486,7 @@ export async function createTransaction(
 	return row;
 }
 
-export async function updateTransaction(
-	db: Db,
-	userId: string,
-	input: TransactionUpdateInput
-) {
+export async function updateTransaction(db: Db, userId: string, input: TransactionUpdateInput) {
 	const [row] = await db
 		.update(transactions)
 		.set({
@@ -544,6 +533,7 @@ git commit -m "feat(repo): transactions repository with filter + CRUD"
 ## Task 4: Account Balance Computation
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/server/repositories/balances.ts`
 - Create: `<NEW_REPO>/src/lib/server/repositories/balances.test.ts`
 
@@ -569,12 +559,13 @@ beforeEach(() => {
 		.run('acc2', h.userId, 'Bank', 'bank', 'IDR', 500000, now, now);
 });
 
-const insertTx = (h: TestDbHandle, args: { id: string; accountId: string; amount: number; kind: 'income' | 'expense' }) => {
+const insertTx = (
+	h: TestDbHandle,
+	args: { id: string; accountId: string; amount: number; kind: 'income' | 'expense' }
+) => {
 	const now = Date.now();
 	h.sqlite
-		.prepare(
-			'INSERT INTO transactions VALUES (?, ?, ?, NULL, ?, ?, NULL, ?, ?, ?)'
-		)
+		.prepare('INSERT INTO transactions VALUES (?, ?, ?, NULL, ?, ?, NULL, ?, ?, ?)')
 		.run(args.id, h.userId, args.accountId, args.amount, args.kind, now, now, now);
 };
 
@@ -603,14 +594,10 @@ describe('computeAccountBalances', () => {
 	it('cross-user transactions do not affect own balance', async () => {
 		const now = Date.now();
 		h.sqlite
-			.prepare(
-				'INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)'
-			)
+			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)')
 			.run('acc-other', h.otherUserId, 'Other', 'cash', 'IDR', 0, now, now);
 		h.sqlite
-			.prepare(
-				'INSERT INTO transactions VALUES (?, ?, ?, NULL, ?, ?, NULL, ?, ?, ?)'
-			)
+			.prepare('INSERT INTO transactions VALUES (?, ?, ?, NULL, ?, ?, NULL, ?, ?, ?)')
 			.run('tother', h.otherUserId, 'acc-other', 99999, 'expense', now, now, now);
 
 		const map = await computeAccountBalances(h.db, h.userId);
@@ -638,10 +625,7 @@ type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema
  * Returns Map<accountId, balanceCents>. Includes only accounts owned by `userId`.
  * Balance = initial_balance_cents + SUM(income) - SUM(expense). Computed in SQL.
  */
-export async function computeAccountBalances(
-	db: Db,
-	userId: string
-): Promise<Map<string, number>> {
+export async function computeAccountBalances(db: Db, userId: string): Promise<Map<string, number>> {
 	// LEFT JOIN aggregates of own transactions per account.
 	// Drizzle's groupBy + sql<number> casts produce per-account totals.
 	const rows = await db
@@ -667,7 +651,7 @@ export async function computeAccountBalances(
 }
 ```
 
-The unused `sum` import can be removed if your linter complains — kept for readability of intent. The raw `sql\`COALESCE(SUM(CASE WHEN ...))\`` expression is the SQLite-portable way to do conditional aggregation. Drizzle's typed helpers don't have a direct equivalent for `CASE WHEN`.
+The unused `sum` import can be removed if your linter complains — kept for readability of intent. The raw `sql\`COALESCE(SUM(CASE WHEN ...))\``expression is the SQLite-portable way to do conditional aggregation. Drizzle's typed helpers don't have a direct equivalent for`CASE WHEN`.
 
 - [ ] **Step 4: Run (PASS)**
 
@@ -690,6 +674,7 @@ git commit -m "feat(repo): per-account balance computation via SQL aggregate"
 ## Task 5: Transactions List Page + Server Actions
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/routes/(app)/transactions/+page.server.ts`
 - Create: `<NEW_REPO>/src/routes/(app)/transactions/+page.svelte`
 
@@ -792,7 +777,10 @@ export const actions: Actions = {
 			occurredAt: occurredAtMs ?? 0
 		});
 		if (!parsed.success) {
-			return fail(400, { action: 'create', message: parsed.error.issues[0]?.message ?? 'Invalid input' });
+			return fail(400, {
+				action: 'create',
+				message: parsed.error.issues[0]?.message ?? 'Invalid input'
+			});
 		}
 		await createTransaction(db, user.id, parsed.data);
 		return { success: true, action: 'create' };
@@ -807,7 +795,10 @@ export const actions: Actions = {
 			occurredAt: occurredAtMs ?? 0
 		});
 		if (!parsed.success) {
-			return fail(400, { action: 'update', message: parsed.error.issues[0]?.message ?? 'Invalid input' });
+			return fail(400, {
+				action: 'update',
+				message: parsed.error.issues[0]?.message ?? 'Invalid input'
+			});
 		}
 		const updated = await updateTransaction(db, user.id, parsed.data);
 		if (!updated) return fail(404, { action: 'update', message: 'Transaction not found' });
@@ -857,9 +848,11 @@ Long file but mostly mechanical: filter bar (5 inputs + apply), table of rows, c
 	const categoryById = $derived(new Map(data.categories.map((c) => [c.id, c])));
 
 	const formatAmount = (cents: number, currency: string) =>
-		new Intl.NumberFormat('id-ID', { style: 'currency', currency, minimumFractionDigits: 0 }).format(
-			cents / 100
-		);
+		new Intl.NumberFormat('id-ID', {
+			style: 'currency',
+			currency,
+			minimumFractionDigits: 0
+		}).format(cents / 100);
 
 	const formatDate = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
@@ -873,23 +866,23 @@ Long file but mostly mechanical: filter bar (5 inputs + apply), table of rows, c
 
 <svelte:head><title>Transactions — Mavlo</title></svelte:head>
 
-<div class="flex items-center justify-between mb-6">
+<div class="mb-6 flex items-center justify-between">
 	<div>
 		<h1 class="text-2xl font-semibold">Transactions</h1>
-		<p class="text-sm text-muted-foreground mt-1">Track inflows and outflows.</p>
+		<p class="text-muted-foreground mt-1 text-sm">Track inflows and outflows.</p>
 	</div>
 	<Button onclick={() => (createOpen = true)}>
-		<Plus class="size-4 mr-1" /> New transaction
+		<Plus class="mr-1 size-4" /> New transaction
 	</Button>
 </div>
 
 {#if form?.message}
-	<p class="mb-4 text-sm text-destructive">{form.message}</p>
+	<p class="text-destructive mb-4 text-sm">{form.message}</p>
 {/if}
 
 <Card.Root class="mb-6">
 	<Card.Content class="p-4">
-		<form method="GET" class="grid grid-cols-2 md:grid-cols-6 gap-3 items-end">
+		<form method="GET" class="grid grid-cols-2 items-end gap-3 md:grid-cols-6">
 			<div class="space-y-1">
 				<Label for="filter-from">From</Label>
 				<Input id="filter-from" type="date" name="from" value={data.filter.from} />
@@ -903,7 +896,7 @@ Long file but mostly mechanical: filter bar (5 inputs + apply), table of rows, c
 				<select
 					id="filter-account"
 					name="account"
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+					class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
 				>
 					<option value="">All</option>
 					{#each data.accounts as a}
@@ -916,7 +909,7 @@ Long file but mostly mechanical: filter bar (5 inputs + apply), table of rows, c
 				<select
 					id="filter-category"
 					name="category"
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+					class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
 				>
 					<option value="">All</option>
 					{#each data.categories as c}
@@ -931,7 +924,7 @@ Long file but mostly mechanical: filter bar (5 inputs + apply), table of rows, c
 				<select
 					id="filter-kind"
 					name="kind"
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+					class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
 				>
 					<option value="">All</option>
 					<option value="income" selected={data.filter.kind === 'income'}>Income</option>
@@ -964,7 +957,11 @@ Long file but mostly mechanical: filter bar (5 inputs + apply), table of rows, c
 					<Table.Row>
 						<Table.Cell>{formatDate(tx.occurredAt)}</Table.Cell>
 						<Table.Cell class="capitalize">
-							<span class={tx.kind === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}>
+							<span
+								class={tx.kind === 'income'
+									? 'text-emerald-600 dark:text-emerald-400'
+									: 'text-rose-600 dark:text-rose-400'}
+							>
 								{tx.kind}
 							</span>
 						</Table.Cell>
@@ -986,14 +983,14 @@ Long file but mostly mechanical: filter bar (5 inputs + apply), table of rows, c
 								</DropdownMenu.Trigger>
 								<DropdownMenu.Content align="end">
 									<DropdownMenu.Item onclick={() => openEdit(tx)}>
-										<Pencil class="size-4 mr-2" /> Edit
+										<Pencil class="mr-2 size-4" /> Edit
 									</DropdownMenu.Item>
 									<form method="POST" action="?/delete" use:enhance>
 										<input type="hidden" name="id" value={tx.id} />
 										<DropdownMenu.Item>
 											{#snippet child({ props })}
-												<button {...props} type="submit" class="w-full text-left text-destructive">
-													<Trash2 class="size-4 mr-2" /> Delete
+												<button {...props} type="submit" class="text-destructive w-full text-left">
+													<Trash2 class="mr-2 size-4" /> Delete
 												</button>
 											{/snippet}
 										</DropdownMenu.Item>
@@ -1026,10 +1023,11 @@ Long file but mostly mechanical: filter bar (5 inputs + apply), table of rows, c
 		<form
 			method="POST"
 			action="?/create"
-			use:enhance={() => async ({ update, result }) => {
-				await update();
-				if (result.type === 'success') createOpen = false;
-			}}
+			use:enhance={() =>
+				async ({ update, result }) => {
+					await update();
+					if (result.type === 'success') createOpen = false;
+				}}
 			class="space-y-4"
 		>
 			<div class="grid grid-cols-2 gap-3">
@@ -1039,7 +1037,7 @@ Long file but mostly mechanical: filter bar (5 inputs + apply), table of rows, c
 						id="tx-c-kind"
 						name="kind"
 						required
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+						class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
 					>
 						<option value="expense">Expense</option>
 						<option value="income">Income</option>
@@ -1056,7 +1054,7 @@ Long file but mostly mechanical: filter bar (5 inputs + apply), table of rows, c
 					id="tx-c-account"
 					name="accountId"
 					required
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+					class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
 				>
 					{#each data.accounts as a}
 						<option value={a.id}>{a.name} ({a.currency})</option>
@@ -1068,7 +1066,7 @@ Long file but mostly mechanical: filter bar (5 inputs + apply), table of rows, c
 				<select
 					id="tx-c-category"
 					name="categoryId"
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+					class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
 				>
 					<option value="">None</option>
 					<optgroup label="Expense">
@@ -1111,10 +1109,11 @@ Long file but mostly mechanical: filter bar (5 inputs + apply), table of rows, c
 			<form
 				method="POST"
 				action="?/update"
-				use:enhance={() => async ({ update, result }) => {
-					await update();
-					if (result.type === 'success') editOpen = false;
-				}}
+				use:enhance={() =>
+					async ({ update, result }) => {
+						await update();
+						if (result.type === 'success') editOpen = false;
+					}}
 				class="space-y-4"
 			>
 				<input type="hidden" name="id" value={editTarget.id} />
@@ -1125,7 +1124,7 @@ Long file but mostly mechanical: filter bar (5 inputs + apply), table of rows, c
 							id="tx-e-kind"
 							name="kind"
 							required
-							class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+							class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
 						>
 							<option value="expense" selected={editTarget.kind === 'expense'}>Expense</option>
 							<option value="income" selected={editTarget.kind === 'income'}>Income</option>
@@ -1149,7 +1148,7 @@ Long file but mostly mechanical: filter bar (5 inputs + apply), table of rows, c
 						id="tx-e-account"
 						name="accountId"
 						required
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+						class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
 					>
 						{#each data.accounts as a}
 							<option value={a.id} selected={a.id === editTarget.accountId}>
@@ -1163,7 +1162,7 @@ Long file but mostly mechanical: filter bar (5 inputs + apply), table of rows, c
 					<select
 						id="tx-e-category"
 						name="categoryId"
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+						class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
 					>
 						<option value="" selected={!editTarget.categoryId}>None</option>
 						<optgroup label="Expense">
@@ -1218,10 +1217,12 @@ git commit -m "feat(transactions): list page with filters + CRUD dialogs"
 ## Task 6: Wire Dashboard With Real Metrics
 
 **Files:**
+
 - Modify: `<NEW_REPO>/src/routes/(app)/dashboard/+page.server.ts`
 - Modify: `<NEW_REPO>/src/routes/(app)/dashboard/+page.svelte`
 
 Replace the empty `load` and stub cards with real values:
+
 - **Net worth:** sum of all account balances (one currency for now — IDR; mixed-currency totals deferred to settings/conversion)
 - **This month:** total expense (cents) for current month, in default currency
 - **Recent activity:** last 5 transactions
@@ -1311,8 +1312,9 @@ export const load: PageServerLoad = async (event) => {
 <svelte:head><title>Dashboard — Mavlo</title></svelte:head>
 
 <h1 class="text-2xl font-semibold">Dashboard</h1>
-<p class="mt-2 text-sm text-muted-foreground">
-	Welcome, {data.user.name}. Currency: {data.preferences.currency} · Locale: {data.preferences.locale}
+<p class="text-muted-foreground mt-2 text-sm">
+	Welcome, {data.user.name}. Currency: {data.preferences.currency} · Locale: {data.preferences
+		.locale}
 </p>
 
 <div class="mt-8 grid gap-4 md:grid-cols-3">
@@ -1323,20 +1325,20 @@ export const load: PageServerLoad = async (event) => {
 				{formatCents(data.netWorthCents, data.displayCurrency)}
 			</Card.Title>
 		</Card.Header>
-		<Card.Content class="text-xs text-muted-foreground">
-			Sum of all account balances.
-		</Card.Content>
+		<Card.Content class="text-muted-foreground text-xs">Sum of all account balances.</Card.Content>
 	</Card.Root>
 
 	<Card.Root>
 		<Card.Header>
 			<Card.Description>This month spending</Card.Description>
-			<Card.Title class="text-2xl tabular-nums text-rose-600 dark:text-rose-400">
+			<Card.Title class="text-2xl text-rose-600 tabular-nums dark:text-rose-400">
 				{formatCents(data.monthExpenseCents, data.displayCurrency)}
 			</Card.Title>
 		</Card.Header>
-		<Card.Content class="text-xs text-muted-foreground">
-			Income: <span class="text-emerald-600 dark:text-emerald-400">{formatCents(data.monthIncomeCents, data.displayCurrency)}</span>
+		<Card.Content class="text-muted-foreground text-xs">
+			Income: <span class="text-emerald-600 dark:text-emerald-400"
+				>{formatCents(data.monthIncomeCents, data.displayCurrency)}</span
+			>
 		</Card.Content>
 	</Card.Root>
 
@@ -1345,7 +1347,7 @@ export const load: PageServerLoad = async (event) => {
 			<Card.Description>Recent activity</Card.Description>
 			<Card.Title class="text-2xl">{data.recent.length}</Card.Title>
 		</Card.Header>
-		<Card.Content class="text-xs text-muted-foreground">
+		<Card.Content class="text-muted-foreground text-xs">
 			Last {data.recent.length} transaction{data.recent.length === 1 ? '' : 's'}.
 		</Card.Content>
 	</Card.Root>
@@ -1355,26 +1357,33 @@ export const load: PageServerLoad = async (event) => {
 	<Card.Header class="flex flex-row items-center justify-between">
 		<Card.Title>Recent transactions</Card.Title>
 		<Button variant="ghost" size="sm" href="/transactions">
-			View all <ArrowRight class="size-4 ml-1" />
+			View all <ArrowRight class="ml-1 size-4" />
 		</Button>
 	</Card.Header>
 	<Card.Content class="p-0">
 		{#if data.recent.length === 0}
-			<p class="text-sm text-muted-foreground p-6 text-center">
+			<p class="text-muted-foreground p-6 text-center text-sm">
 				No transactions yet. <a href="/transactions" class="underline">Add one</a>.
 			</p>
 		{:else}
 			<ul class="divide-y">
 				{#each data.recent as r}
-					<li class="px-6 py-3 flex items-center justify-between text-sm">
+					<li class="flex items-center justify-between px-6 py-3 text-sm">
 						<div class="flex flex-col">
-							<span class="font-medium">{r.note || r.categoryName || r.accountName || 'Transaction'}</span>
-							<span class="text-xs text-muted-foreground">
+							<span class="font-medium"
+								>{r.note || r.categoryName || r.accountName || 'Transaction'}</span
+							>
+							<span class="text-muted-foreground text-xs">
 								{formatDate(r.occurredAt)} · {r.accountName ?? '—'}
-								{#if r.categoryName} · {r.categoryName}{/if}
+								{#if r.categoryName}
+									· {r.categoryName}{/if}
 							</span>
 						</div>
-						<span class={r.kind === 'income' ? 'text-emerald-600 dark:text-emerald-400 tabular-nums' : 'text-rose-600 dark:text-rose-400 tabular-nums'}>
+						<span
+							class={r.kind === 'income'
+								? 'text-emerald-600 tabular-nums dark:text-emerald-400'
+								: 'text-rose-600 tabular-nums dark:text-rose-400'}
+						>
 							{r.kind === 'expense' ? '−' : '+'}{formatCents(r.amountCents, r.accountCurrency)}
 						</span>
 					</li>

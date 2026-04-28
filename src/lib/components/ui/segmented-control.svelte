@@ -54,10 +54,7 @@
 	role="radiogroup"
 	aria-label={ariaLabel}
 	tabindex="-1"
-	class={cn(
-		'inline-grid w-full rounded-lg bg-muted p-1 gap-1',
-		className
-	)}
+	class={cn('bg-muted inline-grid w-full gap-1 rounded-lg p-1', className)}
 	style="grid-template-columns: repeat({options.length}, minmax(0, 1fr));"
 	onkeydown={onKeydown}
 >
@@ -70,9 +67,9 @@
 			tabindex={value === opt.value ? 0 : -1}
 			onclick={() => (value = opt.value)}
 			class={cn(
-				'flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm transition-all',
+				'flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm transition-all',
 				value === opt.value
-					? 'bg-background text-foreground shadow-sm font-medium'
+					? 'bg-background text-foreground font-medium shadow-sm'
 					: 'text-muted-foreground hover:text-foreground'
 			)}
 		>

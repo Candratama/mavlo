@@ -12,20 +12,11 @@ export const load: LayoutServerLoad = async (event) => {
 	const db = getDb(event.platform!.env.DB);
 
 	let prefs = (
-		await db
-			.select()
-			.from(userPreferences)
-			.where(eq(userPreferences.userId, user.id))
-			.limit(1)
+		await db.select().from(userPreferences).where(eq(userPreferences.userId, user.id)).limit(1)
 	)[0];
 
 	if (!prefs) {
-		prefs = (
-			await db
-				.insert(userPreferences)
-				.values({ userId: user.id })
-				.returning()
-		)[0];
+		prefs = (await db.insert(userPreferences).values({ userId: user.id }).returning())[0];
 	}
 
 	const [accounts, categories, balances] = await Promise.all([

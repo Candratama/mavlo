@@ -44,7 +44,10 @@ export const actions: Actions = {
 		const fd = await event.request.formData();
 		const parsed = categoryCreateSchema.safeParse(formObject(fd));
 		if (!parsed.success) {
-			return fail(400, { action: 'create', message: parsed.error.issues[0]?.message ?? 'Invalid input' });
+			return fail(400, {
+				action: 'create',
+				message: parsed.error.issues[0]?.message ?? 'Invalid input'
+			});
 		}
 		await createCategory(db, user.id, parsed.data);
 		return { success: true, action: 'create' };
@@ -55,7 +58,10 @@ export const actions: Actions = {
 		const fd = await event.request.formData();
 		const parsed = categoryUpdateSchema.safeParse(formObject(fd));
 		if (!parsed.success) {
-			return fail(400, { action: 'update', message: parsed.error.issues[0]?.message ?? 'Invalid input' });
+			return fail(400, {
+				action: 'update',
+				message: parsed.error.issues[0]?.message ?? 'Invalid input'
+			});
 		}
 		const updated = await updateCategory(db, user.id, parsed.data);
 		if (!updated) return fail(404, { action: 'update', message: 'Category not found' });

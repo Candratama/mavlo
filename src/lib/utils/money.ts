@@ -5,7 +5,10 @@
  */
 export function parseRupiahToCents(input: string): number | null {
 	if (typeof input !== 'string') return null;
-	const cleaned = input.trim().replace(/^Rp\s?/i, '').trim();
+	const cleaned = input
+		.trim()
+		.replace(/^Rp\s?/i, '')
+		.trim();
 	if (cleaned === '') return null;
 	if (!/^\d{1,3}(\.\d{3})*$|^\d+$/.test(cleaned)) return null;
 	const digits = cleaned.replace(/\./g, '');

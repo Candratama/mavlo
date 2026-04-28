@@ -11,7 +11,17 @@
 	import SubmitButton from './submit-button.svelte';
 	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
 	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
-	import { CalendarDays, StickyNote, Trash2, Coins, Landmark, CreditCard, Wallet, CircleEllipsis, Tag } from 'lucide-svelte';
+	import {
+		CalendarDays,
+		StickyNote,
+		Trash2,
+		Coins,
+		Landmark,
+		CreditCard,
+		Wallet,
+		CircleEllipsis,
+		Tag
+	} from 'lucide-svelte';
 	import type { Component } from 'svelte';
 	import { setLastUsed } from '$lib/utils/last-used.js';
 	import { notify } from '$lib/utils/toast.js';
@@ -163,7 +173,11 @@
 	const dateLabel = $derived(
 		isToday
 			? 'Today'
-			: new Date(occurredAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+			: new Date(occurredAt).toLocaleDateString('en-US', {
+					month: 'short',
+					day: 'numeric',
+					year: 'numeric'
+				})
 	);
 
 	function onClosed() {
@@ -205,15 +219,11 @@
 			<input type="hidden" name="id" value={editTarget.id} />
 		{/if}
 
-		<SegmentedControl
-			options={kindOptions}
-			bind:value={kind}
-			ariaLabel="Transaction kind"
-		/>
+		<SegmentedControl options={kindOptions} bind:value={kind} ariaLabel="Transaction kind" />
 		<input type="hidden" name="kind" value={kind} />
 
 		<div class="space-y-1">
-			<div class="text-xs text-muted-foreground">
+			<div class="text-muted-foreground text-xs">
 				{accounts.find((a) => a.id === accountId)?.currency ?? 'IDR'}
 			</div>
 			<MoneyInput
@@ -222,15 +232,15 @@
 				min={1}
 				required
 				placeholder="0"
-				class="text-3xl md:text-2xl h-14 md:h-12 font-semibold"
+				class="h-14 text-3xl font-semibold md:h-12 md:text-2xl"
 			/>
 		</div>
 
-		<div class="flex items-center gap-2 flex-wrap">
+		<div class="flex flex-wrap items-center gap-2">
 			<button
 				type="button"
 				onclick={() => dateInput?.showPicker?.()}
-				class="inline-flex items-center gap-1.5 px-3 h-9 rounded-full border border-input bg-background text-sm cursor-pointer hover:bg-accent/30"
+				class="border-input bg-background hover:bg-accent/30 inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-sm"
 			>
 				<CalendarDays class="size-4" />
 				{dateLabel}
@@ -248,7 +258,7 @@
 				<button
 					type="button"
 					onclick={() => (showNote = true)}
-					class="inline-flex items-center gap-1.5 px-3 h-9 rounded-full border border-dashed border-input text-sm text-muted-foreground hover:bg-accent/30"
+					class="border-input text-muted-foreground hover:bg-accent/30 inline-flex h-9 items-center gap-1.5 rounded-full border border-dashed px-3 text-sm"
 				>
 					<StickyNote class="size-4" />
 					Add note
@@ -260,7 +270,13 @@
 			<div class="space-y-1">
 				<Label for="tx-note">Note</Label>
 				<div class="flex items-center gap-2">
-					<Input id="tx-note" name="note" bind:value={note} maxlength={200} placeholder="Optional" />
+					<Input
+						id="tx-note"
+						name="note"
+						bind:value={note}
+						maxlength={200}
+						placeholder="Optional"
+					/>
 					<Button
 						type="button"
 						variant="ghost"
@@ -313,12 +329,14 @@
 			</div>
 		{/if}
 
-		<div class="md:hidden sticky bottom-0 -mx-4 px-4 py-3 bg-background border-t pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+		<div
+			class="bg-background sticky bottom-0 -mx-4 border-t px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden"
+		>
 			<SubmitButton {pending} class="w-full">
 				{mode === 'create' ? 'Save' : 'Update'}
 			</SubmitButton>
 		</div>
-		<div class="hidden md:flex justify-end gap-2 pt-2">
+		<div class="hidden justify-end gap-2 pt-2 md:flex">
 			<Button type="button" variant="outline" onclick={onClosed}>Cancel</Button>
 			<SubmitButton {pending}>{mode === 'create' ? 'Save' : 'Update'}</SubmitButton>
 		</div>
@@ -336,8 +354,11 @@
 	</Dialog.Root>
 {:else}
 	<Sheet.Root bind:open>
-		<Sheet.Content side="bottom" class="max-h-[calc(90dvh-var(--keyboard-h,0px))] flex flex-col p-0">
-			<Sheet.Header class="text-left p-4 pb-2">
+		<Sheet.Content
+			side="bottom"
+			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
+		>
+			<Sheet.Header class="p-4 pb-2 text-left">
 				<Sheet.Title>{mode === 'create' ? 'New transaction' : 'Edit transaction'}</Sheet.Title>
 			</Sheet.Header>
 			<div class="flex-1 overflow-y-auto">

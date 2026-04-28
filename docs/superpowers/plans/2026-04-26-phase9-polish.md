@@ -7,6 +7,7 @@
 **Architecture:** `svelte-sonner` already installed (Phase 1 polish). `mode-watcher` already installed; just expose a toggle in /settings. Pending state via SvelteKit's `submitting` from `enhance` callback.
 
 **Conventions:**
+
 - `<NEW_REPO>` = `/Users/candratama/Project/WebDev/mavlo`
 - Branch: `main` (greenfield, branch strategy A)
 
@@ -15,6 +16,7 @@
 ## Task 1: Sonner Toaster Mount + Helpers
 
 **Files:**
+
 - Modify: `<NEW_REPO>/src/routes/+layout.svelte` (mount `<Toaster>`)
 - Create: `<NEW_REPO>/src/lib/utils/toast.ts` (typed helpers)
 
@@ -70,6 +72,7 @@ git commit -m "feat(toast): mount Toaster + notify helper"
 ## Task 2: Wire Toasts Into Form Actions
 
 **Files:**
+
 - Modify each `(app)/<resource>/+page.svelte` that submits forms
 
 Pattern: in the page's enhance callback, on `result.type === 'success'`, fire a success toast. On `result.type === 'failure'`, fire error toast with the message.
@@ -139,6 +142,7 @@ git commit -m "feat(toast): success/error notifications across all form actions"
 ## Task 3: Form Pending State (Disabled + Spinner)
 
 **Files:**
+
 - Modify each form's submit button across the app
 
 Pattern: track `submitting` state via the `enhance` callback, disable the submit button + show a spinner while the request is in flight.
@@ -221,6 +225,7 @@ git commit -m "feat(forms): pending state with spinner on form submits"
 ## Task 4: Dark Mode Toggle in Settings
 
 **Files:**
+
 - Modify: `<NEW_REPO>/src/routes/(app)/settings/+page.svelte`
 - Modify: `<NEW_REPO>/src/routes/+layout.svelte` (read `data.preferences.theme` for ModeWatcher default)
 
@@ -286,7 +291,8 @@ In the form, replace the existing `<select id="pref-theme">` with:
 			<button
 				type="button"
 				onclick={() => pickTheme(t.value)}
-				class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border text-sm transition-colors {selectedTheme === t.value
+				class="flex flex-1 items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm transition-colors {selectedTheme ===
+				t.value
 					? 'border-primary bg-primary/10 text-foreground'
 					: 'border-input bg-background text-muted-foreground hover:text-foreground'}"
 			>
@@ -315,9 +321,11 @@ git commit -m "feat(theme): apply saved theme on app load + segmented toggle in 
 ## Task 5: Empty States Audit
 
 **Files:**
+
 - Modify: any pages where the empty state is missing or terse
 
 Check each list/grid page. For each, ensure when zero items render:
+
 - Icon (lucide) representing the resource
 - Heading like "No transactions yet"
 - Subtext explaining what to do
@@ -341,14 +349,14 @@ Existing pages already have inline empty states (P3T5 etc.); just upgrade them.
 	let { icon: Icon, title, description, children }: Props = $props();
 </script>
 
-<div class="flex flex-col items-center justify-center text-center py-12 px-4 gap-3">
-	<div class="rounded-full bg-muted p-3">
-		<Icon class="size-6 text-muted-foreground" />
+<div class="flex flex-col items-center justify-center gap-3 px-4 py-12 text-center">
+	<div class="bg-muted rounded-full p-3">
+		<Icon class="text-muted-foreground size-6" />
 	</div>
 	<div class="space-y-1">
 		<h3 class="text-sm font-medium">{title}</h3>
 		{#if description}
-			<p class="text-xs text-muted-foreground max-w-sm">{description}</p>
+			<p class="text-muted-foreground max-w-sm text-xs">{description}</p>
 		{/if}
 	</div>
 	{#if children}
@@ -364,6 +372,7 @@ Existing pages already have inline empty states (P3T5 etc.); just upgrade them.
 Replace the existing inline empty states with `<EmptyState icon={Wallet} title="No accounts yet" description="Add your first account to start tracking finances."><Button onclick={() => createOpen = true}>Add account</Button></EmptyState>`.
 
 This applies to:
+
 - accounts: icon `Wallet`
 - categories: icon `Tag`
 - transactions: icon `ArrowLeftRight`, description includes the active filter range
@@ -416,6 +425,7 @@ Capture new Version ID.
 - [ ] **Step 4: Manual e2e (user-run)**
 
 Sign in. Verify:
+
 - Toast appears on every successful action (create/update/delete/archive)
 - Submit buttons show spinner + disabled while submitting
 - /settings: theme buttons immediately swap light/dark; reload preserves choice

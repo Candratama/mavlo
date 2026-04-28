@@ -10,10 +10,12 @@
 </Card.Header>
 
 <Card.Content>
-	<p class="text-sm text-muted-foreground">
+	<p class="text-muted-foreground text-sm">
 		You're all set. Head to your dashboard to get started.
 	</p>
 	<p class="mt-4 text-sm">
-		<a href="/dashboard" class="text-muted-foreground hover:text-foreground underline">Go to dashboard</a>
+		<a href="/dashboard" class="text-muted-foreground hover:text-foreground underline"
+			>Go to dashboard</a
+		>
 	</p>
 </Card.Content>

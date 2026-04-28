@@ -18,12 +18,22 @@
 
 <Card.Content>
 	{#if !data.token}
-		<p class="text-sm text-destructive">
+		<p class="text-destructive text-sm">
 			Reset token missing.
 			<a href="/forgot-password" class="underline hover:opacity-80">Request a new link.</a>
 		</p>
 	{:else}
-		<form method="POST" use:enhance={() => { pending = true; return async ({ update }) => { await update(); pending = false; }; }} class="space-y-4">
+		<form
+			method="POST"
+			use:enhance={() => {
+				pending = true;
+				return async ({ update }) => {
+					await update();
+					pending = false;
+				};
+			}}
+			class="space-y-4"
+		>
 			<input type="hidden" name="token" value={form?.token ?? data.token} />
 			<div class="space-y-1.5">
 				<Label for="password">New password</Label>
@@ -38,7 +48,7 @@
 			</div>
 
 			{#if form?.message}
-				<p class="text-sm text-destructive">{form.message}</p>
+				<p class="text-destructive text-sm">{form.message}</p>
 			{/if}
 
 			<SubmitButton {pending} class="w-full">Set new password</SubmitButton>

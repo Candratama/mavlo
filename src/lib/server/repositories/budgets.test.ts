@@ -1,12 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createTestDb, type TestDbHandle } from '$lib/server/db/test-fixtures';
-import {
-	listBudgets,
-	createBudget,
-	updateBudget,
-	deleteBudget,
-	getBudget
-} from './budgets';
+import { listBudgets, createBudget, updateBudget, deleteBudget, getBudget } from './budgets';
 
 let h: TestDbHandle;
 

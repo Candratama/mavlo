@@ -18,12 +18,26 @@
 
 <Card.Content>
 	{#if form?.sent}
-		<p class="text-sm">If an account exists for that email, we've sent a reset link. Check your inbox.</p>
+		<p class="text-sm">
+			If an account exists for that email, we've sent a reset link. Check your inbox.
+		</p>
 		<p class="mt-4 text-sm">
-			<a href="/sign-in" class="text-muted-foreground hover:text-foreground underline">Back to sign in</a>
+			<a href="/sign-in" class="text-muted-foreground hover:text-foreground underline"
+				>Back to sign in</a
+			>
 		</p>
 	{:else}
-		<form method="POST" use:enhance={() => { pending = true; return async ({ update }) => { await update(); pending = false; }; }} class="space-y-4">
+		<form
+			method="POST"
+			use:enhance={() => {
+				pending = true;
+				return async ({ update }) => {
+					await update();
+					pending = false;
+				};
+			}}
+			class="space-y-4"
+		>
 			<div class="space-y-1.5">
 				<Label for="email">Email</Label>
 				<Input
@@ -37,7 +51,7 @@
 			</div>
 
 			{#if form?.message}
-				<p class="text-sm text-destructive">{form.message}</p>
+				<p class="text-destructive text-sm">{form.message}</p>
 			{/if}
 
 			<SubmitButton {pending} class="w-full">Send reset link</SubmitButton>

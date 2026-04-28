@@ -13,7 +13,21 @@
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
-	import { Plus, MoreHorizontal, Archive, ArchiveRestore, Pencil, Wallet, Coins, Landmark, CreditCard, CircleEllipsis, Tag, GripVertical, Scale } from 'lucide-svelte';
+	import {
+		Plus,
+		MoreHorizontal,
+		Archive,
+		ArchiveRestore,
+		Pencil,
+		Wallet,
+		Coins,
+		Landmark,
+		CreditCard,
+		CircleEllipsis,
+		Tag,
+		GripVertical,
+		Scale
+	} from 'lucide-svelte';
 	import { dndzone } from 'svelte-dnd-action';
 	import type { Component } from 'svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
@@ -42,7 +56,16 @@
 		{ value: 'other', label: 'Other', icon: CircleEllipsis as unknown as Component }
 	];
 
-	const PRESET_SWATCHES = ['#10b981','#3b82f6','#f59e0b','#f43f5e','#8b5cf6','#ec4899','#14b8a6','#f97316'];
+	const PRESET_SWATCHES = [
+		'#10b981',
+		'#3b82f6',
+		'#f59e0b',
+		'#f43f5e',
+		'#8b5cf6',
+		'#ec4899',
+		'#14b8a6',
+		'#f97316'
+	];
 
 	let createType = $state<string>('cash');
 	let createColor = $state('');
@@ -62,8 +85,7 @@
 		}
 	});
 
-	const iconForType = (type: string) =>
-		typeItems.find((i) => i.value === type)?.icon ?? null;
+	const iconForType = (type: string) => typeItems.find((i) => i.value === type)?.icon ?? null;
 
 	const formatBalance = (cents: number, currency: string) => formatCentsAsCurrency(cents, currency);
 
@@ -113,65 +135,77 @@
 
 <svelte:head><title>Accounts — Mavlo</title></svelte:head>
 
-<div class="flex items-center justify-between mb-6">
+<div class="mb-6 flex items-center justify-between">
 	<div>
-		<h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Accounts</h1>
+		<h1 class="text-xl font-semibold tracking-tight sm:text-2xl">Accounts</h1>
 	</div>
 	<Button onclick={() => (createOpen = true)}>
-		<Plus class="size-4 mr-1" /> New account
+		<Plus class="mr-1 size-4" /> New account
 	</Button>
 </div>
 
-<div class="mb-6 relative overflow-hidden rounded-2xl border bg-gradient-to-br from-emerald-500/15 via-background to-background p-5 sm:p-6 text-center">
-	<p class="text-xs uppercase tracking-wider text-muted-foreground">
+<div
+	class="via-background to-background relative mb-6 overflow-hidden rounded-2xl border bg-gradient-to-br from-emerald-500/15 p-5 text-center sm:p-6"
+>
+	<p class="text-muted-foreground text-xs tracking-wider uppercase">
 		Total Balance <span class="text-foreground/70">({defaultCurrency})</span>
 	</p>
-	<p class="mt-1 text-3xl sm:text-4xl font-semibold tabular-nums tracking-tight">
+	<p class="mt-1 text-3xl font-semibold tracking-tight tabular-nums sm:text-4xl">
 		{formatBalance(totalBalance, defaultCurrency)}
 	</p>
-	<p class="mt-2 text-[10px] text-muted-foreground">
-		Across {data.accounts.length} {data.accounts.length === 1 ? 'account' : 'accounts'}
+	<p class="text-muted-foreground mt-2 text-[10px]">
+		Across {data.accounts.length}
+		{data.accounts.length === 1 ? 'account' : 'accounts'}
 	</p>
 </div>
 
 {#if form?.message}
-	<p class="mb-4 text-sm text-destructive">{form.message}</p>
+	<p class="text-destructive mb-4 text-sm">{form.message}</p>
 {/if}
 
 {#snippet rowMenu(account: AccountRow)}
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger>
 			{#snippet child({ props })}
-				<Button {...props} variant="ghost" size="icon" class="size-11 md:size-8 shrink-0">
+				<Button {...props} variant="ghost" size="icon" class="size-11 shrink-0 md:size-8">
 					<MoreHorizontal class="size-4" />
 				</Button>
 			{/snippet}
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content align="end">
 			<DropdownMenu.Item onclick={() => openEdit(account)}>
-				<Pencil class="size-4 mr-2" /> Edit
+				<Pencil class="mr-2 size-4" /> Edit
 			</DropdownMenu.Item>
 			<DropdownMenu.Item onclick={() => openAdjust(account)}>
-				<Scale class="size-4 mr-2" /> Adjust
+				<Scale class="mr-2 size-4" /> Adjust
 			</DropdownMenu.Item>
-			<form method="POST" action="?/{account.archived ? 'unarchive' : 'archive'}" use:enhance={() => async ({ result }) => {
-				await goto(page.url.pathname + page.url.search, {
-					invalidateAll: true,
-					replaceState: true,
-					keepFocus: true,
-					noScroll: true
-				});
-				if (result.type === 'success') {
-					notify.success(account.archived ? 'Account restored' : 'Account archived');
-				} else if (result.type === 'failure') {
-					const message = (result.data as { message?: string } | undefined)?.message;
-					notify.error(message ?? 'Could not save account');
-				}
-			}}>
+			<form
+				method="POST"
+				action="?/{account.archived ? 'unarchive' : 'archive'}"
+				use:enhance={() =>
+					async ({ result }) => {
+						await goto(page.url.pathname + page.url.search, {
+							invalidateAll: true,
+							replaceState: true,
+							keepFocus: true,
+							noScroll: true
+						});
+						if (result.type === 'success') {
+							notify.success(account.archived ? 'Account restored' : 'Account archived');
+						} else if (result.type === 'failure') {
+							const message = (result.data as { message?: string } | undefined)?.message;
+							notify.error(message ?? 'Could not save account');
+						}
+					}}
+			>
 				<input type="hidden" name="id" value={account.id} />
 				<DropdownMenu.Item>
 					{#snippet child({ props })}
-						<button {...props} type="submit" class="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-left rounded-sm hover:bg-accent/50">
+						<button
+							{...props}
+							type="submit"
+							class="hover:bg-accent/50 flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm"
+						>
 							{#if account.archived}
 								<ArchiveRestore class="size-4" /> Unarchive
 							{:else}
@@ -186,21 +220,31 @@
 {/snippet}
 
 {#if visibleAccounts.length > 0}
-	<div class="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+	<div class="hidden gap-4 md:grid md:grid-cols-2 lg:grid-cols-3">
 		{#each visibleAccounts as account (account.id)}
 			{@const IconComp = iconForType(account.type)}
 			{@const color = account.color || '#3b82f6'}
 			<div
-				class="group relative aspect-[1.586/1] rounded-2xl overflow-hidden p-5 text-white shadow-lg ring-1 ring-white/10 transition-transform hover:-translate-y-0.5 {account.archived ? 'opacity-60' : ''}"
+				class="group relative aspect-[1.586/1] overflow-hidden rounded-2xl p-5 text-white shadow-lg ring-1 ring-white/10 transition-transform hover:-translate-y-0.5 {account.archived
+					? 'opacity-60'
+					: ''}"
 				style="background: linear-gradient(135deg, {color} 0%, {color}cc 50%, {color}88 100%)"
 			>
-				<div class="absolute inset-0 opacity-20" style="background: radial-gradient(circle at top right, white, transparent 60%)"></div>
-				<div class="absolute -right-8 -bottom-8 size-40 rounded-full opacity-15" style="background: white"></div>
+				<div
+					class="absolute inset-0 opacity-20"
+					style="background: radial-gradient(circle at top right, white, transparent 60%)"
+				></div>
+				<div
+					class="absolute -right-8 -bottom-8 size-40 rounded-full opacity-15"
+					style="background: white"
+				></div>
 
-				<div class="relative flex flex-col h-full justify-between">
+				<div class="relative flex h-full flex-col justify-between">
 					<div class="flex items-start justify-between">
 						<div class="flex items-center gap-2">
-							<div class="size-9 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center">
+							<div
+								class="flex size-9 items-center justify-center rounded-lg bg-white/20 backdrop-blur"
+							>
 								{#if IconComp}
 									<IconComp class="size-5" />
 								{:else}
@@ -208,8 +252,8 @@
 								{/if}
 							</div>
 							<div>
-								<div class="text-xs uppercase tracking-wider opacity-80">{account.type}</div>
-								<div class="font-semibold leading-tight">{account.name}</div>
+								<div class="text-xs tracking-wider uppercase opacity-80">{account.type}</div>
+								<div class="leading-tight font-semibold">{account.name}</div>
 							</div>
 						</div>
 						<div class="text-white">
@@ -218,8 +262,8 @@
 					</div>
 
 					<div>
-						<div class="text-xs uppercase tracking-wider opacity-80">Balance</div>
-						<div class="text-2xl xl:text-3xl font-semibold tabular-nums tracking-tight">
+						<div class="text-xs tracking-wider uppercase opacity-80">Balance</div>
+						<div class="text-2xl font-semibold tracking-tight tabular-nums xl:text-3xl">
 							{formatBalance(account.balanceCents, account.currency)}
 						</div>
 					</div>
@@ -236,7 +280,11 @@
 	<div class="hidden md:block">
 		<Card.Root>
 			<Card.Content>
-				<EmptyState icon={Wallet} title="No accounts yet" description="Add your first account to start tracking your finances.">
+				<EmptyState
+					icon={Wallet}
+					title="No accounts yet"
+					description="Add your first account to start tracking your finances."
+				>
 					<Button onclick={() => (createOpen = true)}>Add account</Button>
 				</EmptyState>
 			</Card.Content>
@@ -246,8 +294,13 @@
 
 {#if visibleAccounts.length > 0}
 	<ul
-		class="md:hidden space-y-2"
-		use:dndzone={{ items: visibleAccounts, flipDurationMs: 150, dropTargetStyle: {}, dragDisabled: dndDisabled }}
+		class="space-y-2 md:hidden"
+		use:dndzone={{
+			items: visibleAccounts,
+			flipDurationMs: 150,
+			dropTargetStyle: {},
+			dragDisabled: dndDisabled
+		}}
 		onconsider={(e) => (visibleAccounts = e.detail.items)}
 		onfinalize={(e) => {
 			visibleAccounts = e.detail.items;
@@ -257,31 +310,38 @@
 	>
 		{#each visibleAccounts as account (account.id)}
 			{@const IconComp = iconForType(account.type)}
-			<li class="rounded-lg border bg-card p-3 flex items-center gap-3 {account.archived ? 'opacity-60' : ''}">
+			<li
+				class="bg-card flex items-center gap-3 rounded-lg border p-3 {account.archived
+					? 'opacity-60'
+					: ''}"
+			>
 				<button
 					type="button"
 					tabindex="-1"
 					aria-label="Drag to reorder"
 					onpointerdown={enableDrag}
 					ontouchstart={enableDrag}
-					class="shrink-0 touch-none cursor-grab active:cursor-grabbing"
+					class="shrink-0 cursor-grab touch-none active:cursor-grabbing"
 				>
-					<GripVertical class="size-4 text-muted-foreground" />
+					<GripVertical class="text-muted-foreground size-4" />
 				</button>
-				<div class="flex items-center gap-3 flex-1 min-w-0">
-					<div class="size-9 shrink-0 rounded-md flex items-center justify-center" style={account.color ? `background-color: ${account.color}20` : ''}>
+				<div class="flex min-w-0 flex-1 items-center gap-3">
+					<div
+						class="flex size-9 shrink-0 items-center justify-center rounded-md"
+						style={account.color ? `background-color: ${account.color}20` : ''}
+					>
 						{#if IconComp}
 							<IconComp class="size-4" style={account.color ? `color: ${account.color}` : ''} />
 						{:else}
-							<Wallet class="size-4 text-muted-foreground" />
+							<Wallet class="text-muted-foreground size-4" />
 						{/if}
 					</div>
-					<div class="flex-1 min-w-0">
-						<div class="font-medium truncate">{account.name}</div>
-						<div class="text-xs text-muted-foreground capitalize mt-0.5">
+					<div class="min-w-0 flex-1">
+						<div class="truncate font-medium">{account.name}</div>
+						<div class="text-muted-foreground mt-0.5 text-xs capitalize">
 							{account.type} · {account.currency}
 						</div>
-						<div class="text-base font-semibold tabular-nums mt-1">
+						<div class="mt-1 text-base font-semibold tabular-nums">
 							{formatBalance(account.balanceCents, account.currency)}
 						</div>
 					</div>
@@ -291,9 +351,13 @@
 		{/each}
 	</ul>
 {:else}
-	<ul class="md:hidden space-y-2">
+	<ul class="space-y-2 md:hidden">
 		<li>
-			<EmptyState icon={Wallet} title="No accounts yet" description="Add your first account to start tracking your finances.">
+			<EmptyState
+				icon={Wallet}
+				title="No accounts yet"
+				description="Add your first account to start tracking your finances."
+			>
 				<Button onclick={() => (createOpen = true)}>Add account</Button>
 			</EmptyState>
 		</li>
@@ -301,7 +365,11 @@
 {/if}
 
 <div class="mt-6 flex justify-center">
-	<Button variant="ghost" size="sm" href={data.includeArchived ? '/accounts' : '/accounts?archived=1'}>
+	<Button
+		variant="ghost"
+		size="sm"
+		href={data.includeArchived ? '/accounts' : '/accounts?archived=1'}
+	>
 		{data.includeArchived ? 'Hide archived' : 'Show archived'}
 	</Button>
 </div>
@@ -340,7 +408,13 @@
 		</div>
 		<div class="space-y-1">
 			<Label>Type</Label>
-			<PickerSheet items={typeItems} bind:value={createType} name="type" placeholder="Select type" title="Account type" />
+			<PickerSheet
+				items={typeItems}
+				bind:value={createType}
+				name="type"
+				placeholder="Select type"
+				title="Account type"
+			/>
 		</div>
 		<div class="grid grid-cols-2 gap-3">
 			<div class="space-y-1">
@@ -349,23 +423,32 @@
 			</div>
 			<div class="space-y-1">
 				<Label for="create-balance">Initial balance</Label>
-				<MoneyInput id="create-balance" name="initialBalanceCents" min={0} class="text-2xl h-12" />
+				<MoneyInput id="create-balance" name="initialBalanceCents" min={0} class="h-12 text-2xl" />
 			</div>
 		</div>
 		<div class="space-y-2">
 			<div class="flex items-center justify-between">
 				<Label>Color</Label>
-				<span class="size-5 rounded border" style="background-color: {createColor || 'transparent'}" aria-hidden="true"></span>
+				<span
+					class="size-5 rounded border"
+					style="background-color: {createColor || 'transparent'}"
+					aria-hidden="true"
+				></span>
 			</div>
 			<div class="grid grid-cols-8 gap-2">
 				{#each PRESET_SWATCHES as swatch (swatch)}
 					<button
 						type="button"
-						onclick={() => { createColor = swatch; createCustomColor = false; }}
+						onclick={() => {
+							createColor = swatch;
+							createCustomColor = false;
+						}}
 						aria-pressed={createColor === swatch}
 						aria-label="Color {swatch}"
 						style="background-color: {swatch}; touch-action: manipulation; -webkit-tap-highlight-color: transparent;"
-						class="size-10 rounded-lg cursor-pointer outline-none {createColor === swatch ? 'ring-2 ring-offset-2 ring-foreground ring-offset-background' : ''}"
+						class="size-10 cursor-pointer rounded-lg outline-none {createColor === swatch
+							? 'ring-foreground ring-offset-background ring-2 ring-offset-2'
+							: ''}"
 					>
 						<span class="sr-only">{swatch}</span>
 					</button>
@@ -374,17 +457,27 @@
 			<button
 				type="button"
 				onclick={() => (createCustomColor = !createCustomColor)}
-				class="text-xs text-muted-foreground underline"
+				class="text-muted-foreground text-xs underline"
 			>
 				{createCustomColor ? 'Hide custom' : '+ Custom hex'}
 			</button>
 			{#if createCustomColor}
 				<div class="flex items-center gap-2">
 					<Input bind:value={createColor} placeholder="#10b981" maxlength={7} />
-					<span class="size-6 rounded border" style="background-color: {createColor || 'transparent'}"></span>
+					<span
+						class="size-6 rounded border"
+						style="background-color: {createColor || 'transparent'}"
+					></span>
 				</div>
 			{/if}
-			<input type="text" name="color" bind:value={createColor} class="sr-only" tabindex="-1" aria-hidden="true" />
+			<input
+				type="text"
+				name="color"
+				bind:value={createColor}
+				class="sr-only"
+				tabindex="-1"
+				aria-hidden="true"
+			/>
 		</div>
 		<div class="flex justify-end gap-2">
 			<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
@@ -405,8 +498,11 @@
 	</Dialog.Root>
 {:else}
 	<Sheet.Root bind:open={createOpen}>
-		<Sheet.Content side="bottom" class="max-h-[calc(90dvh-var(--keyboard-h,0px))] flex flex-col p-0">
-			<Sheet.Header class="text-left p-4 pb-2">
+		<Sheet.Content
+			side="bottom"
+			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
+		>
+			<Sheet.Header class="p-4 pb-2 text-left">
 				<Sheet.Title>New account</Sheet.Title>
 				<Sheet.Description>Add a new financial account to track.</Sheet.Description>
 			</Sheet.Header>
@@ -450,7 +546,13 @@
 		</div>
 		<div class="space-y-1">
 			<Label>Type</Label>
-			<PickerSheet items={typeItems} bind:value={editType} name="type" placeholder="Select type" title="Account type" />
+			<PickerSheet
+				items={typeItems}
+				bind:value={editType}
+				name="type"
+				placeholder="Select type"
+				title="Account type"
+			/>
 		</div>
 		<div class="grid grid-cols-2 gap-3">
 			<div class="space-y-1">
@@ -464,24 +566,33 @@
 					name="initialBalanceCents"
 					min={0}
 					value={account.initialBalanceCents}
-					class="text-2xl h-12"
+					class="h-12 text-2xl"
 				/>
 			</div>
 		</div>
 		<div class="space-y-2">
 			<div class="flex items-center justify-between">
 				<Label>Color</Label>
-				<span class="size-5 rounded border" style="background-color: {editColor || 'transparent'}" aria-hidden="true"></span>
+				<span
+					class="size-5 rounded border"
+					style="background-color: {editColor || 'transparent'}"
+					aria-hidden="true"
+				></span>
 			</div>
 			<div class="grid grid-cols-8 gap-2">
 				{#each PRESET_SWATCHES as swatch (swatch)}
 					<button
 						type="button"
-						onclick={() => { editColor = swatch; editCustomColor = false; }}
+						onclick={() => {
+							editColor = swatch;
+							editCustomColor = false;
+						}}
 						aria-pressed={editColor === swatch}
 						aria-label="Color {swatch}"
 						style="background-color: {swatch}; touch-action: manipulation; -webkit-tap-highlight-color: transparent;"
-						class="size-10 rounded-lg cursor-pointer outline-none {editColor === swatch ? 'ring-2 ring-offset-2 ring-foreground ring-offset-background' : ''}"
+						class="size-10 cursor-pointer rounded-lg outline-none {editColor === swatch
+							? 'ring-foreground ring-offset-background ring-2 ring-offset-2'
+							: ''}"
 					>
 						<span class="sr-only">{swatch}</span>
 					</button>
@@ -490,17 +601,25 @@
 			<button
 				type="button"
 				onclick={() => (editCustomColor = !editCustomColor)}
-				class="text-xs text-muted-foreground underline"
+				class="text-muted-foreground text-xs underline"
 			>
 				{editCustomColor ? 'Hide custom' : '+ Custom hex'}
 			</button>
 			{#if editCustomColor}
 				<div class="flex items-center gap-2">
 					<Input bind:value={editColor} placeholder="#10b981" maxlength={7} />
-					<span class="size-6 rounded border" style="background-color: {editColor || 'transparent'}"></span>
+					<span class="size-6 rounded border" style="background-color: {editColor || 'transparent'}"
+					></span>
 				</div>
 			{/if}
-			<input type="text" name="color" bind:value={editColor} class="sr-only" tabindex="-1" aria-hidden="true" />
+			<input
+				type="text"
+				name="color"
+				bind:value={editColor}
+				class="sr-only"
+				tabindex="-1"
+				aria-hidden="true"
+			/>
 		</div>
 		<div class="flex justify-end gap-2">
 			<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
@@ -521,8 +640,11 @@
 		</Dialog.Root>
 	{:else}
 		<Sheet.Root bind:open={editOpen}>
-			<Sheet.Content side="bottom" class="max-h-[calc(90dvh-var(--keyboard-h,0px))] flex flex-col p-0">
-				<Sheet.Header class="text-left p-4 pb-2">
+			<Sheet.Content
+				side="bottom"
+				class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
+			>
+				<Sheet.Header class="p-4 pb-2 text-left">
 					<Sheet.Title>Edit account</Sheet.Title>
 					<Sheet.Description>Update your account details.</Sheet.Description>
 				</Sheet.Header>
@@ -558,20 +680,35 @@
 		class="space-y-4 p-4"
 	>
 		<input type="hidden" name="id" value={target.id} />
-		<div class="rounded-lg bg-muted p-3 text-sm">
-			<div class="text-xs text-muted-foreground">Current balance</div>
-			<div class="font-semibold tabular-nums text-base">{formatBalance(target.balanceCents, target.currency)}</div>
+		<div class="bg-muted rounded-lg p-3 text-sm">
+			<div class="text-muted-foreground text-xs">Current balance</div>
+			<div class="text-base font-semibold tabular-nums">
+				{formatBalance(target.balanceCents, target.currency)}
+			</div>
 		</div>
 		<div class="space-y-1">
 			<Label for="adjust-target">New balance</Label>
-			<MoneyInput id="adjust-target" name="targetCents" bind:value={adjustTargetCents} class="text-2xl h-12" required />
+			<MoneyInput
+				id="adjust-target"
+				name="targetCents"
+				bind:value={adjustTargetCents}
+				class="h-12 text-2xl"
+				required
+			/>
 		</div>
 		<div class="space-y-1">
 			<Label for="adjust-note">Note (optional)</Label>
-			<Input id="adjust-note" name="note" bind:value={adjustNote} maxlength={200} placeholder="Reason for adjustment" />
+			<Input
+				id="adjust-note"
+				name="note"
+				bind:value={adjustNote}
+				maxlength={200}
+				placeholder="Reason for adjustment"
+			/>
 		</div>
-		<p class="text-xs text-muted-foreground">
-			Creates a tracked transaction (income or expense) under "Balance Adjustment" category for the difference.
+		<p class="text-muted-foreground text-xs">
+			Creates a tracked transaction (income or expense) under "Balance Adjustment" category for the
+			difference.
 		</p>
 		<div class="flex justify-end gap-2">
 			<Button type="button" variant="outline" onclick={() => (adjustOpen = false)}>Cancel</Button>
@@ -592,8 +729,11 @@
 		</Dialog.Root>
 	{:else}
 		<Sheet.Root bind:open={adjustOpen}>
-			<Sheet.Content side="bottom" class="max-h-[calc(90dvh-var(--keyboard-h,0px))] flex flex-col p-0">
-				<Sheet.Header class="text-left p-4 pb-2">
+			<Sheet.Content
+				side="bottom"
+				class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
+			>
+				<Sheet.Header class="p-4 pb-2 text-left">
 					<Sheet.Title>Adjust</Sheet.Title>
 				</Sheet.Header>
 				<div class="flex-1 overflow-y-auto">{@render adjustForm(adjustTarget)}</div>

@@ -13,11 +13,7 @@ import {
 import { computeAccountBalances } from '$lib/server/repositories/balances';
 import { getOrCreateAdjustmentCategory } from '$lib/server/repositories/categories';
 import { createTransaction } from '$lib/server/repositories/transactions';
-import {
-	accountCreateSchema,
-	accountUpdateSchema,
-	accountIdSchema
-} from '$lib/validation/account';
+import { accountCreateSchema, accountUpdateSchema, accountIdSchema } from '$lib/validation/account';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
@@ -44,7 +40,10 @@ export const actions: Actions = {
 		const fd = await event.request.formData();
 		const parsed = accountCreateSchema.safeParse(formObject(fd));
 		if (!parsed.success) {
-			return fail(400, { action: 'create', message: parsed.error.issues[0]?.message ?? 'Invalid input' });
+			return fail(400, {
+				action: 'create',
+				message: parsed.error.issues[0]?.message ?? 'Invalid input'
+			});
 		}
 		await createAccount(db, user.id, parsed.data);
 		return { success: true, action: 'create' };
@@ -56,7 +55,10 @@ export const actions: Actions = {
 		const fd = await event.request.formData();
 		const parsed = accountUpdateSchema.safeParse(formObject(fd));
 		if (!parsed.success) {
-			return fail(400, { action: 'update', message: parsed.error.issues[0]?.message ?? 'Invalid input' });
+			return fail(400, {
+				action: 'update',
+				message: parsed.error.issues[0]?.message ?? 'Invalid input'
+			});
 		}
 		const updated = await updateAccount(db, user.id, parsed.data);
 		if (!updated) return fail(404, { action: 'update', message: 'Account not found' });
@@ -104,7 +106,8 @@ export const actions: Actions = {
 		const note = String(fd.get('note') ?? '').trim() || null;
 		const targetCents = Number(targetRaw);
 		if (!accountId) return fail(400, { action: 'adjust', message: 'Account required' });
-		if (!Number.isFinite(targetCents)) return fail(400, { action: 'adjust', message: 'Invalid amount' });
+		if (!Number.isFinite(targetCents))
+			return fail(400, { action: 'adjust', message: 'Invalid amount' });
 
 		const account = await getAccount(db, user.id, accountId);
 		if (!account) return fail(404, { action: 'adjust', message: 'Account not found' });
@@ -123,8 +126,9 @@ export const actions: Actions = {
 			kind,
 			amountCents: Math.abs(delta),
 			occurredAt: Date.now(),
-			note: note ?? `Adjustment to ${account.currency} ${(targetCents / 100).toLocaleString('id-ID')}`,
-			transferToAccountId: null
+			note:
+				note ?? `Adjustment to ${account.currency} ${(targetCents / 100).toLocaleString('id-ID')}`,
+			transferToAccountId: undefined
 		});
 
 		return { success: true, action: 'adjust' };

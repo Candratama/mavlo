@@ -7,15 +7,15 @@ import type { CategoryCreateInput, CategoryUpdateInput } from '$lib/validation/c
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
 
-export async function listCategories(
-	db: Db,
-	userId: string,
-	opts: { includeArchived: boolean }
-) {
+export async function listCategories(db: Db, userId: string, opts: { includeArchived: boolean }) {
 	const where = opts.includeArchived
 		? eq(categories.userId, userId)
 		: and(eq(categories.userId, userId), eq(categories.archived, false));
-	return db.select().from(categories).where(where).orderBy(asc(categories.sortOrder), asc(categories.name));
+	return db
+		.select()
+		.from(categories)
+		.where(where)
+		.orderBy(asc(categories.sortOrder), asc(categories.name));
 }
 
 export async function getCategory(db: Db, userId: string, id: string) {
@@ -82,7 +82,11 @@ export async function deleteCategory(db: Db, userId: string, id: string) {
 	return row ?? null;
 }
 
-export async function reorderCategories(db: Db, userId: string, orderedIds: string[]): Promise<void> {
+export async function reorderCategories(
+	db: Db,
+	userId: string,
+	orderedIds: string[]
+): Promise<void> {
 	await Promise.all(
 		orderedIds.map((id, idx) =>
 			db

@@ -86,15 +86,19 @@ export const load: PageServerLoad = async (event) => {
 		};
 	});
 
-	const topCategoryEntry = spendingByCategory.length > 0
-		? [...spendingByCategory].sort((a, b) => b.amountCents - a.amountCents)[0]
-		: null;
+	const topCategoryEntry =
+		spendingByCategory.length > 0
+			? [...spendingByCategory].sort((a, b) => b.amountCents - a.amountCents)[0]
+			: null;
 	const topCategory = topCategoryEntry
 		? {
-			name: topCategoryEntry.categoryName,
-			amountCents: topCategoryEntry.amountCents,
-			percent: monthExpenseCents > 0 ? Math.round((topCategoryEntry.amountCents / monthExpenseCents) * 100) : 0
-		}
+				name: topCategoryEntry.categoryName,
+				amountCents: topCategoryEntry.amountCents,
+				percent:
+					monthExpenseCents > 0
+						? Math.round((topCategoryEntry.amountCents / monthExpenseCents) * 100)
+						: 0
+			}
 		: null;
 
 	return {

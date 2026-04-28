@@ -7,15 +7,15 @@ import type { AccountCreateInput, AccountUpdateInput } from '$lib/validation/acc
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
 
-export async function listAccounts(
-	db: Db,
-	userId: string,
-	opts: { includeArchived: boolean }
-) {
+export async function listAccounts(db: Db, userId: string, opts: { includeArchived: boolean }) {
 	const where = opts.includeArchived
 		? eq(accounts.userId, userId)
 		: and(eq(accounts.userId, userId), eq(accounts.archived, false));
-	return db.select().from(accounts).where(where).orderBy(asc(accounts.sortOrder), asc(accounts.name));
+	return db
+		.select()
+		.from(accounts)
+		.where(where)
+		.orderBy(asc(accounts.sortOrder), asc(accounts.name));
 }
 
 export async function getAccount(db: Db, userId: string, id: string) {

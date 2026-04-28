@@ -3,6 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development. Steps use checkbox (`- [ ]`).
 
 **Goal:** Three features:
+
 1. **Budgets** — monthly per-category budget limit + spent tracking with progress bar.
 2. **Settings page** — edit user_preferences (currency, locale, timezone, theme, weekStartsOn).
 3. **Avatar upload** — image upload to R2, served via worker endpoint, stored on `users.image`.
@@ -12,6 +13,7 @@
 **Tech Stack:** Same as Phase 4. R2 binding already wired in `wrangler.jsonc` (Phase 1 T3). `users.image` column exists (Phase 1 auth schema).
 
 **Conventions:**
+
 - `<NEW_REPO>` = `/Users/candratama/Project/WebDev/mavlo`
 - Branch: `main` (greenfield, branch strategy A)
 - Avatar key in R2: `avatars/<userId>/<cuid>.<ext>`
@@ -22,6 +24,7 @@
 ## Task 1: Budget Validation
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/validation/budget.ts`
 - Create: `<NEW_REPO>/src/lib/validation/budget.test.ts`
 
@@ -66,9 +69,7 @@ const periodMonthRegex = /^\d{4}-(0[1-9]|1[0-2])$/;
 
 export const budgetCreateSchema = z.object({
 	categoryId: z.string().min(1, 'Category required'),
-	periodMonth: z
-		.string()
-		.regex(periodMonthRegex, 'Period must be YYYY-MM'),
+	periodMonth: z.string().regex(periodMonthRegex, 'Period must be YYYY-MM'),
 	limitCents: z.coerce.number().int().positive('Limit must be positive')
 });
 
@@ -99,6 +100,7 @@ git commit -m "feat(validation): zod schemas for budgets"
 ## Task 2: Update Test Fixture for Budgets
 
 **Files:**
+
 - Modify: `<NEW_REPO>/src/lib/server/db/test-fixtures.ts`
 
 Add `budgets` table SQL + extend `tables` opt union.
@@ -155,6 +157,7 @@ git commit -m "feat(test): add budgets table to in-memory fixture"
 ## Task 3: Budget Repository
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/server/repositories/budgets.ts`
 - Create: `<NEW_REPO>/src/lib/server/repositories/budgets.test.ts`
 
@@ -165,13 +168,7 @@ CRUD: list, get, create, update, delete (hard). User-scoped. Filter list by `per
 ```typescript
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createTestDb, type TestDbHandle } from '$lib/server/db/test-fixtures';
-import {
-	listBudgets,
-	createBudget,
-	updateBudget,
-	deleteBudget,
-	getBudget
-} from './budgets';
+import { listBudgets, createBudget, updateBudget, deleteBudget, getBudget } from './budgets';
 
 let h: TestDbHandle;
 
@@ -262,14 +259,14 @@ import type { BudgetCreateInput, BudgetUpdateInput } from '$lib/validation/budge
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
 
-export async function listBudgets(
-	db: Db,
-	userId: string,
-	filter: { periodMonth?: string }
-) {
+export async function listBudgets(db: Db, userId: string, filter: { periodMonth?: string }) {
 	const conds = [eq(budgets.userId, userId)];
 	if (filter.periodMonth) conds.push(eq(budgets.periodMonth, filter.periodMonth));
-	return db.select().from(budgets).where(and(...conds)).orderBy(asc(budgets.categoryId));
+	return db
+		.select()
+		.from(budgets)
+		.where(and(...conds))
+		.orderBy(asc(budgets.categoryId));
 }
 
 export async function getBudget(db: Db, userId: string, id: string) {
@@ -332,6 +329,7 @@ git commit -m "feat(repo): budgets repository with user-scoped queries"
 ## Task 4: Budget Spent Computation
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/lib/server/repositories/budget-spent.ts`
 - Create: `<NEW_REPO>/src/lib/server/repositories/budget-spent.test.ts`
 
@@ -373,9 +371,7 @@ const insertTx = (
 ) => {
 	const cat = categoryId ? `'${categoryId}'` : 'NULL';
 	h.sqlite
-		.prepare(
-			`INSERT INTO transactions VALUES (?, ?, 'acc1', ${cat}, ?, ?, NULL, ?, ?, ?, NULL)`
-		)
+		.prepare(`INSERT INTO transactions VALUES (?, ?, 'acc1', ${cat}, ?, ?, NULL, ?, ?, ?, NULL)`)
 		.run(id, h.userId, amount, kind, occurredAt, occurredAt, occurredAt);
 };
 
@@ -401,9 +397,7 @@ describe('computeBudgetSpent', () => {
 			.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
 			.run('cat1-other', h.otherUserId, 'Food', 'expense', otherNow, otherNow);
 		h.sqlite
-			.prepare(
-				'INSERT INTO transactions VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, NULL)'
-			)
+			.prepare('INSERT INTO transactions VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, NULL)')
 			.run(
 				'tx-other',
 				h.otherUserId,
@@ -497,6 +491,7 @@ git commit -m "feat(repo): budget spent computation per category per month"
 ## Task 5: Budgets List Page + Server Actions
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/routes/(app)/budgets/+page.server.ts`
 - Create: `<NEW_REPO>/src/routes/(app)/budgets/+page.svelte`
 
@@ -516,11 +511,7 @@ import {
 } from '$lib/server/repositories/budgets';
 import { listCategories } from '$lib/server/repositories/categories';
 import { computeBudgetSpent } from '$lib/server/repositories/budget-spent';
-import {
-	budgetCreateSchema,
-	budgetUpdateSchema,
-	budgetIdSchema
-} from '$lib/validation/budget';
+import { budgetCreateSchema, budgetUpdateSchema, budgetIdSchema } from '$lib/validation/budget';
 import type { Actions, PageServerLoad } from './$types';
 
 const currentPeriodMonth = (): string => {
@@ -562,7 +553,10 @@ export const actions: Actions = {
 		const fd = await event.request.formData();
 		const parsed = budgetCreateSchema.safeParse(formObject(fd));
 		if (!parsed.success) {
-			return fail(400, { action: 'create', message: parsed.error.issues[0]?.message ?? 'Invalid input' });
+			return fail(400, {
+				action: 'create',
+				message: parsed.error.issues[0]?.message ?? 'Invalid input'
+			});
 		}
 		await createBudget(db, user.id, parsed.data);
 		return { success: true, action: 'create' };
@@ -573,7 +567,10 @@ export const actions: Actions = {
 		const fd = await event.request.formData();
 		const parsed = budgetUpdateSchema.safeParse(formObject(fd));
 		if (!parsed.success) {
-			return fail(400, { action: 'update', message: parsed.error.issues[0]?.message ?? 'Invalid input' });
+			return fail(400, {
+				action: 'update',
+				message: parsed.error.issues[0]?.message ?? 'Invalid input'
+			});
 		}
 		const updated = await updateBudget(db, user.id, parsed.data);
 		if (!updated) return fail(404, { action: 'update', message: 'Budget not found' });
@@ -633,20 +630,20 @@ export const actions: Actions = {
 
 <svelte:head><title>Budgets — Mavlo</title></svelte:head>
 
-<div class="flex items-center justify-between mb-6">
+<div class="mb-6 flex items-center justify-between">
 	<div>
 		<h1 class="text-2xl font-semibold">Budgets</h1>
-		<p class="text-sm text-muted-foreground mt-1">Monthly category spending limits.</p>
+		<p class="text-muted-foreground mt-1 text-sm">Monthly category spending limits.</p>
 	</div>
 	<Button onclick={() => (createOpen = true)}>
-		<Plus class="size-4 mr-1" /> New budget
+		<Plus class="mr-1 size-4" /> New budget
 	</Button>
 </div>
 
 <Card.Root class="mb-6">
 	<Card.Content class="p-4">
 		<form method="GET" class="flex items-end gap-3">
-			<div class="space-y-1 flex-1 max-w-xs">
+			<div class="max-w-xs flex-1 space-y-1">
 				<Label for="filter-period">Period</Label>
 				<Input id="filter-period" type="month" name="period" value={data.periodMonth} />
 			</div>
@@ -656,7 +653,7 @@ export const actions: Actions = {
 </Card.Root>
 
 {#if form?.message}
-	<p class="mb-4 text-sm text-destructive">{form.message}</p>
+	<p class="text-destructive mb-4 text-sm">{form.message}</p>
 {/if}
 
 <div class="grid gap-4 md:grid-cols-2">
@@ -681,14 +678,14 @@ export const actions: Actions = {
 					</DropdownMenu.Trigger>
 					<DropdownMenu.Content align="end">
 						<DropdownMenu.Item onclick={() => openEdit(budget)}>
-							<Pencil class="size-4 mr-2" /> Edit
+							<Pencil class="mr-2 size-4" /> Edit
 						</DropdownMenu.Item>
 						<form method="POST" action="?/delete" use:enhance>
 							<input type="hidden" name="id" value={budget.id} />
 							<DropdownMenu.Item>
 								{#snippet child({ props })}
-									<button {...props} type="submit" class="w-full text-left text-destructive">
-										<Trash2 class="size-4 mr-2" /> Delete
+									<button {...props} type="submit" class="text-destructive w-full text-left">
+										<Trash2 class="mr-2 size-4" /> Delete
 									</button>
 								{/snippet}
 							</DropdownMenu.Item>
@@ -697,13 +694,13 @@ export const actions: Actions = {
 				</DropdownMenu.Root>
 			</Card.Header>
 			<Card.Content>
-				<div class="flex items-baseline justify-between text-sm tabular-nums mb-2">
-					<span class={over ? 'text-rose-600 dark:text-rose-400 font-medium' : ''}>
+				<div class="mb-2 flex items-baseline justify-between text-sm tabular-nums">
+					<span class={over ? 'font-medium text-rose-600 dark:text-rose-400' : ''}>
 						{formatCents(spent)}
 					</span>
 					<span class="text-muted-foreground">of {formatCents(budget.limitCents)}</span>
 				</div>
-				<div class="h-2 rounded-full bg-muted overflow-hidden">
+				<div class="bg-muted h-2 overflow-hidden rounded-full">
 					<div
 						class={over
 							? 'h-full bg-rose-500'
@@ -713,8 +710,9 @@ export const actions: Actions = {
 						style="width: {percentage}%"
 					></div>
 				</div>
-				<p class="mt-2 text-xs text-muted-foreground">
-					{percentage}% used{#if over} · over by {formatCents(spent - budget.limitCents)}{/if}
+				<p class="text-muted-foreground mt-2 text-xs">
+					{percentage}% used{#if over}
+						· over by {formatCents(spent - budget.limitCents)}{/if}
 				</p>
 			</Card.Content>
 		</Card.Root>
@@ -739,10 +737,11 @@ export const actions: Actions = {
 		<form
 			method="POST"
 			action="?/create"
-			use:enhance={() => async ({ update, result }) => {
-				await update();
-				if (result.type === 'success') createOpen = false;
-			}}
+			use:enhance={() =>
+				async ({ update, result }) => {
+					await update();
+					if (result.type === 'success') createOpen = false;
+				}}
 			class="space-y-4"
 		>
 			<div class="space-y-1">
@@ -751,7 +750,7 @@ export const actions: Actions = {
 					id="budget-c-category"
 					name="categoryId"
 					required
-					class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+					class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
 				>
 					{#each data.expenseCategories as c}
 						<option value={c.id}>{c.name}</option>
@@ -786,10 +785,11 @@ export const actions: Actions = {
 			<form
 				method="POST"
 				action="?/update"
-				use:enhance={() => async ({ update, result }) => {
-					await update();
-					if (result.type === 'success') editOpen = false;
-				}}
+				use:enhance={() =>
+					async ({ update, result }) => {
+						await update();
+						if (result.type === 'success') editOpen = false;
+					}}
 				class="space-y-4"
 			>
 				<input type="hidden" name="id" value={editTarget.id} />
@@ -799,7 +799,7 @@ export const actions: Actions = {
 						id="budget-e-category"
 						name="categoryId"
 						required
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+						class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
 					>
 						{#each data.expenseCategories as c}
 							<option value={c.id} selected={c.id === editTarget.categoryId}>{c.name}</option>
@@ -852,6 +852,7 @@ git commit -m "feat(budgets): list page with progress bars + CRUD dialogs"
 ## Task 6: Settings Page (User Preferences)
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/routes/(app)/settings/+page.server.ts`
 - Create: `<NEW_REPO>/src/routes/(app)/settings/+page.svelte`
 - Create: `<NEW_REPO>/src/lib/validation/preferences.ts`
@@ -939,11 +940,7 @@ export async function getPreferences(db: Db, userId: string) {
 	return row ?? null;
 }
 
-export async function updatePreferences(
-	db: Db,
-	userId: string,
-	input: PreferencesUpdateInput
-) {
+export async function updatePreferences(db: Db, userId: string, input: PreferencesUpdateInput) {
 	const [row] = await db
 		.update(userPreferences)
 		.set({
@@ -1010,8 +1007,8 @@ export const actions: Actions = {
 
 <svelte:head><title>Settings — Mavlo</title></svelte:head>
 
-<h1 class="text-2xl font-semibold mb-2">Settings</h1>
-<p class="text-sm text-muted-foreground mb-6">Customize your Mavlo experience.</p>
+<h1 class="mb-2 text-2xl font-semibold">Settings</h1>
+<p class="text-muted-foreground mb-6 text-sm">Customize your Mavlo experience.</p>
 
 <Card.Root class="max-w-2xl">
 	<Card.Header>
@@ -1033,7 +1030,13 @@ export const actions: Actions = {
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-1">
 					<Label for="pref-timezone">Timezone</Label>
-					<Input id="pref-timezone" name="timezone" required maxlength={60} value={prefs.timezone} />
+					<Input
+						id="pref-timezone"
+						name="timezone"
+						required
+						maxlength={60}
+						value={prefs.timezone}
+					/>
 				</div>
 				<div class="space-y-1">
 					<Label for="pref-theme">Theme</Label>
@@ -1041,7 +1044,7 @@ export const actions: Actions = {
 						id="pref-theme"
 						name="theme"
 						required
-						class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+						class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
 					>
 						<option value="light" selected={prefs.theme === 'light'}>Light</option>
 						<option value="dark" selected={prefs.theme === 'dark'}>Dark</option>
@@ -1065,7 +1068,7 @@ export const actions: Actions = {
 			{#if form?.success}
 				<p class="text-sm text-emerald-600 dark:text-emerald-400">Saved.</p>
 			{:else if form?.message}
-				<p class="text-sm text-destructive">{form.message}</p>
+				<p class="text-destructive text-sm">{form.message}</p>
 			{/if}
 
 			<Button type="submit">Save</Button>
@@ -1089,6 +1092,7 @@ git commit -m "feat(settings): preferences edit page with form action"
 ## Task 7: Avatar Upload (R2 + Worker Endpoint)
 
 **Files:**
+
 - Create: `<NEW_REPO>/src/routes/(app)/settings/avatar/+page.server.ts` (the upload action)
 - Modify: `<NEW_REPO>/src/routes/(app)/settings/+page.svelte` (add upload form)
 - Create: `<NEW_REPO>/src/routes/api/avatar/[userId]/+server.ts` (serve from R2)
@@ -1153,15 +1157,16 @@ export async function getAvatar(args: { bucket: R2Bucket; userId: string }) {
 import { describe, it, expect, vi } from 'vitest';
 import { uploadAvatar } from './avatar';
 
-const fakeBucket = (): R2Bucket => ({
-	put: vi.fn().mockResolvedValue({}),
-	get: vi.fn().mockResolvedValue(null),
-	head: vi.fn().mockResolvedValue(null),
-	delete: vi.fn().mockResolvedValue(undefined),
-	list: vi.fn().mockResolvedValue({ objects: [] }),
-	createMultipartUpload: vi.fn() as any,
-	resumeMultipartUpload: vi.fn() as any
-}) as unknown as R2Bucket;
+const fakeBucket = (): R2Bucket =>
+	({
+		put: vi.fn().mockResolvedValue({}),
+		get: vi.fn().mockResolvedValue(null),
+		head: vi.fn().mockResolvedValue(null),
+		delete: vi.fn().mockResolvedValue(undefined),
+		list: vi.fn().mockResolvedValue({ objects: [] }),
+		createMultipartUpload: vi.fn() as any,
+		resumeMultipartUpload: vi.fn() as any
+	}) as unknown as R2Bucket;
 
 describe('uploadAvatar', () => {
 	it('rejects unsupported types', async () => {
@@ -1255,17 +1260,19 @@ export const actions: Actions = {
 Append a second Card after the Preferences card:
 
 ```svelte
-<Card.Root class="max-w-2xl mt-6">
+<Card.Root class="mt-6 max-w-2xl">
 	<Card.Header>
 		<Card.Title>Avatar</Card.Title>
-		<Card.Description>Upload a profile picture (PNG, JPEG, WebP, or GIF; max 2 MB).</Card.Description>
+		<Card.Description
+			>Upload a profile picture (PNG, JPEG, WebP, or GIF; max 2 MB).</Card.Description
+		>
 	</Card.Header>
 	<Card.Content>
 		{#if data.user.image}
 			<img
 				src={data.user.image}
 				alt="Current avatar"
-				class="size-20 rounded-full object-cover border mb-4"
+				class="mb-4 size-20 rounded-full border object-cover"
 			/>
 		{/if}
 		<form
@@ -1274,7 +1281,12 @@ Append a second Card after the Preferences card:
 			enctype="multipart/form-data"
 			class="flex items-center gap-3"
 		>
-			<Input type="file" name="avatar" accept="image/png,image/jpeg,image/webp,image/gif" required />
+			<Input
+				type="file"
+				name="avatar"
+				accept="image/png,image/jpeg,image/webp,image/gif"
+				required
+			/>
 			<Button type="submit">Upload</Button>
 		</form>
 	</Card.Content>
@@ -1286,10 +1298,10 @@ The `(app)/+layout.server.ts` already returns `data.user` containing `id, name, 
 In `src/routes/(app)/+layout.server.ts` change the return:
 
 ```typescript
-	return {
-		user: { id: user.id, name: user.name, email: user.email, image: user.image },
-		preferences: prefs
-	};
+return {
+	user: { id: user.id, name: user.name, email: user.email, image: user.image },
+	preferences: prefs
+};
 ```
 
 - [ ] **Step 6: Type-check + commit**

@@ -13,14 +13,14 @@
 	let { icon: Icon, title, description, children }: Props = $props();
 </script>
 
-<div class="flex flex-col items-center justify-center text-center py-12 px-4 gap-3">
-	<div class="rounded-full bg-muted p-3">
-		<Icon class="size-6 text-muted-foreground" />
+<div class="flex flex-col items-center justify-center gap-3 px-4 py-12 text-center">
+	<div class="bg-muted rounded-full p-3">
+		<Icon class="text-muted-foreground size-6" />
 	</div>
 	<div class="space-y-1">
 		<h3 class="text-sm font-medium">{title}</h3>
 		{#if description}
-			<p class="text-xs text-muted-foreground max-w-sm">{description}</p>
+			<p class="text-muted-foreground max-w-sm text-xs">{description}</p>
 		{/if}
 	</div>
 	{#if children}

@@ -19,6 +19,7 @@ Out: Recurring transactions, multi-currency conversion, offline/SW, icon picker,
 Three new components in `src/lib/components/ui/`:
 
 ### `SegmentedControl`
+
 Pill-style group of 2-3 mutually exclusive options. Used for: transaction kind (Expense | Income | Transfer), category kind (Income | Expense), theme (Light | Dark | System).
 
 - Props: `options: { value: string; label: string; icon?: Component }[]`, `value: string` (`$bindable`), `name?: string`, `class?: string`.
@@ -26,6 +27,7 @@ Pill-style group of 2-3 mutually exclusive options. Used for: transaction kind (
 - Visual: rounded `bg-muted` track, active item `bg-background shadow-sm font-medium`. Equal-width grid columns.
 
 ### `PickerSheet`
+
 Bottom-sheet picker for long lists. Used for: account, category (grouped), account-type, transferTo, currency.
 
 - Props: `items: PickerItem[]` where `PickerItem = { value: string; label: string; description?: string; icon?: Component }`, `value: string` (`$bindable`), `placeholder: string`, `searchable?: boolean`, `groups?: { label: string; items: PickerItem[] }[]` (overrides flat items when present), `disabled?: boolean`.
@@ -35,6 +37,7 @@ Bottom-sheet picker for long lists. Used for: account, category (grouped), accou
 - For form submission, parent renders a hidden `<input type="hidden" name="..." value={picked}>`.
 
 ### `Fab`
+
 Floating action button. Single global instance in `(app)/+layout.svelte`.
 
 - Position: `fixed right-4 bottom-[calc(var(--bottom-nav-h)+1rem+env(safe-area-inset-bottom))] z-30`.
@@ -43,9 +46,11 @@ Floating action button. Single global instance in `(app)/+layout.svelte`.
 - Visual: `size-14 rounded-full bg-primary text-primary-foreground shadow-lg`, lucide `Plus` icon `size-6`.
 
 ### Add-transaction store
+
 `src/lib/stores/add-transaction.ts` — module-scoped Svelte 5 `$state` exposing `open: boolean` and `defaultKind?: 'expense' | 'income' | 'transfer'`. The `(app)/+layout.svelte` mounts a single `AddTransactionSheet` listening to this store so Fab + Transactions page header can both trigger the same sheet without prop-drilling.
 
 ### `lib/utils/last-used.ts`
+
 SSR-safe localStorage wrapper:
 
 ```ts
@@ -85,11 +90,13 @@ Guard with `typeof window === 'undefined'` for SSR.
 8. **Footer** — sticky bottom. Mobile: full-width `Save` button. Desktop: `[Cancel] [Save]` row right-aligned.
 
 ### Form submission
+
 - Existing `?/create` and `?/update` form actions unchanged.
 - Hidden `<input>` elements mirror picker values: `accountId`, `transferToAccountId`, `categoryId`, `kind`, `occurredAt`, `note`, `amountCents`.
 - On successful submit, write `setLastUsed({ accountId, kind })`.
 
 ### Validation
+
 - Submit disabled until amount > 0 and required pickers populated.
 - For Transfer: `accountId !== transferToAccountId`.
 - Errors surface via existing `notify.error(message)` toast pattern.
@@ -101,6 +108,7 @@ Guard with `typeof window === 'undefined'` for SSR.
 ### Transactions filter
 
 **Mobile (`< md`):**
+
 - Replace inline 5-field grid with a chip bar above the transactions list.
 - No active filters → single ghost button: `[⚙ Filter]`.
 - Active filters → chips for each populated param (`From: Sep 1`, `To: Sep 30`, `Account: BCA`, `Category: Food`, `Kind: Expense`). Each chip has a small `×` to clear that param (navigates to URL without it). Trailing `[⚙ Edit]` chip opens the full filter sheet.
@@ -112,15 +120,18 @@ Guard with `typeof window === 'undefined'` for SSR.
   - Footer: `[Reset]` (clears all params) and `[Apply]` (submits the form, which triggers GET navigation).
 
 **Desktop (`md+`):**
+
 - Keep current 6-col grid form, but use new `SegmentedControl` for Kind and `PickerSheet` for Account/Category. From/To remain native date inputs.
 
 ### Budgets filter
 
 **Mobile (`< md`):**
+
 - Replace card with chip bar: `[Sep 2026]` chip → tap = native `<input type="month">`.
 - "Apply" trigger fires on change (auto-submit) since there's only one field.
 
 **Desktop (`md+`):**
+
 - Replace text `Input` with native `<input type="month">` for `period`. Apply button kept.
 
 URL params unchanged (`?from=&to=&account=&category=&kind=`, `?period=`). All filter logic stays server-side via existing GET form pattern.
@@ -130,17 +141,20 @@ URL params unchanged (`?from=&to=&account=&category=&kind=`, `?period=`). All fi
 ## Section 4 — Per-Page Polish
 
 ### Dashboard (`/dashboard`)
+
 - KPI cards: `Card.Title` `text-2xl` → `text-xl` on mobile (`sm:text-2xl` keeps desktop). `Card.Header` `p-4` → `p-3` on mobile.
 - Charts unchanged (Phase 11 already responsive).
 - Recent list: `px-6` → `px-4` on mobile.
 
 ### Transactions (`/transactions`)
+
 - Filter → chip bar (Section 3).
 - Add/Edit → bottom sheet on mobile, dialog on desktop (Section 2).
 - "New transaction" header button → `hidden md:inline-flex` (FAB takes over mobile).
 - Mobile list rows unchanged (already cards from Phase 11).
 
 ### Accounts (`/accounts`)
+
 - Create/Edit dialog → bottom sheet on mobile.
 - `Type` native select → `PickerSheet` with lucide icons:
   - Cash → `Coins`, Bank → `Landmark`, Credit → `CreditCard`, Wallet → `Wallet`, Other → `CircleEllipsis`.
@@ -148,6 +162,7 @@ URL params unchanged (`?from=&to=&account=&category=&kind=`, `?period=`). All fi
 - Currency stays `Input` (8-char) for now.
 
 ### Budgets (`/budgets`)
+
 - Filter → period chip (Section 3).
 - Create/Edit dialog → bottom sheet on mobile.
 - `Category` native select → `PickerSheet`.
@@ -155,6 +170,7 @@ URL params unchanged (`?from=&to=&account=&category=&kind=`, `?period=`). All fi
 - `Limit` → hero amount style.
 
 ### Categories (`/categories`)
+
 - Create/Edit dialog → bottom sheet on mobile.
 - `Kind` (income/expense) native select → `SegmentedControl`.
 - `Color (hex)` input → swatch grid + `[+ Custom]` expander:
@@ -164,12 +180,14 @@ URL params unchanged (`?from=&to=&account=&category=&kind=`, `?period=`). All fi
 - `Icon` text input unchanged.
 
 ### Settings (`/settings`)
+
 - `Theme` select → `SegmentedControl` `[Light | Dark | System]`.
 - New field: `Month start day` (Section 5).
 - Form fields use `space-y-4` consistent with other pages.
 - Any present modal → bottom sheet on mobile.
 
 ### Layout (`(app)/+layout.svelte`)
+
 - Mount global `Fab` (mobile-only, `hidden md:hidden` redundant — handled inside).
 - Mount global `AddTransactionSheet` listening to add-transaction store.
 - "+ New X" header buttons on Accounts/Budgets/Categories pages: kept on mobile (page-specific creates; FAB is transactions-only).
@@ -179,9 +197,10 @@ URL params unchanged (`?from=&to=&account=&category=&kind=`, `?period=`). All fi
 ## Section 5 — Adjustable Month Start Day (Payday Cycle)
 
 ### Data
+
 - New column on `userPreferences`:
   ```ts
-  monthStartDay: integer('month_start_day', { mode: 'number' }).notNull().default(1)
+  monthStartDay: integer('month_start_day', { mode: 'number' }).notNull().default(1);
   ```
 - Range: 1-28 (capped at 28 to avoid Feb edge cases).
 - Migration via drizzle-kit (`npm run db:generate` then `npm run db:push`).
@@ -189,7 +208,11 @@ URL params unchanged (`?from=&to=&account=&category=&kind=`, `?period=`). All fi
 ### Helper — `src/lib/utils/cycle.ts`
 
 ```ts
-export interface Cycle { start: Date; end: Date; periodMonth: string; }
+export interface Cycle {
+	start: Date;
+	end: Date;
+	periodMonth: string;
+}
 
 // Cycle containing `now` for given startDay. UTC-based.
 export function getCurrentCycle(now: Date, startDay: number, timezone: string): Cycle;
@@ -202,6 +225,7 @@ export function formatCycleLabel(cycle: Cycle, startDay: number, locale?: string
 ```
 
 Implementation rules:
+
 - All math in UTC ms; convert to user's timezone only for display via `Intl.DateTimeFormat`.
 - `start` = day `startDay` of the anchor month at 00:00 in user's timezone.
 - `end` = day `startDay` of next month at 00:00 (exclusive), so range is half-open `[start, end)`.
@@ -210,42 +234,49 @@ Implementation rules:
 ### Server queries updated
 
 `src/routes/(app)/dashboard/+page.server.ts`:
+
 - `monthExpenseCents`, `monthIncomeCents`, `dailySpending`, `spendingByCategory` — replace calendar-month boundary calculations with `getCurrentCycle(now, prefs.monthStartDay, prefs.timezone)`.
 
 `src/routes/(app)/transactions/+page.server.ts`:
+
 - When neither `from` nor `to` query param present, default range = current cycle.
 
 `src/routes/(app)/budgets/+page.server.ts`:
+
 - `spentByCategory` map keyed by budget — interpret each budget's `periodMonth` via `getCycleForPeriod(periodMonth, prefs.monthStartDay, prefs.timezone)` and sum transactions whose `occurredAt` falls in the cycle's `[start, end)`.
 - Default `periodMonth` for new budgets = current cycle's `periodMonth` (anchor month, not calendar month).
 
 ### Settings UI
+
 Add to `/settings` form:
 
 ```svelte
 <div class="space-y-1">
-  <Label for="month-start-day">Cycle start (e.g. payday)</Label>
-  <Input
-    id="month-start-day"
-    type="number"
-    name="monthStartDay"
-    min="1"
-    max="28"
-    value={prefs.monthStartDay}
-  />
-  <p class="text-xs text-muted-foreground">
-    Day 1 = calendar month. Day 25 = your month runs 25th to 24th. Affects current and future periods.
-  </p>
+	<Label for="month-start-day">Cycle start (e.g. payday)</Label>
+	<Input
+		id="month-start-day"
+		type="number"
+		name="monthStartDay"
+		min="1"
+		max="28"
+		value={prefs.monthStartDay}
+	/>
+	<p class="text-muted-foreground text-xs">
+		Day 1 = calendar month. Day 25 = your month runs 25th to 24th. Affects current and future
+		periods.
+	</p>
 </div>
 ```
 
 Validation in form action: clamp to 1-28, reject otherwise.
 
 ### Display copy
+
 - Dashboard "This month spending" `Card.Description` → shows cycle label dynamically (e.g. "Sep 25 – Oct 24" when non-1, else "September 2026").
 - Budgets page subtitle when `monthStartDay !== 1`: `"Period {periodMonth} ({cycleLabel})"`.
 
 ### Constraints
+
 - Existing budget rows are not migrated — they continue to use `periodMonth` strings, but the boundary interpretation shifts forward when the user changes `monthStartDay`. Documented in Settings copy.
 
 ---
@@ -255,6 +286,7 @@ Validation in form action: clamp to 1-28, reject otherwise.
 ### Unit tests (vitest, jsdom)
 
 **`lib/utils/cycle.test.ts`** — covers:
+
 - `startDay=1` returns calendar month boundaries.
 - `startDay=25` mid-month start returns `prev-25 → curr-25` for `now` before the 25th, `curr-25 → next-25` after.
 - Feb edge: anchored to user's timezone, never overshoots Feb 28.
@@ -263,6 +295,7 @@ Validation in form action: clamp to 1-28, reject otherwise.
 - Label formatting for both cases.
 
 **`lib/utils/last-used.test.ts`** — covers:
+
 - SSR safety: import + call functions when `window` undefined returns sane defaults / no-op.
 - get/set roundtrip in jsdom.
 - Malformed JSON returns defaults.
@@ -281,6 +314,7 @@ Validation in form action: clamp to 1-28, reject otherwise.
 - Categories swatch picker: select preset, expand custom, paste hex.
 
 ### Type-check + lint
+
 - `npm run check` and `npm run lint` clean for new files. Pre-existing baseline errors unchanged (Phase 11 acknowledged 1 type error + 38 lint errors pre-existing).
 
 ---
@@ -288,9 +322,11 @@ Validation in form action: clamp to 1-28, reject otherwise.
 ## Section 7 — Dependencies, Risks, Out-of-Scope
 
 ### Dependencies
+
 None added at the package level. All built on existing bits-ui, shadcn-svelte, lucide-svelte, Tailwind v4. One drizzle migration adds `month_start_day` column.
 
 ### Risks
+
 - **Cycle math + timezone** — easy to get off-by-one. Mitigated by exhaustive unit tests covering startDay=1, mid-month starts, Feb boundaries, period anchor edges.
 - **localStorage SSR** — guarded with `typeof window` check in `last-used.ts`.
 - **PickerSheet keyboard** — bits-ui Sheet handles focus trap; search input gets autofocus when `searchable=true`.
@@ -299,6 +335,7 @@ None added at the package level. All built on existing bits-ui, shadcn-svelte, l
 - **Migration safety** — adding a NOT NULL column with default to a table; D1 supports this without locking.
 
 ### Out of scope
+
 - Recurring / scheduled transactions
 - Multi-currency conversion display
 - Skeleton loading / offline / service worker
@@ -312,6 +349,7 @@ None added at the package level. All built on existing bits-ui, shadcn-svelte, l
 ## File Inventory
 
 ### New files
+
 - `src/lib/components/ui/segmented-control.svelte`
 - `src/lib/components/ui/picker-sheet.svelte`
 - `src/lib/components/ui/fab.svelte`
@@ -326,6 +364,7 @@ None added at the package level. All built on existing bits-ui, shadcn-svelte, l
 - Drizzle migration: `drizzle/<timestamped>_month_start_day.sql`
 
 ### Modified files
+
 - `src/lib/server/db/schema.ts` — add `monthStartDay` column.
 - `src/routes/(app)/+layout.svelte` — mount `Fab` and `AddTransactionSheet` global.
 - `src/routes/(app)/dashboard/+page.svelte` — KPI sizing + recent list padding.

@@ -7,11 +7,7 @@ import type { BudgetCreateInput, BudgetUpdateInput } from '$lib/validation/budge
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
 
-export async function listBudgets(
-	db: Db,
-	userId: string,
-	filter: { periodMonth?: string }
-) {
+export async function listBudgets(db: Db, userId: string, filter: { periodMonth?: string }) {
 	const conds = [eq(budgets.userId, userId)];
 	if (filter.periodMonth) conds.push(eq(budgets.periodMonth, filter.periodMonth));
 	return db
