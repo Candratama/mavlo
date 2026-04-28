@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
+	import CinematicFooter from '$lib/components/ui/cinematic-footer.svelte';
 	import {
 		ArrowRight,
 		Wallet,
@@ -207,39 +208,13 @@
 		</div>
 	</section>
 
-	<!-- Final CTA -->
-	<section class="px-4 sm:px-6 pb-16 sm:pb-24">
-		<div class="max-w-3xl mx-auto text-center">
-			<h2 class="text-2xl sm:text-3xl font-bold tracking-tight mb-4">
-				Siap mulai lihat ke mana uangmu pergi?
-			</h2>
-			<Button href="/sign-up" size="lg">
-				Buat akun gratis <ArrowRight class="size-4 ml-1.5" />
-			</Button>
-			<p class="mt-3 text-xs text-muted-foreground">No credit card. Tidak akan pernah.</p>
-		</div>
-	</section>
-
-	<!-- Footer with ocean abyss glow -->
-	<div class="relative isolate overflow-hidden bg-black">
-		<div
-			aria-hidden="true"
-			class="pointer-events-none absolute inset-0 z-0"
-			style="background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(6,182,212,0.25), transparent 70%);"
-		></div>
-		<footer class="relative z-10 border-t border-border/40 px-4 sm:px-6 py-6">
-			<div
-				class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground"
-			>
-				<div class="flex items-center gap-2">
-					<img src="/icon-192.png" alt="Mavlo" class="size-5 rounded" />
-					<span>Mavlo · Built solo, for solo.</span>
-				</div>
-				<div class="flex items-center gap-4">
-					<a href="/sign-in" class="hover:text-foreground transition-colors">Sign in</a>
-					<a href="/sign-up" class="hover:text-foreground transition-colors">Sign up</a>
-				</div>
-			</div>
-		</footer>
-	</div>
+	<!-- Cinematic footer with embedded CTA -->
+	<CinematicFooter
+		ctaTitle="Siap lihat ke mana uangmu pergi?"
+		ctaDescription="No credit card. Tidak akan pernah."
+		primaryHref="/sign-up"
+		primaryLabel="Buat akun gratis"
+		secondaryHref="/sign-in"
+		secondaryLabel="Saya sudah punya akun"
+	/>
 </div>
