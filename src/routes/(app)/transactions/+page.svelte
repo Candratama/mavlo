@@ -106,6 +106,36 @@
 	const totalIncome = $derived(data.transactions.filter((t) => t.kind === 'income').reduce((s, t) => s + t.amountCents, 0));
 	const totalExpense = $derived(data.transactions.filter((t) => t.kind === 'expense').reduce((s, t) => s + t.amountCents, 0));
 	const txCurrency = $derived(data.accounts[0]?.currency ?? 'IDR');
+
+	type DayGroup = { key: string; dateLabel: string; netCents: number; items: TxRow[] };
+
+	const groupedByDay = $derived.by<DayGroup[]>(() => {
+		const byDay = new Map<string, DayGroup>();
+		for (const tx of data.transactions) {
+			const key = new Date(tx.occurredAt).toISOString().slice(0, 10);
+			let g = byDay.get(key);
+			if (!g) {
+				const date = new Date(`${key}T00:00:00.000Z`);
+				g = {
+					key,
+					dateLabel: date.toLocaleDateString('en-US', {
+						weekday: 'long',
+						month: 'long',
+						day: 'numeric',
+						year: 'numeric',
+						timeZone: 'UTC'
+					}),
+					netCents: 0,
+					items: []
+				};
+				byDay.set(key, g);
+			}
+			g.items.push(tx);
+			if (tx.kind === 'income') g.netCents += tx.amountCents;
+			else if (tx.kind === 'expense') g.netCents -= tx.amountCents;
+		}
+		return Array.from(byDay.values()).sort((a, b) => b.key.localeCompare(a.key));
+	});
 </script>
 
 <svelte:head><title>Transactions — Mavlo</title></svelte:head>
@@ -355,42 +385,79 @@
 	</Card.Root>
 </div>
 
-<ul class="md:hidden space-y-2">
-	{#each data.transactions as tx (tx.id)}
-		{@const acc = accountById.get(tx.accountId)}
-		{@const destAcc = tx.transferToAccountId ? accountById.get(tx.transferToAccountId) : null}
-		{@const cat = tx.categoryId ? categoryById.get(tx.categoryId) : null}
-		{@const IconComp = tx.kind === 'transfer' ? ArrowLeftRight : (getIconByName(cat?.icon) ?? Tag)}
-		{@const tint = cat?.color ?? (tx.kind === 'income' ? '#10b981' : tx.kind === 'transfer' ? '#3b82f6' : '#94a3b8')}
-		<li class="rounded-lg border bg-card p-3 flex items-center gap-3">
-			<div class="size-10 shrink-0 rounded-lg flex items-center justify-center" style="background-color: {tint}20; color: {tint}">
-				<IconComp class="size-5" />
-			</div>
-			<div class="flex-1 min-w-0">
-				<div class="text-sm font-medium truncate">
-					{tx.note || cat?.name || acc?.name || 'Transaction'}
-				</div>
-				<div class="text-xs text-muted-foreground truncate">
-					<span class="tabular-nums">{formatDate(tx.occurredAt)}</span>
-					· {acc?.name ?? '—'}
-					{#if tx.kind === 'transfer' && destAcc} → {destAcc.name}{/if}
-				</div>
-			</div>
-			<div class="flex items-center gap-1 shrink-0">
-				<span class="text-sm font-semibold tabular-nums whitespace-nowrap {tx.kind === 'expense' ? 'text-expense' : tx.kind === 'income' ? 'text-income' : 'text-transfer'}">
-					{tx.kind === 'expense' ? '−' : tx.kind === 'income' ? '+' : ''}{formatAmount(tx.amountCents, acc?.currency ?? 'IDR')}
+<div class="md:hidden space-y-5">
+	{#each groupedByDay as group (group.key)}
+		<section>
+			<div class="flex items-baseline justify-between mb-2 px-1 gap-2">
+				<span class="text-xs text-muted-foreground truncate">{group.dateLabel}</span>
+				<span
+					class="text-xs font-semibold tabular-nums whitespace-nowrap {group.netCents >= 0
+						? 'text-income'
+						: 'text-expense'}"
+				>
+					{group.netCents >= 0 ? '+' : '−'}{formatAmount(Math.abs(group.netCents), txCurrency)}
 				</span>
-				{@render rowMenu(tx)}
 			</div>
-		</li>
+			<ul class="space-y-2">
+				{#each group.items as tx (tx.id)}
+					{@const acc = accountById.get(tx.accountId)}
+					{@const destAcc = tx.transferToAccountId
+						? accountById.get(tx.transferToAccountId)
+						: null}
+					{@const cat = tx.categoryId ? categoryById.get(tx.categoryId) : null}
+					{@const IconComp = tx.kind === 'transfer'
+						? ArrowLeftRight
+						: (getIconByName(cat?.icon) ?? Tag)}
+					{@const tint = cat?.color ?? (tx.kind === 'income'
+						? '#10b981'
+						: tx.kind === 'transfer'
+							? '#3b82f6'
+							: '#94a3b8')}
+					<li class="rounded-lg border bg-card p-3 flex items-center gap-3">
+						<div
+							class="size-10 shrink-0 rounded-lg flex items-center justify-center"
+							style="background-color: {tint}20; color: {tint}"
+						>
+							<IconComp class="size-5" />
+						</div>
+						<div class="flex-1 min-w-0">
+							<div class="text-sm font-medium truncate">
+								{tx.note || cat?.name || acc?.name || 'Transaction'}
+							</div>
+							<div class="text-xs text-muted-foreground truncate">
+								{acc?.name ?? '—'}{#if tx.kind === 'transfer' && destAcc} → {destAcc.name}{/if}
+							</div>
+						</div>
+						<div class="flex items-center gap-1 shrink-0">
+							<span
+								class="text-sm font-semibold tabular-nums whitespace-nowrap {tx.kind ===
+								'expense'
+									? 'text-expense'
+									: tx.kind === 'income'
+										? 'text-income'
+										: 'text-transfer'}"
+							>
+								{tx.kind === 'expense' ? '−' : tx.kind === 'income' ? '+' : ''}{formatAmount(
+									tx.amountCents,
+									acc?.currency ?? 'IDR'
+								)}
+							</span>
+							{@render rowMenu(tx)}
+						</div>
+					</li>
+				{/each}
+			</ul>
+		</section>
 	{:else}
-		<li>
-			<EmptyState icon={ArrowLeftRight} title="No transactions in this range" description="Try a different date range or add a new transaction.">
-				<Button onclick={() => openAddTransaction('expense')}>Add transaction</Button>
-			</EmptyState>
-		</li>
+		<EmptyState
+			icon={ArrowLeftRight}
+			title="No transactions in this range"
+			description="Try a different date range or add a new transaction."
+		>
+			<Button onclick={() => openAddTransaction('expense')}>Add transaction</Button>
+		</EmptyState>
 	{/each}
-</ul>
+</div>
 
 <!-- Edit sheet -->
 <AddTransactionSheet
