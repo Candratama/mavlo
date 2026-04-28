@@ -122,7 +122,7 @@
 			<h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-center mb-10">
 				Yang kamu dapat
 			</h2>
-			<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+			<div class="grid sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
 				{#each features as f (f.title)}
 					<div class="rounded-xl border bg-card p-5 hover:bg-accent/20 transition-colors">
 						<div
