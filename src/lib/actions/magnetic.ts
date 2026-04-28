@@ -31,8 +31,8 @@ export function magnetic(node: HTMLElement, opts: Options = {}) {
 			rotationX: 0,
 			rotationY: 0,
 			scale: 1,
-			ease: 'elastic.out(1, 0.3)',
-			duration: 1.2
+			ease: 'power3.out',
+			duration: 0.5
 		});
 	};
 

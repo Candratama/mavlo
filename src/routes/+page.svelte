@@ -248,20 +248,20 @@
 
 			<div
 				data-anim="fade-up"
-				class="mt-10 flex flex-wrap items-center justify-center gap-3"
+				class="mt-10 flex flex-wrap items-center justify-center gap-4"
 			>
 				<a
 					href="/sign-up"
-					use:magnetic={{ strength: 0.35, tilt: 0.1 }}
-					class="footer-glass-pill group flex items-center gap-3 rounded-full px-8 py-4 text-sm font-bold text-foreground"
+					use:magnetic={{ strength: 0.3, tilt: 0.08 }}
+					class="footer-glass-pill group flex items-center gap-3 rounded-full px-10 py-5 text-sm font-bold text-foreground md:text-base"
 				>
 					Mulai gratis
-					<ArrowRight class="size-4 transition-transform group-hover:translate-x-1" />
+					<ArrowRight class="size-4 transition-transform duration-300 group-hover:translate-x-1" />
 				</a>
 				<a
 					href="/sign-in"
 					use:magnetic={{ strength: 0.3, tilt: 0.08 }}
-					class="footer-glass-pill rounded-full px-8 py-4 text-sm font-bold text-muted-foreground hover:text-foreground"
+					class="footer-glass-pill rounded-full px-10 py-5 text-sm font-bold text-muted-foreground hover:text-foreground md:text-base"
 				>
 					Saya sudah punya akun
 				</a>
