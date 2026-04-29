@@ -4,7 +4,7 @@ import { sveltekitCookies } from 'better-auth/svelte-kit';
 import { env } from '$env/dynamic/private';
 import { getRequestEvent } from '$app/server';
 import { getDb } from '$lib/server/db';
-import { sendEmail } from '$lib/server/email/resend';
+import { sendEmail } from '$lib/server/email/brevo';
 import { verifyEmailTemplate, resetPasswordTemplate } from '$lib/server/email/templates';
 
 const sendFromRequest = async (to: string, subject: string, text: string) => {
@@ -12,8 +12,8 @@ const sendFromRequest = async (to: string, subject: string, text: string) => {
 	const platformEnv = event.platform?.env;
 	if (!platformEnv) throw new Error('platform.env unavailable in auth email callback');
 	await sendEmail({
-		apiKey: platformEnv.RESEND_API_KEY,
-		from: platformEnv.RESEND_FROM,
+		apiKey: platformEnv.BREVO_API_KEY,
+		from: platformEnv.BREVO_FROM,
 		to,
 		subject,
 		text

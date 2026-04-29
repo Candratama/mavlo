@@ -11,8 +11,8 @@
 	"workers_dev": true,
 	"preview_urls": true,
 	"vars": {
-		"ORIGIN": "https://mavlo.wahyucandratama.workers.dev",
-		"RESEND_FROM": "Mavlo <onboarding@resend.dev>"
+		"ORIGIN": "https://mavlo.web.id",
+		"BREVO_FROM": "Mavlo <noreply@mavlo.web.id>"
 	},
 	"d1_databases": [
 		{
