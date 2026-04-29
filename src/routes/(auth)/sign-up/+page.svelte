@@ -69,5 +69,5 @@
 
 <p class="text-muted-foreground mt-6 text-center text-xs">
 	Udah punya akun?
-	<a href={resolve('/sign-in')} class="text-foreground hover:underline">Masuk</a>
+	<a href={resolve('/sign-in')} class="text-foreground hover:underline">Login</a>
 </p>

@@ -1,7 +1,8 @@
 import { eq } from 'drizzle-orm';
+import { redirect } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth/guards';
 import { getDb } from '$lib/server/db';
-import { userPreferences } from '$lib/server/db/schema';
+import { userPreferences, users } from '$lib/server/db/schema';
 import { listAccounts } from '$lib/server/repositories/accounts';
 import { listCategories } from '$lib/server/repositories/categories';
 import { computeAccountBalances } from '$lib/server/repositories/balances';
@@ -10,6 +11,15 @@ import type { LayoutServerLoad } from './$types';
 export const load: LayoutServerLoad = async (event) => {
 	const user = requireUser(event);
 	const db = getDb(event.platform!.env.DB);
+
+	const [userRow] = await db
+		.select({ onboardedAt: users.onboardedAt })
+		.from(users)
+		.where(eq(users.id, user.id))
+		.limit(1);
+	if (!userRow?.onboardedAt) {
+		throw redirect(302, '/onboarding');
+	}
 
 	let prefs = (
 		await db.select().from(userPreferences).where(eq(userPreferences.userId, user.id)).limit(1)

@@ -12,6 +12,6 @@
 </p>
 <p class="mt-4 text-sm">
 	<a href={resolve('/sign-in')} class="text-muted-foreground hover:text-foreground underline"
-		>Balik ke masuk</a
+		>Balik ke login</a
 	>
 </p>

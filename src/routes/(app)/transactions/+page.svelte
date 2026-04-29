@@ -345,7 +345,7 @@
 			</div>
 		</div>
 		<div class="flex gap-2 border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-			<Button variant="outline" class="flex-1" onclick={resetFilters}>Reset</Button>
+			<Button class="flex-1" onclick={resetFilters}>Reset</Button>
 			<Button class="flex-1" onclick={applyFilters}>Apply</Button>
 		</div>
 	</Sheet.Content>

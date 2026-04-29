@@ -10,7 +10,7 @@
 
 <svelte:head><title>Sign in — Mavlo</title></svelte:head>
 
-<h1 class="mavlo-headline text-3xl font-black tracking-tight">Masuk lagi</h1>
+<h1 class="mavlo-headline text-3xl font-black tracking-tight">Login lagi</h1>
 <p class="text-muted-foreground mt-2 text-sm">Welcome back. Lanjut catat duit lo.</p>
 
 <form

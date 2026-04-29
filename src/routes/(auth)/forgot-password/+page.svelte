@@ -17,7 +17,7 @@
 	<p class="mt-6 text-sm">Kalau email lo terdaftar, link reset udah dikirim. Cek inbox.</p>
 	<p class="mt-4 text-sm">
 		<a href={resolve('/sign-in')} class="text-muted-foreground hover:text-foreground underline"
-			>Balik ke masuk</a
+			>Balik ke login</a
 		>
 	</p>
 {:else}
