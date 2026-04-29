@@ -5,6 +5,7 @@
 
 	type Props = {
 		pending?: boolean;
+		disabled?: boolean;
 		variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
 		size?: 'default' | 'sm' | 'lg' | 'icon';
 		class?: string;
@@ -13,6 +14,7 @@
 
 	let {
 		pending = false,
+		disabled = false,
 		variant = 'default',
 		size = 'default',
 		class: className = '',
@@ -20,7 +22,7 @@
 	}: Props = $props();
 </script>
 
-<Button type="submit" {variant} {size} disabled={pending} class={className}>
+<Button type="submit" {variant} {size} disabled={pending || disabled} class={className}>
 	{#if pending}
 		<Loader2 class="size-4 animate-spin" />
 	{/if}

@@ -28,7 +28,7 @@
 		type PickerItem,
 		type PickerGroup
 	} from '$lib/components/ui/picker-sheet.svelte';
-	import { goto, invalidateAll } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { SvelteURLSearchParams, SvelteMap } from 'svelte/reactivity';
 	import AddTransactionSheet from '$lib/components/forms/add-transaction-sheet.svelte';
@@ -368,8 +368,8 @@
 				method="POST"
 				action="?/delete"
 				use:enhance={() =>
-					async ({ result }) => {
-						await invalidateAll();
+					async ({ result, update }) => {
+						await update();
 						if (result.type === 'success') {
 							notify.success('Transaction deleted');
 						} else if (result.type === 'failure') {

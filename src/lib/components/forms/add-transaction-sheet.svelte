@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -109,6 +108,28 @@
 	let note = $state(initialState().note);
 	let showNote = $state(initialState().note.length > 0);
 	let pending = $state(false);
+	let amountCents = $state<number | null>(editTarget?.amountCents ?? null);
+
+	const sourceAccount = $derived(accounts.find((a) => a.id === accountId));
+	const sourceBalanceCents = $derived(sourceAccount?.balanceCents);
+	const oldOwnEffectCents = $derived.by(() => {
+		// Refund old effect when editing the same source account
+		if (mode !== 'edit' || !editTarget) return 0;
+		if (editTarget.accountId !== accountId) return 0;
+		if (editTarget.kind === 'expense' || editTarget.kind === 'transfer')
+			return editTarget.amountCents;
+		if (editTarget.kind === 'income') return -editTarget.amountCents;
+		return 0;
+	});
+	const availableBalanceCents = $derived(
+		sourceBalanceCents !== undefined ? sourceBalanceCents + oldOwnEffectCents : undefined
+	);
+	const exceedsBalance = $derived(
+		(kind === 'expense' || kind === 'transfer') &&
+			amountCents !== null &&
+			availableBalanceCents !== undefined &&
+			amountCents > availableBalanceCents
+	);
 
 	$effect(() => {
 		if (!open) return;
@@ -144,9 +165,7 @@
 			value: a.id,
 			label: a.name,
 			description:
-				a.balanceCents !== undefined
-					? `${a.currency} · ${formatCentsAsCurrency(a.balanceCents, a.currency)}`
-					: a.currency,
+				a.balanceCents !== undefined ? formatCentsAsCurrency(a.balanceCents, a.currency) : '',
 			icon: (a.type && accountTypeIcon[a.type]) || fallbackAccountIcon
 		}))
 	);
@@ -192,11 +211,11 @@
 		action={actionUrl}
 		use:enhance={() => {
 			pending = true;
-			return async ({ result }) => {
+			return async ({ result, update }) => {
 				pending = false;
+				await update();
 				if (result.type === 'success') {
 					setLastUsed({ accountId, kind });
-					await invalidateAll();
 					await onSuccess?.();
 					notify.success(mode === 'create' ? 'Transaction added' : 'Transaction updated');
 					onClosed();
@@ -216,17 +235,28 @@
 		<input type="hidden" name="kind" value={kind} />
 
 		<div class="space-y-1">
-			<div class="text-muted-foreground text-xs">
-				{accounts.find((a) => a.id === accountId)?.currency ?? 'IDR'}
+			<div class="text-muted-foreground flex items-center justify-between text-xs">
+				<span>{sourceAccount?.currency ?? 'IDR'}</span>
+				{#if (kind === 'expense' || kind === 'transfer') && availableBalanceCents !== undefined && sourceAccount}
+					<span>
+						Sisa:
+						<span class={exceedsBalance ? 'text-destructive font-semibold' : 'text-foreground/80'}>
+							{formatCentsAsCurrency(availableBalanceCents, sourceAccount.currency)}
+						</span>
+					</span>
+				{/if}
 			</div>
 			<MoneyInput
 				name="amountCents"
-				value={editTarget?.amountCents ?? null}
+				bind:value={amountCents}
 				min={1}
 				required
 				placeholder="0"
-				class="h-14 text-3xl font-semibold md:h-12 md:text-2xl"
+				class={`h-14 text-3xl font-semibold md:h-12 md:text-2xl ${exceedsBalance ? 'border-destructive focus-visible:border-destructive' : ''}`}
 			/>
+			{#if exceedsBalance}
+				<p class="text-destructive text-xs">Saldo gak cukup di akun sumber.</p>
+			{/if}
 		</div>
 
 		<div class="flex flex-wrap items-center gap-2">
@@ -325,13 +355,15 @@
 		<div
 			class="bg-background sticky bottom-0 -mx-4 border-t px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden"
 		>
-			<SubmitButton {pending} class="w-full">
+			<SubmitButton {pending} disabled={exceedsBalance} class="w-full">
 				{mode === 'create' ? 'Save' : 'Update'}
 			</SubmitButton>
 		</div>
 		<div class="hidden justify-end gap-2 pt-2 md:flex">
 			<Button type="button" variant="outline" onclick={onClosed}>Cancel</Button>
-			<SubmitButton {pending}>{mode === 'create' ? 'Save' : 'Update'}</SubmitButton>
+			<SubmitButton {pending} disabled={exceedsBalance}>
+				{mode === 'create' ? 'Save' : 'Update'}
+			</SubmitButton>
 		</div>
 	</form>
 {/snippet}

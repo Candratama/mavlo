@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import SubmitButton from '$lib/components/forms/submit-button.svelte';
@@ -153,8 +152,8 @@
 				method="POST"
 				action="?/{category.archived ? 'unarchive' : 'archive'}"
 				use:enhance={() =>
-					async ({ result }) => {
-						await invalidateAll();
+					async ({ result, update }) => {
+						await update();
 						if (result.type === 'success') {
 							notify.success(category.archived ? 'Category restored' : 'Category archived');
 						} else if (result.type === 'failure') {
@@ -184,8 +183,8 @@
 				method="POST"
 				action="?/delete"
 				use:enhance={() =>
-					async ({ result }) => {
-						await invalidateAll();
+					async ({ result, update }) => {
+						await update();
 						if (result.type === 'success') {
 							notify.success('Category deleted');
 						} else if (result.type === 'failure') {
@@ -402,10 +401,10 @@
 			formData.set('color', createColor);
 			formData.set('icon', createIcon);
 			createPending = true;
-			return async ({ result }) => {
+			return async ({ result, update }) => {
 				createPending = false;
+				await update();
 				if (result.type === 'success') {
-					await invalidateAll();
 					createOpen = false;
 					notify.success('Category created');
 				} else if (result.type === 'failure') {
@@ -545,10 +544,10 @@
 			formData.set('color', editColor);
 			formData.set('icon', editIcon);
 			editPending = true;
-			return async ({ result }) => {
+			return async ({ result, update }) => {
 				editPending = false;
+				await update();
 				if (result.type === 'success') {
-					await invalidateAll();
 					editOpen = false;
 					notify.success('Category updated');
 				} else if (result.type === 'failure') {

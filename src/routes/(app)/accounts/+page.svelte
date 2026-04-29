@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import MoneyInput from '$lib/components/forms/money-input.svelte';
@@ -180,8 +179,8 @@
 				method="POST"
 				action="?/{account.archived ? 'unarchive' : 'archive'}"
 				use:enhance={() =>
-					async ({ result }) => {
-						await invalidateAll();
+					async ({ result, update }) => {
+						await update();
 						if (result.type === 'success') {
 							notify.success(account.archived ? 'Account restored' : 'Account archived');
 						} else if (result.type === 'failure') {
@@ -379,10 +378,10 @@
 			formData.set('type', createType);
 			formData.set('color', createColor);
 			createPending = true;
-			return async ({ result }) => {
+			return async ({ result, update }) => {
 				createPending = false;
+				await update();
 				if (result.type === 'success') {
-					await invalidateAll();
 					createOpen = false;
 					notify.success('Account created');
 				} else if (result.type === 'failure') {
@@ -511,10 +510,10 @@
 			formData.set('type', editType);
 			formData.set('color', editColor);
 			editPending = true;
-			return async ({ result }) => {
+			return async ({ result, update }) => {
 				editPending = false;
+				await update();
 				if (result.type === 'success') {
-					await invalidateAll();
 					editOpen = false;
 					notify.success('Account updated');
 				} else if (result.type === 'failure') {
@@ -646,10 +645,10 @@
 		action="?/adjust"
 		use:enhance={() => {
 			adjustPending = true;
-			return async ({ result }) => {
+			return async ({ result, update }) => {
 				adjustPending = false;
+				await update();
 				if (result.type === 'success') {
-					await invalidateAll();
 					adjustOpen = false;
 					notify.success('Balance adjusted');
 				} else if (result.type === 'failure') {

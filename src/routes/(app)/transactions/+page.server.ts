@@ -5,10 +5,12 @@ import {
 	listTransactions,
 	createTransaction,
 	updateTransaction,
-	deleteTransaction
+	deleteTransaction,
+	getTransaction
 } from '$lib/server/repositories/transactions';
 import { listAccounts } from '$lib/server/repositories/accounts';
 import { listCategories } from '$lib/server/repositories/categories';
+import { computeAccountBalances } from '$lib/server/repositories/balances';
 import { getPreferences } from '$lib/server/repositories/preferences';
 import {
 	transactionCreateSchema,
@@ -98,6 +100,16 @@ export const actions: Actions = {
 				message: parsed.error.issues[0]?.message ?? 'Invalid input'
 			});
 		}
+		if (parsed.data.kind === 'expense' || parsed.data.kind === 'transfer') {
+			const balances = await computeAccountBalances(db, user.id);
+			const sourceBalance = balances.get(parsed.data.accountId) ?? 0;
+			if (parsed.data.amountCents > sourceBalance) {
+				return fail(400, {
+					action: 'create',
+					message: 'Saldo gak cukup di akun sumber'
+				});
+			}
+		}
 		await createTransaction(db, user.id, parsed.data);
 		return { success: true, action: 'create' };
 	},
@@ -115,6 +127,18 @@ export const actions: Actions = {
 				action: 'update',
 				message: parsed.error.issues[0]?.message ?? 'Invalid input'
 			});
+		}
+		if (parsed.data.kind === 'expense' || parsed.data.kind === 'transfer') {
+			const balances = await computeAccountBalances(db, user.id);
+			const old = await getTransaction(db, user.id, parsed.data.id);
+			let available = balances.get(parsed.data.accountId) ?? 0;
+			if (old && old.accountId === parsed.data.accountId) {
+				if (old.kind === 'expense' || old.kind === 'transfer') available += old.amountCents;
+				else if (old.kind === 'income') available -= old.amountCents;
+			}
+			if (parsed.data.amountCents > available) {
+				return fail(400, { action: 'update', message: 'Saldo gak cukup di akun sumber' });
+			}
 		}
 		const updated = await updateTransaction(db, user.id, parsed.data);
 		if (!updated) return fail(404, { action: 'update', message: 'Transaction not found' });

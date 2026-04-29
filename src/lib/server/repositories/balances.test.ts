@@ -87,4 +87,21 @@ describe('computeAccountBalances', () => {
 		const map = await computeAccountBalances(h.db, h.userId);
 		expect(map.get('acc1')).toBe(100000); // unchanged — cross-user transfer ignored
 	});
+
+	it('deleting a transfer restores both accounts to pre-transfer balance', async () => {
+		const now = Date.now();
+		h.sqlite
+			.prepare('INSERT INTO transactions VALUES (?, ?, ?, NULL, ?, ?, NULL, ?, ?, ?, ?)')
+			.run('t-tx', h.userId, 'acc1', 25000, 'transfer', now, now, now, 'acc2');
+
+		const after = await computeAccountBalances(h.db, h.userId);
+		expect(after.get('acc1')).toBe(75000);
+		expect(after.get('acc2')).toBe(525000);
+
+		h.sqlite.prepare('DELETE FROM transactions WHERE id = ?').run('t-tx');
+
+		const restored = await computeAccountBalances(h.db, h.userId);
+		expect(restored.get('acc1')).toBe(100000);
+		expect(restored.get('acc2')).toBe(500000);
+	});
 });

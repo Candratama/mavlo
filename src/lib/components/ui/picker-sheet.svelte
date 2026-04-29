@@ -83,7 +83,7 @@
 
 	const triggerClass = $derived(
 		cn(
-			'flex h-9 md:h-8 w-full items-center justify-between rounded-md border border-input bg-background px-3 text-sm transition-colors disabled:opacity-50 hover:bg-accent/30',
+			'flex min-h-9 md:min-h-8 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-1.5 text-sm transition-colors disabled:opacity-50 hover:bg-accent/30',
 			!selected && 'text-muted-foreground',
 			className
 		)
@@ -172,11 +172,16 @@
 		<Popover.Trigger>
 			{#snippet child({ props })}
 				<button {...props} type="button" {id} {disabled} class={triggerClass}>
-					<span class="flex min-w-0 items-center gap-2">
+					<span class="flex min-w-0 flex-1 items-center gap-2">
 						{#if selected?.icon}
 							<selected.icon class="size-4 shrink-0" />
 						{/if}
-						<span class="truncate">{selected?.label ?? placeholder}</span>
+						<span class="flex min-w-0 flex-col">
+							<span class="truncate">{selected?.label ?? placeholder}</span>
+							{#if selected?.description}
+								<span class="text-muted-foreground truncate text-xs">{selected.description}</span>
+							{/if}
+						</span>
 					</span>
 					<ChevronDown class="size-4 shrink-0 opacity-60" />
 				</button>
@@ -198,11 +203,16 @@
 		<Sheet.Trigger>
 			{#snippet child({ props })}
 				<button {...props} type="button" {id} {disabled} class={triggerClass}>
-					<span class="flex min-w-0 items-center gap-2">
+					<span class="flex min-w-0 flex-1 items-center gap-2">
 						{#if selected?.icon}
 							<selected.icon class="size-4 shrink-0" />
 						{/if}
-						<span class="truncate">{selected?.label ?? placeholder}</span>
+						<span class="flex min-w-0 flex-col">
+							<span class="truncate">{selected?.label ?? placeholder}</span>
+							{#if selected?.description}
+								<span class="text-muted-foreground truncate text-xs">{selected.description}</span>
+							{/if}
+						</span>
 					</span>
 					<ChevronDown class="size-4 shrink-0 opacity-60" />
 				</button>
