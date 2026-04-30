@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import MoneyInput from '$lib/components/forms/money-input.svelte';
@@ -39,6 +40,8 @@
 	const isDesktop = new MediaQuery('(min-width: 768px)');
 
 	type AccountRow = (typeof data.accounts)[number];
+
+	const includeArchived = $derived(page.url.searchParams.get('archived') === '1');
 
 	let createOpen = $state(false);
 	let editOpen = $state(false);
@@ -100,9 +103,10 @@
 	};
 
 
-	let visibleAccounts = $state<AccountRow[]>(data.accounts);
+	const sourceAccounts = $derived(includeArchived ? data.allAccounts : data.accounts);
+	let visibleAccounts = $state<AccountRow[]>([]);
 	$effect(() => {
-		visibleAccounts = data.accounts;
+		visibleAccounts = sourceAccounts;
 	});
 
 	async function persistOrder(ids: string[]) {
@@ -406,9 +410,9 @@
 	<Button
 		variant="ghost"
 		size="sm"
-		href={data.includeArchived ? '/accounts' : '/accounts?archived=1'}
+		href={includeArchived ? '/accounts' : '/accounts?archived=1'}
 	>
-		{data.includeArchived ? 'Hide archived' : 'Show archived'}
+		{includeArchived ? 'Hide archived' : 'Show archived'}
 	</Button>
 </div>
 

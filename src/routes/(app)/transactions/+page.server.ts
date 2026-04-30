@@ -2,79 +2,38 @@ import { fail } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth/guards';
 import { getDb } from '$lib/server/db';
 import {
-	listTransactions,
 	createTransaction,
 	updateTransaction,
 	deleteTransaction,
 	getTransaction
 } from '$lib/server/repositories/transactions';
-import { listAccounts, getAccount } from '$lib/server/repositories/accounts';
-import { listCategories } from '$lib/server/repositories/categories';
+import { getAccount } from '$lib/server/repositories/accounts';
 import { computeAccountBalances } from '$lib/server/repositories/balances';
-import { getPreferences } from '$lib/server/repositories/preferences';
 import {
 	transactionCreateSchema,
 	transactionUpdateSchema,
-	transactionIdSchema,
-	transactionListFilterSchema
+	transactionIdSchema
 } from '$lib/validation/transaction';
-import { getCurrentCycle } from '$lib/utils/cycle.js';
-import type { Actions, PageServerLoad } from './$types';
+import { purgeUserCache, allUserCacheNames } from '$lib/server/cf-cache';
+import { getCurrentCycle } from '$lib/utils/cycle';
+import { getPreferences } from '$lib/server/repositories/preferences';
+import type { Actions } from './$types';
 
-const dayMs = 24 * 60 * 60 * 1000;
+async function purgeUserCaches(event: Parameters<Actions[string]>[0], userId: string) {
+	const db = getDb(event.platform!.env.DB);
+	const prefs = await getPreferences(db, userId);
+	const cycle = getCurrentCycle(
+		new Date(),
+		prefs?.monthStartDay ?? 1,
+		prefs?.timezone ?? 'Asia/Jakarta'
+	);
+	await purgeUserCache(userId, allUserCacheNames(cycle.periodMonth, 6));
+}
 
 const ymdToMs = (s: string | null): number | undefined => {
 	if (!s) return undefined;
 	const t = Date.parse(`${s}T00:00:00.000Z`);
 	return Number.isNaN(t) ? undefined : t;
-};
-
-export const load: PageServerLoad = async (event) => {
-	const user = requireUser(event);
-	const db = getDb(event.platform!.env.DB);
-
-	const preferences = await getPreferences(db, user.id);
-	const monthStartDay = preferences?.monthStartDay ?? 1;
-	const timezone = preferences?.timezone ?? 'Asia/Jakarta';
-
-	const cycle = getCurrentCycle(new Date(), monthStartDay, timezone);
-
-	const url = event.url;
-	const fromParam = url.searchParams.get('from');
-	const toParam = url.searchParams.get('to');
-	let fromMs: number | undefined = ymdToMs(fromParam);
-	let toMs: number | undefined = ymdToMs(toParam);
-	if (fromMs === undefined && toMs === undefined) {
-		fromMs = cycle.start.getTime();
-		toMs = cycle.end.getTime();
-	}
-
-	const filter = transactionListFilterSchema.parse({
-		fromMs,
-		toMs: (toMs ?? cycle.end.getTime()) + dayMs - 1, // include end-of-day for `to` if user supplied YYYY-MM-DD
-		accountId: url.searchParams.get('account') ?? undefined,
-		categoryId: url.searchParams.get('category') ?? undefined,
-		kind: url.searchParams.get('kind') ?? undefined
-	});
-
-	const [items, accounts, categories] = await Promise.all([
-		listTransactions(db, user.id, filter),
-		listAccounts(db, user.id, { includeArchived: false }),
-		listCategories(db, user.id, { includeArchived: false })
-	]);
-
-	return {
-		transactions: items,
-		accounts,
-		categories,
-		filter: {
-			from: fromParam ?? '',
-			to: toParam ?? '',
-			accountId: url.searchParams.get('account') ?? '',
-			categoryId: url.searchParams.get('category') ?? '',
-			kind: url.searchParams.get('kind') ?? ''
-		}
-	};
 };
 
 const formObject = (fd: FormData) => Object.fromEntries(fd.entries());
@@ -123,8 +82,9 @@ export const actions: Actions = {
 				});
 			}
 		}
-		await createTransaction(db, user.id, parsed.data);
-		return { success: true, action: 'create' };
+		const created = await createTransaction(db, user.id, parsed.data);
+		await purgeUserCaches(event, user.id);
+		return { success: true, action: 'create', transaction: created };
 	},
 	update: async (event) => {
 		const user = requireUser(event);
@@ -168,7 +128,8 @@ export const actions: Actions = {
 		}
 		const updated = await updateTransaction(db, user.id, parsed.data);
 		if (!updated) return fail(404, { action: 'update', message: 'Transaction not found' });
-		return { success: true, action: 'update' };
+		await purgeUserCaches(event, user.id);
+		return { success: true, action: 'update', transaction: updated };
 	},
 	delete: async (event) => {
 		const user = requireUser(event);
@@ -186,6 +147,7 @@ export const actions: Actions = {
 		}
 		const deleted = await deleteTransaction(db, user.id, parsed.data.id);
 		if (!deleted) return fail(404, { action: 'delete', message: 'Transaction not found' });
-		return { success: true, action: 'delete' };
+		await purgeUserCaches(event, user.id);
+		return { success: true, action: 'delete', id: parsed.data.id };
 	}
 };

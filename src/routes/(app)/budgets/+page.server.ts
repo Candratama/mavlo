@@ -2,77 +2,28 @@ import { fail } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth/guards';
 import { getDb } from '$lib/server/db';
 import {
-	listBudgets,
 	createBudget,
 	updateBudget,
 	deleteBudget
 } from '$lib/server/repositories/budgets';
-import { listAccounts } from '$lib/server/repositories/accounts';
-import { listCategories } from '$lib/server/repositories/categories';
-import { computeBudgetSpent } from '$lib/server/repositories/budget-spent';
-import { computeAccountBalances } from '$lib/server/repositories/balances';
-import { getPreferences } from '$lib/server/repositories/preferences';
 import { budgetCreateSchema, budgetUpdateSchema, budgetIdSchema } from '$lib/validation/budget';
-import { getCycleForPeriod, getCurrentCycle } from '$lib/utils/cycle.js';
-import type { Actions, PageServerLoad } from './$types';
-
-export const load: PageServerLoad = async (event) => {
-	const user = requireUser(event);
-	const db = getDb(event.platform!.env.DB);
-
-	const preferences = await getPreferences(db, user.id);
-	const monthStartDay = preferences?.monthStartDay ?? 1;
-	const timezone = preferences?.timezone ?? 'Asia/Jakarta';
-
-	const periodMonth =
-		event.url.searchParams.get('period') ??
-		getCurrentCycle(new Date(), monthStartDay, timezone).periodMonth;
-
-	const cycle = getCycleForPeriod(periodMonth, monthStartDay, timezone);
-
-	const [budgets, spent, categories, accounts, balances] = await Promise.all([
-		listBudgets(db, user.id, { periodMonth }),
-		computeBudgetSpent(db, user.id, cycle.start.getTime(), cycle.end.getTime() - 1),
-		listCategories(db, user.id, { includeArchived: false }),
-		listAccounts(db, user.id, { includeArchived: false }),
-		computeAccountBalances(db, user.id)
-	]);
-
-	const expenseCategories = categories.filter((c) => c.kind === 'expense');
-	const spentByCategory = Object.fromEntries(spent.entries());
-
-	let savingsCents = 0;
-	let operationalCents = 0;
-	for (const a of accounts) {
-		const bal = balances.get(a.id) ?? a.initialBalanceCents;
-		if (a.type === 'savings') savingsCents += bal;
-		else operationalCents += bal;
-	}
-	const assignedCents = budgets.reduce((s, b) => s + b.limitCents, 0);
-	const allocatedCents = savingsCents + assignedCents;
-	const totalCashCents = savingsCents + operationalCents;
-	const unallocatedCents = totalCashCents - allocatedCents;
-
-	return {
-		periodMonth,
-		budgets,
-		expenseCategories,
-		categories,
-		spentByCategory,
-		monthStartDay,
-		timezone,
-		allocation: {
-			totalCashCents,
-			savingsCents,
-			operationalCents,
-			assignedCents,
-			allocatedCents,
-			unallocatedCents
-		}
-	};
-};
+import { purgeUserCache, allUserCacheNames } from '$lib/server/cf-cache';
+import { getCurrentCycle } from '$lib/utils/cycle';
+import { getPreferences } from '$lib/server/repositories/preferences';
+import type { Actions } from './$types';
 
 const formObject = (fd: FormData) => Object.fromEntries(fd.entries());
+
+async function purgeUserCaches(event: Parameters<Actions[string]>[0], userId: string) {
+	const db = getDb(event.platform!.env.DB);
+	const prefs = await getPreferences(db, userId);
+	const cycle = getCurrentCycle(
+		new Date(),
+		prefs?.monthStartDay ?? 1,
+		prefs?.timezone ?? 'Asia/Jakarta'
+	);
+	await purgeUserCache(userId, allUserCacheNames(cycle.periodMonth, 6));
+}
 
 export const actions: Actions = {
 	create: async (event) => {
@@ -87,6 +38,7 @@ export const actions: Actions = {
 			});
 		}
 		await createBudget(db, user.id, parsed.data);
+		await purgeUserCaches(event, user.id);
 		return { success: true, action: 'create' };
 	},
 	update: async (event) => {
@@ -102,6 +54,7 @@ export const actions: Actions = {
 		}
 		const updated = await updateBudget(db, user.id, parsed.data);
 		if (!updated) return fail(404, { action: 'update', message: 'Budget not found' });
+		await purgeUserCaches(event, user.id);
 		return { success: true, action: 'update' };
 	},
 	delete: async (event) => {
@@ -112,6 +65,7 @@ export const actions: Actions = {
 		if (!parsed.success) return fail(400, { action: 'delete', message: 'Invalid id' });
 		const deleted = await deleteBudget(db, user.id, parsed.data.id);
 		if (!deleted) return fail(404, { action: 'delete', message: 'Budget not found' });
+		await purgeUserCaches(event, user.id);
 		return { success: true, action: 'delete' };
 	}
 };

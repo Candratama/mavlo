@@ -29,6 +29,7 @@
 		type PickerGroup
 	} from '$lib/components/ui/picker-sheet.svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { SvelteURLSearchParams, SvelteMap } from 'svelte/reactivity';
 	import AddTransactionSheet from '$lib/components/forms/add-transaction-sheet.svelte';
@@ -38,15 +39,55 @@
 
 	type TxRow = (typeof data.transactions)[number];
 
+	// URL-driven filter (replaces server-side load filter).
+	const filterFromUrl = $derived({
+		from: page.url.searchParams.get('from') ?? '',
+		to: page.url.searchParams.get('to') ?? '',
+		accountId: page.url.searchParams.get('account') ?? '',
+		categoryId: page.url.searchParams.get('category') ?? '',
+		kind: page.url.searchParams.get('kind') ?? ''
+	});
+
+	const ymdToMs = (s: string) => {
+		const t = Date.parse(`${s}T00:00:00.000Z`);
+		return Number.isNaN(t) ? null : t;
+	};
+	const dayMs = 24 * 60 * 60 * 1000;
+
+	const filteredTransactions = $derived.by(() => {
+		const f = filterFromUrl;
+		const cycle = data.cycle;
+		const fromMs = f.from ? ymdToMs(f.from) : cycle.startMs;
+		const toMs = (f.to ? ymdToMs(f.to) : null) ?? cycle.endMs;
+		const toMsInclusive = (toMs ?? cycle.endMs) + (f.to ? dayMs - 1 : 0);
+		return data.transactions.filter((t) => {
+			if (fromMs !== null && t.occurredAt < fromMs) return false;
+			if (t.occurredAt > toMsInclusive) return false;
+			if (f.accountId && t.accountId !== f.accountId) return false;
+			if (f.categoryId && t.categoryId !== f.categoryId) return false;
+			if (f.kind && t.kind !== f.kind) return false;
+			return true;
+		});
+	});
+
 	let editOpen = $state(false);
 	let editTarget = $state<TxRow | null>(null);
 
 	let filterOpen = $state(false);
-	let fFrom = $state(data.filter.from ?? '');
-	let fTo = $state(data.filter.to ?? '');
-	let fAccount = $state(data.filter.accountId ?? '');
-	let fCategory = $state(data.filter.categoryId ?? '');
-	let fKind = $state(data.filter.kind ?? '');
+	let fFrom = $state(filterFromUrl.from);
+	let fTo = $state(filterFromUrl.to);
+	let fAccount = $state(filterFromUrl.accountId);
+	let fCategory = $state(filterFromUrl.categoryId);
+	let fKind = $state(filterFromUrl.kind);
+
+	$effect(() => {
+		const f = filterFromUrl;
+		fFrom = f.from;
+		fTo = f.to;
+		fAccount = f.accountId;
+		fCategory = f.categoryId;
+		fKind = f.kind;
+	});
 
 	const accountById = $derived(new Map(data.accounts.map((a) => [a.id, a])));
 	const categoryById = $derived(new Map(data.categories.map((c) => [c.id, c])));
@@ -63,32 +104,32 @@
 	type Chip = { key: string; label: string; remove: () => void };
 	const chips = $derived.by<Chip[]>(() => {
 		const out: Chip[] = [];
-		if (data.filter.from)
+		if (filterFromUrl.from)
 			out.push({
 				key: 'from',
-				label: `From: ${data.filter.from}`,
+				label: `From: ${filterFromUrl.from}`,
 				remove: () => removeParam('from')
 			});
-		if (data.filter.to)
-			out.push({ key: 'to', label: `To: ${data.filter.to}`, remove: () => removeParam('to') });
-		if (data.filter.accountId) {
-			const a = accountById.get(data.filter.accountId);
+		if (filterFromUrl.to)
+			out.push({ key: 'to', label: `To: ${filterFromUrl.to}`, remove: () => removeParam('to') });
+		if (filterFromUrl.accountId) {
+			const a = accountById.get(filterFromUrl.accountId);
 			out.push({
 				key: 'account',
 				label: a?.name ?? 'Account',
 				remove: () => removeParam('account')
 			});
 		}
-		if (data.filter.categoryId) {
-			const c = categoryById.get(data.filter.categoryId);
+		if (filterFromUrl.categoryId) {
+			const c = categoryById.get(filterFromUrl.categoryId);
 			out.push({
 				key: 'category',
 				label: c?.name ?? 'Category',
 				remove: () => removeParam('category')
 			});
 		}
-		if (data.filter.kind)
-			out.push({ key: 'kind', label: data.filter.kind, remove: () => removeParam('kind') });
+		if (filterFromUrl.kind)
+			out.push({ key: 'kind', label: filterFromUrl.kind, remove: () => removeParam('kind') });
 		return out;
 	});
 
@@ -146,10 +187,12 @@
 	];
 
 	const totalIncome = $derived(
-		data.transactions.filter((t) => t.kind === 'income').reduce((s, t) => s + t.amountCents, 0)
+		filteredTransactions.filter((t) => t.kind === 'income').reduce((s, t) => s + t.amountCents, 0)
 	);
 	const totalExpense = $derived(
-		data.transactions.filter((t) => t.kind === 'expense').reduce((s, t) => s + t.amountCents, 0)
+		filteredTransactions
+			.filter((t) => t.kind === 'expense')
+			.reduce((s, t) => s + t.amountCents, 0)
 	);
 	const txCurrency = $derived(data.accounts[0]?.currency ?? 'IDR');
 
@@ -157,7 +200,7 @@
 
 	const groupedByDay = $derived.by<DayGroup[]>(() => {
 		const byDay = new SvelteMap<string, DayGroup>();
-		for (const tx of data.transactions) {
+		for (const tx of filteredTransactions) {
 			const key = new Date(tx.occurredAt).toISOString().slice(0, 10);
 			let g = byDay.get(key);
 			if (!g) {
@@ -264,11 +307,11 @@
 			<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
 				<div class="space-y-1">
 					<Label for="filter-from">From</Label>
-					<Input id="filter-from" type="date" name="from" value={data.filter.from} />
+					<Input id="filter-from" type="date" name="from" value={filterFromUrl.from} />
 				</div>
 				<div class="space-y-1">
 					<Label for="filter-to">To</Label>
-					<Input id="filter-to" type="date" name="to" value={data.filter.to} />
+					<Input id="filter-to" type="date" name="to" value={filterFromUrl.to} />
 				</div>
 				<div class="space-y-1">
 					<Label>Account</Label>
@@ -411,7 +454,7 @@
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
-					{#each data.transactions as tx (tx.id)}
+					{#each filteredTransactions as tx (tx.id)}
 						{@const acc = accountById.get(tx.accountId)}
 						{@const destAcc = tx.transferToAccountId
 							? accountById.get(tx.transferToAccountId)

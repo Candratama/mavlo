@@ -1,10 +1,7 @@
-import { eq } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth/guards';
 import { getDb } from '$lib/server/db';
-import { userPreferences } from '$lib/server/db/schema';
 import {
-	listAccounts,
 	createAccount,
 	updateAccount,
 	archiveAccount,
@@ -12,53 +9,27 @@ import {
 	reorderAccounts,
 	getAccount
 } from '$lib/server/repositories/accounts';
-import {
-	computeAccountBalances,
-	computeAccountPeriodSummary
-} from '$lib/server/repositories/balances';
+import { computeAccountBalances } from '$lib/server/repositories/balances';
 import { getOrCreateAdjustmentCategory } from '$lib/server/repositories/categories';
 import { createTransaction } from '$lib/server/repositories/transactions';
 import { accountCreateSchema, accountUpdateSchema, accountIdSchema } from '$lib/validation/account';
-import { getCurrentCycle, formatCycleLabel } from '$lib/utils/cycle';
-import type { Actions, PageServerLoad } from './$types';
-
-export const load: PageServerLoad = async (event) => {
-	const user = requireUser(event);
-	const db = getDb(event.platform!.env.DB);
-	const includeArchived = event.url.searchParams.get('archived') === '1';
-
-	const [prefs] = await db
-		.select()
-		.from(userPreferences)
-		.where(eq(userPreferences.userId, user.id))
-		.limit(1);
-	const startDay = prefs?.monthStartDay ?? 1;
-	const timezone = prefs?.timezone ?? 'Asia/Jakarta';
-	const locale = prefs?.locale ?? 'id-ID';
-	const cycle = getCurrentCycle(new Date(), startDay, timezone);
-
-	const [accounts, balances, periodSummary] = await Promise.all([
-		listAccounts(db, user.id, { includeArchived }),
-		computeAccountBalances(db, user.id),
-		computeAccountPeriodSummary(db, user.id, cycle.start.getTime(), cycle.end.getTime() - 1)
-	]);
-	const accountsWithBalance = accounts.map((a) => {
-		const s = periodSummary.get(a.id);
-		return {
-			...a,
-			balanceCents: balances.get(a.id) ?? a.initialBalanceCents,
-			periodIncomeCents: s?.incomeCents ?? 0,
-			periodExpenseCents: s?.expenseCents ?? 0
-		};
-	});
-	return {
-		accounts: accountsWithBalance,
-		includeArchived,
-		periodLabel: formatCycleLabel(cycle, startDay, locale)
-	};
-};
+import { purgeUserCache, allUserCacheNames } from '$lib/server/cf-cache';
+import { getCurrentCycle } from '$lib/utils/cycle';
+import { getPreferences } from '$lib/server/repositories/preferences';
+import type { Actions } from './$types';
 
 const formObject = (fd: FormData) => Object.fromEntries(fd.entries());
+
+async function purgeUserCaches(event: Parameters<Actions[string]>[0], userId: string) {
+	const db = getDb(event.platform!.env.DB);
+	const prefs = await getPreferences(db, userId);
+	const cycle = getCurrentCycle(
+		new Date(),
+		prefs?.monthStartDay ?? 1,
+		prefs?.timezone ?? 'Asia/Jakarta'
+	);
+	await purgeUserCache(userId, allUserCacheNames(cycle.periodMonth, 6));
+}
 
 export const actions: Actions = {
 	create: async (event) => {
@@ -73,6 +44,7 @@ export const actions: Actions = {
 			});
 		}
 		await createAccount(db, user.id, parsed.data);
+		await purgeUserCaches(event, user.id);
 		return { success: true, action: 'create' };
 	},
 
@@ -89,6 +61,7 @@ export const actions: Actions = {
 		}
 		const updated = await updateAccount(db, user.id, parsed.data);
 		if (!updated) return fail(404, { action: 'update', message: 'Account not found' });
+		await purgeUserCaches(event, user.id);
 		return { success: true, action: 'update' };
 	},
 
@@ -158,6 +131,7 @@ export const actions: Actions = {
 			transferToAccountId: undefined
 		});
 
+		await purgeUserCaches(event, user.id);
 		return { success: true, action: 'adjust' };
 	}
 };
