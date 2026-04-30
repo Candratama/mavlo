@@ -41,6 +41,15 @@ sw.addEventListener('fetch', (event) => {
 	if (url.origin !== sw.location.origin) return;
 	if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/auth/')) return;
 
+	// SvelteKit internal data fetches (load functions, invalidateAll) — always network.
+	// Without this, mutations don't reflect until manual reload.
+	if (
+		url.pathname.endsWith('/__data.json') ||
+		url.searchParams.has('x-sveltekit-invalidated')
+	) {
+		return;
+	}
+
 	if (ASSETS.includes(url.pathname)) {
 		event.respondWith(
 			caches.open(CACHE).then(async (cache) => {
@@ -69,17 +78,21 @@ sw.addEventListener('fetch', (event) => {
 		return;
 	}
 
+	// Non-asset, non-navigation GETs — network-first w/ cache fallback for offline.
 	event.respondWith(
 		(async () => {
-			const cache = await caches.open(CACHE);
-			const cached = await cache.match(request);
-			const fetched = fetch(request)
-				.then((response) => {
-					if (response.ok) cache.put(request, response.clone()).catch(() => undefined);
-					return response;
-				})
-				.catch(() => null);
-			return cached ?? (await fetched) ?? Response.error();
+			try {
+				const fresh = await fetch(request);
+				if (fresh.ok) {
+					const cache = await caches.open(CACHE);
+					cache.put(request, fresh.clone()).catch(() => undefined);
+				}
+				return fresh;
+			} catch {
+				const cache = await caches.open(CACHE);
+				const cached = await cache.match(request);
+				return cached ?? Response.error();
+			}
 		})()
 	);
 });
