@@ -1,9 +1,35 @@
+<script lang="ts" module>
+	import type { Component } from 'svelte';
+
+	// Module-scope cache so chart components survive across `/dashboard` re-mounts.
+	// Dynamic import promises are also browser-cached, but assigning to module vars
+	// avoids the brief `null → loaded` flash on every navigation.
+	let cachedCategoryChart: Component | null = null;
+	let cachedDailyChart: Component | null = null;
+	let cachedTrendChart: Component | null = null;
+	let chartLoadPromise: Promise<void> | null = null;
+
+	function loadCharts(): Promise<void> {
+		if (cachedCategoryChart && cachedDailyChart && cachedTrendChart) return Promise.resolve();
+		if (chartLoadPromise) return chartLoadPromise;
+		chartLoadPromise = Promise.all([
+			import('$lib/components/charts/SpendingByCategoryChart.svelte'),
+			import('$lib/components/charts/DailySpendingChart.svelte'),
+			import('$lib/components/charts/IncomeExpenseChart.svelte')
+		]).then(([s, d, i]) => {
+			cachedCategoryChart = s.default as Component;
+			cachedDailyChart = d.default as Component;
+			cachedTrendChart = i.default as Component;
+		});
+		return chartLoadPromise;
+	}
+</script>
+
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
-	import type { Component } from 'svelte';
 	import { ArrowRight, ArrowLeftRight, ArrowUp, ArrowDown, Tag, Eye, EyeOff } from 'lucide-svelte';
 	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
@@ -71,19 +97,16 @@
 		{ value: 'trend', label: 'Trend' }
 	];
 
-	let SpendingByCategoryChart = $state<Component | null>(null);
-	let DailySpendingChart = $state<Component | null>(null);
-	let IncomeExpenseChart = $state<Component | null>(null);
+	let SpendingByCategoryChart = $state<Component | null>(cachedCategoryChart);
+	let DailySpendingChart = $state<Component | null>(cachedDailyChart);
+	let IncomeExpenseChart = $state<Component | null>(cachedTrendChart);
 
 	onMount(() => {
-		void Promise.all([
-			import('$lib/components/charts/SpendingByCategoryChart.svelte'),
-			import('$lib/components/charts/DailySpendingChart.svelte'),
-			import('$lib/components/charts/IncomeExpenseChart.svelte')
-		]).then(([s, d, i]) => {
-			SpendingByCategoryChart = s.default as Component;
-			DailySpendingChart = d.default as Component;
-			IncomeExpenseChart = i.default as Component;
+		if (SpendingByCategoryChart && DailySpendingChart && IncomeExpenseChart) return;
+		void loadCharts().then(() => {
+			SpendingByCategoryChart = cachedCategoryChart;
+			DailySpendingChart = cachedDailyChart;
+			IncomeExpenseChart = cachedTrendChart;
 		});
 	});
 

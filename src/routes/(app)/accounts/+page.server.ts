@@ -1,6 +1,8 @@
+import { eq } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth/guards';
 import { getDb } from '$lib/server/db';
+import { userPreferences } from '$lib/server/db/schema';
 import {
 	listAccounts,
 	createAccount,
@@ -10,25 +12,50 @@ import {
 	reorderAccounts,
 	getAccount
 } from '$lib/server/repositories/accounts';
-import { computeAccountBalances } from '$lib/server/repositories/balances';
+import {
+	computeAccountBalances,
+	computeAccountPeriodSummary
+} from '$lib/server/repositories/balances';
 import { getOrCreateAdjustmentCategory } from '$lib/server/repositories/categories';
 import { createTransaction } from '$lib/server/repositories/transactions';
 import { accountCreateSchema, accountUpdateSchema, accountIdSchema } from '$lib/validation/account';
+import { getCurrentCycle, formatCycleLabel } from '$lib/utils/cycle';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
 	const user = requireUser(event);
 	const db = getDb(event.platform!.env.DB);
 	const includeArchived = event.url.searchParams.get('archived') === '1';
-	const [accounts, balances] = await Promise.all([
+
+	const [prefs] = await db
+		.select()
+		.from(userPreferences)
+		.where(eq(userPreferences.userId, user.id))
+		.limit(1);
+	const startDay = prefs?.monthStartDay ?? 1;
+	const timezone = prefs?.timezone ?? 'Asia/Jakarta';
+	const locale = prefs?.locale ?? 'id-ID';
+	const cycle = getCurrentCycle(new Date(), startDay, timezone);
+
+	const [accounts, balances, periodSummary] = await Promise.all([
 		listAccounts(db, user.id, { includeArchived }),
-		computeAccountBalances(db, user.id)
+		computeAccountBalances(db, user.id),
+		computeAccountPeriodSummary(db, user.id, cycle.start.getTime(), cycle.end.getTime() - 1)
 	]);
-	const accountsWithBalance = accounts.map((a) => ({
-		...a,
-		balanceCents: balances.get(a.id) ?? a.initialBalanceCents
-	}));
-	return { accounts: accountsWithBalance, includeArchived };
+	const accountsWithBalance = accounts.map((a) => {
+		const s = periodSummary.get(a.id);
+		return {
+			...a,
+			balanceCents: balances.get(a.id) ?? a.initialBalanceCents,
+			periodIncomeCents: s?.incomeCents ?? 0,
+			periodExpenseCents: s?.expenseCents ?? 0
+		};
+	});
+	return {
+		accounts: accountsWithBalance,
+		includeArchived,
+		periodLabel: formatCycleLabel(cycle, startDay, locale)
+	};
 };
 
 const formObject = (fd: FormData) => Object.fromEntries(fd.entries());

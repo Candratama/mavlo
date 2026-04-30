@@ -17,6 +17,7 @@
 		Landmark,
 		CreditCard,
 		Wallet,
+		PiggyBank,
 		CircleEllipsis,
 		Tag
 	} from 'lucide-svelte';
@@ -141,6 +142,7 @@
 		occurredAt = i.occurredAt;
 		note = i.note;
 		showNote = i.note.length > 0;
+		amountCents = mode === 'edit' && editTarget ? editTarget.amountCents : null;
 	});
 
 	const kindOptions = [
@@ -155,12 +157,26 @@
 		bank: Landmark as unknown as Icon,
 		credit: CreditCard as unknown as Icon,
 		wallet: Wallet as unknown as Icon,
+		savings: PiggyBank as unknown as Icon,
 		other: CircleEllipsis as unknown as Icon
 	};
 	const fallbackAccountIcon = Wallet as unknown as Icon;
 	const fallbackCategoryIcon = Tag as unknown as Icon;
 
+	// Savings accounts: transfer-only. Hide from source picker for income/expense.
+	const sourceAccounts = $derived(
+		accounts.filter((a) => kind === 'transfer' || a.type !== 'savings')
+	);
 	const accountItems = $derived<PickerItem[]>(
+		sourceAccounts.map((a) => ({
+			value: a.id,
+			label: a.name,
+			description:
+				a.balanceCents !== undefined ? formatCentsAsCurrency(a.balanceCents, a.currency) : '',
+			icon: (a.type && accountTypeIcon[a.type]) || fallbackAccountIcon
+		}))
+	);
+	const allAccountItems = $derived<PickerItem[]>(
 		accounts.map((a) => ({
 			value: a.id,
 			label: a.name,
@@ -169,6 +185,13 @@
 			icon: (a.type && accountTypeIcon[a.type]) || fallbackAccountIcon
 		}))
 	);
+
+	$effect(() => {
+		const valid = new Set(sourceAccounts.map((a) => a.id));
+		if (accountId && !valid.has(accountId)) {
+			accountId = sourceAccounts[0]?.id ?? '';
+		}
+	});
 
 	const categoryItems = $derived<PickerItem[]>([
 		{ value: '', label: 'None', icon: fallbackCategoryIcon },
@@ -231,7 +254,9 @@
 			<input type="hidden" name="id" value={editTarget.id} />
 		{/if}
 
-		<SegmentedControl options={kindOptions} bind:value={kind} ariaLabel="Transaction kind" />
+		{#if mode === 'create'}
+			<SegmentedControl options={kindOptions} bind:value={kind} ariaLabel="Transaction kind" />
+		{/if}
 		<input type="hidden" name="kind" value={kind} />
 
 		<div class="space-y-1">
@@ -263,7 +288,7 @@
 			<button
 				type="button"
 				onclick={() => dateInput?.showPicker?.()}
-				class="border-input bg-background hover:bg-accent/30 inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-sm"
+				class="border-input bg-background hover:bg-accent/30 inline-flex h-11 cursor-pointer items-center gap-1.5 rounded-full border px-4 text-sm md:h-9 md:px-3"
 			>
 				<CalendarDays class="size-4" />
 				{dateLabel}
@@ -281,7 +306,7 @@
 				<button
 					type="button"
 					onclick={() => (showNote = true)}
-					class="border-input text-muted-foreground hover:bg-accent/30 inline-flex h-9 items-center gap-1.5 rounded-full border border-dashed px-3 text-sm"
+					class="border-input text-muted-foreground hover:bg-accent/30 inline-flex h-11 items-center gap-1.5 rounded-full border border-dashed px-4 text-sm md:h-9 md:px-3"
 				>
 					<StickyNote class="size-4" />
 					Add note
@@ -331,7 +356,7 @@
 			<div class="space-y-2">
 				<Label>To account</Label>
 				<PickerSheet
-					items={accountItems.filter((i) => i.value !== accountId)}
+					items={allAccountItems.filter((i) => i.value !== accountId)}
 					bind:value={transferToAccountId}
 					name="transferToAccountId"
 					placeholder="Choose destination"
@@ -355,7 +380,11 @@
 		<div
 			class="bg-background sticky bottom-0 -mx-4 border-t px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden"
 		>
-			<SubmitButton {pending} disabled={exceedsBalance} class="w-full">
+			<SubmitButton
+				{pending}
+				disabled={exceedsBalance}
+				class="h-12 w-full text-base font-semibold"
+			>
 				{mode === 'create' ? 'Save' : 'Update'}
 			</SubmitButton>
 		</div>

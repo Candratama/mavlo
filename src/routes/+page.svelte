@@ -1,7 +1,7 @@
 <script lang="ts">
 	import CinematicFooter from '$lib/components/ui/cinematic-footer.svelte';
 	import { resolve } from '$app/paths';
-	import { ArrowRight } from 'lucide-svelte';
+	import { ArrowRight, PlayCircle } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { setMode } from 'mode-watcher';
 
@@ -236,6 +236,51 @@
 		</div>
 	</section>
 
+	<!-- Try demo CTA -->
+	<section class="relative z-10 px-4 py-16 sm:px-6 sm:py-24">
+		<div class="mx-auto max-w-3xl">
+			<div data-anim="fade-up" class="mb-6 flex items-center gap-3">
+				<span class="text-primary/80 text-[10px] font-black tracking-[0.3em]">02</span>
+				<span class="from-primary/40 h-px flex-1 bg-gradient-to-r to-transparent"></span>
+				<span class="text-muted-foreground text-[10px] font-bold tracking-[0.3em] uppercase">
+					Coba langsung
+				</span>
+			</div>
+
+			<div
+				data-anim="fade-up"
+				class="mavlo-pill relative isolate overflow-hidden rounded-3xl p-8 sm:p-12"
+			>
+				<div
+					aria-hidden="true"
+					class="pointer-events-none absolute inset-0"
+					style="background: radial-gradient(ellipse 60% 60% at 100% 0%, rgba(16,185,129,0.18), transparent 70%);"
+				></div>
+				<div class="relative">
+					<h2 class="mavlo-headline text-3xl font-black tracking-tighter sm:text-4xl">
+						Coba app aslinya.<br />Gak perlu daftar.
+					</h2>
+					<p class="text-muted-foreground mt-4 max-w-md text-sm leading-relaxed sm:text-base">
+						Login ke <span class="text-foreground font-medium">demo account</span> dengan data
+						contoh. Bisa tambah & edit transaksi. Akun demo auto-hapus dalam 24 jam.
+					</p>
+					<div class="mt-8">
+						<form method="POST" action="/api/demo-login">
+							<button
+								type="submit"
+								class="mavlo-pill group text-foreground inline-flex items-center gap-2 rounded-full px-8 py-4 text-sm font-bold transition-transform duration-300 ease-out hover:-translate-y-0.5"
+							>
+								<PlayCircle class="size-4" />
+								Buka demo
+								<ArrowRight class="size-4 transition-transform duration-300 group-hover:translate-x-1" />
+							</button>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
 	<!-- Marquee divider -->
 	<div
 		aria-hidden="true"
@@ -312,7 +357,7 @@
 	<section class="relative z-10 px-4 py-20 sm:px-6 sm:py-28">
 		<div class="mx-auto max-w-3xl">
 			<div data-anim="fade-up" class="mb-6 flex items-center gap-3">
-				<span class="text-primary/80 text-[10px] font-black tracking-[0.3em]">02</span>
+				<span class="text-primary/80 text-[10px] font-black tracking-[0.3em]">03</span>
 				<span class="from-primary/40 h-px flex-1 bg-gradient-to-r to-transparent"></span>
 				<span class="text-muted-foreground text-[10px] font-bold tracking-[0.3em] uppercase">
 					Yang lo dapet
@@ -370,7 +415,7 @@
 	<section class="relative z-10 px-4 py-20 sm:px-6 sm:py-28">
 		<div class="mx-auto max-w-3xl">
 			<div data-anim="fade-up" class="mb-6 flex items-center gap-3">
-				<span class="text-[10px] font-black tracking-[0.3em] text-rose-300/80">03</span>
+				<span class="text-[10px] font-black tracking-[0.3em] text-rose-300/80">04</span>
 				<span class="h-px flex-1 bg-gradient-to-r from-rose-400/40 to-transparent"></span>
 				<span class="text-muted-foreground text-[10px] font-bold tracking-[0.3em] uppercase">
 					Dukungan

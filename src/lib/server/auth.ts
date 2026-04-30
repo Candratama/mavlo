@@ -42,7 +42,8 @@ const authConfig = {
 	user: {
 		modelName: 'users',
 		additionalFields: {
-			username: { type: 'string', required: false, input: true }
+			username: { type: 'string', required: false, input: true },
+			isDemo: { type: 'boolean', required: false, input: false }
 		}
 	},
 	session: { modelName: 'sessions' },

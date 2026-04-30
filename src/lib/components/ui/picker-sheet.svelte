@@ -83,7 +83,7 @@
 
 	const triggerClass = $derived(
 		cn(
-			'flex min-h-9 md:min-h-8 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-1.5 text-sm transition-colors disabled:opacity-50 hover:bg-accent/30',
+			'flex min-h-12 md:min-h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors disabled:opacity-50 hover:bg-accent/30',
 			!selected && 'text-muted-foreground',
 			className
 		)
@@ -111,18 +111,20 @@
 							type="button"
 							onclick={() => pick(it.value)}
 							class={cn(
-								'hover:bg-accent/50 flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm',
+								'hover:bg-accent/50 flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm md:py-2',
 								value === it.value && 'bg-accent/30'
 							)}
 						>
-							<span class="flex min-w-0 items-center gap-2">
+							<span class="flex min-w-0 flex-1 items-center gap-2">
 								{#if it.icon}
 									<it.icon class="size-4 shrink-0" />
 								{/if}
-								<span class="flex min-w-0 flex-col">
+								<span class="flex min-w-0 flex-1 items-baseline gap-2">
 									<span class="truncate">{it.label}</span>
 									{#if it.description}
-										<span class="text-muted-foreground truncate text-xs">{it.description}</span>
+										<span class="text-muted-foreground shrink-0 text-xs tabular-nums">
+											{it.description}
+										</span>
 									{/if}
 								</span>
 							</span>
@@ -142,7 +144,7 @@
 						type="button"
 						onclick={() => pick(it.value)}
 						class={cn(
-							'hover:bg-accent/50 flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm',
+							'hover:bg-accent/50 flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm md:py-2',
 							value === it.value && 'bg-accent/30'
 						)}
 					>
@@ -150,10 +152,12 @@
 							{#if it.icon}
 								<it.icon class="size-4 shrink-0" />
 							{/if}
-							<span class="flex min-w-0 flex-col">
+							<span class="flex min-w-0 flex-1 items-baseline gap-2">
 								<span class="truncate">{it.label}</span>
 								{#if it.description}
-									<span class="text-muted-foreground truncate text-xs">{it.description}</span>
+									<span class="text-muted-foreground shrink-0 text-xs tabular-nums">
+										{it.description}
+									</span>
 								{/if}
 							</span>
 						</span>
@@ -176,10 +180,12 @@
 						{#if selected?.icon}
 							<selected.icon class="size-4 shrink-0" />
 						{/if}
-						<span class="flex min-w-0 flex-col">
+						<span class="flex min-w-0 flex-1 items-baseline gap-2">
 							<span class="truncate">{selected?.label ?? placeholder}</span>
 							{#if selected?.description}
-								<span class="text-muted-foreground truncate text-xs">{selected.description}</span>
+								<span class="text-muted-foreground hidden shrink-0 text-xs tabular-nums md:inline">
+									{selected.description}
+								</span>
 							{/if}
 						</span>
 					</span>
@@ -207,10 +213,12 @@
 						{#if selected?.icon}
 							<selected.icon class="size-4 shrink-0" />
 						{/if}
-						<span class="flex min-w-0 flex-col">
+						<span class="flex min-w-0 flex-1 items-baseline gap-2">
 							<span class="truncate">{selected?.label ?? placeholder}</span>
 							{#if selected?.description}
-								<span class="text-muted-foreground truncate text-xs">{selected.description}</span>
+								<span class="text-muted-foreground hidden shrink-0 text-xs tabular-nums md:inline">
+									{selected.description}
+								</span>
 							{/if}
 						</span>
 					</span>

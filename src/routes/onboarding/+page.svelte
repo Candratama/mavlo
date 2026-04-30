@@ -12,6 +12,7 @@
 		Landmark,
 		CreditCard,
 		Wallet,
+		PiggyBank,
 		CircleEllipsis,
 		Check,
 		ArrowRight,
@@ -30,7 +31,7 @@
 	let locale = $state('id-ID');
 
 	let accountName = $state('');
-	let accountType = $state<'cash' | 'bank' | 'credit' | 'wallet' | 'other'>('cash');
+	let accountType = $state<'cash' | 'bank' | 'credit' | 'wallet' | 'savings' | 'other'>('cash');
 	let initialBalanceCents = $state<number | null>(0);
 
 	const allCategoryNames = $derived(data.defaultCategories.map((c) => c.name));
@@ -53,6 +54,7 @@
 		{ value: 'cash', label: 'Cash', icon: Coins },
 		{ value: 'bank', label: 'Bank', icon: Landmark },
 		{ value: 'wallet', label: 'E-wallet', icon: Wallet },
+		{ value: 'savings', label: 'Savings', icon: PiggyBank },
 		{ value: 'credit', label: 'Kartu', icon: CreditCard },
 		{ value: 'other', label: 'Lainnya', icon: CircleEllipsis }
 	] as const;

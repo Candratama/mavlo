@@ -6,7 +6,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
-	import { Sun, Moon, Monitor, LogOut, User as UserIcon, Mail, Loader2 } from 'lucide-svelte';
+	import { Sun, Moon, Monitor, LogOut, User as UserIcon, Mail, Loader2, Camera } from 'lucide-svelte';
 	import { notify } from '$lib/utils/toast.js';
 	import SegmentedControl, {
 		type SegmentedOption
@@ -28,6 +28,22 @@
 	let savedTimer: ReturnType<typeof setTimeout> | null = null;
 	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 	let prefsInitialized = false;
+
+	let avatarForm: HTMLFormElement | undefined = $state();
+	let avatarUploading = $state(false);
+
+	function onAvatarChange(e: Event) {
+		const input = e.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file) return;
+		if (file.size > 2 * 1024 * 1024) {
+			notify.error('File size exceeds 2 MB');
+			input.value = '';
+			return;
+		}
+		avatarUploading = true;
+		avatarForm?.requestSubmit();
+	}
 
 	const currencyItems: PickerItem[] = [
 		{ value: 'IDR', label: 'IDR', description: 'Indonesian Rupiah' },
@@ -186,19 +202,71 @@
 			</Card.Header>
 			<Card.Content class="space-y-5">
 				<div class="flex items-center gap-4">
-					{#if data.user.image}
-						<img
-							src={data.user.image}
-							alt="Current avatar"
-							class="size-16 shrink-0 rounded-full border object-cover"
-						/>
-					{:else}
-						<div
-							class="bg-muted flex size-16 shrink-0 items-center justify-center rounded-full border"
+					<form
+						method="POST"
+						action="/settings/avatar"
+						enctype="multipart/form-data"
+						bind:this={avatarForm}
+						use:enhance={() => {
+							return async ({ result, update }) => {
+								avatarUploading = false;
+								await update();
+								if (result.type === 'success' || result.type === 'redirect') {
+									notify.success('Profile picture updated');
+								} else if (result.type === 'failure') {
+									const msg = (result.data as { message?: string } | undefined)?.message;
+									notify.error(msg ?? 'Could not upload photo');
+								} else {
+									notify.error('Upload failed');
+								}
+							};
+						}}
+						class="relative shrink-0"
+					>
+						<label
+							for="avatar-input"
+							class="group relative block cursor-pointer"
+							aria-label="Change profile picture"
+							title="Click to change profile picture"
 						>
-							<UserIcon class="text-muted-foreground size-7" />
-						</div>
-					{/if}
+							{#if data.user.image}
+								<img
+									src={data.user.image}
+									alt="Current avatar"
+									class="size-16 rounded-full border object-cover transition-opacity group-hover:opacity-75 {avatarUploading
+										? 'opacity-50'
+										: ''}"
+								/>
+							{:else}
+								<div
+									class="bg-muted flex size-16 items-center justify-center rounded-full border transition-opacity group-hover:opacity-75 {avatarUploading
+										? 'opacity-50'
+										: ''}"
+								>
+									<UserIcon class="text-muted-foreground size-7" />
+								</div>
+							{/if}
+							<span
+								class="bg-primary text-primary-foreground border-background absolute right-0 bottom-0 flex size-6 items-center justify-center rounded-full border-2 shadow-sm"
+								aria-hidden="true"
+							>
+								{#if avatarUploading}
+									<Loader2 class="size-3 animate-spin" />
+								{:else}
+									<Camera class="size-3" />
+								{/if}
+							</span>
+						</label>
+						<input
+							id="avatar-input"
+							type="file"
+							name="avatar"
+							accept="image/png,image/jpeg,image/webp,image/gif"
+							class="sr-only"
+							onchange={onAvatarChange}
+							disabled={avatarUploading}
+						/>
+					</form>
 					<div class="min-w-0 flex-1">
 						<div class="truncate font-medium">{data.user.name ?? '—'}</div>
 						<div class="text-muted-foreground flex items-center gap-1.5 truncate text-xs">
@@ -247,27 +315,6 @@
 					<p class="text-muted-foreground text-xs">
 						3–30 characters, letters, numbers, dot, underscore.
 					</p>
-				</div>
-
-				<div class="space-y-2">
-					<Label class="text-muted-foreground text-xs tracking-wider uppercase"
-						>Profile picture</Label
-					>
-					<form
-						method="POST"
-						action="/settings/avatar"
-						enctype="multipart/form-data"
-						class="flex items-center gap-2"
-					>
-						<Input
-							type="file"
-							name="avatar"
-							accept="image/png,image/jpeg,image/webp,image/gif"
-							required
-						/>
-						<Button type="submit">Upload</Button>
-					</form>
-					<p class="text-muted-foreground text-xs">PNG, JPEG, WebP, or GIF; max 2 MB.</p>
 				</div>
 
 				<div class="border-t pt-4">

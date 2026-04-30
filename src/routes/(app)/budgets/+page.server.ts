@@ -7,8 +7,10 @@ import {
 	updateBudget,
 	deleteBudget
 } from '$lib/server/repositories/budgets';
+import { listAccounts } from '$lib/server/repositories/accounts';
 import { listCategories } from '$lib/server/repositories/categories';
 import { computeBudgetSpent } from '$lib/server/repositories/budget-spent';
+import { computeAccountBalances } from '$lib/server/repositories/balances';
 import { getPreferences } from '$lib/server/repositories/preferences';
 import { budgetCreateSchema, budgetUpdateSchema, budgetIdSchema } from '$lib/validation/budget';
 import { getCycleForPeriod, getCurrentCycle } from '$lib/utils/cycle.js';
@@ -28,14 +30,28 @@ export const load: PageServerLoad = async (event) => {
 
 	const cycle = getCycleForPeriod(periodMonth, monthStartDay, timezone);
 
-	const [budgets, spent, categories] = await Promise.all([
+	const [budgets, spent, categories, accounts, balances] = await Promise.all([
 		listBudgets(db, user.id, { periodMonth }),
 		computeBudgetSpent(db, user.id, cycle.start.getTime(), cycle.end.getTime() - 1),
-		listCategories(db, user.id, { includeArchived: false })
+		listCategories(db, user.id, { includeArchived: false }),
+		listAccounts(db, user.id, { includeArchived: false }),
+		computeAccountBalances(db, user.id)
 	]);
 
 	const expenseCategories = categories.filter((c) => c.kind === 'expense');
 	const spentByCategory = Object.fromEntries(spent.entries());
+
+	let savingsCents = 0;
+	let operationalCents = 0;
+	for (const a of accounts) {
+		const bal = balances.get(a.id) ?? a.initialBalanceCents;
+		if (a.type === 'savings') savingsCents += bal;
+		else operationalCents += bal;
+	}
+	const assignedCents = budgets.reduce((s, b) => s + b.limitCents, 0);
+	const allocatedCents = savingsCents + assignedCents;
+	const totalCashCents = savingsCents + operationalCents;
+	const unallocatedCents = totalCashCents - allocatedCents;
 
 	return {
 		periodMonth,
@@ -44,7 +60,15 @@ export const load: PageServerLoad = async (event) => {
 		categories,
 		spentByCategory,
 		monthStartDay,
-		timezone
+		timezone,
+		allocation: {
+			totalCashCents,
+			savingsCents,
+			operationalCents,
+			assignedCents,
+			allocatedCents,
+			unallocatedCents
+		}
 	};
 };
 

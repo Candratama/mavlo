@@ -10,7 +10,18 @@
 	import * as Sheet from '$lib/components/ui/sheet';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
-	import { Plus, MoreHorizontal, Pencil, Trash2, Target, Tag } from 'lucide-svelte';
+	import {
+		Plus,
+		MoreHorizontal,
+		Pencil,
+		Trash2,
+		Target,
+		Tag,
+		PiggyBank,
+		Wallet,
+		AlertTriangle,
+		CheckCircle2
+	} from 'lucide-svelte';
 	import { getIconByName } from '$lib/utils/category-icons.js';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
@@ -42,6 +53,10 @@
 	const totalSpent = $derived(
 		data.budgets.reduce((s, b) => s + (data.spentByCategory[b.categoryId] ?? 0), 0)
 	);
+
+	const alloc = $derived(data.allocation);
+	const overAllocated = $derived(alloc.unallocatedCents < 0);
+	const fullyAllocated = $derived(alloc.unallocatedCents === 0 && alloc.totalCashCents > 0);
 
 	const pct = (spent: number, limit: number) =>
 		limit === 0 ? 0 : Math.min(100, Math.round((spent / limit) * 100));
@@ -76,12 +91,71 @@
 </div>
 
 <div
-	class="mb-6 rounded-xl border bg-gradient-to-br {totalSpent > totalAllocated
+	class="mb-6 rounded-xl border bg-gradient-to-br {overAllocated
 		? 'from-rose-500/10'
-		: 'from-primary/10'} via-card to-card p-4"
+		: fullyAllocated
+			? 'from-emerald-500/10'
+			: 'from-amber-500/10'} via-card to-card p-4 sm:p-5"
 >
+	<div class="mb-3 flex items-start justify-between gap-3">
+		<div>
+			<div class="text-muted-foreground text-xs tracking-wider uppercase">
+				{overAllocated ? 'Over-allocated' : fullyAllocated ? 'Fully allocated' : 'Belum dialokasikan'}
+			</div>
+			<div
+				class="mt-1 text-2xl font-bold tracking-tight tabular-nums sm:text-3xl {overAllocated
+					? 'text-expense'
+					: fullyAllocated
+						? 'text-emerald-500'
+						: ''}"
+			>
+				{formatCents(Math.abs(alloc.unallocatedCents))}
+			</div>
+		</div>
+		<div
+			class="flex size-10 shrink-0 items-center justify-center rounded-full {overAllocated
+				? 'bg-rose-500/15 text-rose-500'
+				: fullyAllocated
+					? 'bg-emerald-500/15 text-emerald-500'
+					: 'bg-amber-500/15 text-amber-500'}"
+		>
+			{#if overAllocated}
+				<AlertTriangle class="size-5" />
+			{:else if fullyAllocated}
+				<CheckCircle2 class="size-5" />
+			{:else}
+				<Target class="size-5" />
+			{/if}
+		</div>
+	</div>
+
+	<div class="grid grid-cols-3 gap-3 text-xs">
+		<div>
+			<div class="text-muted-foreground flex items-center gap-1 tracking-wider uppercase">
+				<Wallet class="size-3" /> Total
+			</div>
+			<div class="mt-1 font-semibold tabular-nums">{formatCents(alloc.totalCashCents)}</div>
+		</div>
+		<div>
+			<div class="text-muted-foreground flex items-center gap-1 tracking-wider uppercase">
+				<PiggyBank class="size-3" /> Savings
+			</div>
+			<div class="mt-1 font-semibold tabular-nums">{formatCents(alloc.savingsCents)}</div>
+		</div>
+		<div>
+			<div class="text-muted-foreground flex items-center gap-1 tracking-wider uppercase">
+				<Target class="size-3" /> Budget
+			</div>
+			<div class="mt-1 font-semibold tabular-nums">{formatCents(alloc.assignedCents)}</div>
+		</div>
+	</div>
+</div>
+
+<div class="mb-6 rounded-xl border bg-gradient-to-br {totalSpent > totalAllocated
+		? 'from-rose-500/10'
+		: 'from-primary/10'} via-card to-card p-4">
 	<div class="mb-2 flex items-center justify-between">
-		<span class="text-sm font-semibold">Total Budget</span>
+		<span class="text-sm font-semibold">Spent vs Budget</span>
 		<span
 			class="text-sm font-semibold tabular-nums {totalSpent > totalAllocated
 				? 'text-expense'

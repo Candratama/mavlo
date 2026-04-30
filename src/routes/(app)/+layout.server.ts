@@ -46,7 +46,8 @@ export const load: LayoutServerLoad = async (event) => {
 			name: user.name,
 			username: (user as { username?: string | null }).username ?? null,
 			email: user.email,
-			image: user.image
+			image: user.image,
+			isDemo: (user as { isDemo?: boolean }).isDemo ?? false
 		},
 		preferences: prefs,
 		accounts: accountsWithBalance,

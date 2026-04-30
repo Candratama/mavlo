@@ -24,7 +24,7 @@ export async function listTransactions(db: Db, userId: string, filter: Transacti
 		.select()
 		.from(transactions)
 		.where(and(...conds))
-		.orderBy(desc(transactions.occurredAt));
+		.orderBy(desc(transactions.occurredAt), desc(transactions.createdAt));
 }
 
 export async function getTransaction(db: Db, userId: string, id: string) {

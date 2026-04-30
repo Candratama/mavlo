@@ -58,7 +58,8 @@ const transactionsTableSql = `
 		occurred_at INTEGER NOT NULL,
 		created_at INTEGER NOT NULL,
 		updated_at INTEGER NOT NULL,
-		transfer_to_account_id TEXT REFERENCES accounts(id) ON DELETE RESTRICT
+		transfer_to_account_id TEXT REFERENCES accounts(id) ON DELETE RESTRICT,
+		is_seed INTEGER NOT NULL DEFAULT 0
 	)
 `;
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tick } from 'svelte';
+	import { tick, untrack } from 'svelte';
 	import { Input } from '$lib/components/ui/input';
 	import { formatCentsToRupiah, parseRupiahToCents } from '$lib/utils/money.js';
 
@@ -27,23 +27,40 @@
 
 	const cents = $derived(parseRupiahToCents(display));
 
-	$effect(() => {
-		if (cents !== value) value = cents;
+	// Sync prop → display when parent updates value externally (e.g. opening edit sheet).
+	// Uses $effect.pre so display is reconciled BEFORE the display→value effect reads it,
+	// avoiding a race where stale empty display overwrites the just-set prop back to null.
+	// `untrack` keeps display reads non-reactive — effect only re-fires on value changes,
+	// so user typing won't trigger this branch and reset the cursor.
+	$effect.pre(() => {
+		const v = value;
+		untrack(() => {
+			if (v === null || v === undefined) {
+				if (display !== '') display = '';
+				return;
+			}
+			if (parseRupiahToCents(display) !== v) {
+				display = formatCentsToRupiah(v);
+			}
+		});
 	});
 
+	// Sync display → value when user types.
 	$effect(() => {
-		if (value === null || value === undefined) {
-			if (display !== '') display = '';
-			return;
-		}
-		if (parseRupiahToCents(display) !== value) {
-			display = formatCentsToRupiah(value);
-		}
+		if (cents !== value) value = cents;
 	});
 
 	function formatDigits(digits: string): string {
 		if (!digits) return '';
 		return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+	}
+
+	function onBeforeInput(e: Event) {
+		const ev = e as InputEvent;
+		// Block any inserted text that isn't a pure digit string.
+		if (ev.inputType?.startsWith('insert') && typeof ev.data === 'string') {
+			if (!/^\d+$/.test(ev.data)) ev.preventDefault();
+		}
 	}
 
 	async function onInput(e: Event) {
@@ -87,9 +104,11 @@
 		{id}
 		type="text"
 		inputmode="numeric"
+		pattern="[0-9]*"
 		autocomplete="off"
 		value={display}
 		oninput={onInput}
+		onbeforeinput={onBeforeInput}
 		{placeholder}
 		{required}
 		class="pl-9 tabular-nums {className}"

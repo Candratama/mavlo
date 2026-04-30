@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { untrack } from 'svelte';
+	import { page, navigating } from '$app/state';
+	import { onMount, untrack } from 'svelte';
 	import { setMode } from 'mode-watcher';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import Fab from '$lib/components/ui/fab.svelte';
@@ -12,7 +12,7 @@
 	} from '$lib/stores/add-transaction.svelte.js';
 	import { setupPwaCapture } from '$lib/stores/pwa-install.svelte.js';
 	import { getLastUsed } from '$lib/utils/last-used.js';
-	import { invalidateAll } from '$app/navigation';
+	import { invalidateAll, preloadCode, preloadData } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import {
 		LayoutDashboard,
@@ -34,6 +34,28 @@
 	});
 
 	$effect(() => setupPwaCapture());
+
+	// (B) Aggressive prefetch — preload main route code + data after dashboard mount.
+	// Subsequent navigations between the 4 main pages feel instant.
+	const MAIN_ROUTES = ['/dashboard', '/transactions', '/accounts', '/budgets'];
+	onMount(() => {
+		// Code first (small, synchronous JS)
+		MAIN_ROUTES.forEach((r) => {
+			void preloadCode(r);
+		});
+		// Data on idle so it doesn't fight initial render.
+		const idle = (cb: () => void) => {
+			const w = window as Window & { requestIdleCallback?: (cb: () => void) => void };
+			if (typeof w.requestIdleCallback === 'function') w.requestIdleCallback(cb);
+			else setTimeout(cb, 600);
+		};
+		idle(() => {
+			MAIN_ROUTES.forEach((r) => {
+				if (r === page.url.pathname) return;
+				void preloadData(r);
+			});
+		});
+	});
 
 	$effect(() => {
 		if (typeof window === 'undefined') return;
@@ -242,4 +264,39 @@
 		/>
 		<Fab />
 	</div>
+
+	{#if data.user?.isDemo}
+		<a
+			href={resolve('/sign-up')}
+			class="border-amber-400/40 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 fixed top-3 right-3 z-50 flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-bold tracking-wider uppercase backdrop-blur-md transition-colors"
+		>
+			<span class="size-1.5 animate-pulse rounded-full bg-amber-400"></span>
+			Demo · Daftar
+		</a>
+	{/if}
+
+	{#if navigating.to}
+		<div class="nav-progress pointer-events-none fixed inset-x-0 top-0 z-[60] h-0.5 overflow-hidden">
+			<div class="nav-progress-bar h-full bg-emerald-400"></div>
+		</div>
+	{/if}
 </div>
+
+<style>
+	.nav-progress-bar {
+		animation: nav-progress 2.4s ease-in-out infinite;
+		transform-origin: left center;
+	}
+	@keyframes nav-progress {
+		0% {
+			transform: translateX(-100%) scaleX(0.4);
+		}
+		50% {
+			transform: translateX(0%) scaleX(0.6);
+		}
+		100% {
+			transform: translateX(100%) scaleX(0.4);
+		}
+	}
+
+</style>

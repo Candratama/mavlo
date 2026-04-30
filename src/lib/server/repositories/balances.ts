@@ -1,10 +1,61 @@
-import { eq } from 'drizzle-orm';
+import { and, between, eq } from 'drizzle-orm';
 import { type DrizzleD1Database } from 'drizzle-orm/d1';
 import { type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { accounts, transactions } from '$lib/server/db/schema';
 import * as schema from '$lib/server/db/schema';
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
+
+export interface AccountPeriodSummary {
+	incomeCents: number;
+	expenseCents: number;
+}
+
+/**
+ * Returns Map<accountId, {incomeCents, expenseCents}> for transactions in [fromMs, toMs].
+ *
+ * Per-account flow view (NOT strict accounting):
+ *   - income kind  → +income on source account
+ *   - expense kind → +expense on source account
+ *   - transfer     → +expense on source account, +income on target account
+ *
+ * This represents money in/out of each account, useful for per-account dashboards.
+ * Range is inclusive.
+ */
+export async function computeAccountPeriodSummary(
+	db: Db,
+	userId: string,
+	fromMs: number,
+	toMs: number
+): Promise<Map<string, AccountPeriodSummary>> {
+	const rows = await db
+		.select()
+		.from(transactions)
+		.where(
+			and(eq(transactions.userId, userId), between(transactions.occurredAt, fromMs, toMs))
+		);
+
+	const out = new Map<string, AccountPeriodSummary>();
+	const bump = (accountId: string, key: 'incomeCents' | 'expenseCents', cents: number) => {
+		const cur = out.get(accountId) ?? { incomeCents: 0, expenseCents: 0 };
+		cur[key] += cents;
+		out.set(accountId, cur);
+	};
+
+	for (const t of rows) {
+		if (t.kind === 'income') {
+			bump(t.accountId, 'incomeCents', t.amountCents);
+		} else if (t.kind === 'expense') {
+			bump(t.accountId, 'expenseCents', t.amountCents);
+		} else if (t.kind === 'transfer') {
+			bump(t.accountId, 'expenseCents', t.amountCents);
+			if (t.transferToAccountId) {
+				bump(t.transferToAccountId, 'incomeCents', t.amountCents);
+			}
+		}
+	}
+	return out;
+}
 
 /**
  * Returns Map<accountId, balanceCents>. Includes only accounts owned by `userId`.

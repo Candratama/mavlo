@@ -8,7 +8,7 @@ import {
 	deleteTransaction,
 	getTransaction
 } from '$lib/server/repositories/transactions';
-import { listAccounts } from '$lib/server/repositories/accounts';
+import { listAccounts, getAccount } from '$lib/server/repositories/accounts';
 import { listCategories } from '$lib/server/repositories/categories';
 import { computeAccountBalances } from '$lib/server/repositories/balances';
 import { getPreferences } from '$lib/server/repositories/preferences';
@@ -100,6 +100,19 @@ export const actions: Actions = {
 				message: parsed.error.issues[0]?.message ?? 'Invalid input'
 			});
 		}
+		const sourceAccount = await getAccount(db, user.id, parsed.data.accountId);
+		if (!sourceAccount) {
+			return fail(400, { action: 'create', message: 'Akun sumber tidak ditemukan' });
+		}
+		if (
+			sourceAccount.type === 'savings' &&
+			(parsed.data.kind === 'income' || parsed.data.kind === 'expense')
+		) {
+			return fail(400, {
+				action: 'create',
+				message: 'Akun savings cuma bisa transfer, gak bisa income/expense'
+			});
+		}
 		if (parsed.data.kind === 'expense' || parsed.data.kind === 'transfer') {
 			const balances = await computeAccountBalances(db, user.id);
 			const sourceBalance = balances.get(parsed.data.accountId) ?? 0;
@@ -128,6 +141,19 @@ export const actions: Actions = {
 				message: parsed.error.issues[0]?.message ?? 'Invalid input'
 			});
 		}
+		const sourceAccount = await getAccount(db, user.id, parsed.data.accountId);
+		if (!sourceAccount) {
+			return fail(400, { action: 'update', message: 'Akun sumber tidak ditemukan' });
+		}
+		if (
+			sourceAccount.type === 'savings' &&
+			(parsed.data.kind === 'income' || parsed.data.kind === 'expense')
+		) {
+			return fail(400, {
+				action: 'update',
+				message: 'Akun savings cuma bisa transfer, gak bisa income/expense'
+			});
+		}
 		if (parsed.data.kind === 'expense' || parsed.data.kind === 'transfer') {
 			const balances = await computeAccountBalances(db, user.id);
 			const old = await getTransaction(db, user.id, parsed.data.id);
@@ -150,6 +176,14 @@ export const actions: Actions = {
 		const fd = await event.request.formData();
 		const parsed = transactionIdSchema.safeParse(formObject(fd));
 		if (!parsed.success) return fail(400, { action: 'delete', message: 'Invalid id' });
+		const existing = await getTransaction(db, user.id, parsed.data.id);
+		if (!existing) return fail(404, { action: 'delete', message: 'Transaction not found' });
+		if ((user as { isDemo?: boolean }).isDemo && existing.isSeed) {
+			return fail(403, {
+				action: 'delete',
+				message: 'Demo: data dummy gak bisa dihapus. Hapus transaksi yg lo bikin sendiri aja.'
+			});
+		}
 		const deleted = await deleteTransaction(db, user.id, parsed.data.id);
 		if (!deleted) return fail(404, { action: 'delete', message: 'Transaction not found' });
 		return { success: true, action: 'delete' };

@@ -20,13 +20,16 @@
 		Coins,
 		Landmark,
 		CreditCard,
+		PiggyBank,
 		CircleEllipsis,
 		GripVertical,
-		Scale
+		ArrowUp,
+		ArrowDown,
+		Lock
 	} from 'lucide-svelte';
 	import { dndzone } from 'svelte-dnd-action';
 	import type { Component } from 'svelte';
-	import { formatCentsAsCurrency } from '$lib/utils/money.js';
+	import { formatCentsAsCurrency, formatCentsCompact } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
 	import { MediaQuery } from 'svelte/reactivity';
@@ -47,6 +50,7 @@
 	const typeItems: PickerItem[] = [
 		{ value: 'cash', label: 'Cash', icon: Coins as unknown as Component },
 		{ value: 'bank', label: 'Bank', icon: Landmark as unknown as Component },
+		{ value: 'savings', label: 'Savings', icon: PiggyBank as unknown as Component },
 		{ value: 'credit', label: 'Credit', icon: CreditCard as unknown as Component },
 		{ value: 'wallet', label: 'Wallet', icon: Wallet as unknown as Component },
 		{ value: 'other', label: 'Other', icon: CircleEllipsis as unknown as Component }
@@ -70,6 +74,7 @@
 	let editType = $state<string>('cash');
 	let editColor = $state('');
 	let editCustomColor = $state(false);
+	let editAdjustCents = $state<number | null>(null);
 
 	$effect(() => {
 		if (editTarget) {
@@ -78,6 +83,7 @@
 			editType = t.type;
 			editColor = c;
 			editCustomColor = !!c && !PRESET_SWATCHES.includes(c);
+			editAdjustCents = t.balanceCents;
 		}
 	});
 
@@ -93,18 +99,6 @@
 		editOpen = true;
 	};
 
-	let adjustOpen = $state(false);
-	let adjustTarget = $state<AccountRow | null>(null);
-	let adjustTargetCents = $state<number | null>(null);
-	let adjustNote = $state('');
-	let adjustPending = $state(false);
-
-	const openAdjust = (a: AccountRow) => {
-		adjustTarget = a;
-		adjustTargetCents = a.balanceCents;
-		adjustNote = '';
-		adjustOpen = true;
-	};
 
 	let visibleAccounts = $state<AccountRow[]>(data.accounts);
 	$effect(() => {
@@ -172,9 +166,6 @@
 			<DropdownMenu.Item onclick={() => openEdit(account)}>
 				<Pencil class="mr-2 size-4" /> Edit
 			</DropdownMenu.Item>
-			<DropdownMenu.Item onclick={() => openAdjust(account)}>
-				<Scale class="mr-2 size-4" /> Adjust
-			</DropdownMenu.Item>
 			<form
 				method="POST"
 				action="?/{account.archived ? 'unarchive' : 'archive'}"
@@ -233,39 +224,51 @@
 
 				<div class="relative flex h-full flex-col justify-between">
 					<div class="flex items-start justify-between">
-						<div class="flex items-center gap-2">
+						<div class="flex items-center gap-3">
 							<div
-								class="flex size-9 items-center justify-center rounded-lg border backdrop-blur"
+								class="flex size-12 items-center justify-center rounded-xl border backdrop-blur"
 								style="background-color: {color}26; border-color: {color}40; color: {color}"
 							>
 								{#if IconComp}
-									<IconComp class="size-5" />
+									<IconComp class="size-6" />
 								{:else}
-									<Wallet class="size-5" />
+									<Wallet class="size-6" />
 								{/if}
 							</div>
 							<div>
-								<div class="text-muted-foreground text-xs tracking-wider uppercase">
+								<div
+									class="text-muted-foreground flex items-center gap-1 text-xs tracking-wider uppercase"
+								>
 									{account.type}
+									{#if account.type === 'savings'}
+										<Lock class="size-3" aria-label="Transfer-only" />
+									{/if}
 								</div>
-								<div class="leading-tight font-semibold">{account.name}</div>
+								<div class="text-lg leading-tight font-semibold">{account.name}</div>
 							</div>
 						</div>
 						{@render rowMenu(account)}
 					</div>
 
-					<div>
-						<div class="text-muted-foreground text-xs tracking-wider uppercase">Balance</div>
-						<div class="text-2xl font-semibold tracking-tight tabular-nums xl:text-3xl">
-							{formatBalance(account.balanceCents, account.currency)}
+					<div class="flex items-end justify-between gap-2">
+						<div class="text-muted-foreground flex items-center gap-3 text-xs tabular-nums">
+							<span class="text-income/70 flex items-center gap-1">
+								<ArrowDown class="size-3" />
+								{formatCentsCompact(account.periodIncomeCents, account.currency)}
+							</span>
+							<span class="text-expense/70 flex items-center gap-1">
+								<ArrowUp class="size-3" />
+								{formatCentsCompact(account.periodExpenseCents, account.currency)}
+							</span>
 						</div>
-					</div>
-
-					<div class="text-muted-foreground flex items-end justify-between text-xs">
-						<span class="tracking-[0.3em]">•••• ••••</span>
-						<span class="font-semibold tracking-wider" style="color: {color}">
-							{account.currency}
-						</span>
+						<div class="flex flex-col items-end">
+							<div class="text-2xl font-semibold tracking-tight tabular-nums xl:text-3xl">
+								{formatBalance(account.balanceCents, account.currency)}
+							</div>
+							<span class="mt-1 text-xs font-semibold tracking-wider" style="color: {color}">
+								{account.currency}
+							</span>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -305,42 +308,82 @@
 	>
 		{#each visibleAccounts as account (account.id)}
 			{@const IconComp = iconForType(account.type)}
+			{@const color = account.color || '#3b82f6'}
 			<li
-				class="bg-card flex items-center gap-3 rounded-lg border p-3 {account.archived
+				class="mavlo-pill text-foreground relative flex items-stretch gap-2 overflow-hidden rounded-2xl p-4 {account.archived
 					? 'opacity-60'
 					: ''}"
 			>
+				<div
+					aria-hidden="true"
+					class="pointer-events-none absolute inset-0 opacity-70"
+					style="background: radial-gradient(ellipse 70% 60% at 0% 0%, {color}33, transparent 60%), radial-gradient(circle 50% at 100% 100%, {color}22, transparent 70%);"
+				></div>
+				<div
+					aria-hidden="true"
+					class="pointer-events-none absolute -right-10 -bottom-10 size-32 rounded-full opacity-20 blur-2xl"
+					style="background: {color}"
+				></div>
+
 				<button
 					type="button"
 					tabindex="-1"
 					aria-label="Drag to reorder"
 					onpointerdown={enableDrag}
 					ontouchstart={enableDrag}
-					class="shrink-0 cursor-grab touch-none active:cursor-grabbing"
+					class="text-muted-foreground relative shrink-0 cursor-grab touch-none self-center active:cursor-grabbing"
 				>
-					<GripVertical class="text-muted-foreground size-4" />
+					<GripVertical class="size-4" />
 				</button>
-				<div class="flex min-w-0 flex-1 items-center gap-3">
-					<div
-						class="flex size-9 shrink-0 items-center justify-center rounded-md"
-						style={account.color ? `background-color: ${account.color}20` : ''}
-					>
-						{#if IconComp}
-							<IconComp class="size-4" style={account.color ? `color: ${account.color}` : ''} />
-						{:else}
-							<Wallet class="text-muted-foreground size-4" />
-						{/if}
-					</div>
-					<div class="min-w-0 flex-1">
-						<div class="truncate font-medium">{account.name}</div>
-						<div class="text-muted-foreground mt-0.5 text-xs capitalize">
-							{account.type} · {account.currency}
+
+				<div class="relative flex min-w-0 flex-1 flex-col gap-3">
+					<div class="flex items-start justify-between gap-2">
+						<div class="flex min-w-0 items-center gap-3">
+							<div
+								class="flex size-11 shrink-0 items-center justify-center rounded-xl border backdrop-blur"
+								style="background-color: {color}26; border-color: {color}40; color: {color}"
+							>
+								{#if IconComp}
+									<IconComp class="size-5" />
+								{:else}
+									<Wallet class="size-5" />
+								{/if}
+							</div>
+							<div class="min-w-0">
+								<div
+									class="text-muted-foreground flex items-center gap-1 text-[10px] tracking-wider uppercase"
+								>
+									{account.type}
+									{#if account.type === 'savings'}
+										<Lock class="size-2.5" aria-label="Transfer-only" />
+									{/if}
+								</div>
+								<div class="truncate text-base leading-tight font-semibold">{account.name}</div>
+							</div>
 						</div>
-						<div class="mt-1 text-base font-semibold tabular-nums">
-							{formatBalance(account.balanceCents, account.currency)}
+						{@render rowMenu(account)}
+					</div>
+
+					<div class="flex items-end justify-between gap-2">
+						<div class="flex items-center gap-2 text-[11px] tabular-nums">
+							<span class="text-income/70 flex items-center gap-1">
+								<ArrowDown class="size-2.5" />
+								{formatCentsCompact(account.periodIncomeCents, account.currency)}
+							</span>
+							<span class="text-expense/70 flex items-center gap-1">
+								<ArrowUp class="size-2.5" />
+								{formatCentsCompact(account.periodExpenseCents, account.currency)}
+							</span>
+						</div>
+						<div class="flex flex-col items-end">
+							<div class="text-lg font-semibold tracking-tight tabular-nums">
+								{formatBalance(account.balanceCents, account.currency)}
+							</div>
+							<span class="mt-0.5 text-[10px] font-semibold tracking-wider" style="color: {color}">
+								{account.currency}
+							</span>
 						</div>
 					</div>
-					{@render rowMenu(account)}
 				</div>
 			</li>
 		{/each}
@@ -396,25 +439,25 @@
 			<Label for="create-name">Name</Label>
 			<Input id="create-name" name="name" required maxlength={80} />
 		</div>
-		<div class="space-y-1">
-			<Label>Type</Label>
-			<PickerSheet
-				items={typeItems}
-				bind:value={createType}
-				name="type"
-				placeholder="Select type"
-				title="Account type"
-			/>
-		</div>
 		<div class="grid grid-cols-2 gap-3">
+			<div class="space-y-1">
+				<Label>Type</Label>
+				<PickerSheet
+					items={typeItems}
+					bind:value={createType}
+					name="type"
+					placeholder="Select type"
+					title="Account type"
+				/>
+			</div>
 			<div class="space-y-1">
 				<Label for="create-currency">Currency</Label>
 				<Input id="create-currency" name="currency" required maxlength={8} value="IDR" />
 			</div>
-			<div class="space-y-1">
-				<Label for="create-balance">Initial balance</Label>
-				<MoneyInput id="create-balance" name="initialBalanceCents" min={0} class="h-12 text-2xl" />
-			</div>
+		</div>
+		<div class="space-y-1">
+			<Label for="create-balance">Initial balance</Label>
+			<MoneyInput id="create-balance" name="initialBalanceCents" min={0} class="h-12 text-2xl" />
 		</div>
 		<div class="space-y-2">
 			<div class="flex items-center justify-between">
@@ -503,6 +546,7 @@
 
 <!-- Edit form snippet (receives account to avoid null narrowing issues) -->
 {#snippet editForm(account: AccountRow)}
+	{@const currentBalance = account.balanceCents}
 	<form
 		method="POST"
 		action="?/update"
@@ -510,10 +554,24 @@
 			formData.set('type', editType);
 			formData.set('color', editColor);
 			editPending = true;
+			const targetCents = editAdjustCents;
 			return async ({ result, update }) => {
 				editPending = false;
 				await update();
 				if (result.type === 'success') {
+					if (targetCents !== null && targetCents !== currentBalance) {
+						const adjFd = new FormData();
+						adjFd.set('id', account.id);
+						adjFd.set('targetCents', String(targetCents));
+						try {
+							const res = await fetch('?/adjust', { method: 'POST', body: adjFd });
+							if (!res.ok) throw new Error('adjust failed');
+						} catch {
+							notify.error('Account updated tapi adjust gagal');
+							editOpen = false;
+							return;
+						}
+					}
 					editOpen = false;
 					notify.success('Account updated');
 				} else if (result.type === 'failure') {
@@ -525,35 +583,52 @@
 		class="space-y-4 p-4"
 	>
 		<input type="hidden" name="id" value={account.id} />
+		<input type="hidden" name="initialBalanceCents" value={account.initialBalanceCents} />
 		<div class="space-y-1">
 			<Label for="edit-name">Name</Label>
 			<Input id="edit-name" name="name" required maxlength={80} value={account.name} />
 		</div>
-		<div class="space-y-1">
-			<Label>Type</Label>
-			<PickerSheet
-				items={typeItems}
-				bind:value={editType}
-				name="type"
-				placeholder="Select type"
-				title="Account type"
-			/>
-		</div>
 		<div class="grid grid-cols-2 gap-3">
+			<div class="space-y-1">
+				<Label>Type</Label>
+				<PickerSheet
+					items={typeItems}
+					bind:value={editType}
+					name="type"
+					placeholder="Select type"
+					title="Account type"
+				/>
+			</div>
 			<div class="space-y-1">
 				<Label for="edit-currency">Currency</Label>
 				<Input id="edit-currency" name="currency" required maxlength={8} value={account.currency} />
 			</div>
-			<div class="space-y-1">
-				<Label for="edit-balance">Initial balance</Label>
-				<MoneyInput
-					id="edit-balance"
-					name="initialBalanceCents"
-					min={0}
-					value={account.initialBalanceCents}
-					class="h-12 text-2xl"
-				/>
+		</div>
+		<div class="space-y-1">
+			<Label for="edit-current-balance">Current balance</Label>
+			<div
+				id="edit-current-balance"
+				class="border-input bg-muted/40 text-muted-foreground flex h-11 items-center rounded-lg border px-3 text-base font-semibold tabular-nums md:h-8 md:text-sm"
+			>
+				{formatBalance(currentBalance, account.currency)}
 			</div>
+		</div>
+		<div class="space-y-1">
+			<Label for="edit-balance">Adjust balance to</Label>
+			<MoneyInput
+				id="edit-balance"
+				name="_targetBalanceDisplay"
+				bind:value={editAdjustCents}
+				min={0}
+				class="h-12 text-2xl"
+			/>
+			{#if editAdjustCents !== null && editAdjustCents !== currentBalance}
+				<p class="text-muted-foreground text-xs">
+					{editAdjustCents > currentBalance
+						? `+${formatBalance(editAdjustCents - currentBalance, account.currency)}`
+						: `-${formatBalance(currentBalance - editAdjustCents, account.currency)}`} adjustment will be recorded as a transaction
+				</p>
+			{/if}
 		</div>
 		<div class="space-y-2">
 			<div class="flex items-center justify-between">
@@ -639,85 +714,3 @@
 	{/if}
 {/if}
 
-{#snippet adjustForm(target: AccountRow)}
-	<form
-		method="POST"
-		action="?/adjust"
-		use:enhance={() => {
-			adjustPending = true;
-			return async ({ result, update }) => {
-				adjustPending = false;
-				await update();
-				if (result.type === 'success') {
-					adjustOpen = false;
-					notify.success('Balance adjusted');
-				} else if (result.type === 'failure') {
-					const message = (result.data as { message?: string } | undefined)?.message;
-					notify.error(message ?? 'Could not adjust');
-				}
-			};
-		}}
-		class="space-y-4 p-4"
-	>
-		<input type="hidden" name="id" value={target.id} />
-		<div class="bg-muted rounded-lg p-3 text-sm">
-			<div class="text-muted-foreground text-xs">Current balance</div>
-			<div class="text-base font-semibold tabular-nums">
-				{formatBalance(target.balanceCents, target.currency)}
-			</div>
-		</div>
-		<div class="space-y-1">
-			<Label for="adjust-target">New balance</Label>
-			<MoneyInput
-				id="adjust-target"
-				name="targetCents"
-				bind:value={adjustTargetCents}
-				class="h-12 text-2xl"
-				required
-			/>
-		</div>
-		<div class="space-y-1">
-			<Label for="adjust-note">Note (optional)</Label>
-			<Input
-				id="adjust-note"
-				name="note"
-				bind:value={adjustNote}
-				maxlength={200}
-				placeholder="Reason for adjustment"
-			/>
-		</div>
-		<p class="text-muted-foreground text-xs">
-			Creates a tracked transaction (income or expense) under "Balance Adjustment" category for the
-			difference.
-		</p>
-		<div class="flex justify-end gap-2">
-			<Button type="button" variant="outline" onclick={() => (adjustOpen = false)}>Cancel</Button>
-			<SubmitButton pending={adjustPending}>Save</SubmitButton>
-		</div>
-	</form>
-{/snippet}
-
-{#if adjustTarget}
-	{#if isDesktop.current}
-		<Dialog.Root bind:open={adjustOpen}>
-			<Dialog.Content>
-				<Dialog.Header>
-					<Dialog.Title>Adjust</Dialog.Title>
-				</Dialog.Header>
-				{@render adjustForm(adjustTarget)}
-			</Dialog.Content>
-		</Dialog.Root>
-	{:else}
-		<Sheet.Root bind:open={adjustOpen}>
-			<Sheet.Content
-				side="bottom"
-				class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
-			>
-				<Sheet.Header class="p-4 pb-2 text-left">
-					<Sheet.Title>Adjust</Sheet.Title>
-				</Sheet.Header>
-				<div class="flex-1 overflow-y-auto">{@render adjustForm(adjustTarget)}</div>
-			</Sheet.Content>
-		</Sheet.Root>
-	{/if}
-{/if}

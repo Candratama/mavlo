@@ -21,7 +21,7 @@ export const accounts = sqliteTable(
 		id: cuid().primaryKey(),
 		userId: userIdFk(),
 		name: text('name').notNull(),
-		type: text('type', { enum: ['cash', 'bank', 'credit', 'wallet', 'other'] }).notNull(),
+		type: text('type', { enum: ['cash', 'bank', 'credit', 'wallet', 'savings', 'other'] }).notNull(),
 		currency: text('currency').notNull().default('IDR'),
 		initialBalanceCents: integer('initial_balance_cents', { mode: 'number' }).notNull().default(0),
 		color: text('color'),
@@ -67,6 +67,7 @@ export const transactions = sqliteTable(
 		kind: text('kind', { enum: ['income', 'expense', 'transfer'] }).notNull(),
 		note: text('note'),
 		occurredAt: integer('occurred_at', { mode: 'number' }).notNull(),
+		isSeed: integer('is_seed', { mode: 'boolean' }).notNull().default(false),
 		createdAt: epochMsNow('created_at'),
 		updatedAt: epochMsNow('updated_at')
 	},

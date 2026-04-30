@@ -37,3 +37,25 @@ export function formatCentsAsCurrency(cents: number, currency: string): string {
 		maximumFractionDigits: 0
 	}).format(cents / 100);
 }
+
+/**
+ * Compact currency formatting for tight UI (e.g. "Rp 9.9M", "Rp 1.2B", "Rp 350K").
+ * Falls back to full Rp formatting for amounts < 10_000 IDR.
+ */
+export function formatCentsCompact(cents: number, currency: string = 'IDR'): string {
+	const v = Math.trunc(cents / 100);
+	const sign = v < 0 ? '-' : '';
+	const abs = Math.abs(v);
+	const prefix = currency === 'IDR' ? 'Rp ' : '';
+	if (abs < 10_000) {
+		return `${sign}${prefix}${abs.toLocaleString('id-ID')}`;
+	}
+	const round = (n: number) => {
+		if (n >= 100) return Math.round(n).toString();
+		const r = Math.round(n * 10) / 10;
+		return r.toString();
+	};
+	if (abs >= 1_000_000_000) return `${sign}${prefix}${round(abs / 1_000_000_000)}B`;
+	if (abs >= 1_000_000) return `${sign}${prefix}${round(abs / 1_000_000)}M`;
+	return `${sign}${prefix}${round(abs / 1_000)}K`;
+}
