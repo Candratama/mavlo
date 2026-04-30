@@ -104,7 +104,7 @@
 		{id}
 		type="text"
 		inputmode="numeric"
-		pattern="[0-9]*"
+		pattern="[0-9.]*"
 		autocomplete="off"
 		value={display}
 		oninput={onInput}
