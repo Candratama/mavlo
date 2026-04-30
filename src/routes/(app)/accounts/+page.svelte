@@ -23,12 +23,10 @@
 		CreditCard,
 		PiggyBank,
 		CircleEllipsis,
-		GripVertical,
 		ArrowUp,
 		ArrowDown,
 		Lock
 	} from 'lucide-svelte';
-	import { dndzone } from 'svelte-dnd-action';
 	import type { Component } from 'svelte';
 	import { formatCentsAsCurrency, formatCentsCompact } from '$lib/utils/money.js';
 	import { notify } from '$lib/utils/toast.js';
@@ -102,29 +100,7 @@
 		editOpen = true;
 	};
 
-
-	const sourceAccounts = $derived(includeArchived ? data.allAccounts : data.accounts);
-	let visibleAccounts = $state<AccountRow[]>([]);
-	$effect(() => {
-		visibleAccounts = sourceAccounts;
-	});
-
-	async function persistOrder(ids: string[]) {
-		const fd = new FormData();
-		fd.set('ids', ids.join(','));
-		const res = await fetch('?/reorder', { method: 'POST', body: fd });
-		if (!res.ok) {
-			notify.error('Could not save order');
-		}
-	}
-
-	let dndDisabled = $state(true);
-	function enableDrag() {
-		dndDisabled = false;
-	}
-	function disableDrag() {
-		dndDisabled = true;
-	}
+	const visibleAccounts = $derived(includeArchived ? data.allAccounts : data.accounts);
 </script>
 
 <svelte:head><title>Accounts — Mavlo</title></svelte:head>
@@ -295,21 +271,7 @@
 {/if}
 
 {#if visibleAccounts.length > 0}
-	<ul
-		class="space-y-2 md:hidden"
-		use:dndzone={{
-			items: visibleAccounts,
-			flipDurationMs: 150,
-			dropTargetStyle: {},
-			dragDisabled: dndDisabled
-		}}
-		onconsider={(e) => (visibleAccounts = e.detail.items)}
-		onfinalize={(e) => {
-			visibleAccounts = e.detail.items;
-			persistOrder(visibleAccounts.map((a) => a.id));
-			disableDrag();
-		}}
-	>
+	<ul class="space-y-2 md:hidden">
 		{#each visibleAccounts as account (account.id)}
 			{@const IconComp = iconForType(account.type)}
 			{@const color = account.color || '#3b82f6'}
@@ -328,17 +290,6 @@
 					class="pointer-events-none absolute -right-10 -bottom-10 size-32 rounded-full opacity-20 blur-2xl"
 					style="background: {color}"
 				></div>
-
-				<button
-					type="button"
-					tabindex="-1"
-					aria-label="Drag to reorder"
-					onpointerdown={enableDrag}
-					ontouchstart={enableDrag}
-					class="text-muted-foreground relative shrink-0 cursor-grab touch-none self-center active:cursor-grabbing"
-				>
-					<GripVertical class="size-4" />
-				</button>
 
 				<div class="relative flex min-w-0 flex-1 flex-col gap-3">
 					<div class="flex items-start justify-between gap-2">
@@ -407,11 +358,7 @@
 {/if}
 
 <div class="mt-6 flex justify-center">
-	<Button
-		variant="ghost"
-		size="sm"
-		href={includeArchived ? '/accounts' : '/accounts?archived=1'}
-	>
+	<Button variant="ghost" size="sm" href={includeArchived ? '/accounts' : '/accounts?archived=1'}>
 		{includeArchived ? 'Hide archived' : 'Show archived'}
 	</Button>
 </div>
@@ -630,7 +577,8 @@
 				<p class="text-muted-foreground text-xs">
 					{editAdjustCents > currentBalance
 						? `+${formatBalance(editAdjustCents - currentBalance, account.currency)}`
-						: `-${formatBalance(currentBalance - editAdjustCents, account.currency)}`} adjustment will be recorded as a transaction
+						: `-${formatBalance(currentBalance - editAdjustCents, account.currency)}`} adjustment will
+					be recorded as a transaction
 				</p>
 			{/if}
 		</div>
@@ -717,4 +665,3 @@
 		</Sheet.Root>
 	{/if}
 {/if}
-

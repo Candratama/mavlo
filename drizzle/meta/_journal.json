@@ -57,6 +57,13 @@
       "when": 1777558000000,
       "tag": "0007_add_is_seed",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1777559000000,
+      "tag": "0008_drop_accounts_sort_order",
+      "breakpoints": true
     }
   ]
 }

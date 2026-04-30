@@ -1,4 +1,4 @@
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, sql } from 'drizzle-orm';
 import { type DrizzleD1Database } from 'drizzle-orm/d1';
 import { type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { accounts } from '$lib/server/db/schema';
@@ -7,15 +7,20 @@ import type { AccountCreateInput, AccountUpdateInput } from '$lib/validation/acc
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
 
+const typeOrder = sql`CASE ${accounts.type}
+	WHEN 'cash' THEN 0
+	WHEN 'bank' THEN 1
+	WHEN 'wallet' THEN 2
+	WHEN 'credit' THEN 3
+	WHEN 'savings' THEN 4
+	ELSE 5
+END`;
+
 export async function listAccounts(db: Db, userId: string, opts: { includeArchived: boolean }) {
 	const where = opts.includeArchived
 		? eq(accounts.userId, userId)
 		: and(eq(accounts.userId, userId), eq(accounts.archived, false));
-	return db
-		.select()
-		.from(accounts)
-		.where(where)
-		.orderBy(asc(accounts.sortOrder), asc(accounts.name));
+	return db.select().from(accounts).where(where).orderBy(typeOrder, asc(accounts.name));
 }
 
 export async function getAccount(db: Db, userId: string, id: string) {
@@ -76,15 +81,4 @@ export async function unarchiveAccount(db: Db, userId: string, id: string) {
 		.where(and(eq(accounts.userId, userId), eq(accounts.id, id)))
 		.returning();
 	return row ?? null;
-}
-
-export async function reorderAccounts(db: Db, userId: string, orderedIds: string[]): Promise<void> {
-	await Promise.all(
-		orderedIds.map((id, idx) =>
-			db
-				.update(accounts)
-				.set({ sortOrder: idx, updatedAt: Date.now() })
-				.where(and(eq(accounts.userId, userId), eq(accounts.id, id)))
-		)
-	);
 }

@@ -14,10 +14,10 @@ beforeEach(() => {
 	h = createTestDb({ tables: ['accounts', 'categories', 'transactions'] });
 	const now = Date.now();
 	h.sqlite
-		.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
+		.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
 		.run('acc1', h.userId, 'Cash', 'cash', 'IDR', 0, now, now);
 	h.sqlite
-		.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
+		.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
 		.run('acc2', h.otherUserId, 'Other Cash', 'cash', 'IDR', 0, now, now);
 	h.sqlite
 		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
@@ -120,7 +120,7 @@ describe('transactions repository', () => {
 	it('createTransaction persists transferToAccountId for transfers', async () => {
 		const now = Date.now();
 		h.sqlite
-			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
+			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
 			.run('acc-bank', h.userId, 'Bank', 'bank', 'IDR', 0, now, now);
 
 		const t = await createTransaction(h.db, h.userId, {
@@ -140,10 +140,10 @@ describe('transactions repository', () => {
 	it('updateTransaction can change transferToAccountId', async () => {
 		const now = Date.now();
 		h.sqlite
-			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
+			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
 			.run('acc-bank', h.userId, 'Bank', 'bank', 'IDR', 0, now, now);
 		h.sqlite
-			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
+			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
 			.run('acc-wallet', h.userId, 'Wallet', 'wallet', 'IDR', 0, now, now);
 
 		const t = await createTransaction(h.db, h.userId, {
