@@ -24,12 +24,16 @@
 	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
 	import { CATEGORY_ICONS, getIconByName } from '$lib/utils/category-icons.js';
 	import { MediaQuery } from 'svelte/reactivity';
+	import { page } from '$app/state';
 
 	let { data, form } = $props();
 
 	const isDesktop = new MediaQuery('(min-width: 768px)');
 
-	type CategoryRow = (typeof data.categories)[number];
+	const includeArchived = $derived(page.url.searchParams.get('archived') === '1');
+	const cats = $derived(includeArchived ? data.allCategories : data.categories);
+
+	type CategoryRow = (typeof data.allCategories)[number];
 
 	let createOpen = $state(false);
 	let editOpen = $state(false);
@@ -86,16 +90,14 @@
 		{ value: 'income', label: 'Income' }
 	];
 
-	let visibleCategories = $state<CategoryRow[]>(data.categories.filter((c) => c.kind === viewKind));
-	let expenseCategories = $state<CategoryRow[]>(
-		data.categories.filter((c) => c.kind === 'expense')
-	);
-	let incomeCategories = $state<CategoryRow[]>(data.categories.filter((c) => c.kind === 'income'));
+	let visibleCategories = $state<CategoryRow[]>(cats.filter((c) => c.kind === viewKind));
+	let expenseCategories = $state<CategoryRow[]>(cats.filter((c) => c.kind === 'expense'));
+	let incomeCategories = $state<CategoryRow[]>(cats.filter((c) => c.kind === 'income'));
 
 	$effect(() => {
-		visibleCategories = data.categories.filter((c) => c.kind === viewKind);
-		expenseCategories = data.categories.filter((c) => c.kind === 'expense');
-		incomeCategories = data.categories.filter((c) => c.kind === 'income');
+		visibleCategories = cats.filter((c) => c.kind === viewKind);
+		expenseCategories = cats.filter((c) => c.kind === 'expense');
+		incomeCategories = cats.filter((c) => c.kind === 'income');
 	});
 
 	async function persistOrder(ids: string[]) {
@@ -386,9 +388,9 @@
 	<Button
 		variant="ghost"
 		size="sm"
-		href={data.includeArchived ? '/categories' : '/categories?archived=1'}
+		href={includeArchived ? '/categories' : '/categories?archived=1'}
 	>
-		{data.includeArchived ? 'Hide archived' : 'Show archived'}
+		{includeArchived ? 'Hide archived' : 'Show archived'}
 	</Button>
 </div>
 

@@ -56,7 +56,7 @@ export const load: LayoutServerLoad = async (event) => {
 
 	const [
 		accounts,
-		categories,
+		allCategories,
 		balances,
 		periodSummary,
 		transactions,
@@ -67,7 +67,7 @@ export const load: LayoutServerLoad = async (event) => {
 		monthlyIncomeExpense
 	] = await Promise.all([
 		listAccounts(db, user.id, { includeArchived: true }),
-		listCategories(db, user.id, { includeArchived: false }),
+		listCategories(db, user.id, { includeArchived: true }),
 		computeAccountBalances(db, user.id),
 		computeAccountPeriodSummary(db, user.id, cycleFromMs, cycleToMs),
 		listTransactions(db, user.id, {}),
@@ -83,6 +83,8 @@ export const load: LayoutServerLoad = async (event) => {
 			computeMonthlyIncomeExpense(db, user.id, 6, cycle.periodMonth)
 		)
 	]);
+
+	const categories = allCategories.filter((c) => !c.archived);
 
 	const allAccountsWithBalance = accounts.map((a) => {
 		const s = periodSummary.get(a.id);
@@ -186,6 +188,7 @@ export const load: LayoutServerLoad = async (event) => {
 		accounts: accountsWithBalance,
 		allAccounts: allAccountsWithBalance,
 		categories,
+		allCategories,
 		transactions,
 		// Budgets page
 		budgets: budgetList,

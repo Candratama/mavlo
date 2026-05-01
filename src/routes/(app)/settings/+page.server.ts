@@ -5,12 +5,7 @@ import { getDb } from '$lib/server/db';
 import { users } from '$lib/server/db/auth.schema';
 import { updatePreferences } from '$lib/server/repositories/preferences';
 import { preferencesUpdateSchema } from '$lib/validation/preferences';
-import type { Actions, PageServerLoad } from './$types';
-
-export const load: PageServerLoad = async () => {
-	// Preferences come from (app)/+layout.server.ts via parent data.
-	return {};
-};
+import type { Actions } from './$types';
 
 const formObject = (fd: FormData) => Object.fromEntries(fd.entries());
 
