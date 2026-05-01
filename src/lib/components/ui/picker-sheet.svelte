@@ -32,6 +32,7 @@
 		title?: string;
 		searchable?: boolean;
 		disabled?: boolean;
+		showSelectedDescription?: boolean;
 		id?: string;
 		class?: string;
 	};
@@ -45,6 +46,7 @@
 		title = 'Select',
 		searchable = false,
 		disabled = false,
+		showSelectedDescription = false,
 		id,
 		class: className = ''
 	}: Props = $props();
@@ -182,7 +184,7 @@
 						{/if}
 						<span class="flex min-w-0 flex-1 items-baseline gap-2">
 							<span class="truncate">{selected?.label ?? placeholder}</span>
-							{#if selected?.description}
+							{#if selected?.description && showSelectedDescription}
 								<span class="text-muted-foreground shrink-0 text-xs tabular-nums">
 									{selected.description}
 								</span>
@@ -215,7 +217,7 @@
 						{/if}
 						<span class="flex min-w-0 flex-1 items-baseline gap-2">
 							<span class="truncate">{selected?.label ?? placeholder}</span>
-							{#if selected?.description}
+							{#if selected?.description && showSelectedDescription}
 								<span class="text-muted-foreground shrink-0 text-xs tabular-nums">
 									{selected.description}
 								</span>

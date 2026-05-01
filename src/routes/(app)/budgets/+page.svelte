@@ -138,7 +138,7 @@
 	<div class="grid grid-cols-3 gap-3 text-xs">
 		<div>
 			<div class="text-muted-foreground flex items-center gap-1 tracking-wider uppercase">
-				<Wallet class="size-3" /> Total
+				<Wallet class="size-3" /> Balance
 			</div>
 			<div class="mt-1 font-semibold tabular-nums">{formatCents(alloc.totalCashCents)}</div>
 		</div>

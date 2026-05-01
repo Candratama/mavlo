@@ -341,6 +341,7 @@
 				name="accountId"
 				placeholder="Choose account"
 				title="Select account"
+				showSelectedDescription
 			/>
 		</div>
 
@@ -353,6 +354,7 @@
 					name="transferToAccountId"
 					placeholder="Choose destination"
 					title="Select destination"
+					showSelectedDescription
 				/>
 			</div>
 		{:else}

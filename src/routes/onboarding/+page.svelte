@@ -26,9 +26,15 @@
 	let step = $state<1 | 2 | 3>(1);
 	let pending = $state(false);
 
+	const CURRENCY_TO_LOCALE: Record<string, string> = {
+		IDR: 'id-ID',
+		USD: 'en-US',
+		EUR: 'en-GB'
+	};
+
 	let currency = $state('IDR');
 	let timezone = $state('Asia/Jakarta');
-	let locale = $state('id-ID');
+	const locale = $derived(CURRENCY_TO_LOCALE[currency] ?? 'en-US');
 
 	let accountName = $state('');
 	let accountType = $state<'cash' | 'bank' | 'credit' | 'wallet' | 'savings' | 'other'>('cash');
@@ -117,12 +123,6 @@
 		<div class="space-y-2">
 			<Label>Currency</Label>
 			<SegmentedControl options={currencyOptions} bind:value={currency} ariaLabel="Currency" />
-		</div>
-
-		<div class="space-y-1.5">
-			<Label for="locale">Locale</Label>
-			<Input id="locale" bind:value={locale} maxlength={20} />
-			<p class="text-muted-foreground text-xs">Date & number format (e.g. id-ID).</p>
 		</div>
 
 		<div class="space-y-1.5">

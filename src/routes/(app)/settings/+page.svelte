@@ -75,24 +75,26 @@
 		{ value: 'NZD', label: 'NZD', description: 'New Zealand Dollar' }
 	];
 
-	const localeItems: PickerItem[] = [
-		{ value: 'id-ID', label: 'id-ID', description: 'Indonesian (Indonesia)' },
-		{ value: 'en-US', label: 'en-US', description: 'English (US)' },
-		{ value: 'en-GB', label: 'en-GB', description: 'English (UK)' },
-		{ value: 'en-AU', label: 'en-AU', description: 'English (Australia)' },
-		{ value: 'en-SG', label: 'en-SG', description: 'English (Singapore)' },
-		{ value: 'ms-MY', label: 'ms-MY', description: 'Malay (Malaysia)' },
-		{ value: 'ja-JP', label: 'ja-JP', description: 'Japanese (Japan)' },
-		{ value: 'zh-CN', label: 'zh-CN', description: 'Chinese (China)' },
-		{ value: 'zh-HK', label: 'zh-HK', description: 'Chinese (Hong Kong)' },
-		{ value: 'ko-KR', label: 'ko-KR', description: 'Korean (Korea)' },
-		{ value: 'th-TH', label: 'th-TH', description: 'Thai (Thailand)' },
-		{ value: 'vi-VN', label: 'vi-VN', description: 'Vietnamese (Vietnam)' },
-		{ value: 'fr-FR', label: 'fr-FR', description: 'French (France)' },
-		{ value: 'de-DE', label: 'de-DE', description: 'German (Germany)' },
-		{ value: 'es-ES', label: 'es-ES', description: 'Spanish (Spain)' },
-		{ value: 'pt-BR', label: 'pt-BR', description: 'Portuguese (Brazil)' }
-	];
+	const CURRENCY_TO_LOCALE: Record<string, string> = {
+		IDR: 'id-ID',
+		USD: 'en-US',
+		EUR: 'en-GB',
+		SGD: 'en-SG',
+		MYR: 'ms-MY',
+		JPY: 'ja-JP',
+		GBP: 'en-GB',
+		AUD: 'en-AU',
+		CNY: 'zh-CN',
+		KRW: 'ko-KR',
+		THB: 'th-TH',
+		HKD: 'zh-HK',
+		PHP: 'en-PH',
+		VND: 'vi-VN',
+		INR: 'en-IN',
+		CHF: 'de-CH',
+		CAD: 'en-CA',
+		NZD: 'en-NZ'
+	};
 
 	const timezoneItems: PickerItem[] = [
 		{ value: 'Asia/Jakarta', label: 'Asia/Jakarta', description: 'WIB · UTC+7' },
@@ -126,7 +128,7 @@
 	];
 
 	let selectedCurrency = $state<string>(prefs.currency ?? 'IDR');
-	let selectedLocale = $state<string>(prefs.locale ?? 'id-ID');
+	const derivedLocale = $derived(CURRENCY_TO_LOCALE[selectedCurrency] ?? 'en-US');
 	let selectedTimezone = $state<string>(prefs.timezone ?? 'Asia/Jakarta');
 
 	type Theme = 'light' | 'dark' | 'system';
@@ -161,7 +163,7 @@
 	$effect(() => {
 		// Track all preference fields
 		void selectedCurrency;
-		void selectedLocale;
+		void derivedLocale;
 		void selectedTimezone;
 		void selectedTheme;
 		void selectedWeekStart;
@@ -417,28 +419,18 @@
 								/>
 							</div>
 							<div class="space-y-1">
-								<Label>Locale</Label>
+								<Label>Timezone</Label>
 								<PickerSheet
-									items={localeItems}
-									bind:value={selectedLocale}
-									name="locale"
-									placeholder="Select locale"
-									title="Locale"
+									items={timezoneItems}
+									bind:value={selectedTimezone}
+									name="timezone"
+									placeholder="Select timezone"
+									title="Timezone"
 									searchable
 								/>
 							</div>
 						</div>
-						<div class="space-y-1">
-							<Label>Timezone</Label>
-							<PickerSheet
-								items={timezoneItems}
-								bind:value={selectedTimezone}
-								name="timezone"
-								placeholder="Select timezone"
-								title="Timezone"
-								searchable
-							/>
-						</div>
+						<input type="hidden" name="locale" value={derivedLocale} />
 						<div class="space-y-1">
 							<Label>Theme</Label>
 							<SegmentedControl options={themeOptions} bind:value={selectedTheme} name="theme" />
