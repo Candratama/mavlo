@@ -6,7 +6,16 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as Card from '$lib/components/ui/card';
-	import { Sun, Moon, Monitor, LogOut, User as UserIcon, Mail, Loader2, Camera } from 'lucide-svelte';
+	import {
+		Sun,
+		Moon,
+		Monitor,
+		LogOut,
+		User as UserIcon,
+		Mail,
+		Loader2,
+		Camera
+	} from 'lucide-svelte';
 	import { notify } from '$lib/utils/toast.js';
 	import SegmentedControl, {
 		type SegmentedOption

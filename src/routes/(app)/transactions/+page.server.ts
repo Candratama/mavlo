@@ -61,7 +61,7 @@ export const actions: Actions = {
 		}
 		const sourceAccount = await getAccount(db, user.id, parsed.data.accountId);
 		if (!sourceAccount) {
-			return fail(400, { action: 'create', message: 'Akun sumber tidak ditemukan' });
+			return fail(400, { action: 'create', message: 'Source account not found' });
 		}
 		if (
 			sourceAccount.type === 'savings' &&
@@ -69,7 +69,7 @@ export const actions: Actions = {
 		) {
 			return fail(400, {
 				action: 'create',
-				message: 'Akun savings cuma bisa transfer, gak bisa income/expense'
+				message: 'Savings accounts only support transfers, not income/expense'
 			});
 		}
 		if (parsed.data.kind === 'expense' || parsed.data.kind === 'transfer') {
@@ -78,7 +78,7 @@ export const actions: Actions = {
 			if (parsed.data.amountCents > sourceBalance) {
 				return fail(400, {
 					action: 'create',
-					message: 'Saldo gak cukup di akun sumber'
+					message: 'Insufficient balance in source account'
 				});
 			}
 		}
@@ -103,7 +103,7 @@ export const actions: Actions = {
 		}
 		const sourceAccount = await getAccount(db, user.id, parsed.data.accountId);
 		if (!sourceAccount) {
-			return fail(400, { action: 'update', message: 'Akun sumber tidak ditemukan' });
+			return fail(400, { action: 'update', message: 'Source account not found' });
 		}
 		if (
 			sourceAccount.type === 'savings' &&
@@ -111,7 +111,7 @@ export const actions: Actions = {
 		) {
 			return fail(400, {
 				action: 'update',
-				message: 'Akun savings cuma bisa transfer, gak bisa income/expense'
+				message: 'Savings accounts only support transfers, not income/expense'
 			});
 		}
 		if (parsed.data.kind === 'expense' || parsed.data.kind === 'transfer') {
@@ -123,7 +123,7 @@ export const actions: Actions = {
 				else if (old.kind === 'income') available -= old.amountCents;
 			}
 			if (parsed.data.amountCents > available) {
-				return fail(400, { action: 'update', message: 'Saldo gak cukup di akun sumber' });
+				return fail(400, { action: 'update', message: 'Insufficient balance in source account' });
 			}
 		}
 		const updated = await updateTransaction(db, user.id, parsed.data);
@@ -142,7 +142,7 @@ export const actions: Actions = {
 		if ((user as { isDemo?: boolean }).isDemo && existing.isSeed) {
 			return fail(403, {
 				action: 'delete',
-				message: 'Demo: data dummy gak bisa dihapus. Hapus transaksi yg lo bikin sendiri aja.'
+				message: 'Demo: seed data cannot be deleted. Only your own transactions can be removed.'
 			});
 		}
 		const deleted = await deleteTransaction(db, user.id, parsed.data.id);

@@ -1,6 +1,12 @@
 import { type DrizzleD1Database } from 'drizzle-orm/d1';
 import * as schema from '$lib/server/db/schema';
-import { accounts, categories, transactions, budgets, userPreferences } from '$lib/server/db/schema';
+import {
+	accounts,
+	categories,
+	transactions,
+	budgets,
+	userPreferences
+} from '$lib/server/db/schema';
 import { DEFAULT_CATEGORIES } from '$lib/server/onboarding-defaults';
 
 type Db = DrizzleD1Database<typeof schema>;
@@ -57,7 +63,7 @@ export async function seedDemoData(db: Db, userId: string): Promise<void> {
 			},
 			{
 				userId,
-				name: 'Tabungan',
+				name: 'Savings',
 				type: 'savings',
 				currency: 'IDR',
 				initialBalanceCents: 1500000000,
@@ -71,7 +77,7 @@ export async function seedDemoData(db: Db, userId: string): Promise<void> {
 			bca: seedAccounts.find((a) => a.name === 'BCA')!.id,
 			cash: seedAccounts.find((a) => a.name === 'Cash')!.id,
 			gopay: seedAccounts.find((a) => a.name === 'GoPay')!.id,
-			savings: seedAccounts.find((a) => a.name === 'Tabungan')!.id
+			savings: seedAccounts.find((a) => a.name === 'Savings')!.id
 		},
 		categoryIds: new Map()
 	};
@@ -96,20 +102,20 @@ export async function seedDemoData(db: Db, userId: string): Promise<void> {
 		{
 			userId,
 			accountId: seededIds.accountIds.bca,
-			categoryId: cat('Gaji'),
+			categoryId: cat('Salary'),
 			amountCents: 750000000,
 			kind: 'income',
-			note: 'Gajian bulan ini',
+			note: 'Monthly salary',
 			occurredAt: daysAgoMs(2),
 			isSeed: true
 		},
 		{
 			userId,
 			accountId: seededIds.accountIds.cash,
-			categoryId: cat('Makan'),
+			categoryId: cat('Food'),
 			amountCents: 5500000,
 			kind: 'expense',
-			note: 'Makan siang',
+			note: 'Lunch',
 			occurredAt: todayMs(),
 			isSeed: true
 		},
@@ -119,37 +125,37 @@ export async function seedDemoData(db: Db, userId: string): Promise<void> {
 			categoryId: cat('Transport'),
 			amountCents: 2500000,
 			kind: 'expense',
-			note: 'Gojek ke kantor',
+			note: 'Gojek to office',
 			occurredAt: todayMs(),
 			isSeed: true
 		},
 		{
 			userId,
 			accountId: seededIds.accountIds.bca,
-			categoryId: cat('Tagihan'),
+			categoryId: cat('Bills'),
 			amountCents: 35000000,
 			kind: 'expense',
-			note: 'Listrik + internet',
+			note: 'Electricity + internet',
 			occurredAt: daysAgoMs(1),
 			isSeed: true
 		},
 		{
 			userId,
 			accountId: seededIds.accountIds.bca,
-			categoryId: cat('Hiburan'),
+			categoryId: cat('Entertainment'),
 			amountCents: 12000000,
 			kind: 'expense',
-			note: 'Nonton bioskop',
+			note: 'Movie night',
 			occurredAt: daysAgoMs(3),
 			isSeed: true
 		},
 		{
 			userId,
 			accountId: seededIds.accountIds.cash,
-			categoryId: cat('Belanja'),
+			categoryId: cat('Shopping'),
 			amountCents: 18500000,
 			kind: 'expense',
-			note: 'Indomaret',
+			note: 'Groceries',
 			occurredAt: daysAgoMs(4),
 			isSeed: true
 		},
@@ -160,7 +166,7 @@ export async function seedDemoData(db: Db, userId: string): Promise<void> {
 			transferToAccountId: seededIds.accountIds.savings,
 			amountCents: 200000000,
 			kind: 'transfer',
-			note: 'Setor tabungan',
+			note: 'Savings deposit',
 			occurredAt: daysAgoMs(5),
 			isSeed: true
 		}
@@ -168,10 +174,10 @@ export async function seedDemoData(db: Db, userId: string): Promise<void> {
 
 	const periodMonth = periodMonthStr();
 	const budgetSeeds = [
-		{ name: 'Makan', limitCents: 200000000 },
+		{ name: 'Food', limitCents: 200000000 },
 		{ name: 'Transport', limitCents: 80000000 },
-		{ name: 'Belanja', limitCents: 150000000 },
-		{ name: 'Tagihan', limitCents: 120000000 }
+		{ name: 'Shopping', limitCents: 150000000 },
+		{ name: 'Bills', limitCents: 120000000 }
 	];
 	const budgetRows = budgetSeeds
 		.map((b) => ({ categoryId: cat(b.name), limitCents: b.limitCents }))

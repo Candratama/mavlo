@@ -95,39 +95,39 @@
 		{
 			icon: '/icons/wallet.png',
 			title: 'Multi-account',
-			body: 'Cash, bank, e-wallet, kartu kredit. Saldo lo nyatu di satu tempat.'
+			body: 'Cash, bank, e-wallet, credit card. All your balances in one place.'
 		},
 		{
 			icon: '/icons/dollar.png',
-			title: 'Budget per kategori',
-			body: 'Pasang limit bulanan. Bar progres + warning pas lo mau kebablasan.'
+			title: 'Budget per category',
+			body: 'Set monthly limits. Progress bars and warnings before you overspend.'
 		},
 		{
 			icon: '/icons/chart.png',
-			title: 'Visualisasi pengeluaran',
-			body: 'Donut chart, daily flow, income vs expense 6 bulan terakhir.'
+			title: 'Spending visualizations',
+			body: 'Donut chart, daily flow, income vs expense over the last 6 months.'
 		},
 		{
 			icon: '/icons/mobile.png',
 			title: 'PWA-first, offline-friendly',
-			body: 'Install di home screen. Buka tanpa internet. Kerasa kayak app native.'
+			body: 'Install on your home screen. Open without internet. Feels like a native app.'
 		}
 	] as const;
 
 	const marqueeWords = [
-		'duit gue habis ke mana?',
-		'lupa beli apa aja',
-		'masa fitur dasar bayar?',
-		'yaudah bikin sendiri',
-		'gratis selamanya'
+		'where did my money go?',
+		'forgot what I bought',
+		'why pay for the basics?',
+		'so I built my own',
+		'free forever'
 	];
 </script>
 
 <svelte:head>
-	<title>Mavlo — Lacak Duit Lo Tanpa Bayar</title>
+	<title>Mavlo — Track Your Money for Free</title>
 	<meta
 		name="description"
-		content="Catat transaksi, atur budget per kategori, dan tau ke mana duit lo pergi. Gratis selamanya, tanpa fitur premium."
+		content="Log transactions, set per-category budgets, and see where your money goes. Free forever, no premium tier."
 	/>
 </svelte:head>
 
@@ -206,16 +206,16 @@
 				data-anim="fade-up"
 				class="mavlo-headline text-5xl font-black tracking-tighter sm:text-7xl"
 			>
-				Lacak duit lo<br />tanpa harus bayar.
+				Track your money<br />without paying a cent.
 			</h1>
 
 			<p
 				data-anim="fade-up"
 				class="text-muted-foreground mx-auto mt-8 max-w-xl text-base leading-relaxed sm:text-lg"
 			>
-				Catat pengeluaran 5 detik. Atur budget per kategori. Tau persis
-				<span class="text-foreground font-medium italic">"duit gue habis ke mana?"</span> — tanpa bayar
-				sepeser pun.
+				Log expenses in 5 seconds. Set budgets by category. Finally know
+				<span class="text-foreground font-medium italic">"where did my money go?"</span> — without paying
+				a thing.
 			</p>
 
 			<div data-anim="fade-up" class="mt-10 flex flex-wrap items-center justify-center gap-4">
@@ -223,14 +223,14 @@
 					href={resolve('/sign-up')}
 					class="mavlo-pill group text-foreground flex items-center gap-3 rounded-full px-10 py-5 text-sm font-bold transition-transform duration-300 ease-out hover:-translate-y-1 md:text-base"
 				>
-					Mulai gratis
+					Start free
 					<ArrowRight class="size-4 transition-transform duration-300 group-hover:translate-x-1" />
 				</a>
 				<a
 					href={resolve('/sign-in')}
 					class="mavlo-pill text-muted-foreground hover:text-foreground rounded-full px-10 py-5 text-sm font-bold transition-transform duration-300 ease-out hover:-translate-y-1 md:text-base"
 				>
-					Udah punya akun
+					I have an account
 				</a>
 			</div>
 		</div>
@@ -243,7 +243,7 @@
 				<span class="text-primary/80 text-[10px] font-black tracking-[0.3em]">02</span>
 				<span class="from-primary/40 h-px flex-1 bg-gradient-to-r to-transparent"></span>
 				<span class="text-muted-foreground text-[10px] font-bold tracking-[0.3em] uppercase">
-					Coba langsung
+					Try it now
 				</span>
 			</div>
 
@@ -258,11 +258,11 @@
 				></div>
 				<div class="relative">
 					<h2 class="mavlo-headline text-3xl font-black tracking-tighter sm:text-4xl">
-						Coba app aslinya.<br />Gak perlu daftar.
+						Try the real app.<br />No sign-up needed.
 					</h2>
 					<p class="text-muted-foreground mt-4 max-w-md text-sm leading-relaxed sm:text-base">
-						Login ke <span class="text-foreground font-medium">demo account</span> dengan data
-						contoh. Bisa tambah & edit transaksi. Akun demo auto-hapus dalam 24 jam.
+						Sign in to a <span class="text-foreground font-medium">demo account</span> with sample data.
+						Add and edit transactions. Demo accounts auto-delete after 24 hours.
 					</p>
 					<div class="mt-8">
 						<form method="POST" action="/api/demo-login">
@@ -271,8 +271,10 @@
 								class="mavlo-pill group text-foreground inline-flex items-center gap-2 rounded-full px-8 py-4 text-sm font-bold transition-transform duration-300 ease-out hover:-translate-y-0.5"
 							>
 								<PlayCircle class="size-4" />
-								Buka demo
-								<ArrowRight class="size-4 transition-transform duration-300 group-hover:translate-x-1" />
+								Open demo
+								<ArrowRight
+									class="size-4 transition-transform duration-300 group-hover:translate-x-1"
+								/>
 							</button>
 						</form>
 					</div>
@@ -307,7 +309,7 @@
 				<span class="text-primary/80 text-[10px] font-black tracking-[0.3em]">01</span>
 				<span class="from-primary/40 h-px flex-1 bg-gradient-to-r to-transparent"></span>
 				<span class="text-muted-foreground text-[10px] font-bold tracking-[0.3em] uppercase">
-					Cerita di balik Mavlo
+					The story behind Mavlo
 				</span>
 			</div>
 
@@ -322,31 +324,31 @@
 				></div>
 				<div class="relative space-y-6 text-base leading-relaxed sm:text-lg">
 					<p data-stagger-item>
-						Gue sering bingung tiap akhir bulan. Saldo tinggal dikit, tapi lupa beli apa aja. Udah
-						coba beberapa app pelacak keuangan yang populer — semuanya bagus, tapi <span
+						I'd hit the end of every month confused. Balance was low, but I couldn't remember what I
+						bought. I tried a few popular finance trackers — all decent, but <span
 							class="text-foreground font-semibold underline decoration-rose-400/60 decoration-2 underline-offset-4"
-							>mesti bayar</span
+							>they all charge</span
 						>
-						buat fitur dasar kayak budget per kategori atau export data.
+						for basics like per-category budgets or data export.
 					</p>
 					<p data-stagger-item>
-						Yaudah, gue bikin sendiri. Fokusnya simpel:
+						So I built my own. The focus is simple:
 						<span
 							class="text-foreground font-semibold underline decoration-emerald-400/60 decoration-2 underline-offset-4"
-							>catat transaksi cepet</span
+							>fast transaction logging</span
 						>,
 						<span
 							class="text-foreground font-semibold underline decoration-cyan-400/60 decoration-2 underline-offset-4"
-							>budget per kategori</span
-						>, dan
+							>per-category budgets</span
+						>, and
 						<span
 							class="text-foreground font-semibold underline decoration-violet-400/60 decoration-2 underline-offset-4"
-							>grafik pengeluaran</span
+							>spending charts</span
 						>
-						yang enak dibaca. Tanpa fitur premium, tanpa iklan.
+						that are easy to read. No premium tier, no ads.
 					</p>
 					<p data-stagger-item class="text-muted-foreground">
-						Kalau Mavlo bantu lo juga, gue seneng banget. Pakai sebebas-bebasnya.
+						If Mavlo helps you too, that means a lot. Use it however you want.
 					</p>
 				</div>
 			</div>
@@ -360,7 +362,7 @@
 				<span class="text-primary/80 text-[10px] font-black tracking-[0.3em]">03</span>
 				<span class="from-primary/40 h-px flex-1 bg-gradient-to-r to-transparent"></span>
 				<span class="text-muted-foreground text-[10px] font-bold tracking-[0.3em] uppercase">
-					Yang lo dapet
+					What you get
 				</span>
 			</div>
 
@@ -368,7 +370,7 @@
 				data-anim="fade-up"
 				class="mavlo-headline mb-10 text-4xl font-black tracking-tighter sm:text-5xl"
 			>
-				Empat hal kecil<br />yang bikin beda.
+				Four small things<br />that make the difference.
 			</h2>
 
 			<div data-stagger class="grid gap-4 sm:grid-cols-2">
@@ -401,10 +403,9 @@
 			<div data-anim="fade-up" class="mavlo-pill flex items-center gap-4 rounded-2xl p-5 sm:p-6">
 				<img src="/icons/lock.png" alt="" class="icon-3d-emerald size-16 shrink-0" />
 				<p class="text-muted-foreground text-sm leading-relaxed sm:text-base">
-					Data lo cuma lo yang liat. Gak dijual, gak dipakai buat training AI, gak dishare ke
-					siapapun.
+					Your data is yours alone. Not sold, not used to train AI, not shared with anyone.
 					<span class="text-foreground font-medium">
-						Tujuannya cuma satu: bantu lo paham keuangan sendiri.
+						The goal is one thing: help you understand your own finances.
 					</span>
 				</p>
 			</div>
@@ -418,7 +419,7 @@
 				<span class="text-[10px] font-black tracking-[0.3em] text-rose-300/80">04</span>
 				<span class="h-px flex-1 bg-gradient-to-r from-rose-400/40 to-transparent"></span>
 				<span class="text-muted-foreground text-[10px] font-bold tracking-[0.3em] uppercase">
-					Dukungan
+					Support
 				</span>
 			</div>
 
@@ -439,13 +440,13 @@
 						class="icon-3d-rose animate-mavlo-heartbeat mx-auto mb-5 size-20"
 					/>
 					<h2 class="mavlo-headline text-3xl font-black tracking-tight sm:text-4xl">
-						Suka Mavlo? Bisa kali beliin kopi.
+						Like Mavlo? Maybe buy me a coffee.
 					</h2>
 					<p
 						class="text-muted-foreground mx-auto mt-4 max-w-md text-sm leading-relaxed sm:text-base"
 					>
-						Mavlo gratis dan bakal tetep gratis. Tapi kalau bantu lo hemat ratusan ribu per bulan,
-						traktiran kecil bantu gue bayar server dan tetep waras ngembangin fitur baru.
+						Mavlo is free and will stay free. But if it saves you hundreds of thousands a month, a
+						small tip helps me pay for servers and stay sane while building new features.
 					</p>
 
 					<div class="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -455,7 +456,7 @@
 							rel="noopener noreferrer"
 							class="mavlo-pill group text-foreground inline-flex items-center gap-2 rounded-full px-8 py-4 text-sm font-bold transition-transform duration-300 ease-out hover:-translate-y-0.5"
 						>
-							Traktir di Trakteer
+							Tip on Trakteer
 							<ArrowRight
 								class="size-4 transition-transform duration-300 group-hover:translate-x-1"
 							/>
@@ -463,7 +464,7 @@
 					</div>
 
 					<p class="text-muted-foreground mt-5 text-xs">
-						Atau share Mavlo ke temen lo yang lagi pusing soal duit — itu juga ngebantu banget.
+						Or share Mavlo with a friend who's stressed about money — that helps a lot too.
 					</p>
 				</div>
 			</div>
@@ -472,12 +473,12 @@
 
 	<!-- Cinematic footer with embedded CTA -->
 	<CinematicFooter
-		ctaTitle="Siap liat ke mana duit lo pergi?"
-		ctaDescription="Tanpa kartu kredit. Tanpa langganan. Selamanya."
+		ctaTitle="Ready to see where your money goes?"
+		ctaDescription="No credit card. No subscription. Forever."
 		primaryHref="/sign-up"
-		primaryLabel="Buat akun gratis"
+		primaryLabel="Create free account"
 		secondaryHref="/sign-in"
-		secondaryLabel="Udah punya akun"
+		secondaryLabel="I have an account"
 	/>
 </div>
 

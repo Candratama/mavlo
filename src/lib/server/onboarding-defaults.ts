@@ -8,13 +8,13 @@ export type DefaultCategory = {
 };
 
 export const DEFAULT_CATEGORIES: DefaultCategory[] = [
-	{ name: 'Makan', kind: 'expense', icon: 'utensils', color: '#f59e0b' },
+	{ name: 'Food', kind: 'expense', icon: 'utensils', color: '#f59e0b' },
 	{ name: 'Transport', kind: 'expense', icon: 'car', color: '#3b82f6' },
-	{ name: 'Belanja', kind: 'expense', icon: 'shopping-bag', color: '#ec4899' },
-	{ name: 'Tagihan', kind: 'expense', icon: 'receipt', color: '#ef4444' },
-	{ name: 'Hiburan', kind: 'expense', icon: 'film', color: '#a855f7' },
-	{ name: 'Kesehatan', kind: 'expense', icon: 'heart-pulse', color: '#10b981' },
-	{ name: 'Gaji', kind: 'income', icon: 'briefcase', color: '#22c55e' },
+	{ name: 'Shopping', kind: 'expense', icon: 'shopping-bag', color: '#ec4899' },
+	{ name: 'Bills', kind: 'expense', icon: 'receipt', color: '#ef4444' },
+	{ name: 'Entertainment', kind: 'expense', icon: 'film', color: '#a855f7' },
+	{ name: 'Health', kind: 'expense', icon: 'heart-pulse', color: '#10b981' },
+	{ name: 'Salary', kind: 'income', icon: 'briefcase', color: '#22c55e' },
 	{ name: 'Bonus', kind: 'income', icon: 'gift', color: '#14b8a6' },
-	{ name: 'Lainnya', kind: 'income', icon: 'hand-coins', color: '#06b6d4' }
+	{ name: 'Other', kind: 'income', icon: 'hand-coins', color: '#06b6d4' }
 ];

@@ -18,7 +18,7 @@ export const actions: Actions = {
 		const parsed = onboardingCompleteSchema.safeParse(Object.fromEntries(fd.entries()));
 		if (!parsed.success) {
 			return fail(400, {
-				message: parsed.error.issues[0]?.message ?? 'Data tidak valid'
+				message: parsed.error.issues[0]?.message ?? 'Invalid data'
 			});
 		}
 
@@ -26,7 +26,7 @@ export const actions: Actions = {
 			await completeOnboarding(db, user.id, parsed.data);
 		} catch (err) {
 			console.error('completeOnboarding failed', err);
-			return fail(500, { message: 'Gagal menyimpan setup, coba lagi.' });
+			return fail(500, { message: 'Could not save setup. Please try again.' });
 		}
 
 		throw redirect(302, '/dashboard');

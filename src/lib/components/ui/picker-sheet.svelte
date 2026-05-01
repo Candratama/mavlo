@@ -183,7 +183,7 @@
 						<span class="flex min-w-0 flex-1 items-baseline gap-2">
 							<span class="truncate">{selected?.label ?? placeholder}</span>
 							{#if selected?.description}
-								<span class="text-muted-foreground hidden shrink-0 text-xs tabular-nums md:inline">
+								<span class="text-muted-foreground shrink-0 text-xs tabular-nums">
 									{selected.description}
 								</span>
 							{/if}
@@ -216,7 +216,7 @@
 						<span class="flex min-w-0 flex-1 items-baseline gap-2">
 							<span class="truncate">{selected?.label ?? placeholder}</span>
 							{#if selected?.description}
-								<span class="text-muted-foreground hidden shrink-0 text-xs tabular-nums md:inline">
+								<span class="text-muted-foreground shrink-0 text-xs tabular-nums">
 									{selected.description}
 								</span>
 							{/if}

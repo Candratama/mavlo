@@ -190,9 +190,7 @@
 		filteredTransactions.filter((t) => t.kind === 'income').reduce((s, t) => s + t.amountCents, 0)
 	);
 	const totalExpense = $derived(
-		filteredTransactions
-			.filter((t) => t.kind === 'expense')
-			.reduce((s, t) => s + t.amountCents, 0)
+		filteredTransactions.filter((t) => t.kind === 'expense').reduce((s, t) => s + t.amountCents, 0)
 	);
 	const txCurrency = $derived(data.accounts[0]?.currency ?? 'IDR');
 

@@ -31,9 +31,7 @@ export async function computeAccountPeriodSummary(
 	const rows = await db
 		.select()
 		.from(transactions)
-		.where(
-			and(eq(transactions.userId, userId), between(transactions.occurredAt, fromMs, toMs))
-		);
+		.where(and(eq(transactions.userId, userId), between(transactions.occurredAt, fromMs, toMs)));
 
 	const out = new Map<string, AccountPeriodSummary>();
 	const bump = (accountId: string, key: 'incomeCents' | 'expenseCents', cents: number) => {

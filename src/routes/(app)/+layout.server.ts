@@ -102,8 +102,12 @@ export const load: LayoutServerLoad = async (event) => {
 		else operationalCents += a.balanceCents;
 	}
 	const assignedCents = budgetList.reduce((s, b) => s + b.limitCents, 0);
+	const remainingBudgetCents = budgetList.reduce((s, b) => {
+		const spent = budgetSpent.get(b.categoryId) ?? 0;
+		return s + Math.max(0, b.limitCents - spent);
+	}, 0);
 	const totalCashCents = savingsCents + operationalCents;
-	const allocatedCents = savingsCents + assignedCents;
+	const allocatedCents = savingsCents + remainingBudgetCents;
 
 	const spentByCategory: Record<string, number> = Object.fromEntries(budgetSpent.entries());
 
@@ -119,10 +123,7 @@ export const load: LayoutServerLoad = async (event) => {
 		.reduce((s, t) => s + t.amountCents, 0);
 	const netWorthCents = Array.from(balances.values()).reduce((s, b) => s + b, 0);
 	const budgetLimitCents = assignedCents;
-	const budgetSpentCents = budgetList.reduce(
-		(s, b) => s + (budgetSpent.get(b.categoryId) ?? 0),
-		0
-	);
+	const budgetSpentCents = budgetList.reduce((s, b) => s + (budgetSpent.get(b.categoryId) ?? 0), 0);
 
 	const accountById = new Map(accounts.map((a) => [a.id, a]));
 	const categoryById = new Map(categories.map((c) => [c.id, c]));
@@ -196,6 +197,7 @@ export const load: LayoutServerLoad = async (event) => {
 			savingsCents,
 			operationalCents,
 			assignedCents,
+			remainingBudgetCents,
 			allocatedCents,
 			unallocatedCents: totalCashCents - allocatedCents
 		},

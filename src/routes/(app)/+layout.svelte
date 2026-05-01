@@ -268,7 +268,7 @@
 	{#if data.user?.isDemo}
 		<a
 			href={resolve('/sign-up')}
-			class="border-amber-400/40 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 fixed top-3 right-3 z-50 flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-bold tracking-wider uppercase backdrop-blur-md transition-colors"
+			class="fixed top-3 right-3 z-50 flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/15 px-3 py-1.5 text-[10px] font-bold tracking-wider text-amber-300 uppercase backdrop-blur-md transition-colors hover:bg-amber-500/25"
 		>
 			<span class="size-1.5 animate-pulse rounded-full bg-amber-400"></span>
 			Demo · Daftar
@@ -276,7 +276,9 @@
 	{/if}
 
 	{#if navigating.to}
-		<div class="nav-progress pointer-events-none fixed inset-x-0 top-0 z-[60] h-0.5 overflow-hidden">
+		<div
+			class="nav-progress pointer-events-none fixed inset-x-0 top-0 z-[60] h-0.5 overflow-hidden"
+		>
 			<div class="nav-progress-bar h-full bg-emerald-400"></div>
 		</div>
 	{/if}
@@ -298,5 +300,4 @@
 			transform: translateX(100%) scaleX(0.4);
 		}
 	}
-
 </style>

@@ -26,6 +26,7 @@ vite.config.ts.timestamp-*
 .dev.vars
 
 # DB dumps
+*.sql
 remote-*.sql
 
 # Claude Code

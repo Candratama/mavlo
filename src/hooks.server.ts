@@ -36,10 +36,16 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
 		const isAuthApi = path.startsWith('/api/auth/');
 		const isSignOut = path === '/sign-out';
 		if (isFormAction && !DEMO_ALLOWED_ACTIONS.has(key)) {
-			throw error(403, 'Demo mode: cuma bisa create/update/delete transaksi. Daftar buat akses penuh.');
+			throw error(
+				403,
+				'Demo mode: only create/update/delete transactions are allowed. Sign up for full access.'
+			);
 		}
 		if (!isFormAction && !isAuthApi && !isSignOut) {
-			throw error(403, 'Demo mode: cuma bisa create/update/delete transaksi. Daftar buat akses penuh.');
+			throw error(
+				403,
+				'Demo mode: only create/update/delete transactions are allowed. Sign up for full access.'
+			);
 		}
 	}
 

@@ -55,8 +55,8 @@
 		{ value: 'bank', label: 'Bank', icon: Landmark },
 		{ value: 'wallet', label: 'E-wallet', icon: Wallet },
 		{ value: 'savings', label: 'Savings', icon: PiggyBank },
-		{ value: 'credit', label: 'Kartu', icon: CreditCard },
-		{ value: 'other', label: 'Lainnya', icon: CircleEllipsis }
+		{ value: 'credit', label: 'Card', icon: CreditCard },
+		{ value: 'other', label: 'Other', icon: CircleEllipsis }
 	] as const;
 
 	const currencyOptions = [
@@ -73,11 +73,11 @@
 <div class="mb-6 flex items-center justify-between">
 	<h1 class="mavlo-headline text-2xl font-black tracking-tight sm:text-3xl">
 		{#if step === 1}
-			Set preferensi lo
+			Set your preferences
 		{:else if step === 2}
-			Akun pertama lo
+			Your first account
 		{:else}
-			Pilih kategori
+			Choose categories
 		{/if}
 	</h1>
 	<span class="text-muted-foreground text-xs font-medium tabular-nums">{step}/3</span>
@@ -111,7 +111,7 @@
 
 	{#if step === 1}
 		<p class="text-muted-foreground text-sm">
-			Default udah di-set buat Indonesia. Lo bisa ubah nanti di Settings.
+			Defaults are set for Indonesia. You can change these later in Settings.
 		</p>
 
 		<div class="space-y-2">
@@ -122,32 +122,32 @@
 		<div class="space-y-1.5">
 			<Label for="locale">Locale</Label>
 			<Input id="locale" bind:value={locale} maxlength={20} />
-			<p class="text-muted-foreground text-xs">Format tanggal & angka (contoh: id-ID).</p>
+			<p class="text-muted-foreground text-xs">Date & number format (e.g. id-ID).</p>
 		</div>
 
 		<div class="space-y-1.5">
 			<Label for="timezone">Timezone</Label>
 			<Input id="timezone" bind:value={timezone} maxlength={60} />
-			<p class="text-muted-foreground text-xs">Contoh: Asia/Jakarta, Asia/Makassar.</p>
+			<p class="text-muted-foreground text-xs">Example: Asia/Jakarta, Asia/Makassar.</p>
 		</div>
 	{:else if step === 2}
 		<p class="text-muted-foreground text-sm">
-			Bikin minimal satu akun (dompet, rekening bank, e-wallet) buat mulai catat.
+			Create at least one account (wallet, bank, e-wallet) to start tracking.
 		</p>
 
 		<div class="space-y-1.5">
-			<Label for="account-name">Nama akun</Label>
+			<Label for="account-name">Account name</Label>
 			<Input
 				id="account-name"
 				bind:value={accountName}
-				placeholder="Cash, BCA, GoPay, dll"
+				placeholder="Cash, BCA, GoPay, etc."
 				maxlength={80}
 				required
 			/>
 		</div>
 
 		<div class="space-y-2">
-			<Label>Tipe</Label>
+			<Label>Type</Label>
 			<div class="grid grid-cols-3 gap-2 sm:grid-cols-5">
 				{#each accountTypes as t (t.value)}
 					{@const Icon = t.icon}
@@ -169,22 +169,22 @@
 		</div>
 
 		<div class="space-y-1.5">
-			<Label>Saldo awal</Label>
+			<Label>Initial balance</Label>
 			<MoneyInput name="_initialBalanceDisplay" bind:value={initialBalanceCents} placeholder="0" />
-			<p class="text-muted-foreground text-xs">Saldo sekarang di akun ini. Boleh 0.</p>
+			<p class="text-muted-foreground text-xs">Current balance in this account. Can be 0.</p>
 		</div>
 	{:else}
 		<p class="text-muted-foreground text-sm">
-			Pilih kategori yg lo butuh. Bisa edit/tambah lagi nanti.
+			Pick the categories you need. You can edit or add more later.
 		</p>
 
 		<div class="flex gap-2">
-			<Button type="button" variant="outline" size="sm" onclick={selectAll}>Pilih semua</Button>
-			<Button type="button" variant="ghost" size="sm" onclick={clearAll}>Kosongin</Button>
+			<Button type="button" variant="outline" size="sm" onclick={selectAll}>Select all</Button>
+			<Button type="button" variant="ghost" size="sm" onclick={clearAll}>Clear</Button>
 		</div>
 
 		<div class="space-y-2">
-			<p class="text-muted-foreground text-xs font-bold tracking-wider uppercase">Pengeluaran</p>
+			<p class="text-muted-foreground text-xs font-bold tracking-wider uppercase">Expenses</p>
 			<div class="grid grid-cols-2 gap-2">
 				{#each data.defaultCategories.filter((c) => c.kind === 'expense') as cat (cat.name)}
 					{@const Icon = getIconByName(cat.icon)}
@@ -195,7 +195,7 @@
 						class={cn(
 							'flex items-center gap-2 rounded-xl border p-3 text-sm transition-all',
 							active
-								? 'border-emerald-400/60 bg-emerald-400/10 text-foreground'
+								? 'text-foreground border-emerald-400/60 bg-emerald-400/10'
 								: 'border-border/60 bg-background/30 text-muted-foreground hover:border-border'
 						)}
 					>
@@ -213,7 +213,7 @@
 		</div>
 
 		<div class="space-y-2">
-			<p class="text-muted-foreground text-xs font-bold tracking-wider uppercase">Pemasukan</p>
+			<p class="text-muted-foreground text-xs font-bold tracking-wider uppercase">Income</p>
 			<div class="grid grid-cols-2 gap-2">
 				{#each data.defaultCategories.filter((c) => c.kind === 'income') as cat (cat.name)}
 					{@const Icon = getIconByName(cat.icon)}
@@ -224,7 +224,7 @@
 						class={cn(
 							'flex items-center gap-2 rounded-xl border p-3 text-sm transition-all',
 							active
-								? 'border-emerald-400/60 bg-emerald-400/10 text-foreground'
+								? 'text-foreground border-emerald-400/60 bg-emerald-400/10'
 								: 'border-border/60 bg-background/30 text-muted-foreground hover:border-border'
 						)}
 					>
@@ -255,7 +255,7 @@
 				disabled={pending}
 			>
 				<ArrowLeft class="size-4" />
-				Kembali
+				Back
 			</Button>
 		{/if}
 
@@ -266,13 +266,13 @@
 				onclick={() => (step = (step + 1) as 1 | 2 | 3)}
 				disabled={(step === 2 && !canNextFrom2) || pending}
 			>
-				Lanjut
+				Continue
 				<ArrowRight class="size-4" />
 			</Button>
 		{:else}
 			<SubmitButton {pending} class="lift ml-auto">
 				<Sparkles class="size-4" />
-				Selesai & masuk dashboard
+				Finish & go to dashboard
 			</SubmitButton>
 		{/if}
 	</div>

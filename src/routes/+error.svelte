@@ -7,16 +7,16 @@
 	const message = $derived(page.error?.message ?? 'Something went wrong');
 
 	const title = $derived.by(() => {
-		if (status === 404) return 'Halaman gak ketemu';
-		if (status === 401 || status === 403) return 'Akses ditolak';
+		if (status === 404) return 'Page not found';
+		if (status === 401 || status === 403) return 'Access denied';
 		if (status >= 500) return 'Server error';
-		return 'Ada yang error';
+		return 'Something went wrong';
 	});
 
 	const description = $derived.by(() => {
-		if (status === 404) return 'Maaf, halaman yang lo cari gak ada.';
-		if (status === 401 || status === 403) return 'Lo harus masuk dulu buat liat halaman ini.';
-		if (status >= 500) return 'Ada masalah di sisi server. Coba lagi sebentar.';
+		if (status === 404) return "Sorry, the page you're looking for doesn't exist.";
+		if (status === 401 || status === 403) return 'You need to sign in to view this page.';
+		if (status >= 500) return 'There was an issue on our end. Please try again shortly.';
 		return message;
 	});
 
@@ -47,7 +47,7 @@
 
 			<div class="mt-6 flex flex-col justify-center gap-2 sm:flex-row">
 				<Button variant="outline" onclick={goBack}>
-					<ArrowLeft class="mr-1.5 size-4" /> Balik
+					<ArrowLeft class="mr-1.5 size-4" /> Back
 				</Button>
 				<Button href="/dashboard">
 					<Home class="mr-1.5 size-4" /> Dashboard

@@ -32,8 +32,8 @@ export const POST: RequestHandler = async (event) => {
 		.where(and(eq(users.isDemo, true), lt(users.createdAt, cutoff)))
 		.returning({ id: users.id });
 
-	return new Response(
-		JSON.stringify({ deleted: deleted.length, cutoff: cutoff.toISOString() }),
-		{ status: 200, headers: { 'content-type': 'application/json' } }
-	);
+	return new Response(JSON.stringify({ deleted: deleted.length, cutoff: cutoff.toISOString() }), {
+		status: 200,
+		headers: { 'content-type': 'application/json' }
+	});
 };

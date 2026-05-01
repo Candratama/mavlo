@@ -260,16 +260,8 @@
 		<input type="hidden" name="kind" value={kind} />
 
 		<div class="space-y-1">
-			<div class="text-muted-foreground flex items-center justify-between text-xs">
-				<span>{sourceAccount?.currency ?? 'IDR'}</span>
-				{#if (kind === 'expense' || kind === 'transfer') && availableBalanceCents !== undefined && sourceAccount}
-					<span>
-						Sisa:
-						<span class={exceedsBalance ? 'text-destructive font-semibold' : 'text-foreground/80'}>
-							{formatCentsAsCurrency(availableBalanceCents, sourceAccount.currency)}
-						</span>
-					</span>
-				{/if}
+			<div class="text-muted-foreground text-xs">
+				{sourceAccount?.currency ?? 'IDR'}
 			</div>
 			<MoneyInput
 				name="amountCents"
@@ -280,7 +272,7 @@
 				class={`h-14 text-3xl font-semibold md:h-12 md:text-2xl ${exceedsBalance ? 'border-destructive focus-visible:border-destructive' : ''}`}
 			/>
 			{#if exceedsBalance}
-				<p class="text-destructive text-xs">Saldo gak cukup di akun sumber.</p>
+				<p class="text-destructive text-xs">Insufficient balance in source account.</p>
 			{/if}
 		</div>
 
@@ -380,11 +372,7 @@
 		<div
 			class="bg-background sticky bottom-0 -mx-4 border-t px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden"
 		>
-			<SubmitButton
-				{pending}
-				disabled={exceedsBalance}
-				class="h-12 w-full text-base font-semibold"
-			>
+			<SubmitButton {pending} disabled={exceedsBalance} class="h-12 w-full text-base font-semibold">
 				{mode === 'create' ? 'Save' : 'Update'}
 			</SubmitButton>
 		</div>

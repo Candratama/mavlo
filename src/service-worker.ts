@@ -43,10 +43,7 @@ sw.addEventListener('fetch', (event) => {
 
 	// SvelteKit internal data fetches (load functions, invalidateAll) — always network.
 	// Without this, mutations don't reflect until manual reload.
-	if (
-		url.pathname.endsWith('/__data.json') ||
-		url.searchParams.has('x-sveltekit-invalidated')
-	) {
+	if (url.pathname.endsWith('/__data.json') || url.searchParams.has('x-sveltekit-invalidated')) {
 		return;
 	}
 

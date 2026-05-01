@@ -15,12 +15,12 @@
 	};
 
 	let {
-		ctaTitle = 'Siap liat ke mana duit lo pergi?',
-		ctaDescription = 'Tanpa kartu kredit. Tanpa langganan. Selamanya.',
+		ctaTitle = 'Ready to see where your money goes?',
+		ctaDescription = 'No credit card. No subscription. Forever.',
 		primaryHref = '/sign-up',
-		primaryLabel = 'Buat akun gratis',
+		primaryLabel = 'Create free account',
 		secondaryHref = '/sign-in',
-		secondaryLabel = 'Udah punya akun',
+		secondaryLabel = 'I have an account',
 		brand = 'Mavlo',
 		giantText = 'MAVLO',
 		madeBy = 'Candratama'

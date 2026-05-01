@@ -518,7 +518,7 @@
 							const res = await fetch('?/adjust', { method: 'POST', body: adjFd });
 							if (!res.ok) throw new Error('adjust failed');
 						} catch {
-							notify.error('Account updated tapi adjust gagal');
+							notify.error('Account updated but balance adjustment failed');
 							editOpen = false;
 							return;
 						}

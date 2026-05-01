@@ -10,8 +10,8 @@
 
 <svelte:head><title>Sign in — Mavlo</title></svelte:head>
 
-<h1 class="mavlo-headline text-3xl font-black tracking-tight">Login lagi</h1>
-<p class="text-muted-foreground mt-2 text-sm">Welcome back. Lanjut catat duit lo.</p>
+<h1 class="mavlo-headline text-3xl font-black tracking-tight">Welcome back</h1>
+<p class="text-muted-foreground mt-2 text-sm">Sign in to keep tracking your money.</p>
 
 <form
 	method="POST"
@@ -48,6 +48,6 @@
 </form>
 
 <div class="text-muted-foreground mt-6 flex justify-between text-xs">
-	<a href={resolve('/sign-up')} class="hover:text-foreground underline">Bikin akun</a>
-	<a href={resolve('/forgot-password')} class="hover:text-foreground underline">Lupa password?</a>
+	<a href={resolve('/sign-up')} class="hover:text-foreground underline">Create account</a>
+	<a href={resolve('/forgot-password')} class="hover:text-foreground underline">Forgot password?</a>
 </div>

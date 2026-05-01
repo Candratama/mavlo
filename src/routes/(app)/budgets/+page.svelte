@@ -61,8 +61,14 @@
 	const pct = (spent: number, limit: number) =>
 		limit === 0 ? 0 : Math.min(100, Math.round((spent / limit) * 100));
 
+	type Icon = PickerItem['icon'];
+	const fallbackCategoryIcon = Tag as unknown as Icon;
 	const expenseCategoryItems = $derived<PickerItem[]>(
-		data.expenseCategories.map((c) => ({ value: c.id, label: c.name }))
+		data.expenseCategories.map((c) => ({
+			value: c.id,
+			label: c.name,
+			icon: (getIconByName(c.icon) as unknown as Icon) ?? fallbackCategoryIcon
+		}))
 	);
 
 	let createCategoryId = $state('');
@@ -100,7 +106,7 @@
 	<div class="mb-3 flex items-start justify-between gap-3">
 		<div>
 			<div class="text-muted-foreground text-xs tracking-wider uppercase">
-				{overAllocated ? 'Over-allocated' : fullyAllocated ? 'Fully allocated' : 'Belum dialokasikan'}
+				{overAllocated ? 'Over-allocated' : fullyAllocated ? 'Fully allocated' : 'Unallocated'}
 			</div>
 			<div
 				class="mt-1 text-2xl font-bold tracking-tight tabular-nums sm:text-3xl {overAllocated
@@ -151,9 +157,11 @@
 	</div>
 </div>
 
-<div class="mb-6 rounded-xl border bg-gradient-to-br {totalSpent > totalAllocated
+<div
+	class="mb-6 rounded-xl border bg-gradient-to-br {totalSpent > totalAllocated
 		? 'from-rose-500/10'
-		: 'from-primary/10'} via-card to-card p-4">
+		: 'from-primary/10'} via-card to-card p-4"
+>
 	<div class="mb-2 flex items-center justify-between">
 		<span class="text-sm font-semibold">Spent vs Budget</span>
 		<span

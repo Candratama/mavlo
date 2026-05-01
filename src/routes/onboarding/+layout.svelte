@@ -36,7 +36,7 @@
 				class="border-border/40 bg-background/20 text-muted-foreground mt-3 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-bold tracking-[0.3em] uppercase backdrop-blur-md"
 			>
 				<Sparkles class="size-2.5 text-emerald-400" />
-				Setup Akun Lo
+				Account Setup
 			</div>
 		</div>
 
