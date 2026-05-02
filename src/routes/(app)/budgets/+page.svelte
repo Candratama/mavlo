@@ -367,21 +367,27 @@
 			</div>
 			<div class="space-y-1">
 				<Label for="budget-c-limit">Limit</Label>
-				<MoneyInput id="budget-c-limit" name="limitCents" min={1} required class="h-12 text-2xl" />
+				<MoneyInput
+					id="budget-c-limit"
+					name="limitCents"
+					min={1}
+					required
+					class="h-12 text-lg md:h-12 md:text-lg"
+				/>
 			</div>
 		</div>
-		<div class="flex justify-end gap-2">
+		<div class="flex gap-2 pt-2">
 			<Button
 				type="button"
 				variant="outline"
 				onclick={() => (createOpen = false)}
-				class="rounded-full"
+				class="h-12 flex-1 rounded-full text-base font-semibold md:h-10 md:text-sm"
 			>
 				Cancel
 			</Button>
 			<SubmitButton
 				pending={createPending}
-				class="rounded-full !bg-white !text-neutral-900 hover:!bg-white/90"
+				class="h-12 flex-1 rounded-full !bg-white text-base font-semibold !text-neutral-900 hover:!bg-white/90 md:h-10 md:text-sm"
 			>
 				Create
 			</SubmitButton>
@@ -461,22 +467,22 @@
 						min={1}
 						required
 						value={editTarget.limitCents}
-						class="h-12 text-2xl"
+						class="h-12 text-lg md:h-12 md:text-lg"
 					/>
 				</div>
 			</div>
-			<div class="flex justify-end gap-2">
+			<div class="flex gap-2 pt-2">
 				<Button
 					type="button"
 					variant="outline"
 					onclick={() => (editOpen = false)}
-					class="rounded-full"
+					class="h-12 flex-1 rounded-full text-base font-semibold md:h-10 md:text-sm"
 				>
 					Cancel
 				</Button>
 				<SubmitButton
 					pending={editPending}
-					class="rounded-full !bg-white !text-neutral-900 hover:!bg-white/90"
+					class="h-12 flex-1 rounded-full !bg-white text-base font-semibold !text-neutral-900 hover:!bg-white/90 md:h-10 md:text-sm"
 				>
 					Save
 				</SubmitButton>
