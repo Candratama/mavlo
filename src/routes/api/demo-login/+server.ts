@@ -7,7 +7,7 @@ import { seedDemoData } from '$lib/server/demo-seed';
 import type { RequestHandler } from './$types';
 
 const DEMO_DOMAIN = 'mavlo.demo';
-const SESSION_COOKIE_NAME = 'better-auth.session_token';
+const BASE_COOKIE_NAME = 'better-auth.session_token';
 
 async function signCookieValue(value: string, secret: string): Promise<string> {
 	const key = await crypto.subtle.importKey(
@@ -62,12 +62,13 @@ const handler: RequestHandler = async (event) => {
 
 	const signed = await signCookieValue(session.token, env.BETTER_AUTH_SECRET);
 	const isProd = (env.ORIGIN ?? '').startsWith('https://');
+	const cookieName = isProd ? `__Secure-${BASE_COOKIE_NAME}` : BASE_COOKIE_NAME;
 	const maxAge = Math.max(
 		1,
 		Math.floor((new Date(session.expiresAt).getTime() - Date.now()) / 1000)
 	);
 	const cookieParts = [
-		`${SESSION_COOKIE_NAME}=${signed}`,
+		`${cookieName}=${signed}`,
 		'Path=/',
 		'HttpOnly',
 		'SameSite=Lax',
