@@ -440,7 +440,7 @@
 						class="icon-3d-rose animate-mavlo-heartbeat mx-auto mb-5 size-20"
 					/>
 					<h2 class="mavlo-headline text-3xl font-black tracking-tight sm:text-4xl">
-						Like Mavlo? Maybe buy me a coffee.
+						Love Mavlo? Buy me a coffee.
 					</h2>
 					<p
 						class="text-muted-foreground mx-auto mt-4 max-w-md text-sm leading-relaxed sm:text-base"
@@ -456,7 +456,7 @@
 							rel="noopener noreferrer"
 							class="mavlo-pill group text-foreground inline-flex items-center gap-2 rounded-full px-8 py-4 text-sm font-bold transition-transform duration-300 ease-out hover:-translate-y-0.5"
 						>
-							Tip on Trakteer
+							Donate on Trakteer
 							<ArrowRight
 								class="size-4 transition-transform duration-300 group-hover:translate-x-1"
 							/>

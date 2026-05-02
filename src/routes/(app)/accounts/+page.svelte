@@ -464,8 +464,20 @@
 			/>
 		</div>
 		<div class="flex justify-end gap-2">
-			<Button type="button" variant="outline" onclick={() => (createOpen = false)}>Cancel</Button>
-			<SubmitButton pending={createPending}>Create</SubmitButton>
+			<Button
+				type="button"
+				variant="outline"
+				onclick={() => (createOpen = false)}
+				class="rounded-full"
+			>
+				Cancel
+			</Button>
+			<SubmitButton
+				pending={createPending}
+				class="rounded-full !bg-white !text-neutral-900 hover:!bg-white/90"
+			>
+				Create
+			</SubmitButton>
 		</div>
 	</form>
 {/snippet}
@@ -634,8 +646,20 @@
 			/>
 		</div>
 		<div class="flex justify-end gap-2">
-			<Button type="button" variant="outline" onclick={() => (editOpen = false)}>Cancel</Button>
-			<SubmitButton pending={editPending}>Save</SubmitButton>
+			<Button
+				type="button"
+				variant="outline"
+				onclick={() => (editOpen = false)}
+				class="rounded-full"
+			>
+				Cancel
+			</Button>
+			<SubmitButton
+				pending={editPending}
+				class="rounded-full !bg-white !text-neutral-900 hover:!bg-white/90"
+			>
+				Save
+			</SubmitButton>
 		</div>
 	</form>
 {/snippet}

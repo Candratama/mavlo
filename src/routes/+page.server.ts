@@ -2,5 +2,6 @@ import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = (event) => {
-	if (event.locals.user) throw redirect(302, '/dashboard');
+	const u = event.locals.user as { isDemo?: boolean } | undefined;
+	if (u && !u.isDemo) throw redirect(302, '/dashboard');
 };

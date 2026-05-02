@@ -35,13 +35,14 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
 		const key = isFormAction ? `${path}?/${actionName}` : path;
 		const isAuthApi = path.startsWith('/api/auth/');
 		const isSignOut = path === '/sign-out';
+		const isDemoLogin = path === '/api/demo-login';
 		if (isFormAction && !DEMO_ALLOWED_ACTIONS.has(key)) {
 			throw error(
 				403,
 				'Demo mode: only create/update/delete transactions are allowed. Sign up for full access.'
 			);
 		}
-		if (!isFormAction && !isAuthApi && !isSignOut) {
+		if (!isFormAction && !isAuthApi && !isSignOut && !isDemoLogin) {
 			throw error(
 				403,
 				'Demo mode: only create/update/delete transactions are allowed. Sign up for full access.'

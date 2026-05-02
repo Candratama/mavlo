@@ -21,7 +21,8 @@
 		Tag,
 		Target,
 		Settings,
-		LogOut
+		LogOut,
+		Home
 	} from 'lucide-svelte';
 
 	let { children, data } = $props();
@@ -188,50 +189,75 @@
 				<span class="text-primary text-base font-bold">Mavlo</span>
 			</div>
 
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger>
-					{#snippet child({ props })}
-						<button
-							{...props}
-							class="bg-muted flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border text-sm font-semibold transition-opacity hover:opacity-80"
-							aria-label="Account menu"
-						>
-							{#if data.user.image}
-								<img src={data.user.image} alt={data.user.name} class="size-full object-cover" />
-							{:else}
-								{initials}
-							{/if}
-						</button>
-					{/snippet}
-				</DropdownMenu.Trigger>
-				<DropdownMenu.Content align="end" class="w-44">
-					<DropdownMenu.Item>
+			<div class="flex shrink-0 items-center gap-3">
+				{#if data.user?.isDemo}
+					<a
+						href={resolve('/sign-up')}
+						class="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/15 px-3 py-1.5 text-[10px] font-bold tracking-wider whitespace-nowrap text-amber-300 uppercase transition-colors hover:bg-amber-500/25"
+					>
+						<span class="size-1.5 animate-pulse rounded-full bg-amber-400"></span>
+						Demo · Daftar
+					</a>
+				{/if}
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger>
 						{#snippet child({ props })}
-							<a
+							<button
 								{...props}
-								href={resolve('/settings')}
-								class="hover:bg-accent/50 flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
+								class="bg-muted flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border text-sm font-semibold transition-opacity hover:opacity-80"
+								aria-label="Account menu"
 							>
-								<Settings class="size-4" /> Settings
-							</a>
+								{#if data.user.image}
+									<img src={data.user.image} alt={data.user.name} class="size-full object-cover" />
+								{:else}
+									{initials}
+								{/if}
+							</button>
 						{/snippet}
-					</DropdownMenu.Item>
-					<DropdownMenu.Separator />
-					<form method="POST" action="/sign-out">
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content align="end" class="w-44">
+						{#if data.user?.isDemo}
+							<DropdownMenu.Item>
+								{#snippet child({ props })}
+									<a
+										{...props}
+										href={resolve('/')}
+										class="hover:bg-accent/50 flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
+									>
+										<Home class="size-4" /> Landing
+									</a>
+								{/snippet}
+							</DropdownMenu.Item>
+							<DropdownMenu.Separator />
+						{/if}
 						<DropdownMenu.Item>
 							{#snippet child({ props })}
-								<button
+								<a
 									{...props}
-									type="submit"
-									class="text-destructive hover:bg-accent/50 flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
+									href={resolve('/settings')}
+									class="hover:bg-accent/50 flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
 								>
-									<LogOut class="size-4" /> Sign out
-								</button>
+									<Settings class="size-4" /> Settings
+								</a>
 							{/snippet}
 						</DropdownMenu.Item>
-					</form>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
+						<DropdownMenu.Separator />
+						<form method="POST" action="/sign-out">
+							<DropdownMenu.Item>
+								{#snippet child({ props })}
+									<button
+										{...props}
+										type="submit"
+										class="text-destructive hover:bg-accent/50 flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
+									>
+										<LogOut class="size-4" /> Sign out
+									</button>
+								{/snippet}
+							</DropdownMenu.Item>
+						</form>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+			</div>
 		</header>
 
 		<div
@@ -264,16 +290,6 @@
 		/>
 		<Fab />
 	</div>
-
-	{#if data.user?.isDemo}
-		<a
-			href={resolve('/sign-up')}
-			class="fixed top-3 right-3 z-50 flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/15 px-3 py-1.5 text-[10px] font-bold tracking-wider text-amber-300 uppercase backdrop-blur-md transition-colors hover:bg-amber-500/25"
-		>
-			<span class="size-1.5 animate-pulse rounded-full bg-amber-400"></span>
-			Demo · Daftar
-		</a>
-	{/if}
 
 	{#if navigating.to}
 		<div

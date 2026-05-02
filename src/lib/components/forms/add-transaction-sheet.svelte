@@ -374,13 +374,23 @@
 		<div
 			class="bg-background sticky bottom-0 -mx-4 border-t px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden"
 		>
-			<SubmitButton {pending} disabled={exceedsBalance} class="h-12 w-full text-base font-semibold">
+			<SubmitButton
+				{pending}
+				disabled={exceedsBalance}
+				class="h-12 w-full rounded-full !bg-white text-base font-semibold !text-neutral-900 hover:!bg-white/90"
+			>
 				{mode === 'create' ? 'Save' : 'Update'}
 			</SubmitButton>
 		</div>
 		<div class="hidden justify-end gap-2 pt-2 md:flex">
-			<Button type="button" variant="outline" onclick={onClosed}>Cancel</Button>
-			<SubmitButton {pending} disabled={exceedsBalance}>
+			<Button type="button" variant="outline" onclick={onClosed} class="rounded-full">
+				Cancel
+			</Button>
+			<SubmitButton
+				{pending}
+				disabled={exceedsBalance}
+				class="rounded-full !bg-white !text-neutral-900 hover:!bg-white/90"
+			>
 				{mode === 'create' ? 'Save' : 'Update'}
 			</SubmitButton>
 		</div>

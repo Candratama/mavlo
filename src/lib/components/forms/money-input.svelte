@@ -94,10 +94,8 @@
 	}
 </script>
 
-<div class="relative">
-	<span
-		class="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm"
-	>
+<div class="relative {className}">
+	<span class="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2">
 		Rp
 	</span>
 	<Input
@@ -111,7 +109,7 @@
 		onbeforeinput={onBeforeInput}
 		{placeholder}
 		{required}
-		class="pl-9 tabular-nums {className}"
+		class="pl-16 tabular-nums md:pl-14 {className}"
 	/>
 	<input type="hidden" {name} value={cents ?? ''} />
 	{#if required && cents === null && display !== ''}
