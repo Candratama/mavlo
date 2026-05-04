@@ -6,6 +6,7 @@ import {
 	updateAccount,
 	archiveAccount,
 	unarchiveAccount,
+	deleteAccount,
 	getAccount
 } from '$lib/server/repositories/accounts';
 import { computeAccountBalances } from '$lib/server/repositories/balances';
@@ -82,6 +83,18 @@ export const actions: Actions = {
 		if (!parsed.success) return fail(400, { action: 'unarchive', message: 'Invalid id' });
 		await unarchiveAccount(db, user.id, parsed.data.id);
 		return { success: true, action: 'unarchive' };
+	},
+
+	delete: async (event) => {
+		const user = requireUser(event);
+		const db = getDb(event.platform!.env.DB);
+		const fd = await event.request.formData();
+		const parsed = accountIdSchema.safeParse(formObject(fd));
+		if (!parsed.success) return fail(400, { action: 'delete', message: 'Invalid id' });
+		const deleted = await deleteAccount(db, user.id, parsed.data.id);
+		if (!deleted) return fail(404, { action: 'delete', message: 'Account not found' });
+		await purgeUserCaches(event, user.id);
+		return { success: true, action: 'delete' };
 	},
 
 	adjust: async (event) => {

@@ -82,3 +82,11 @@ export async function unarchiveAccount(db: Db, userId: string, id: string) {
 		.returning();
 	return row ?? null;
 }
+
+export async function deleteAccount(db: Db, userId: string, id: string) {
+	const [row] = await db
+		.delete(accounts)
+		.where(and(eq(accounts.userId, userId), eq(accounts.id, id)))
+		.returning();
+	return row ?? null;
+}

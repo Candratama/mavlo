@@ -25,7 +25,8 @@
 		CircleEllipsis,
 		ArrowUp,
 		ArrowDown,
-		Lock
+		Lock,
+		Trash2
 	} from 'lucide-svelte';
 	import type { Component } from 'svelte';
 	import { formatCentsAsCurrency, formatCentsCompact } from '$lib/utils/money.js';
@@ -46,6 +47,9 @@
 	let editTarget = $state<AccountRow | null>(null);
 	let createPending = $state(false);
 	let editPending = $state(false);
+	let deleteOpen = $state(false);
+	let deleteTarget = $state<AccountRow | null>(null);
+	let deletePending = $state(false);
 
 	// Cast lucide icons (SvelteComponentTyped) to Component for PickerItem compatibility
 	const typeItems: PickerItem[] = [
@@ -98,6 +102,11 @@
 	const openEdit = (a: AccountRow) => {
 		editTarget = a;
 		editOpen = true;
+	};
+
+	const openDelete = (a: AccountRow) => {
+		deleteTarget = a;
+		deleteOpen = true;
 	};
 
 	const visibleAccounts = $derived(includeArchived ? data.allAccounts : data.accounts);
@@ -177,6 +186,13 @@
 					{/snippet}
 				</DropdownMenu.Item>
 			</form>
+			<DropdownMenu.Separator />
+			<DropdownMenu.Item
+				onclick={() => openDelete(account)}
+				class="text-destructive focus:text-destructive"
+			>
+				<Trash2 class="mr-2 size-4" /> Delete
+			</DropdownMenu.Item>
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 {/snippet}
@@ -693,4 +709,54 @@
 			</Sheet.Content>
 		</Sheet.Root>
 	{/if}
+{/if}
+
+{#if deleteTarget}
+	<Dialog.Root bind:open={deleteOpen}>
+		<Dialog.Content>
+			<Dialog.Header>
+				<Dialog.Title>Delete account</Dialog.Title>
+				<Dialog.Description>
+					Are you sure you want to permanently delete <strong>{deleteTarget.name}</strong>? All
+					transactions for this account will also be deleted. This action cannot be undone.
+				</Dialog.Description>
+			</Dialog.Header>
+			<form
+				method="POST"
+				action="?/delete"
+				use:enhance={() => {
+					deletePending = true;
+					return async ({ result, update }) => {
+						deletePending = false;
+						await update();
+						if (result.type === 'success') {
+							deleteOpen = false;
+							notify.success('Account deleted');
+						} else if (result.type === 'failure') {
+							const message = (result.data as { message?: string } | undefined)?.message;
+							notify.error(message ?? 'Could not delete account');
+						}
+					};
+				}}
+				class="flex gap-2 pt-2"
+			>
+				<input type="hidden" name="id" value={deleteTarget.id} />
+				<Button
+					type="button"
+					variant="outline"
+					onclick={() => (deleteOpen = false)}
+					class="h-12 flex-1 rounded-full text-base font-semibold md:h-10 md:text-sm"
+				>
+					Cancel
+				</Button>
+				<SubmitButton
+					pending={deletePending}
+					variant="destructive"
+					class="h-12 flex-1 rounded-full text-base font-semibold md:h-10 md:text-sm"
+				>
+					Delete
+				</SubmitButton>
+			</form>
+		</Dialog.Content>
+	</Dialog.Root>
 {/if}
