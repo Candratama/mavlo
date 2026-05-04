@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import { untrack } from 'svelte';
 	import { setMode } from 'mode-watcher';
 	import { Button } from '$lib/components/ui/button';
@@ -219,10 +220,10 @@
 						enctype="multipart/form-data"
 						bind:this={avatarForm}
 						use:enhance={() => {
-							return async ({ result, update }) => {
+							return async ({ result }) => {
 								avatarUploading = false;
-								await update();
 								if (result.type === 'success' || result.type === 'redirect') {
+									await invalidateAll();
 									notify.success('Profile picture updated');
 								} else if (result.type === 'failure') {
 									const msg = (result.data as { message?: string } | undefined)?.message;
@@ -301,9 +302,9 @@
 						method="POST"
 						action="?/username"
 						use:enhance={() => {
-							return async ({ result, update }) => {
-								await update();
+							return async ({ result }) => {
 								if (result.type === 'success') {
+									await invalidateAll();
 									notify.success('Username updated');
 								} else if (result.type === 'failure') {
 									const msg = (result.data as { usernameError?: string } | undefined)

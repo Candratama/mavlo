@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import SubmitButton from '$lib/components/forms/submit-button.svelte';
@@ -154,9 +155,9 @@
 				method="POST"
 				action="?/{category.archived ? 'unarchive' : 'archive'}"
 				use:enhance={() =>
-					async ({ result, update }) => {
-						await update();
+					async ({ result }) => {
 						if (result.type === 'success') {
+							await invalidateAll();
 							notify.success(category.archived ? 'Category restored' : 'Category archived');
 						} else if (result.type === 'failure') {
 							const message = (result.data as { message?: string } | undefined)?.message;
@@ -185,9 +186,9 @@
 				method="POST"
 				action="?/delete"
 				use:enhance={() =>
-					async ({ result, update }) => {
-						await update();
+					async ({ result }) => {
 						if (result.type === 'success') {
+							await invalidateAll();
 							notify.success('Category deleted');
 						} else if (result.type === 'failure') {
 							const message = (result.data as { message?: string } | undefined)?.message;
@@ -403,10 +404,10 @@
 			formData.set('color', createColor);
 			formData.set('icon', createIcon);
 			createPending = true;
-			return async ({ result, update }) => {
+			return async ({ result }) => {
 				createPending = false;
-				await update();
 				if (result.type === 'success') {
+					await invalidateAll();
 					createOpen = false;
 					notify.success('Category created');
 				} else if (result.type === 'failure') {
@@ -558,10 +559,10 @@
 			formData.set('color', editColor);
 			formData.set('icon', editIcon);
 			editPending = true;
-			return async ({ result, update }) => {
+			return async ({ result }) => {
 				editPending = false;
-				await update();
 				if (result.type === 'success') {
+					await invalidateAll();
 					editOpen = false;
 					notify.success('Category updated');
 				} else if (result.type === 'failure') {

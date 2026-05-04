@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import MoneyInput from '$lib/components/forms/money-input.svelte';
@@ -260,9 +261,9 @@
 							method="POST"
 							action="?/delete"
 							use:enhance={() =>
-								async ({ result, update }) => {
-									await update();
+								async ({ result }) => {
 									if (result.type === 'success') {
+										await invalidateAll();
 										notify.success('Budget deleted');
 									} else if (result.type === 'failure') {
 										const message = (result.data as { message?: string } | undefined)?.message;
@@ -329,10 +330,10 @@
 		action="?/create"
 		use:enhance={() => {
 			createPending = true;
-			return async ({ result, update }) => {
+			return async ({ result }) => {
 				createPending = false;
-				await update();
 				if (result.type === 'success') {
+					await invalidateAll();
 					createOpen = false;
 					notify.success('Budget created');
 				} else if (result.type === 'failure') {
@@ -422,10 +423,10 @@
 			action="?/update"
 			use:enhance={() => {
 				editPending = true;
-				return async ({ result, update }) => {
+				return async ({ result }) => {
 					editPending = false;
-					await update();
 					if (result.type === 'success') {
+						await invalidateAll();
 						editOpen = false;
 						notify.success('Budget updated');
 					} else if (result.type === 'failure') {
