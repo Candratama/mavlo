@@ -21,6 +21,7 @@
 		CircleEllipsis,
 		Tag
 	} from 'lucide-svelte';
+	import { invalidateAll } from '$app/navigation';
 	import { setLastUsed } from '$lib/utils/last-used.js';
 	import { notify } from '$lib/utils/toast.js';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
@@ -234,11 +235,11 @@
 		action={actionUrl}
 		use:enhance={() => {
 			pending = true;
-			return async ({ result, update }) => {
+			return async ({ result }) => {
 				pending = false;
-				await update();
 				if (result.type === 'success') {
 					setLastUsed({ accountId, kind });
+					await invalidateAll();
 					await onSuccess?.();
 					notify.success(mode === 'create' ? 'Transaction added' : 'Transaction updated');
 					onClosed();

@@ -28,7 +28,7 @@
 		type PickerItem,
 		type PickerGroup
 	} from '$lib/components/ui/picker-sheet.svelte';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { SvelteURLSearchParams, SvelteMap } from 'svelte/reactivity';
@@ -409,9 +409,9 @@
 				method="POST"
 				action="?/delete"
 				use:enhance={() =>
-					async ({ result, update }) => {
-						await update();
+					async ({ result }) => {
 						if (result.type === 'success') {
+							await invalidateAll();
 							notify.success('Transaction deleted');
 						} else if (result.type === 'failure') {
 							const message = (result.data as { message?: string } | undefined)?.message;
