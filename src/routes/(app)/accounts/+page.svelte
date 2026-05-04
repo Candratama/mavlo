@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -159,9 +160,9 @@
 				method="POST"
 				action="?/{account.archived ? 'unarchive' : 'archive'}"
 				use:enhance={() =>
-					async ({ result, update }) => {
-						await update();
+					async ({ result }) => {
 						if (result.type === 'success') {
+							await invalidateAll();
 							notify.success(account.archived ? 'Account restored' : 'Account archived');
 						} else if (result.type === 'failure') {
 							const message = (result.data as { message?: string } | undefined)?.message;
@@ -388,10 +389,10 @@
 			formData.set('type', createType);
 			formData.set('color', createColor);
 			createPending = true;
-			return async ({ result, update }) => {
+			return async ({ result }) => {
 				createPending = false;
-				await update();
 				if (result.type === 'success') {
+					await invalidateAll();
 					createOpen = false;
 					notify.success('Account created');
 				} else if (result.type === 'failure') {
@@ -539,9 +540,8 @@
 			formData.set('color', editColor);
 			editPending = true;
 			const targetCents = editAdjustCents;
-			return async ({ result, update }) => {
+			return async ({ result }) => {
 				editPending = false;
-				await update();
 				if (result.type === 'success') {
 					if (targetCents !== null && targetCents !== currentBalance) {
 						const adjFd = new FormData();
@@ -552,10 +552,12 @@
 							if (!res.ok) throw new Error('adjust failed');
 						} catch {
 							notify.error('Account updated but balance adjustment failed');
+							await invalidateAll();
 							editOpen = false;
 							return;
 						}
 					}
+					await invalidateAll();
 					editOpen = false;
 					notify.success('Account updated');
 				} else if (result.type === 'failure') {
@@ -726,10 +728,10 @@
 				action="?/delete"
 				use:enhance={() => {
 					deletePending = true;
-					return async ({ result, update }) => {
+					return async ({ result }) => {
 						deletePending = false;
-						await update();
 						if (result.type === 'success') {
+							await invalidateAll();
 							deleteOpen = false;
 							notify.success('Account deleted');
 						} else if (result.type === 'failure') {
