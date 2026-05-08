@@ -35,6 +35,7 @@
 		showSelectedDescription?: boolean;
 		id?: string;
 		class?: string;
+		usePopover?: boolean;
 	};
 
 	let {
@@ -48,7 +49,8 @@
 		disabled = false,
 		showSelectedDescription = false,
 		id,
-		class: className = ''
+		class: className = '',
+		usePopover = false
 	}: Props = $props();
 
 	let open = $state(false);
@@ -173,7 +175,7 @@
 	{/if}
 {/snippet}
 
-{#if isDesktop.current}
+{#if isDesktop.current || usePopover}
 	<Popover.Root bind:open>
 		<Popover.Trigger>
 			{#snippet child({ props })}

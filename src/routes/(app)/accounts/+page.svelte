@@ -208,6 +208,11 @@
 					? 'opacity-60'
 					: ''}"
 			>
+				<a
+					href="/accounts/{account.id}"
+					class="absolute inset-0 rounded-2xl"
+					aria-label="View {account.name} transactions"
+				></a>
 				<div
 					aria-hidden="true"
 					class="pointer-events-none absolute inset-0 opacity-70"
@@ -219,7 +224,7 @@
 					style="background: {color}"
 				></div>
 
-				<div class="relative flex h-full flex-col justify-between">
+				<div class="relative z-10 flex h-full flex-col justify-between">
 					<div class="flex items-start justify-between">
 						<div class="flex items-center gap-3">
 							<div
@@ -297,6 +302,11 @@
 					? 'opacity-60'
 					: ''}"
 			>
+				<a
+					href="/accounts/{account.id}"
+					class="absolute inset-0 rounded-2xl"
+					aria-label="View {account.name} transactions"
+				></a>
 				<div
 					aria-hidden="true"
 					class="pointer-events-none absolute inset-0 opacity-70"
@@ -308,7 +318,7 @@
 					style="background: {color}"
 				></div>
 
-				<div class="relative flex min-w-0 flex-1 flex-col gap-3">
+				<div class="relative z-10 flex min-w-0 flex-1 flex-col gap-3">
 					<div class="flex items-start justify-between gap-2">
 						<div class="flex min-w-0 items-center gap-3">
 							<div
