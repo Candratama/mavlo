@@ -343,6 +343,7 @@
 				placeholder="Choose account"
 				title="Select account"
 				showSelectedDescription
+				usePopover={!isDesktop.current}
 			/>
 		</div>
 
@@ -356,6 +357,7 @@
 					placeholder="Choose destination"
 					title="Select destination"
 					showSelectedDescription
+					usePopover={!isDesktop.current}
 				/>
 			</div>
 		{:else}
@@ -368,6 +370,7 @@
 					placeholder="None"
 					title="Select category"
 					searchable
+					usePopover={!isDesktop.current}
 				/>
 			</div>
 		{/if}

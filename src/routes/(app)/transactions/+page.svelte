@@ -305,11 +305,11 @@
 			<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
 				<div class="space-y-1">
 					<Label for="filter-from">From</Label>
-					<Input id="filter-from" type="date" name="from" value={filterFromUrl.from} />
+					<Input id="filter-from" type="date" name="from" bind:value={fFrom} />
 				</div>
 				<div class="space-y-1">
 					<Label for="filter-to">To</Label>
-					<Input id="filter-to" type="date" name="to" value={filterFromUrl.to} />
+					<Input id="filter-to" type="date" name="to" bind:value={fTo} />
 				</div>
 				<div class="space-y-1">
 					<Label>Account</Label>
@@ -368,6 +368,7 @@
 					bind:value={fAccount}
 					placeholder="All accounts"
 					title="Account"
+					usePopover
 				/>
 			</div>
 			<div class="space-y-1">
@@ -378,6 +379,7 @@
 					placeholder="All categories"
 					title="Category"
 					searchable
+					usePopover
 				/>
 			</div>
 			<div class="space-y-1">
