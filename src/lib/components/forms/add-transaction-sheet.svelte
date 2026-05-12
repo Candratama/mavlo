@@ -91,9 +91,14 @@
 				note: editTarget.note ?? ''
 			};
 		}
+		const validSources =
+			defaultKind === 'transfer' ? accounts : accounts.filter((a) => a.type !== 'savings');
+		const resolvedAccountId = validSources.some((a) => a.id === defaultAccountId)
+			? (defaultAccountId ?? '')
+			: (validSources[0]?.id ?? '');
 		return {
 			kind: defaultKind,
-			accountId: defaultAccountId ?? accounts[0]?.id ?? '',
+			accountId: resolvedAccountId,
 			transferToAccountId: '',
 			categoryId: '',
 			occurredAt: todayYmd,
@@ -238,7 +243,8 @@
 			return async ({ result }) => {
 				pending = false;
 				if (result.type === 'success') {
-					setLastUsed({ accountId, kind });
+					const isSavingsSource = sourceAccount?.type === 'savings';
+					setLastUsed(isSavingsSource ? { kind } : { accountId, kind });
 					await invalidateAll();
 					await onSuccess?.();
 					notify.success(mode === 'create' ? 'Transaction added' : 'Transaction updated');
