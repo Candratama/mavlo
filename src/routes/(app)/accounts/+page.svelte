@@ -221,53 +221,41 @@
 				></div>
 
 				<div class="pointer-events-none relative z-10 flex h-full flex-col justify-between">
+					<!-- top: menu kiri, icon kanan -->
 					<div class="flex items-start justify-between">
-						<div class="flex items-center gap-3">
-							<div
-								class="flex size-12 items-center justify-center rounded-xl border backdrop-blur"
-								style="background-color: {color}26; border-color: {color}40; color: {color}"
-							>
-								{#if IconComp}
-									<IconComp class="size-6" />
-								{:else}
-									<Wallet class="size-6" />
-								{/if}
-							</div>
-							<div>
-								<div
-									class="text-muted-foreground flex items-center gap-1 text-xs tracking-wider uppercase"
-								>
-									{account.type}
-									{#if account.type === 'savings'}
-										<Lock class="size-3" aria-label="Transfer-only" />
-									{/if}
-								</div>
-								<div class="text-lg leading-tight font-semibold">{account.name}</div>
-							</div>
-						</div>
 						<div class="pointer-events-auto relative z-20">
 							{@render rowMenu(account)}
 						</div>
+						<div
+							class="flex size-12 items-center justify-center rounded-xl border backdrop-blur"
+							style="background-color: {color}26; border-color: {color}40; color: {color}"
+						>
+							{#if IconComp}
+								<IconComp class="size-6" />
+							{:else}
+								<Wallet class="size-6" />
+							{/if}
+						</div>
 					</div>
 
+					<!-- bottom: type+nama kiri, currency+amount kanan -->
 					<div class="flex items-end justify-between gap-2">
-						<div class="text-muted-foreground flex items-center gap-3 text-xs tabular-nums">
-							<span class="text-income/70 flex items-center gap-1">
-								<ArrowDown class="size-3" />
-								{formatCentsCompact(account.periodIncomeCents, account.currency)}
-							</span>
-							<span class="text-expense/70 flex items-center gap-1">
-								<ArrowUp class="size-3" />
-								{formatCentsCompact(account.periodExpenseCents, account.currency)}
-							</span>
+						<div>
+							<div class="text-muted-foreground flex items-center gap-1 text-[10px] tracking-wider uppercase">
+								{account.type}
+								{#if account.type === 'savings'}
+									<Lock class="size-2.5" aria-label="Transfer-only" />
+								{/if}
+							</div>
+							<div class="text-lg leading-tight font-semibold">{account.name}</div>
 						</div>
 						<div class="flex flex-col items-end">
+							<span class="text-xs font-semibold tracking-wider" style="color: {color}">
+								{account.currency}
+							</span>
 							<div class="text-2xl font-semibold tracking-tight tabular-nums xl:text-3xl">
 								{formatBalance(account.balanceCents, account.currency)}
 							</div>
-							<span class="mt-1 text-xs font-semibold tracking-wider" style="color: {color}">
-								{account.currency}
-							</span>
 						</div>
 					</div>
 				</div>
@@ -316,54 +304,42 @@
 					style="background: {color}"
 				></div>
 
-				<div class="pointer-events-none relative z-10 flex min-w-0 flex-1 flex-col gap-3">
+				<div class="pointer-events-none relative z-10 flex min-w-0 flex-1 flex-col justify-between gap-2">
+					<!-- top: menu kiri, icon kanan -->
 					<div class="flex items-start justify-between gap-2">
-						<div class="flex min-w-0 items-center gap-3">
-							<div
-								class="flex size-11 shrink-0 items-center justify-center rounded-xl border backdrop-blur"
-								style="background-color: {color}26; border-color: {color}40; color: {color}"
-							>
-								{#if IconComp}
-									<IconComp class="size-5" />
-								{:else}
-									<Wallet class="size-5" />
-								{/if}
-							</div>
-							<div class="min-w-0">
-								<div
-									class="text-muted-foreground flex items-center gap-1 text-[10px] tracking-wider uppercase"
-								>
-									{account.type}
-									{#if account.type === 'savings'}
-										<Lock class="size-2.5" aria-label="Transfer-only" />
-									{/if}
-								</div>
-								<div class="truncate text-base leading-tight font-semibold">{account.name}</div>
-							</div>
-						</div>
 						<div class="pointer-events-auto relative z-20">
 							{@render rowMenu(account)}
 						</div>
+						<div
+							class="flex size-11 shrink-0 items-center justify-center rounded-xl border backdrop-blur"
+							style="background-color: {color}26; border-color: {color}40; color: {color}"
+						>
+							{#if IconComp}
+								<IconComp class="size-5" />
+							{:else}
+								<Wallet class="size-5" />
+							{/if}
+						</div>
 					</div>
 
+					<!-- bottom: type+nama kiri, currency+amount kanan -->
 					<div class="flex items-end justify-between gap-2">
-						<div class="flex items-center gap-2 text-[11px] tabular-nums">
-							<span class="text-income/70 flex items-center gap-1">
-								<ArrowDown class="size-2.5" />
-								{formatCentsCompact(account.periodIncomeCents, account.currency)}
-							</span>
-							<span class="text-expense/70 flex items-center gap-1">
-								<ArrowUp class="size-2.5" />
-								{formatCentsCompact(account.periodExpenseCents, account.currency)}
-							</span>
+						<div class="min-w-0">
+							<div class="text-muted-foreground flex items-center gap-1 text-[10px] tracking-wider uppercase">
+								{account.type}
+								{#if account.type === 'savings'}
+									<Lock class="size-2.5" aria-label="Transfer-only" />
+								{/if}
+							</div>
+							<div class="truncate text-base leading-tight font-semibold">{account.name}</div>
 						</div>
-						<div class="flex flex-col items-end">
+						<div class="flex shrink-0 flex-col items-end">
+							<span class="text-[10px] font-semibold tracking-wider" style="color: {color}">
+								{account.currency}
+							</span>
 							<div class="text-lg font-semibold tracking-tight tabular-nums">
 								{formatBalance(account.balanceCents, account.currency)}
 							</div>
-							<span class="mt-0.5 text-[10px] font-semibold tracking-wider" style="color: {color}">
-								{account.currency}
-							</span>
 						</div>
 					</div>
 				</div>

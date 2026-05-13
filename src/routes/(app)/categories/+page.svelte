@@ -314,7 +314,7 @@
 
 {#if visibleCategories.length > 0}
 	<ul
-		class="space-y-2 md:hidden"
+		class="grid grid-cols-2 gap-3 md:hidden"
 		use:dndzone={{
 			items: visibleCategories,
 			flipDurationMs: 150,
@@ -330,39 +330,45 @@
 	>
 		{#each visibleCategories as category (category.id)}
 			{@const IconComp = getIconByName(category.icon)}
+			{@const tint = category.color ?? '#8b5cf6'}
 			<li
-				class="bg-card flex items-center gap-3 rounded-lg border p-3 {category.archived
-					? 'opacity-60'
-					: ''}"
+				class="bg-card relative overflow-hidden rounded-xl border p-4 {category.archived ? 'opacity-60' : ''}"
+				style="min-height: 96px;"
 			>
-				<button
-					type="button"
-					tabindex="-1"
-					aria-label="Drag to reorder"
-					onpointerdown={enableDrag}
-					ontouchstart={enableDrag}
-					class="shrink-0 cursor-grab touch-none active:cursor-grabbing"
-				>
-					<GripVertical class="text-muted-foreground size-4" />
-				</button>
-				<div class="flex min-w-0 flex-1 items-center gap-3">
-					<div
-						class="flex size-9 shrink-0 items-center justify-center rounded-md"
-						style={category.color ? `background-color: ${category.color}20` : ''}
-					>
-						{#if IconComp}
-							<IconComp class="size-4" style={category.color ? `color: ${category.color}` : ''} />
-						{:else}
-							<Tag class="text-muted-foreground size-4" />
-						{/if}
-					</div>
-					<div class="min-w-0 flex-1">
-						<a href="/categories/{category.id}" class="truncate font-medium hover:underline block">{category.name}</a>
-						<div class="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
-							<span class="capitalize">{category.kind}</span>
+				<!-- bg glow -->
+				<div aria-hidden="true" class="pointer-events-none absolute -right-4 -top-4 size-20 rounded-full opacity-15 blur-2xl" style="background: {tint}"></div>
+				<div class="relative flex h-full flex-col justify-between gap-3">
+					<!-- top: drag kiri, menu+icon kanan -->
+					<div class="flex items-start justify-between">
+						<button
+							type="button"
+							tabindex="-1"
+							aria-label="Drag to reorder"
+							onpointerdown={enableDrag}
+							ontouchstart={enableDrag}
+							class="shrink-0 cursor-grab touch-none active:cursor-grabbing"
+						>
+							<GripVertical class="text-muted-foreground size-4" />
+						</button>
+						<div class="flex items-center gap-1">
+							{@render rowMenu(category)}
+							<div
+								class="flex size-9 items-center justify-center rounded-lg"
+								style="background-color: {tint}20; color: {tint}"
+							>
+								{#if IconComp}
+									<IconComp class="size-4" />
+								{:else}
+									<Tag class="size-4" />
+								{/if}
+							</div>
 						</div>
 					</div>
-					{@render rowMenu(category)}
+					<!-- bottom: kind kiri, nama kiri -->
+					<div>
+						<p class="text-muted-foreground text-[10px] tracking-wider uppercase">{category.kind}</p>
+						<a href="/categories/{category.id}" class="truncate font-semibold leading-tight hover:underline block" style="color: {tint}">{category.name}</a>
+					</div>
 				</div>
 			</li>
 		{/each}
