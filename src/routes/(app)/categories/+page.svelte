@@ -332,12 +332,12 @@
 			{@const IconComp = getIconByName(category.icon)}
 			{@const tint = category.color ?? '#8b5cf6'}
 			<li
-				class="bg-card relative overflow-hidden rounded-xl border p-4 {category.archived ? 'opacity-60' : ''}"
+				class="bg-card relative flex flex-col justify-between overflow-hidden rounded-xl border p-4 {category.archived ? 'opacity-60' : ''}"
 				style="min-height: 96px;"
 			>
 				<!-- bg glow -->
 				<div aria-hidden="true" class="pointer-events-none absolute -right-4 -top-4 size-20 rounded-full opacity-15 blur-2xl" style="background: {tint}"></div>
-				<div class="relative flex h-full flex-col justify-between gap-3">
+				<div class="relative flex flex-col justify-between gap-3 flex-1">
 					<!-- top: drag kiri, menu+icon kanan -->
 					<div class="flex items-start justify-between">
 						<button
