@@ -281,7 +281,7 @@
 									<Tag class="text-muted-foreground size-4" />
 								{/if}
 							</div>
-							<span class="min-w-0 flex-1 truncate font-medium">{category.name}</span>
+							<a href="/categories/{category.id}" class="min-w-0 flex-1 truncate font-medium hover:underline">{category.name}</a>
 							{@render rowMenu(category)}
 						</li>
 					{/each}
@@ -357,7 +357,7 @@
 						{/if}
 					</div>
 					<div class="min-w-0 flex-1">
-						<div class="truncate font-medium">{category.name}</div>
+						<a href="/categories/{category.id}" class="truncate font-medium hover:underline block">{category.name}</a>
 						<div class="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
 							<span class="capitalize">{category.kind}</span>
 						</div>

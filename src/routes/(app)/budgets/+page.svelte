@@ -227,7 +227,12 @@
 		{@const over = spent > budget.limitCents}
 		{@const IconComp = getIconByName(cat?.icon) ?? Tag}
 		{@const tint = cat?.color ?? '#8b5cf6'}
-		<Card.Root>
+		<Card.Root class="relative">
+			<a
+				href="/budgets/{budget.id}"
+				class="absolute inset-0 rounded-[inherit] z-0"
+				aria-label="View {cat?.name ?? 'budget'} transactions"
+			></a>
 			<Card.Header class="flex flex-row items-start justify-between gap-3">
 				<div class="flex min-w-0 flex-1 items-center gap-3">
 					<div
@@ -241,6 +246,7 @@
 						<Card.Description>{budget.periodMonth}</Card.Description>
 					</div>
 				</div>
+				<div class="relative z-10">
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger>
 						{#snippet child({ props })}
@@ -282,8 +288,9 @@
 						</form>
 					</DropdownMenu.Content>
 				</DropdownMenu.Root>
+				</div>
 			</Card.Header>
-			<Card.Content>
+			<Card.Content class="relative z-10">
 				<div class="mb-2 flex items-baseline justify-between text-sm tabular-nums">
 					<span class={over ? 'text-expense font-medium' : ''}>
 						{formatCents(spent)}
