@@ -102,7 +102,7 @@
 		bind:this={limelightEl}
 		class={cn(
 			'bg-primary absolute top-0 z-10 h-[5px] w-11 rounded-full',
-			isReady ? 'transition-[left] duration-400 ease-in-out' : '',
+			isReady ? 'transition-[left] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]' : '',
 			activeIndex < 0 ? 'opacity-0' : '',
 			limelightClass
 		)}

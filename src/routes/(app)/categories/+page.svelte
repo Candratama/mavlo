@@ -27,7 +27,7 @@
 	import { MediaQuery } from 'svelte/reactivity';
 	import { page } from '$app/state';
 
-	let { data, form } = $props();
+	let { data } = $props();
 
 	const isDesktop = new MediaQuery('(min-width: 768px)');
 
@@ -129,10 +129,6 @@
 		<Plus class="mr-1 size-4" /> New category
 	</Button>
 </div>
-
-{#if form?.message}
-	<p class="text-destructive mb-4 text-sm">{form.message}</p>
-{/if}
 
 <div class="mb-4 md:hidden">
 	<SegmentedControl options={viewKindOptions} bind:value={viewKind} ariaLabel="Category kind" />

@@ -29,7 +29,7 @@
 	import EmptyState from '$lib/components/empty-state.svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 
-	let { data, form } = $props();
+	let { data } = $props();
 
 	const isDesktop = new MediaQuery('(min-width: 768px)');
 
@@ -218,10 +218,6 @@
 		</form>
 	</Card.Content>
 </Card.Root>
-
-{#if form?.message}
-	<p class="text-destructive mb-4 text-sm">{form.message}</p>
-{/if}
 
 <div class="grid gap-4 md:grid-cols-2">
 	{#each data.budgets as budget (budget.id)}

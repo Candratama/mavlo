@@ -35,7 +35,7 @@
 	import AddTransactionSheet from '$lib/components/forms/add-transaction-sheet.svelte';
 	import { openAddTransaction } from '$lib/stores/add-transaction.svelte.js';
 
-	let { data, form } = $props();
+	let { data } = $props();
 
 	type TxRow = (typeof data.transactions)[number];
 
@@ -260,10 +260,6 @@
 		</p>
 	</div>
 </div>
-
-{#if form?.message}
-	<p class="text-destructive mb-4 text-sm">{form.message}</p>
-{/if}
 
 <!-- Mobile chip bar -->
 <div class="mb-4 flex items-center gap-2 overflow-x-auto md:hidden">

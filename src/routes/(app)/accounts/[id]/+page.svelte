@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { goto, invalidateAll } from '$app/navigation';
+	import { invalidateAll } from '$app/navigation';
 	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
@@ -112,7 +112,7 @@
 </svelte:head>
 
 <div class="mb-6">
-	<Button variant="ghost" size="sm" class="-ml-2 mb-3" onclick={() => goto('/accounts')}>
+	<Button variant="ghost" size="sm" class="-ml-2 mb-3" href="/accounts">
 		<ArrowLeft class="mr-1 size-4" /> Accounts
 	</Button>
 

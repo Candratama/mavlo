@@ -35,7 +35,7 @@
 	import EmptyState from '$lib/components/empty-state.svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 
-	let { data, form } = $props();
+	let { data } = $props();
 
 	const isDesktop = new MediaQuery('(min-width: 768px)');
 
@@ -138,10 +138,6 @@
 		{data.accounts.length === 1 ? 'account' : 'accounts'}
 	</p>
 </div>
-
-{#if form?.message}
-	<p class="text-destructive mb-4 text-sm">{form.message}</p>
-{/if}
 
 {#snippet rowMenu(account: AccountRow)}
 	<DropdownMenu.Root>
