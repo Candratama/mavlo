@@ -176,11 +176,17 @@
 				{pct}%
 			</span>
 		</div>
-		<div class="bg-muted mb-3 h-2.5 overflow-hidden rounded-full">
-			<div
-				class="h-full rounded-full transition-all {over ? 'bg-rose-500' : pct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
-				style="width: {pct}%"
-			></div>
+		<div class="bg-muted relative mb-3 h-2.5 overflow-hidden rounded-full">
+			{#if over}
+				<div class="absolute inset-y-0 left-0 h-full rounded-full bg-amber-500" style="width: 100%"></div>
+				{@const overPct = Math.min(100, Math.round(((spentCents - limitCents) / limitCents) * 100))}
+				<div class="absolute inset-y-0 right-0 h-full rounded-full bg-rose-500 transition-all" style="width: {overPct}%"></div>
+			{:else}
+				<div
+					class="h-full rounded-full transition-all {pct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
+					style="width: {pct}%"
+				></div>
+			{/if}
 		</div>
 		<div class="grid grid-cols-3 gap-3 text-xs">
 			<div>

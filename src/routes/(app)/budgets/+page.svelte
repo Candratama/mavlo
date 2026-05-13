@@ -297,15 +297,22 @@
 					</span>
 					<span class="text-muted-foreground">of {formatCents(budget.limitCents)}</span>
 				</div>
-				<div class="bg-muted h-2 overflow-hidden rounded-full">
-					<div
-						class={over
-							? 'h-full bg-rose-500'
-							: percentage >= 80
-								? 'h-full bg-amber-500'
-								: 'h-full bg-emerald-500'}
-						style="width: {percentage}%"
-					></div>
+				<div class="bg-muted relative h-2 overflow-hidden rounded-full">
+					{#if over}
+						<!-- base: full bar amber (100% of limit) -->
+						<div class="absolute inset-y-0 left-0 h-full bg-amber-500" style="width: 100%"></div>
+						<!-- overflow: red segment proportional to overage -->
+						{@const overPct = Math.min(100, Math.round(((spent - budget.limitCents) / budget.limitCents) * 100))}
+						<div
+							class="absolute inset-y-0 right-0 h-full bg-rose-500 transition-all"
+							style="width: {overPct}%"
+						></div>
+					{:else}
+						<div
+							class="h-full transition-all {percentage >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
+							style="width: {percentage}%"
+						></div>
+					{/if}
 				</div>
 				<p class="text-muted-foreground mt-2 text-xs">
 					{percentage}% used{#if over}
