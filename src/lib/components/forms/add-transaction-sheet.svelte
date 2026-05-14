@@ -215,15 +215,17 @@
 	});
 
 	const isToday = $derived(occurredAt === todayYmd);
-	const dateLabel = $derived(
-		isToday
-			? 'Today'
-			: new Date(occurredAt).toLocaleDateString('en-US', {
-					month: 'short',
-					day: 'numeric',
-					year: 'numeric'
-				})
-	);
+	const dateLabel = $derived.by(() => {
+		if (isToday) return 'Today';
+		if (!occurredAt) return 'Pick date';
+		const d = new Date(`${occurredAt}T00:00:00`);
+		if (Number.isNaN(d.getTime())) return 'Pick date';
+		return d.toLocaleDateString('en-US', {
+			month: 'short',
+			day: 'numeric',
+			year: 'numeric'
+		});
+	});
 
 	function onClosed() {
 		open = false;

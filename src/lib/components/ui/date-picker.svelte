@@ -47,15 +47,12 @@
 	const displayLabel = $derived(label ?? value ?? placeholder);
 
 	function onSelect(next: DateValue | undefined) {
-		if (!next) {
-			value = '';
-		} else {
-			const d = next as CalendarDate;
-			const yyyy = String(d.year).padStart(4, '0');
-			const mm = String(d.month).padStart(2, '0');
-			const dd = String(d.day).padStart(2, '0');
-			value = `${yyyy}-${mm}-${dd}`;
-		}
+		if (!next) return;
+		const d = next as CalendarDate;
+		const yyyy = String(d.year).padStart(4, '0');
+		const mm = String(d.month).padStart(2, '0');
+		const dd = String(d.day).padStart(2, '0');
+		value = `${yyyy}-${mm}-${dd}`;
 		open = false;
 	}
 
