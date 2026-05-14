@@ -227,16 +227,25 @@
 		{@const over = spent > budget.limitCents}
 		{@const IconComp = getIconByName(cat?.icon) ?? Tag}
 		{@const tint = cat?.color ?? '#8b5cf6'}
-		<Card.Root class="relative overflow-hidden">
+		<Card.Root class="relative">
 			<a
 				href="/budgets/{budget.id}"
 				class="absolute inset-0 rounded-[inherit] z-0"
 				aria-label="View {cat?.name ?? 'budget'} transactions"
 			></a>
-			<!-- bg glow -->
-			<div aria-hidden="true" class="pointer-events-none absolute -right-6 -top-6 size-24 rounded-full opacity-15 blur-2xl" style="background: {tint}"></div>
-			<Card.Header class="flex flex-row items-start justify-between gap-3 pb-2">
-				<!-- menu kiri atas -->
+			<Card.Header class="flex flex-row items-start justify-between gap-3">
+				<div class="flex min-w-0 flex-1 items-center gap-3">
+					<div
+						class="flex size-10 shrink-0 items-center justify-center rounded-lg"
+						style="background-color: {tint}20; color: {tint}"
+					>
+						<IconComp class="size-5" />
+					</div>
+					<div class="min-w-0">
+						<Card.Title class="truncate">{cat?.name ?? 'Unknown'}</Card.Title>
+						<Card.Description>{budget.periodMonth}</Card.Description>
+					</div>
+				</div>
 				<div class="relative z-10">
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger>
@@ -280,41 +289,35 @@
 					</DropdownMenu.Content>
 				</DropdownMenu.Root>
 				</div>
-				<!-- icon pojok kanan atas -->
-				<div
-					class="flex size-10 shrink-0 items-center justify-center rounded-lg"
-					style="background-color: {tint}20; color: {tint}"
-				>
-					<IconComp class="size-5" />
-				</div>
 			</Card.Header>
-			<Card.Content class="relative z-10 pt-1">
-				<!-- progress bar -->
-				<div class="bg-muted relative mb-3 h-1.5 overflow-hidden rounded-full">
+			<Card.Content class="relative z-10">
+				<div class="mb-2 flex items-baseline justify-between text-sm tabular-nums">
+					<span class={over ? 'text-expense font-medium' : ''}>
+						{formatCents(spent)}
+					</span>
+					<span class="text-muted-foreground">of {formatCents(budget.limitCents)}</span>
+				</div>
+				<div class="bg-muted relative h-2 overflow-hidden rounded-full">
 					{#if over}
+						<!-- base: full bar amber (100% of limit) -->
 						<div class="absolute inset-y-0 left-0 h-full bg-amber-500" style="width: 100%"></div>
+						<!-- overflow: red segment proportional to overage -->
 						{@const overPct = Math.min(100, Math.round(((spent - budget.limitCents) / budget.limitCents) * 100))}
-						<div class="absolute inset-y-0 right-0 h-full bg-rose-500 transition-all" style="width: {overPct}%"></div>
+						<div
+							class="absolute inset-y-0 right-0 h-full bg-rose-500 transition-all"
+							style="width: {overPct}%"
+						></div>
 					{:else}
-						<div class="h-full transition-all {percentage >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}" style="width: {percentage}%"></div>
+						<div
+							class="h-full transition-all {percentage >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
+							style="width: {percentage}%"
+						></div>
 					{/if}
 				</div>
-				<!-- bottom: nama kiri, amount kanan -->
-				<div class="flex items-end justify-between gap-2">
-					<div class="min-w-0">
-						<p class="text-muted-foreground text-[10px] tracking-wider uppercase">{budget.periodMonth}</p>
-						<p class="truncate text-sm font-semibold leading-tight">{cat?.name ?? 'Unknown'}</p>
-					</div>
-					<div class="shrink-0 text-right">
-						<p class="text-[10px] tracking-wider uppercase" style="color: {tint}">
-							{#if over}over{:else}{percentage}%{/if}
-						</p>
-						<p class="text-sm font-semibold tabular-nums {over ? 'text-expense' : ''}">
-							{formatCents(spent)}
-						</p>
-						<p class="text-muted-foreground text-[10px] tabular-nums">/ {formatCents(budget.limitCents)}</p>
-					</div>
-				</div>
+				<p class="text-muted-foreground mt-2 text-xs">
+					{percentage}% used{#if over}
+						· over by {formatCents(spent - budget.limitCents)}{/if}
+				</p>
 			</Card.Content>
 		</Card.Root>
 	{:else}
