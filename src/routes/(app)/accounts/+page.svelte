@@ -195,7 +195,7 @@
 {/snippet}
 
 {#if visibleAccounts.length > 0}
-	<div class="hidden gap-4 md:grid md:grid-cols-2 lg:grid-cols-3">
+	<div class="hidden gap-4 lg:grid lg:grid-cols-3">
 		{#each visibleAccounts as account (account.id)}
 			{@const IconComp = iconForType(account.type)}
 			{@const color = account.color || '#3b82f6'}
@@ -275,7 +275,7 @@
 		{/each}
 	</div>
 {:else}
-	<div class="hidden md:block">
+	<div class="hidden lg:block">
 		<Card.Root>
 			<Card.Content>
 				<EmptyState
@@ -291,7 +291,7 @@
 {/if}
 
 {#if visibleAccounts.length > 0}
-	<ul class="space-y-2 md:hidden">
+	<ul class="space-y-2 lg:hidden">
 		{#each visibleAccounts as account (account.id)}
 			{@const IconComp = iconForType(account.type)}
 			{@const color = account.color || '#3b82f6'}
@@ -371,7 +371,7 @@
 		{/each}
 	</ul>
 {:else}
-	<ul class="space-y-2 md:hidden">
+	<ul class="space-y-2 lg:hidden">
 		<li>
 			<EmptyState
 				icon={Wallet}

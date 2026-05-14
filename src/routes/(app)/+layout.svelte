@@ -138,7 +138,7 @@
 
 <div class="bg-background flex min-h-screen">
 	<aside
-		class="bg-sidebar text-sidebar-foreground border-sidebar-border hidden w-60 flex-col border-r p-4 lg:flex"
+		class="bg-sidebar text-sidebar-foreground border-sidebar-border hidden w-60 flex-col border-r p-4 lg:sticky lg:top-0 lg:flex lg:h-screen lg:self-start lg:overflow-y-auto"
 	>
 		<div class="mb-6 flex items-center gap-2">
 			<span class="relative inline-flex">
