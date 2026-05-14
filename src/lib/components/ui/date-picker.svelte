@@ -74,11 +74,14 @@
 	});
 </script>
 
-{#snippet body()}
+{#snippet body(mobile: boolean)}
 	<Calendar
 		type="single"
 		value={dateValue}
 		onValueChange={(v) => onSelect(v as DateValue | undefined)}
+		class={mobile
+			? 'w-full text-base [--cell-size:calc((100vw-2rem)/7)] [--cell-radius:calc(var(--radius)+0.5rem)]'
+			: '[--cell-size:--spacing(9)]'}
 	/>
 {/snippet}
 
@@ -100,7 +103,7 @@
 			sideOffset={4}
 			class="bg-popover text-popover-foreground z-50 rounded-md border p-0 shadow-md outline-none"
 		>
-			{@render body()}
+			{@render body(false)}
 		</Popover.Content>
 	</Popover.Root>
 {:else}
@@ -122,8 +125,8 @@
 			<Sheet.Header class="p-4 pb-2 text-left">
 				<Sheet.Title>{title}</Sheet.Title>
 			</Sheet.Header>
-			<div class="flex flex-1 items-start justify-center overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-				{@render body()}
+			<div class="flex flex-1 items-start overflow-y-auto px-2 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
+				{@render body(true)}
 			</div>
 		</Sheet.Content>
 	</Sheet.Root>
