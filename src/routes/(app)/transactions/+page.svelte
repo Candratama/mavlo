@@ -28,6 +28,7 @@
 		type PickerItem,
 		type PickerGroup
 	} from '$lib/components/ui/picker-sheet.svelte';
+	import DatePicker from '$lib/components/ui/date-picker.svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
@@ -301,11 +302,11 @@
 			<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
 				<div class="space-y-1">
 					<Label for="filter-from">From</Label>
-					<Input id="filter-from" type="date" name="from" bind:value={fFrom} />
+					<DatePicker id="filter-from" name="from" bind:value={fFrom} placeholder="From" title="From date" />
 				</div>
 				<div class="space-y-1">
 					<Label for="filter-to">To</Label>
-					<Input id="filter-to" type="date" name="to" bind:value={fTo} />
+					<DatePicker id="filter-to" name="to" bind:value={fTo} placeholder="To" title="To date" />
 				</div>
 				<div class="space-y-1">
 					<Label>Account</Label>
@@ -350,11 +351,11 @@
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-1">
 					<Label for="m-from">From</Label>
-					<Input id="m-from" type="date" bind:value={fFrom} />
+					<DatePicker id="m-from" bind:value={fFrom} placeholder="From" title="From date" />
 				</div>
 				<div class="space-y-1">
 					<Label for="m-to">To</Label>
-					<Input id="m-to" type="date" bind:value={fTo} />
+					<DatePicker id="m-to" bind:value={fTo} placeholder="To" title="To date" />
 				</div>
 			</div>
 			<div class="space-y-1">

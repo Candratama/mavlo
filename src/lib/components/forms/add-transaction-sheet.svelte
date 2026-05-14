@@ -9,8 +9,8 @@
 	import SubmitButton from './submit-button.svelte';
 	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
 	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
+	import DatePicker from '$lib/components/ui/date-picker.svelte';
 	import {
-		CalendarDays,
 		StickyNote,
 		Trash2,
 		Coins,
@@ -106,7 +106,6 @@
 		};
 	}
 
-	let dateInput: HTMLInputElement | undefined = $state();
 	let kind = $state<'income' | 'expense' | 'transfer'>(initialState().kind);
 	let accountId = $state(initialState().accountId);
 	let transferToAccountId = $state(initialState().transferToAccountId);
@@ -284,22 +283,13 @@
 		</div>
 
 		<div class="flex flex-wrap items-center gap-2">
-			<button
-				type="button"
-				onclick={() => dateInput?.showPicker?.()}
-				class="border-input bg-background hover:bg-accent/30 inline-flex h-11 cursor-pointer items-center gap-1.5 rounded-full border px-4 text-sm md:h-9 md:px-3"
-			>
-				<CalendarDays class="size-4" />
-				{dateLabel}
-			</button>
-			<input
-				bind:this={dateInput}
-				type="date"
+			<DatePicker
+				variant="pill"
 				name="occurredAt"
 				bind:value={occurredAt}
-				class="sr-only"
-				tabindex="-1"
-				aria-hidden="true"
+				placeholder="Pick date"
+				title="Date"
+				label={dateLabel}
 			/>
 			{#if !showNote}
 				<button
