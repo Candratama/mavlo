@@ -53,7 +53,7 @@
 	const sourceItems = $derived<PickerItem[]>(
 		eligibleSources.map((s) => ({
 			value: s.budgetId,
-			label: `${s.categoryName} · sisa ${formatCentsAsCurrency(s.sourceRemainingCents, 'IDR')}`,
+			label: `${s.categoryName} · remaining ${formatCentsAsCurrency(s.sourceRemainingCents, 'IDR')}`,
 			icon: (getIconByName(s.categoryIcon) as unknown as Icon) ?? fallback
 		}))
 	);
@@ -69,10 +69,10 @@
 			if (result.type === 'success') {
 				await invalidateAll();
 				onClose();
-				notify.success('Subsidi dicatat');
+				notify.success('Subsidy recorded');
 			} else if (result.type === 'failure') {
 				const message = (result.data as { message?: string } | undefined)?.message;
-				notify.error(message ?? 'Subsidi gagal');
+				notify.error(message ?? 'Subsidy failed');
 			}
 		};
 	}}
@@ -82,36 +82,36 @@
 	<div class="rounded-lg bg-muted/40 p-3 text-sm">
 		<div class="font-medium">{targetCategoryName}</div>
 		<div class="text-muted-foreground mt-1 text-xs">
-			Kekurangan: {formatCentsAsCurrency(targetOverageCents, 'IDR')}
+			Shortfall: {formatCentsAsCurrency(targetOverageCents, 'IDR')}
 		</div>
 		<div class="text-muted-foreground text-xs">
-			Sudah disubsidi: {formatCentsAsCurrency(alreadyCoveredCents, 'IDR')}
+			Already subsidized: {formatCentsAsCurrency(alreadyCoveredCents, 'IDR')}
 		</div>
 		<div class="text-xs font-medium">
-			Sisa yang bisa ditutup: {formatCentsAsCurrency(remainingGap, 'IDR')}
+			Remaining gap: {formatCentsAsCurrency(remainingGap, 'IDR')}
 		</div>
 	</div>
 
 	<div class="space-y-1">
-		<Label>Sumber</Label>
+		<Label>Source</Label>
 		{#if sourceItems.length === 0}
 			<p class="text-muted-foreground text-sm">
-				Tidak ada budget dengan sisa alokasi.
+				No budget with remaining allocation.
 			</p>
 		{:else}
 			<PickerSheet
 				items={sourceItems}
 				bind:value={sourceId}
 				name="fromBudgetId"
-				placeholder="Pilih sumber"
-				title="Sumber"
+				placeholder="Pick source"
+				title="Source"
 				searchable
 			/>
 		{/if}
 	</div>
 
 	<div class="space-y-1">
-		<Label for="subsidy-amount">Jumlah</Label>
+		<Label for="subsidy-amount">Amount</Label>
 		<MoneyInput
 			id="subsidy-amount"
 			name="amountCents"
@@ -122,13 +122,13 @@
 		/>
 		{#if selectedSource}
 			<p class="text-muted-foreground text-xs">
-				Maks: {formatCentsAsCurrency(maxAmount, 'IDR')}
+				Max: {formatCentsAsCurrency(maxAmount, 'IDR')}
 			</p>
 		{/if}
 	</div>
 
 	<div class="space-y-1">
-		<Label for="subsidy-note">Catatan (opsional)</Label>
+		<Label for="subsidy-note">Note (optional)</Label>
 		<Input id="subsidy-note" name="note" maxlength={200} />
 	</div>
 
@@ -146,7 +146,7 @@
 			disabled={!sourceId || amountCents <= 0 || amountCents > maxAmount}
 			class="h-12 flex-1 rounded-full !bg-white text-base font-semibold !text-neutral-900 hover:!bg-white/90 md:h-10 md:text-sm"
 		>
-			Subsidi
+			Subsidize
 		</SubmitButton>
 	</div>
 </form>

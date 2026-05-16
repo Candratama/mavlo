@@ -204,7 +204,7 @@ export async function seedDemoData(db: Db, userId: string): Promise<void> {
 			fromBudgetId: transportBudgetId,
 			toBudgetId: foodBudgetId,
 			amountCents: 1_000_000,
-			note: 'Demo subsidi: makan akhir bulan'
+			note: 'Demo subsidy: end-of-month food'
 		});
 	}
 }

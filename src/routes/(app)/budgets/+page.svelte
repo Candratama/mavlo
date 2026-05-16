@@ -279,7 +279,7 @@
 	{#if data.subsidies.length > 0}
 		{@const totalSubsidy = data.subsidies.reduce((s, x) => s + x.amountCents, 0)}
 		<div class="text-muted-foreground mt-2 text-xs">
-			Subsidi aktif: {data.subsidies.length} record, total {formatCents(totalSubsidy)} dipindahkan.
+			Active subsidies: {data.subsidies.length} record{data.subsidies.length === 1 ? '' : 's'}, total {formatCents(totalSubsidy)} transferred.
 		</div>
 	{/if}
 </div>
@@ -436,17 +436,17 @@
 				<p class="text-muted-foreground mt-2 text-xs">
 					{effPct}% used{#if stillOver}
 						· over by {formatCents(spent - effLimit)}{:else if coveredByEff}
-						· ditutupi subsidi
+						· covered by subsidy
 					{/if}
 				</p>
 				{#if flow.in > 0}
 					<p class="text-muted-foreground mt-1 text-xs">
-						↓ disubsidi {formatCents(flow.in)}
+						↓ subsidized {formatCents(flow.in)}
 					</p>
 				{/if}
 				{#if flow.out > 0}
 					<p class="text-muted-foreground mt-1 text-xs">
-						↑ subsidi keluar {formatCents(flow.out)}
+						↑ outgoing subsidy {formatCents(flow.out)}
 					</p>
 				{/if}
 				{#if stillOver}
@@ -463,7 +463,7 @@
 							openSubsidy(budget);
 						}}
 					>
-						Subsidi dari budget lain
+						Subsidize from another budget
 					</Button>
 				{/if}
 				<SubsidyList
@@ -693,7 +693,7 @@
 {#if isDesktop.current}
 	<Dialog.Root bind:open={subsidyOpen}>
 		<Dialog.Content>
-			<Dialog.Header><Dialog.Title>Subsidi budget</Dialog.Title></Dialog.Header>
+			<Dialog.Header><Dialog.Title>Subsidize budget</Dialog.Title></Dialog.Header>
 			{@render subsidyForm()}
 		</Dialog.Content>
 	</Dialog.Root>
@@ -703,7 +703,7 @@
 			side="bottom"
 			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
 		>
-			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Subsidi budget</Sheet.Title></Sheet.Header>
+			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Subsidize budget</Sheet.Title></Sheet.Header>
 			<div class="flex-1 overflow-y-auto">{@render subsidyForm()}</div>
 		</Sheet.Content>
 	</Sheet.Root>
@@ -734,7 +734,7 @@
 {#if isDesktop.current}
 	<Dialog.Root bind:open={subsidyEditOpen}>
 		<Dialog.Content>
-			<Dialog.Header><Dialog.Title>Edit subsidi</Dialog.Title></Dialog.Header>
+			<Dialog.Header><Dialog.Title>Edit subsidy</Dialog.Title></Dialog.Header>
 			{@render subsidyEditFormSnippet()}
 		</Dialog.Content>
 	</Dialog.Root>
@@ -744,7 +744,7 @@
 			side="bottom"
 			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
 		>
-			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Edit subsidi</Sheet.Title></Sheet.Header>
+			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Edit subsidy</Sheet.Title></Sheet.Header>
 			<div class="flex-1 overflow-y-auto">{@render subsidyEditFormSnippet()}</div>
 		</Sheet.Content>
 	</Sheet.Root>

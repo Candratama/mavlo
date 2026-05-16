@@ -36,7 +36,7 @@
 				open = !open;
 			}}
 		>
-			<span>{entries.length} subsidi aktif</span>
+			<span>{entries.length} active {entries.length === 1 ? 'subsidy' : 'subsidies'}</span>
 			{#if open}<ChevronUp class="size-3" />{:else}<ChevronDown class="size-3" />{/if}
 		</button>
 		{#if open}
@@ -45,7 +45,7 @@
 					<li class="flex items-center justify-between gap-2">
 						<span class="truncate">
 							{e.direction === 'in' ? '↓' : '↑'} {formatCentsAsCurrency(e.amountCents, 'IDR')}
-							{e.direction === 'in' ? 'dari' : 'ke'} {e.counterpartName}
+							{e.direction === 'in' ? 'from' : 'to'} {e.counterpartName}
 						</span>
 						<span class="flex shrink-0 items-center gap-1">
 							<Button
@@ -68,10 +68,10 @@
 									async ({ result }) => {
 										if (result.type === 'success') {
 											await invalidateAll();
-											notify.success('Subsidi dihapus');
+											notify.success('Subsidy deleted');
 										} else if (result.type === 'failure') {
 											const message = (result.data as { message?: string } | undefined)?.message;
-											notify.error(message ?? 'Hapus gagal');
+											notify.error(message ?? 'Delete failed');
 										}
 									}}
 								onclick={(ev) => ev.stopPropagation()}

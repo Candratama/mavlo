@@ -326,7 +326,7 @@
 {#if budget}
 	<div class="mb-6 rounded-xl border bg-card p-4">
 		<div class="mb-3 flex items-center justify-between">
-			<h2 class="text-sm font-semibold">Subsidi</h2>
+			<h2 class="text-sm font-semibold">Subsidies</h2>
 			{#if stillOver}
 				<Button
 					type="button"
@@ -335,12 +335,12 @@
 					disabled={eligibleSources.length === 0}
 					onclick={() => (subsidyOpen = true)}
 				>
-					+ Subsidi dari budget lain
+					+ Subsidize from another budget
 				</Button>
 			{/if}
 		</div>
 		{#if entries.length === 0}
-			<p class="text-muted-foreground text-xs">Belum ada subsidi untuk budget ini.</p>
+			<p class="text-muted-foreground text-xs">No subsidies for this budget yet.</p>
 		{:else}
 			<SubsidyList {entries} onEdit={openSubsidyEdit} />
 		{/if}
@@ -497,13 +497,13 @@
 {#if isDesktop.current}
 	<Dialog.Root bind:open={subsidyOpen}>
 		<Dialog.Content>
-			<Dialog.Header><Dialog.Title>Subsidi budget</Dialog.Title></Dialog.Header>
+			<Dialog.Header><Dialog.Title>Subsidize budget</Dialog.Title></Dialog.Header>
 			{@render subsidyCreateSnippet()}
 		</Dialog.Content>
 	</Dialog.Root>
 	<Dialog.Root bind:open={subsidyEditOpen}>
 		<Dialog.Content>
-			<Dialog.Header><Dialog.Title>Edit subsidi</Dialog.Title></Dialog.Header>
+			<Dialog.Header><Dialog.Title>Edit subsidy</Dialog.Title></Dialog.Header>
 			{@render subsidyEditSnippet()}
 		</Dialog.Content>
 	</Dialog.Root>
@@ -513,7 +513,7 @@
 			side="bottom"
 			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
 		>
-			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Subsidi budget</Sheet.Title></Sheet.Header>
+			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Subsidize budget</Sheet.Title></Sheet.Header>
 			<div class="flex-1 overflow-y-auto">{@render subsidyCreateSnippet()}</div>
 		</Sheet.Content>
 	</Sheet.Root>
@@ -522,7 +522,7 @@
 			side="bottom"
 			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
 		>
-			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Edit subsidi</Sheet.Title></Sheet.Header>
+			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Edit subsidy</Sheet.Title></Sheet.Header>
 			<div class="flex-1 overflow-y-auto">{@render subsidyEditSnippet()}</div>
 		</Sheet.Content>
 	</Sheet.Root>

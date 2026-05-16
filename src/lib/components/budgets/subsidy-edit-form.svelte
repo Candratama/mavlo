@@ -43,10 +43,10 @@
 			if (result.type === 'success') {
 				await invalidateAll();
 				onClose();
-				notify.success('Subsidi diperbarui');
+				notify.success('Subsidy updated');
 			} else if (result.type === 'failure') {
 				const message = (result.data as { message?: string } | undefined)?.message;
-				notify.error(message ?? 'Update gagal');
+				notify.error(message ?? 'Update failed');
 			}
 		};
 	}}
@@ -56,12 +56,12 @@
 	<div class="rounded-lg bg-muted/40 p-3 text-sm">
 		<div class="font-medium">{fromName} → {toName}</div>
 		<div class="text-muted-foreground mt-1 text-xs">
-			From/to tidak bisa diubah.
+			From/to cannot be changed.
 		</div>
 	</div>
 
 	<div class="space-y-1">
-		<Label for="subsidy-edit-amount">Jumlah</Label>
+		<Label for="subsidy-edit-amount">Amount</Label>
 		<MoneyInput
 			id="subsidy-edit-amount"
 			name="amountCents"
@@ -71,12 +71,12 @@
 			class="h-12 text-lg md:h-12 md:text-lg"
 		/>
 		<p class="text-muted-foreground text-xs">
-			Maks: {formatCentsAsCurrency(maxAmount, 'IDR')}
+			Max: {formatCentsAsCurrency(maxAmount, 'IDR')}
 		</p>
 	</div>
 
 	<div class="space-y-1">
-		<Label for="subsidy-edit-note">Catatan</Label>
+		<Label for="subsidy-edit-note">Note</Label>
 		<Input id="subsidy-edit-note" name="note" maxlength={200} value={currentNote ?? ''} />
 	</div>
 
@@ -94,7 +94,7 @@
 			disabled={amountCents <= 0 || amountCents > maxAmount}
 			class="h-12 flex-1 rounded-full !bg-white text-base font-semibold !text-neutral-900 hover:!bg-white/90 md:h-10 md:text-sm"
 		>
-			Simpan
+			Save
 		</SubmitButton>
 	</div>
 </form>
