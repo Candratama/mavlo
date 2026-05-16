@@ -17,6 +17,8 @@ import {
 	computeDailySpending,
 	computeMonthlyIncomeExpense
 } from '$lib/server/repositories/dashboard-stats';
+import { listSubsidies } from '$lib/server/repositories/subsidies';
+import { computeSubsidyFlows } from '$lib/server/repositories/budget-effective';
 import { getCurrentCycle, formatCycleLabel } from '$lib/utils/cycle';
 import { cachedJson, CACHE_KEYS } from '$lib/server/cf-cache';
 import type { LayoutServerLoad } from './$types';
@@ -64,7 +66,9 @@ export const load: LayoutServerLoad = async (event) => {
 		budgetSpent,
 		spendingByCategory,
 		dailySpending,
-		monthlyIncomeExpense
+		monthlyIncomeExpense,
+		subsidies,
+		subsidyFlows
 	] = await Promise.all([
 		listAccounts(db, user.id, { includeArchived: true }),
 		listCategories(db, user.id, { includeArchived: true }),
@@ -81,7 +85,9 @@ export const load: LayoutServerLoad = async (event) => {
 		),
 		cachedJson(user.id, CACHE_KEYS.monthlyIncomeExpense(cycle.periodMonth, 6), 60, () =>
 			computeMonthlyIncomeExpense(db, user.id, 6, cycle.periodMonth)
-		)
+		),
+		listSubsidies(db, user.id, { periodMonth: cycle.periodMonth }),
+		computeSubsidyFlows(db, user.id, cycle.periodMonth)
 	]);
 
 	const categories = allCategories.filter((c) => !c.archived);
@@ -112,6 +118,9 @@ export const load: LayoutServerLoad = async (event) => {
 	const allocatedCents = savingsCents + remainingBudgetCents;
 
 	const spentByCategory: Record<string, number> = Object.fromEntries(budgetSpent.entries());
+
+	const subsidyFlowByBudget: Record<string, { in: number; out: number }> =
+		Object.fromEntries(subsidyFlows.entries());
 
 	// Dashboard stats
 	const cycleTxns = transactions.filter(
@@ -194,6 +203,8 @@ export const load: LayoutServerLoad = async (event) => {
 		budgets: budgetList,
 		expenseCategories: categories.filter((c) => c.kind === 'expense'),
 		spentByCategory,
+		subsidies,
+		subsidyFlowByBudget,
 		periodMonth: cycle.periodMonth,
 		allocation: {
 			totalCashCents,

@@ -5,6 +5,7 @@ import {
 	categories,
 	transactions,
 	budgets,
+	budgetSubsidies,
 	userPreferences
 } from '$lib/server/db/schema';
 import { DEFAULT_CATEGORIES } from '$lib/server/onboarding-defaults';
@@ -173,17 +174,37 @@ export async function seedDemoData(db: Db, userId: string): Promise<void> {
 	]);
 
 	const periodMonth = periodMonthStr();
+	// Food limit is intentionally set below actual spending (5_500_000) to demonstrate overspent state.
 	const budgetSeeds = [
-		{ name: 'Food', limitCents: 200000000 },
-		{ name: 'Transport', limitCents: 80000000 },
-		{ name: 'Shopping', limitCents: 150000000 },
-		{ name: 'Bills', limitCents: 120000000 }
+		{ name: 'Food', limitCents: 4_000_000 },
+		{ name: 'Transport', limitCents: 80_000_000 },
+		{ name: 'Shopping', limitCents: 150_000_000 },
+		{ name: 'Bills', limitCents: 120_000_000 }
 	];
 	const budgetRows = budgetSeeds
 		.map((b) => ({ categoryId: cat(b.name), limitCents: b.limitCents }))
 		.filter((b): b is { categoryId: string; limitCents: number } => b.categoryId !== null)
 		.map((b) => ({ userId, categoryId: b.categoryId, periodMonth, limitCents: b.limitCents }));
+
+	let seededBudgets: { id: string; categoryId: string }[] = [];
 	if (budgetRows.length > 0) {
-		await db.insert(budgets).values(budgetRows);
+		seededBudgets = await db.insert(budgets).values(budgetRows).returning({ id: budgets.id, categoryId: budgets.categoryId });
+	}
+
+	// Seed a sample subsidy: Transport (slack) → Food (overspent).
+	// Food spent 5_500_000 > limit 4_000_000 → overage 1_500_000.
+	// Transport spent 2_500_000, limit 80_000_000 → slack 77_500_000.
+	// Subsidy amount 1_000_000 ≤ min(1_500_000, 77_500_000). ✓
+	const foodBudgetId = seededBudgets.find((b) => b.categoryId === cat('Food'))?.id;
+	const transportBudgetId = seededBudgets.find((b) => b.categoryId === cat('Transport'))?.id;
+	if (foodBudgetId && transportBudgetId) {
+		await db.insert(budgetSubsidies).values({
+			userId,
+			periodMonth,
+			fromBudgetId: transportBudgetId,
+			toBudgetId: foodBudgetId,
+			amountCents: 1_000_000,
+			note: 'Demo subsidy: end-of-month food'
+		});
 	}
 }

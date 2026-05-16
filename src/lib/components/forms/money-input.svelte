@@ -96,7 +96,7 @@
 
 <div class="relative">
 	<span
-		class="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-base"
+		class="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-lg"
 	>
 		Rp
 	</span>

@@ -25,8 +25,12 @@
 	} from 'lucide-svelte';
 	import { getIconByName } from '$lib/utils/category-icons.js';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
+	import { effectiveLimit, sourceRemaining } from '$lib/utils/budget.js';
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
+	import SubsidyCreateForm from '$lib/components/budgets/subsidy-create-form.svelte';
+	import SubsidyList from '$lib/components/budgets/subsidy-list.svelte';
+	import SubsidyEditForm from '$lib/components/budgets/subsidy-edit-form.svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 
 	let { data } = $props();
@@ -42,6 +46,9 @@
 	let editPending = $state(false);
 
 	const categoryById = $derived(new Map(data.categories.map((c) => [c.id, c])));
+
+	const flowOf = (budgetId: string) =>
+		data.subsidyFlowByBudget[budgetId] ?? { in: 0, out: 0 };
 
 	const formatCents = (cents: number) => formatCentsAsCurrency(cents, 'IDR');
 
@@ -74,6 +81,92 @@
 
 	let createCategoryId = $state('');
 	let editCategoryId = $state('');
+
+	let subsidyOpen = $state(false);
+	let subsidyTarget = $state<BudgetRow | null>(null);
+
+	const eligibleSourcesFor = (target: BudgetRow) => {
+		return data.budgets
+			.filter((b) => b.id !== target.id && b.periodMonth === target.periodMonth)
+			.map((b) => {
+				const spentB = data.spentByCategory[b.categoryId] ?? 0;
+				const out = (data.subsidyFlowByBudget[b.id]?.out) ?? 0;
+				const remaining = sourceRemaining({
+					limitCents: b.limitCents,
+					spentCents: spentB,
+					subsidyOutCents: out
+				});
+				const cat = categoryById.get(b.categoryId);
+				return {
+					budgetId: b.id,
+					categoryName: cat?.name ?? 'Unknown',
+					categoryIcon: cat?.icon ?? null,
+					sourceRemainingCents: remaining
+				};
+			})
+			.filter((s) => s.sourceRemainingCents > 0);
+	};
+
+	const openSubsidy = (b: BudgetRow) => {
+		subsidyTarget = b;
+		subsidyOpen = true;
+	};
+
+	type SubsidyRow = (typeof data.subsidies)[number];
+
+	let subsidyEditOpen = $state(false);
+	let subsidyEditTarget = $state<SubsidyRow | null>(null);
+
+	const budgetById = $derived(new Map(data.budgets.map((b) => [b.id, b])));
+
+	const subsidiesByBudget = $derived.by(() => {
+		const inMap: Record<string, SubsidyRow[]> = {};
+		const outMap: Record<string, SubsidyRow[]> = {};
+		for (const s of data.subsidies) {
+			(inMap[s.toBudgetId] ??= []).push(s);
+			(outMap[s.fromBudgetId] ??= []).push(s);
+		}
+		return { inMap, outMap };
+	});
+
+	const entriesForBudget = (budgetId: string) => {
+		const { inMap, outMap } = subsidiesByBudget;
+		const entries: {
+			id: string;
+			direction: 'in' | 'out';
+			counterpartName: string;
+			amountCents: number;
+			note: string | null;
+		}[] = [];
+		for (const s of inMap[budgetId] ?? []) {
+			const fromBudget = budgetById.get(s.fromBudgetId);
+			const cat = fromBudget ? categoryById.get(fromBudget.categoryId) : null;
+			entries.push({
+				id: s.id,
+				direction: 'in',
+				counterpartName: cat?.name ?? 'Unknown',
+				amountCents: s.amountCents,
+				note: s.note
+			});
+		}
+		for (const s of outMap[budgetId] ?? []) {
+			const toBudget = budgetById.get(s.toBudgetId);
+			const cat = toBudget ? categoryById.get(toBudget.categoryId) : null;
+			entries.push({
+				id: s.id,
+				direction: 'out',
+				counterpartName: cat?.name ?? 'Unknown',
+				amountCents: s.amountCents,
+				note: s.note
+			});
+		}
+		return entries;
+	};
+
+	const openSubsidyEdit = (subsidyId: string) => {
+		subsidyEditTarget = data.subsidies.find((s) => s.id === subsidyId) ?? null;
+		subsidyEditOpen = subsidyEditTarget !== null;
+	};
 
 	$effect(() => {
 		if (createOpen && !createCategoryId) {
@@ -183,6 +276,12 @@
 		<span>{formatCents(totalSpent)}</span>
 		<span>{formatCents(totalAllocated)}</span>
 	</div>
+	{#if data.subsidies.length > 0}
+		{@const totalSubsidy = data.subsidies.reduce((s, x) => s + x.amountCents, 0)}
+		<div class="text-muted-foreground mt-2 text-xs">
+			Active subsidies: {data.subsidies.length} record{data.subsidies.length === 1 ? '' : 's'}, total {formatCents(totalSubsidy)} transferred.
+		</div>
+	{/if}
 </div>
 
 <!-- Mobile: period chip -->
@@ -223,7 +322,6 @@
 	{#each data.budgets as budget (budget.id)}
 		{@const cat = categoryById.get(budget.categoryId)}
 		{@const spent = data.spentByCategory[budget.categoryId] ?? 0}
-		{@const percentage = pct(spent, budget.limitCents)}
 		{@const over = spent > budget.limitCents}
 		{@const IconComp = getIconByName(cat?.icon) ?? Tag}
 		{@const tint = cat?.color ?? '#8b5cf6'}
@@ -291,33 +389,87 @@
 				</div>
 			</Card.Header>
 			<Card.Content class="relative z-10">
+				{@const flow = flowOf(budget.id)}
+				{@const effLimit = effectiveLimit(budget.limitCents, flow)}
+				{@const stillOver = spent > effLimit}
+				{@const coveredByEff = over && !stillOver}
+				{@const effPct = effLimit === 0 ? 0 : Math.min(100, Math.round((spent / effLimit) * 100))}
 				<div class="mb-2 flex items-baseline justify-between text-sm tabular-nums">
-					<span class={over ? 'text-expense font-medium' : ''}>
+					<span class={stillOver ? 'text-expense font-medium' : ''}>
 						{formatCents(spent)}
 					</span>
-					<span class="text-muted-foreground">of {formatCents(budget.limitCents)}</span>
+					<span class="text-muted-foreground">
+						of {formatCents(budget.limitCents)}
+						{#if flow.in > 0 || flow.out > 0}
+							<span class="text-xs">(eff {formatCents(effLimit)})</span>
+						{/if}
+					</span>
 				</div>
 				<div class="bg-muted relative h-2 overflow-hidden rounded-full">
-					{#if over}
-						<!-- base: full bar amber (100% of limit) -->
+					{#if stillOver}
 						<div class="absolute inset-y-0 left-0 h-full bg-amber-500" style="width: 100%"></div>
-						<!-- overflow: red segment proportional to overage -->
-						{@const overPct = Math.min(100, Math.round(((spent - budget.limitCents) / budget.limitCents) * 100))}
+						{@const overPct = Math.min(100, Math.round(((spent - effLimit) / Math.max(1, effLimit)) * 100))}
 						<div
 							class="absolute inset-y-0 right-0 h-full bg-rose-500 transition-all"
 							style="width: {overPct}%"
 						></div>
+					{:else if coveredByEff}
+						{@const redPct = effLimit === 0 ? 0 : Math.min(100, Math.round((budget.limitCents / effLimit) * 100))}
+						{@const bluePct = effLimit === 0 ? 0 : Math.min(100 - redPct, Math.round(((spent - budget.limitCents) / effLimit) * 100))}
+						<div class="absolute inset-y-0 left-0 h-full bg-rose-500" style="width: {redPct}%"></div>
+						<div class="absolute inset-y-0 h-full bg-blue-500 transition-all" style="left: {redPct}%; width: {bluePct}%"></div>
 					{:else}
 						<div
-							class="h-full transition-all {percentage >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
-							style="width: {percentage}%"
+							class="h-full transition-all {effPct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
+							style="width: {effPct}%"
+						></div>
+					{/if}
+					{#if flow.in > 0 || flow.out > 0}
+						{@const markerPct = effLimit === 0 ? 0 : Math.min(100, Math.round((budget.limitCents / effLimit) * 100))}
+						<div
+							class="absolute inset-y-0 w-px bg-foreground/40"
+							style="left: {markerPct}%"
+							aria-hidden="true"
 						></div>
 					{/if}
 				</div>
 				<p class="text-muted-foreground mt-2 text-xs">
-					{percentage}% used{#if over}
-						· over by {formatCents(spent - budget.limitCents)}{/if}
+					{effPct}% used{#if stillOver}
+						· over by {formatCents(spent - effLimit)}{:else if coveredByEff}
+						· covered by subsidy
+					{/if}
 				</p>
+				{#if flow.in > 0}
+					<p class="text-muted-foreground mt-1 text-xs">
+						↓ subsidized {formatCents(flow.in)}
+					</p>
+				{/if}
+				{#if flow.out > 0}
+					<p class="text-muted-foreground mt-1 text-xs">
+						↑ outgoing subsidy {formatCents(flow.out)}
+					</p>
+				{/if}
+				{#if stillOver}
+					{@const sources = eligibleSourcesFor(budget)}
+					<Button
+						type="button"
+						variant="outline"
+						size="sm"
+						class="mt-3 w-full"
+						disabled={sources.length === 0}
+						onclick={(e) => {
+							e.preventDefault();
+							e.stopPropagation();
+							openSubsidy(budget);
+						}}
+					>
+						Subsidize from another budget
+					</Button>
+				{/if}
+				<SubsidyList
+					entries={entriesForBudget(budget.id)}
+					onEdit={openSubsidyEdit}
+				/>
 			</Card.Content>
 		</Card.Root>
 	{:else}
@@ -517,6 +669,85 @@
 		>
 			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Edit budget</Sheet.Title></Sheet.Header>
 			<div class="flex-1 overflow-y-auto">{@render editForm()}</div>
+		</Sheet.Content>
+	</Sheet.Root>
+{/if}
+
+{#snippet subsidyForm()}
+	{#if subsidyTarget}
+		{@const flow = flowOf(subsidyTarget.id)}
+		{@const spent = data.spentByCategory[subsidyTarget.categoryId] ?? 0}
+		{@const overage = spent - subsidyTarget.limitCents}
+		{@const cat = categoryById.get(subsidyTarget.categoryId)}
+		<SubsidyCreateForm
+			targetBudgetId={subsidyTarget.id}
+			targetCategoryName={cat?.name ?? 'Unknown'}
+			targetOverageCents={Math.max(0, overage)}
+			alreadyCoveredCents={flow.in}
+			eligibleSources={eligibleSourcesFor(subsidyTarget)}
+			onClose={() => (subsidyOpen = false)}
+		/>
+	{/if}
+{/snippet}
+
+{#if isDesktop.current}
+	<Dialog.Root bind:open={subsidyOpen}>
+		<Dialog.Content>
+			<Dialog.Header><Dialog.Title>Subsidize budget</Dialog.Title></Dialog.Header>
+			{@render subsidyForm()}
+		</Dialog.Content>
+	</Dialog.Root>
+{:else}
+	<Sheet.Root bind:open={subsidyOpen}>
+		<Sheet.Content
+			side="bottom"
+			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
+		>
+			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Subsidize budget</Sheet.Title></Sheet.Header>
+			<div class="flex-1 overflow-y-auto">{@render subsidyForm()}</div>
+		</Sheet.Content>
+	</Sheet.Root>
+{/if}
+
+{#snippet subsidyEditFormSnippet()}
+	{#if subsidyEditTarget}
+		{@const fromBudget = budgetById.get(subsidyEditTarget.fromBudgetId)}
+		{@const toBudget = budgetById.get(subsidyEditTarget.toBudgetId)}
+		{@const fromCat = fromBudget ? categoryById.get(fromBudget.categoryId) : null}
+		{@const toCat = toBudget ? categoryById.get(toBudget.categoryId) : null}
+		{@const fromSpent = fromBudget ? (data.spentByCategory[fromBudget.categoryId] ?? 0) : 0}
+		{@const fromFlowOut = fromBudget ? (data.subsidyFlowByBudget[fromBudget.id]?.out ?? 0) : 0}
+		{@const remainingExclSelf =
+			(fromBudget?.limitCents ?? 0) - fromSpent - fromFlowOut + subsidyEditTarget.amountCents}
+		{#key subsidyEditTarget.id}
+			<SubsidyEditForm
+				subsidyId={subsidyEditTarget.id}
+				fromName={fromCat?.name ?? 'Unknown'}
+				toName={toCat?.name ?? 'Unknown'}
+				currentAmountCents={subsidyEditTarget.amountCents}
+				sourceRemainingExclSelfCents={remainingExclSelf}
+				currentNote={subsidyEditTarget.note}
+				onClose={() => (subsidyEditOpen = false)}
+			/>
+		{/key}
+	{/if}
+{/snippet}
+
+{#if isDesktop.current}
+	<Dialog.Root bind:open={subsidyEditOpen}>
+		<Dialog.Content>
+			<Dialog.Header><Dialog.Title>Edit subsidy</Dialog.Title></Dialog.Header>
+			{@render subsidyEditFormSnippet()}
+		</Dialog.Content>
+	</Dialog.Root>
+{:else}
+	<Sheet.Root bind:open={subsidyEditOpen}>
+		<Sheet.Content
+			side="bottom"
+			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
+		>
+			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Edit subsidy</Sheet.Title></Sheet.Header>
+			<div class="flex-1 overflow-y-auto">{@render subsidyEditFormSnippet()}</div>
 		</Sheet.Content>
 	</Sheet.Root>
 {/if}
