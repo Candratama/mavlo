@@ -29,6 +29,8 @@
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
 	import SubsidyCreateForm from '$lib/components/budgets/subsidy-create-form.svelte';
+	import SubsidyList from '$lib/components/budgets/subsidy-list.svelte';
+	import SubsidyEditForm from '$lib/components/budgets/subsidy-edit-form.svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 
 	let { data } = $props();
@@ -111,6 +113,66 @@
 	const openSubsidy = (b: BudgetRow) => {
 		subsidyTarget = b;
 		subsidyOpen = true;
+	};
+
+	type SubsidyRow = (typeof data.subsidies)[number];
+
+	let subsidyEditOpen = $state(false);
+	let subsidyEditTarget = $state<SubsidyRow | null>(null);
+
+	const budgetById = $derived(new Map(data.budgets.map((b) => [b.id, b])));
+
+	const subsidiesByBudget = $derived(() => {
+		const inMap = new Map<string, SubsidyRow[]>();
+		const outMap = new Map<string, SubsidyRow[]>();
+		for (const s of data.subsidies) {
+			const inArr = inMap.get(s.toBudgetId) ?? [];
+			inArr.push(s);
+			inMap.set(s.toBudgetId, inArr);
+			const outArr = outMap.get(s.fromBudgetId) ?? [];
+			outArr.push(s);
+			outMap.set(s.fromBudgetId, outArr);
+		}
+		return { inMap, outMap };
+	});
+
+	const entriesForBudget = (budgetId: string) => {
+		const { inMap, outMap } = subsidiesByBudget();
+		const entries: {
+			id: string;
+			direction: 'in' | 'out';
+			counterpartName: string;
+			amountCents: number;
+			note: string | null;
+		}[] = [];
+		for (const s of inMap.get(budgetId) ?? []) {
+			const fromBudget = budgetById.get(s.fromBudgetId);
+			const cat = fromBudget ? categoryById.get(fromBudget.categoryId) : null;
+			entries.push({
+				id: s.id,
+				direction: 'in',
+				counterpartName: cat?.name ?? 'Unknown',
+				amountCents: s.amountCents,
+				note: s.note
+			});
+		}
+		for (const s of outMap.get(budgetId) ?? []) {
+			const toBudget = budgetById.get(s.toBudgetId);
+			const cat = toBudget ? categoryById.get(toBudget.categoryId) : null;
+			entries.push({
+				id: s.id,
+				direction: 'out',
+				counterpartName: cat?.name ?? 'Unknown',
+				amountCents: s.amountCents,
+				note: s.note
+			});
+		}
+		return entries;
+	};
+
+	const openSubsidyEdit = (subsidyId: string) => {
+		subsidyEditTarget = data.subsidies.find((s) => s.id === subsidyId) ?? null;
+		subsidyEditOpen = subsidyEditTarget !== null;
 	};
 
 	$effect(() => {
@@ -403,6 +465,10 @@
 						Subsidi dari budget lain
 					</Button>
 				{/if}
+				<SubsidyList
+					entries={entriesForBudget(budget.id)}
+					onEdit={openSubsidyEdit}
+				/>
 			</Card.Content>
 		</Card.Root>
 	{:else}
@@ -638,6 +704,47 @@
 		>
 			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Subsidi budget</Sheet.Title></Sheet.Header>
 			<div class="flex-1 overflow-y-auto">{@render subsidyForm()}</div>
+		</Sheet.Content>
+	</Sheet.Root>
+{/if}
+
+{#snippet subsidyEditFormSnippet()}
+	{#if subsidyEditTarget}
+		{@const fromBudget = budgetById.get(subsidyEditTarget.fromBudgetId)}
+		{@const toBudget = budgetById.get(subsidyEditTarget.toBudgetId)}
+		{@const fromCat = fromBudget ? categoryById.get(fromBudget.categoryId) : null}
+		{@const toCat = toBudget ? categoryById.get(toBudget.categoryId) : null}
+		{@const fromSpent = fromBudget ? (data.spentByCategory[fromBudget.categoryId] ?? 0) : 0}
+		{@const fromFlowOut = fromBudget ? (data.subsidyFlowByBudget[fromBudget.id]?.out ?? 0) : 0}
+		{@const remainingExclSelf =
+			(fromBudget?.limitCents ?? 0) - fromSpent - fromFlowOut + subsidyEditTarget.amountCents}
+		<SubsidyEditForm
+			subsidyId={subsidyEditTarget.id}
+			fromName={fromCat?.name ?? 'Unknown'}
+			toName={toCat?.name ?? 'Unknown'}
+			currentAmountCents={subsidyEditTarget.amountCents}
+			sourceRemainingExclSelfCents={remainingExclSelf}
+			currentNote={subsidyEditTarget.note}
+			onClose={() => (subsidyEditOpen = false)}
+		/>
+	{/if}
+{/snippet}
+
+{#if isDesktop.current}
+	<Dialog.Root bind:open={subsidyEditOpen}>
+		<Dialog.Content>
+			<Dialog.Header><Dialog.Title>Edit subsidi</Dialog.Title></Dialog.Header>
+			{@render subsidyEditFormSnippet()}
+		</Dialog.Content>
+	</Dialog.Root>
+{:else}
+	<Sheet.Root bind:open={subsidyEditOpen}>
+		<Sheet.Content
+			side="bottom"
+			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
+		>
+			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Edit subsidi</Sheet.Title></Sheet.Header>
+			<div class="flex-1 overflow-y-auto">{@render subsidyEditFormSnippet()}</div>
 		</Sheet.Content>
 	</Sheet.Root>
 {/if}
