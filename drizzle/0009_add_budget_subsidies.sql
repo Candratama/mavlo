@@ -15,7 +15,4 @@ CREATE TABLE `budget_subsidies` (
 --> statement-breakpoint
 CREATE INDEX `subsidies_user_period_idx` ON `budget_subsidies` (`user_id`,`period_month`);--> statement-breakpoint
 CREATE INDEX `subsidies_from_idx` ON `budget_subsidies` (`from_budget_id`);--> statement-breakpoint
-CREATE INDEX `subsidies_to_idx` ON `budget_subsidies` (`to_budget_id`);--> statement-breakpoint
-ALTER TABLE `transactions` ADD `is_seed` integer DEFAULT false NOT NULL;--> statement-breakpoint
-ALTER TABLE `users` ADD `is_demo` integer DEFAULT false NOT NULL;--> statement-breakpoint
-ALTER TABLE `accounts` DROP COLUMN `sort_order`;
+CREATE INDEX `subsidies_to_idx` ON `budget_subsidies` (`to_budget_id`);
