@@ -25,6 +25,7 @@
 	} from 'lucide-svelte';
 	import { getIconByName } from '$lib/utils/category-icons.js';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
+	import { effectiveLimit, sourceRemaining } from '$lib/utils/budget.js';
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
 	import { MediaQuery } from 'svelte/reactivity';
@@ -42,6 +43,12 @@
 	let editPending = $state(false);
 
 	const categoryById = $derived(new Map(data.categories.map((c) => [c.id, c])));
+
+	const flowOf = (budgetId: string) =>
+		data.subsidyFlowByBudget[budgetId] ?? { in: 0, out: 0 };
+
+	const effLimitOf = (budget: BudgetRow) =>
+		effectiveLimit(budget.limitCents, flowOf(budget.id));
 
 	const formatCents = (cents: number) => formatCentsAsCurrency(cents, 'IDR');
 
@@ -291,33 +298,63 @@
 				</div>
 			</Card.Header>
 			<Card.Content class="relative z-10">
+				{@const flow = flowOf(budget.id)}
+				{@const effLimit = effectiveLimit(budget.limitCents, flow)}
+				{@const stillOver = spent > effLimit}
+				{@const coveredByEff = over && !stillOver}
+				{@const effPct = effLimit === 0 ? 0 : Math.min(100, Math.round((spent / effLimit) * 100))}
 				<div class="mb-2 flex items-baseline justify-between text-sm tabular-nums">
-					<span class={over ? 'text-expense font-medium' : ''}>
+					<span class={stillOver ? 'text-expense font-medium' : ''}>
 						{formatCents(spent)}
 					</span>
-					<span class="text-muted-foreground">of {formatCents(budget.limitCents)}</span>
+					<span class="text-muted-foreground">
+						of {formatCents(budget.limitCents)}
+						{#if flow.in > 0 || flow.out > 0}
+							<span class="text-xs">(eff {formatCents(effLimit)})</span>
+						{/if}
+					</span>
 				</div>
 				<div class="bg-muted relative h-2 overflow-hidden rounded-full">
-					{#if over}
-						<!-- base: full bar amber (100% of limit) -->
+					{#if stillOver}
 						<div class="absolute inset-y-0 left-0 h-full bg-amber-500" style="width: 100%"></div>
-						<!-- overflow: red segment proportional to overage -->
-						{@const overPct = Math.min(100, Math.round(((spent - budget.limitCents) / budget.limitCents) * 100))}
+						{@const overPct = Math.min(100, Math.round(((spent - effLimit) / Math.max(1, effLimit)) * 100))}
 						<div
 							class="absolute inset-y-0 right-0 h-full bg-rose-500 transition-all"
 							style="width: {overPct}%"
 						></div>
+					{:else if coveredByEff}
+						<div class="h-full bg-emerald-500 transition-all" style="width: 100%"></div>
 					{:else}
 						<div
-							class="h-full transition-all {percentage >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
-							style="width: {percentage}%"
+							class="h-full transition-all {effPct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
+							style="width: {effPct}%"
+						></div>
+					{/if}
+					{#if flow.in > 0 || flow.out > 0}
+						{@const markerPct = effLimit === 0 ? 0 : Math.min(100, Math.round((budget.limitCents / effLimit) * 100))}
+						<div
+							class="absolute inset-y-0 w-px bg-foreground/40"
+							style="left: {markerPct}%"
+							aria-hidden="true"
 						></div>
 					{/if}
 				</div>
 				<p class="text-muted-foreground mt-2 text-xs">
-					{percentage}% used{#if over}
-						· over by {formatCents(spent - budget.limitCents)}{/if}
+					{effPct}% used{#if stillOver}
+						· over by {formatCents(spent - effLimit)}{:else if coveredByEff}
+						· ditutupi subsidi
+					{/if}
 				</p>
+				{#if flow.in > 0}
+					<p class="text-muted-foreground mt-1 text-xs">
+						↓ disubsidi {formatCents(flow.in)}
+					</p>
+				{/if}
+				{#if flow.out > 0}
+					<p class="text-muted-foreground mt-1 text-xs">
+						↑ subsidi keluar {formatCents(flow.out)}
+					</p>
+				{/if}
 			</Card.Content>
 		</Card.Root>
 	{:else}
