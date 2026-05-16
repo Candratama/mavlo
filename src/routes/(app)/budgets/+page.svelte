@@ -28,6 +28,7 @@
 	import { effectiveLimit, sourceRemaining } from '$lib/utils/budget.js';
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
+	import SubsidyCreateForm from '$lib/components/budgets/subsidy-create-form.svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 
 	let { data } = $props();
@@ -81,6 +82,36 @@
 
 	let createCategoryId = $state('');
 	let editCategoryId = $state('');
+
+	let subsidyOpen = $state(false);
+	let subsidyTarget = $state<BudgetRow | null>(null);
+
+	const eligibleSourcesFor = (target: BudgetRow) => {
+		return data.budgets
+			.filter((b) => b.id !== target.id && b.periodMonth === target.periodMonth)
+			.map((b) => {
+				const spentB = data.spentByCategory[b.categoryId] ?? 0;
+				const out = (data.subsidyFlowByBudget[b.id]?.out) ?? 0;
+				const remaining = sourceRemaining({
+					limitCents: b.limitCents,
+					spentCents: spentB,
+					subsidyOutCents: out
+				});
+				const cat = categoryById.get(b.categoryId);
+				return {
+					budgetId: b.id,
+					categoryName: cat?.name ?? 'Unknown',
+					categoryIcon: cat?.icon ?? null,
+					sourceRemainingCents: remaining
+				};
+			})
+			.filter((s) => s.sourceRemainingCents > 0);
+	};
+
+	const openSubsidy = (b: BudgetRow) => {
+		subsidyTarget = b;
+		subsidyOpen = true;
+	};
 
 	$effect(() => {
 		if (createOpen && !createCategoryId) {
@@ -355,6 +386,23 @@
 						↑ subsidi keluar {formatCents(flow.out)}
 					</p>
 				{/if}
+				{#if stillOver}
+					{@const sources = eligibleSourcesFor(budget)}
+					<Button
+						type="button"
+						variant="outline"
+						size="sm"
+						class="mt-3 w-full"
+						disabled={sources.length === 0}
+						onclick={(e) => {
+							e.preventDefault();
+							e.stopPropagation();
+							openSubsidy(budget);
+						}}
+					>
+						Subsidi dari budget lain
+					</Button>
+				{/if}
 			</Card.Content>
 		</Card.Root>
 	{:else}
@@ -554,6 +602,42 @@
 		>
 			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Edit budget</Sheet.Title></Sheet.Header>
 			<div class="flex-1 overflow-y-auto">{@render editForm()}</div>
+		</Sheet.Content>
+	</Sheet.Root>
+{/if}
+
+{#snippet subsidyForm()}
+	{#if subsidyTarget}
+		{@const flow = flowOf(subsidyTarget.id)}
+		{@const spent = data.spentByCategory[subsidyTarget.categoryId] ?? 0}
+		{@const overage = spent - subsidyTarget.limitCents}
+		{@const cat = categoryById.get(subsidyTarget.categoryId)}
+		<SubsidyCreateForm
+			targetBudgetId={subsidyTarget.id}
+			targetCategoryName={cat?.name ?? 'Unknown'}
+			targetOverageCents={Math.max(0, overage)}
+			alreadyCoveredCents={flow.in}
+			eligibleSources={eligibleSourcesFor(subsidyTarget)}
+			onClose={() => (subsidyOpen = false)}
+		/>
+	{/if}
+{/snippet}
+
+{#if isDesktop.current}
+	<Dialog.Root bind:open={subsidyOpen}>
+		<Dialog.Content>
+			<Dialog.Header><Dialog.Title>Subsidi budget</Dialog.Title></Dialog.Header>
+			{@render subsidyForm()}
+		</Dialog.Content>
+	</Dialog.Root>
+{:else}
+	<Sheet.Root bind:open={subsidyOpen}>
+		<Sheet.Content
+			side="bottom"
+			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
+		>
+			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Subsidi budget</Sheet.Title></Sheet.Header>
+			<div class="flex-1 overflow-y-auto">{@render subsidyForm()}</div>
 		</Sheet.Content>
 	</Sheet.Root>
 {/if}
