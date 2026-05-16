@@ -74,6 +74,20 @@ const budgetsTableSql = `
 	)
 `;
 
+const budgetSubsidiesTableSql = `
+	CREATE TABLE budget_subsidies (
+		id TEXT NOT NULL PRIMARY KEY,
+		user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		period_month TEXT NOT NULL,
+		from_budget_id TEXT NOT NULL REFERENCES budgets(id) ON DELETE CASCADE,
+		to_budget_id TEXT NOT NULL REFERENCES budgets(id) ON DELETE CASCADE,
+		amount_cents INTEGER NOT NULL,
+		note TEXT,
+		created_at INTEGER NOT NULL,
+		updated_at INTEGER NOT NULL
+	)
+`;
+
 export interface TestDbHandle {
 	db: BetterSQLite3Database<typeof schema>;
 	userId: string;
@@ -82,16 +96,19 @@ export interface TestDbHandle {
 }
 
 export function createTestDb(opts: {
-	tables: ('accounts' | 'categories' | 'transactions' | 'budgets')[];
+	tables: ('accounts' | 'categories' | 'transactions' | 'budgets' | 'budget_subsidies')[];
 }): TestDbHandle {
 	const sqlite = new Database(':memory:');
 	const db = drizzle(sqlite, { schema });
+	sqlite.pragma('foreign_keys = ON');
 
 	sqlite.prepare(usersTableSql).run();
 	if (opts.tables.includes('accounts')) sqlite.prepare(accountsTableSql).run();
 	if (opts.tables.includes('categories')) sqlite.prepare(categoriesTableSql).run();
 	if (opts.tables.includes('transactions')) sqlite.prepare(transactionsTableSql).run();
 	if (opts.tables.includes('budgets')) sqlite.prepare(budgetsTableSql).run();
+	if (opts.tables.includes('budget_subsidies'))
+		sqlite.prepare(budgetSubsidiesTableSql).run();
 
 	const now = Date.now();
 	const userId = 'user_test_1';
