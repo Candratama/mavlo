@@ -391,9 +391,10 @@
 			<Card.Content class="relative z-10">
 				{@const flow = flowOf(budget.id)}
 				{@const effLimit = effectiveLimit(budget.limitCents, flow)}
-				{@const stillOver = spent > effLimit}
+				{@const denom = budget.limitCents + flow.in}
+				{@const stillOver = spent > denom}
 				{@const coveredByEff = over && !stillOver}
-				{@const effPct = effLimit === 0 ? 0 : Math.min(100, Math.round((spent / effLimit) * 100))}
+				{@const usedPct = denom === 0 ? (spent + flow.out > 0 ? 100 : 0) : Math.min(100, Math.round(((spent + flow.out) / denom) * 100))}
 				<div class="mb-2 flex items-baseline justify-between text-sm tabular-nums">
 					<span class={stillOver ? 'text-expense font-medium' : ''}>
 						{formatCents(spent)}
@@ -408,34 +409,34 @@
 				<div class="bg-muted relative h-2 overflow-hidden rounded-full">
 					{#if stillOver}
 						<div class="absolute inset-y-0 left-0 h-full bg-amber-500" style="width: 100%"></div>
-						{@const overPct = Math.min(100, Math.round(((spent - effLimit) / Math.max(1, effLimit)) * 100))}
+						{@const overPct = denom === 0 ? 100 : Math.min(100, Math.round(((spent - denom) / denom) * 100))}
 						<div
 							class="absolute inset-y-0 right-0 h-full bg-rose-500 transition-all"
 							style="width: {overPct}%"
 						></div>
 					{:else if coveredByEff}
-						{@const redPct = effLimit === 0 ? 0 : Math.min(100, Math.round((budget.limitCents / effLimit) * 100))}
-						{@const bluePct = effLimit === 0 ? 0 : Math.min(100 - redPct, Math.round(((spent - budget.limitCents) / effLimit) * 100))}
+						{@const redPct = denom === 0 ? 0 : Math.min(100, Math.round((budget.limitCents / denom) * 100))}
+						{@const bluePct = denom === 0 ? 0 : Math.min(100 - redPct, Math.round(((spent - budget.limitCents) / denom) * 100))}
 						<div class="absolute inset-y-0 left-0 h-full bg-rose-500" style="width: {redPct}%"></div>
 						<div class="absolute inset-y-0 h-full bg-blue-500 transition-all" style="left: {redPct}%; width: {bluePct}%"></div>
 					{:else}
+						{@const spentPct = denom === 0 ? 0 : Math.min(100, Math.round((spent / denom) * 100))}
+						{@const outPct = denom === 0 ? 0 : Math.min(100 - spentPct, Math.round((flow.out / denom) * 100))}
 						<div
-							class="h-full transition-all {effPct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
-							style="width: {effPct}%"
+							class="absolute inset-y-0 left-0 h-full transition-all {spentPct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
+							style="width: {spentPct}%"
 						></div>
-					{/if}
-					{#if flow.in > 0 || flow.out > 0}
-						{@const markerPct = effLimit === 0 ? 0 : Math.min(100, Math.round((budget.limitCents / effLimit) * 100))}
-						<div
-							class="absolute inset-y-0 w-px bg-foreground/40"
-							style="left: {markerPct}%"
-							aria-hidden="true"
-						></div>
+						{#if flow.out > 0}
+							<div
+								class="absolute inset-y-0 h-full bg-blue-500 transition-all"
+								style="left: {spentPct}%; width: {outPct}%"
+							></div>
+						{/if}
 					{/if}
 				</div>
 				<p class="text-muted-foreground mt-2 text-xs">
-					{effPct}% used{#if stillOver}
-						· over by {formatCents(spent - effLimit)}{:else if coveredByEff}
+					{usedPct}% used{#if stillOver}
+						· over by {formatCents(spent - denom)}{:else if coveredByEff}
 						· covered by subsidy
 					{/if}
 				</p>

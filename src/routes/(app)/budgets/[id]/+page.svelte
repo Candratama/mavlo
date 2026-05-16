@@ -76,11 +76,16 @@
 		budget ? (data.subsidyFlowByBudget[budget.id] ?? { in: 0, out: 0 }) : { in: 0, out: 0 }
 	);
 	const effLimit = $derived(budget ? effectiveLimit(budget.limitCents, flow) : 0);
-	const effPct = $derived(
-		effLimit > 0 ? Math.min(100, Math.round((spentCents / effLimit) * 100)) : 0
-	);
-	const stillOver = $derived(spentCents > effLimit);
+	const denom = $derived((budget?.limitCents ?? 0) + flow.in);
+	const stillOver = $derived(spentCents > denom);
 	const coveredByEff = $derived(over && !stillOver);
+	const effPct = $derived(
+		denom === 0
+			? spentCents + flow.out > 0
+				? 100
+				: 0
+			: Math.min(100, Math.round(((spentCents + flow.out) / denom) * 100))
+	);
 
 	const subsidiesIn = $derived(
 		budget ? data.subsidies.filter((s) => s.toBudgetId === budget.id) : []
@@ -272,18 +277,26 @@
 		<div class="bg-muted relative mb-3 h-2.5 overflow-hidden rounded-full">
 			{#if stillOver}
 				<div class="absolute inset-y-0 left-0 h-full rounded-full bg-amber-500" style="width: 100%"></div>
-				{@const overPct = Math.min(100, Math.round(((spentCents - effLimit) / Math.max(1, effLimit)) * 100))}
+				{@const overPct = denom === 0 ? 100 : Math.min(100, Math.round(((spentCents - denom) / denom) * 100))}
 				<div class="absolute inset-y-0 right-0 h-full rounded-full bg-rose-500 transition-all" style="width: {overPct}%"></div>
 			{:else if coveredByEff}
-				{@const redPct = effLimit === 0 ? 0 : Math.min(100, Math.round((budget.limitCents / effLimit) * 100))}
-				{@const bluePct = effLimit === 0 ? 0 : Math.min(100 - redPct, Math.round(((spentCents - budget.limitCents) / effLimit) * 100))}
+				{@const redPct = denom === 0 ? 0 : Math.min(100, Math.round((budget.limitCents / denom) * 100))}
+				{@const bluePct = denom === 0 ? 0 : Math.min(100 - redPct, Math.round(((spentCents - budget.limitCents) / denom) * 100))}
 				<div class="absolute inset-y-0 left-0 h-full rounded-full bg-rose-500" style="width: {redPct}%"></div>
 				<div class="absolute inset-y-0 h-full rounded-full bg-blue-500 transition-all" style="left: {redPct}%; width: {bluePct}%"></div>
 			{:else}
+				{@const spentPct = denom === 0 ? 0 : Math.min(100, Math.round((spentCents / denom) * 100))}
+				{@const outPct = denom === 0 ? 0 : Math.min(100 - spentPct, Math.round((flow.out / denom) * 100))}
 				<div
-					class="h-full rounded-full transition-all {effPct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
-					style="width: {effPct}%"
+					class="absolute inset-y-0 left-0 h-full rounded-full transition-all {spentPct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
+					style="width: {spentPct}%"
 				></div>
+				{#if flow.out > 0}
+					<div
+						class="absolute inset-y-0 h-full rounded-full bg-blue-500 transition-all"
+						style="left: {spentPct}%; width: {outPct}%"
+					></div>
+				{/if}
 			{/if}
 		</div>
 		<div class="grid grid-cols-3 gap-3 text-xs">
@@ -308,9 +321,9 @@
 				<div class="text-muted-foreground uppercase tracking-wider">{stillOver ? 'Over by' : 'Left'}</div>
 				<div class="mt-1 font-semibold tabular-nums {stillOver ? 'text-expense' : 'text-income'}">
 					{#if stillOver}
-						−{formatCentsAsCurrency(spentCents - effLimit, currency)}
+						−{formatCentsAsCurrency(spentCents - denom, currency)}
 					{:else}
-						{formatCentsAsCurrency(Math.max(0, effLimit - spentCents), currency)}
+						{formatCentsAsCurrency(Math.max(0, denom - spentCents - flow.out), currency)}
 					{/if}
 				</div>
 			</div>
