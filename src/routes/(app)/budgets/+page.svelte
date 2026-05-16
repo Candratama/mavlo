@@ -428,7 +428,7 @@
 						></div>
 						{#if flow.out > 0}
 							<div
-								class="absolute inset-y-0 h-full bg-blue-500 transition-all"
+								class="absolute inset-y-0 h-full bg-purple-500 transition-all"
 								style="left: {spentPct}%; width: {outPct}%"
 							></div>
 						{/if}
