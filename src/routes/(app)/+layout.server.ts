@@ -117,8 +117,8 @@ export const load: LayoutServerLoad = async (event) => {
 	// money given to other budgets is no longer available to this one.
 	const remainingBudgetCents = budgetList.reduce((s, b) => {
 		const spent = budgetSpent.get(b.categoryId) ?? 0;
-		const out = subsidyFlowByBudget[b.id]?.out ?? 0;
-		return s + Math.max(0, b.limitCents - spent - out);
+		const flow = subsidyFlowByBudget[b.id] ?? { in: 0, out: 0 };
+		return s + Math.max(0, b.limitCents + flow.in - spent - flow.out);
 	}, 0);
 	const totalCashCents = savingsCents + operationalCents;
 	const allocatedCents = savingsCents + remainingBudgetCents;
