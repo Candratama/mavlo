@@ -350,7 +350,7 @@
 					</div>
 					<div class="min-w-0">
 						<Card.Title class="truncate">{cat?.name ?? 'Unknown'}</Card.Title>
-						<Card.Description>Remaining {formatCents(denom - spent - flow.out)}</Card.Description>
+						<Card.Description>{formatCents(denom - spent - flow.out)} remaining</Card.Description>
 					</div>
 				</div>
 				<div class="relative z-10">
