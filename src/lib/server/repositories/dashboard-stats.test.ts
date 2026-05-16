@@ -43,7 +43,7 @@ describe('computeSpendingByCategory', () => {
 		insertTx('t2', 'cat-food', 'expense', 30000, apr2026Day(10));
 		insertTx('t3', 'cat-transport', 'expense', 100000, apr2026Day(15));
 		insertTx('t4', 'cat-food', 'income', 999, apr2026Day(8));
-		const rows = await computeSpendingByCategory(h.db, h.userId, '2026-04');
+		const rows = await computeSpendingByCategory(h.db, h.userId, '2026-04', 1, 'UTC');
 		expect(rows).toHaveLength(2);
 		expect(rows[0]).toMatchObject({ categoryId: 'cat-transport', amountCents: 100000 });
 		expect(rows[1]).toMatchObject({ categoryId: 'cat-food', amountCents: 80000 });
@@ -52,7 +52,7 @@ describe('computeSpendingByCategory', () => {
 	it('skips uncategorized expenses', async () => {
 		insertTx('t1', null, 'expense', 50000, apr2026Day(5));
 		insertTx('t2', 'cat-food', 'expense', 30000, apr2026Day(10));
-		const rows = await computeSpendingByCategory(h.db, h.userId, '2026-04');
+		const rows = await computeSpendingByCategory(h.db, h.userId, '2026-04', 1, 'UTC');
 		expect(rows).toHaveLength(1);
 		expect(rows[0].categoryId).toBe('cat-food');
 	});
@@ -63,7 +63,7 @@ describe('computeDailySpending', () => {
 		insertTx('t1', 'cat-food', 'expense', 50000, apr2026Day(5));
 		insertTx('t2', 'cat-food', 'expense', 30000, apr2026Day(5));
 		insertTx('t3', 'cat-food', 'expense', 100000, apr2026Day(15));
-		const rows = await computeDailySpending(h.db, h.userId, '2026-04');
+		const rows = await computeDailySpending(h.db, h.userId, '2026-04', 1, 'UTC');
 		expect(rows).toHaveLength(30);
 		expect(rows[4].amountCents).toBe(80000);
 		expect(rows[5].amountCents).toBe(0);
@@ -72,7 +72,7 @@ describe('computeDailySpending', () => {
 
 	it('income rows do not contribute', async () => {
 		insertTx('t1', 'cat-food', 'income', 99999, apr2026Day(5));
-		const rows = await computeDailySpending(h.db, h.userId, '2026-04');
+		const rows = await computeDailySpending(h.db, h.userId, '2026-04', 1, 'UTC');
 		expect(rows.every((r) => r.amountCents === 0)).toBe(true);
 	});
 });
@@ -82,7 +82,7 @@ describe('computeMonthlyIncomeExpense', () => {
 		insertTx('t1', 'cat-food', 'expense', 100000, Date.UTC(2026, 1, 15));
 		insertTx('t2', 'cat-food', 'income', 200000, Date.UTC(2026, 1, 20));
 		insertTx('t3', 'cat-food', 'expense', 50000, Date.UTC(2026, 3, 10));
-		const rows = await computeMonthlyIncomeExpense(h.db, h.userId, 6, '2026-04');
+		const rows = await computeMonthlyIncomeExpense(h.db, h.userId, 6, '2026-04', 1, 'UTC');
 		expect(rows).toHaveLength(6);
 		expect(rows[0].periodMonth).toBe('2025-11');
 		expect(rows[5].periodMonth).toBe('2026-04');

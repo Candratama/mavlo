@@ -18,7 +18,7 @@ function effectiveDayForMonth(year: number, month1to12: number, startDay: number
 	return Math.min(startDay, daysInMonth(year, month1to12));
 }
 
-function getZonedYearMonthDay(date: Date, timezone: string): { y: number; m: number; d: number } {
+export function getZonedYearMonthDay(date: Date, timezone: string): { y: number; m: number; d: number } {
 	const fmt = new Intl.DateTimeFormat('en-CA', {
 		timeZone: timezone,
 		year: 'numeric',

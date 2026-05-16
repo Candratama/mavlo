@@ -221,6 +221,14 @@
 					: formatCentsAsCurrency(data.budgetLimitCents, data.displayCurrency)}</span
 			>
 		</div>
+		{#if data.subsidies.length > 0}
+			{@const totalSubsidy = data.subsidies.reduce((s, x) => s + x.amountCents, 0)}
+			<div class="text-muted-foreground mt-2 text-xs">
+				{data.subsidies.length} active {data.subsidies.length === 1 ? 'subsidy' : 'subsidies'} ·
+				{hideBalance ? maskedAmount : formatCentsAsCurrency(totalSubsidy, data.displayCurrency)}
+				redistributed
+			</div>
+		{/if}
 	</a>
 {/if}
 

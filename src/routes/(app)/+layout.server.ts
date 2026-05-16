@@ -78,13 +78,13 @@ export const load: LayoutServerLoad = async (event) => {
 		listBudgets(db, user.id, { periodMonth: cycle.periodMonth }),
 		computeBudgetSpent(db, user.id, cycleFromMs, cycleToMs),
 		cachedJson(user.id, CACHE_KEYS.spendingByCategory(cycle.periodMonth), 60, () =>
-			computeSpendingByCategory(db, user.id, cycle.periodMonth)
+			computeSpendingByCategory(db, user.id, cycle.periodMonth, monthStartDay, timezone)
 		),
 		cachedJson(user.id, CACHE_KEYS.dailySpending(cycle.periodMonth), 60, () =>
-			computeDailySpending(db, user.id, cycle.periodMonth)
+			computeDailySpending(db, user.id, cycle.periodMonth, monthStartDay, timezone)
 		),
 		cachedJson(user.id, CACHE_KEYS.monthlyIncomeExpense(cycle.periodMonth, 6), 60, () =>
-			computeMonthlyIncomeExpense(db, user.id, 6, cycle.periodMonth)
+			computeMonthlyIncomeExpense(db, user.id, 6, cycle.periodMonth, monthStartDay, timezone)
 		),
 		listSubsidies(db, user.id, { periodMonth: cycle.periodMonth }),
 		computeSubsidyFlows(db, user.id, cycle.periodMonth)

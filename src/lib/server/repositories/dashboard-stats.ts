@@ -3,6 +3,7 @@ import { type DrizzleD1Database } from 'drizzle-orm/d1';
 import { type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { categories, transactions } from '$lib/server/db/schema';
 import * as schema from '$lib/server/db/schema';
+import { getCycleForPeriod, getZonedYearMonthDay } from '$lib/utils/cycle';
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
 
@@ -31,9 +32,13 @@ export interface SpendingByCategoryRow {
 export async function computeSpendingByCategory(
 	db: Db,
 	userId: string,
-	periodMonth: string
+	periodMonth: string,
+	monthStartDay: number,
+	timezone: string
 ): Promise<SpendingByCategoryRow[]> {
-	const { fromMs, toMs } = periodMonthBounds(periodMonth);
+	const cycle = getCycleForPeriod(periodMonth, monthStartDay, timezone);
+	const fromMs = cycle.start.getTime();
+	const toMs = cycle.end.getTime() - 1;
 
 	const txRows = await db
 		.select()
@@ -77,9 +82,13 @@ export interface DailySpendingRow {
 export async function computeDailySpending(
 	db: Db,
 	userId: string,
-	periodMonth: string
+	periodMonth: string,
+	monthStartDay: number,
+	timezone: string
 ): Promise<DailySpendingRow[]> {
-	const { fromMs, toMs, daysInMonth, year, monthIdx } = periodMonthBounds(periodMonth);
+	const cycle = getCycleForPeriod(periodMonth, monthStartDay, timezone);
+	const fromMs = cycle.start.getTime();
+	const toMs = cycle.end.getTime() - 1;
 
 	const txRows = await db
 		.select()
@@ -92,17 +101,26 @@ export async function computeDailySpending(
 			)
 		);
 
+	// Build one bucket per local day in the cycle. dateMs is the UTC instant of
+	// the local Y-M-D so the chart's getUTCDate() formatter shows the user's day.
+	const DAY_MS = 86_400_000;
+	const startZ = getZonedYearMonthDay(cycle.start, timezone);
+	const endZ = getZonedYearMonthDay(new Date(toMs), timezone);
+	const startKey = Date.UTC(startZ.y, startZ.m - 1, startZ.d);
+	const endKey = Date.UTC(endZ.y, endZ.m - 1, endZ.d);
+
 	const buckets: DailySpendingRow[] = [];
-	for (let day = 1; day <= daysInMonth; day++) {
-		buckets.push({ dateMs: Date.UTC(year, monthIdx, day), amountCents: 0 });
+	const idxByKey = new Map<number, number>();
+	for (let k = startKey; k <= endKey; k += DAY_MS) {
+		idxByKey.set(k, buckets.length);
+		buckets.push({ dateMs: k, amountCents: 0 });
 	}
 
 	for (const t of txRows) {
-		const d = new Date(t.occurredAt);
-		const idx = d.getUTCDate() - 1;
-		if (idx >= 0 && idx < buckets.length) {
-			buckets[idx].amountCents += t.amountCents;
-		}
+		const z = getZonedYearMonthDay(new Date(t.occurredAt), timezone);
+		const key = Date.UTC(z.y, z.m - 1, z.d);
+		const idx = idxByKey.get(key);
+		if (idx !== undefined) buckets[idx].amountCents += t.amountCents;
 	}
 
 	return buckets;
@@ -118,7 +136,9 @@ export async function computeMonthlyIncomeExpense(
 	db: Db,
 	userId: string,
 	monthsBack: number,
-	anchorPeriodMonth: string
+	anchorPeriodMonth: string,
+	monthStartDay: number,
+	timezone: string
 ): Promise<MonthlyIncomeExpenseRow[]> {
 	const { year: anchorY, monthIdx: anchorM } = periodMonthBounds(anchorPeriodMonth);
 
@@ -127,10 +147,12 @@ export async function computeMonthlyIncomeExpense(
 		const date = new Date(Date.UTC(anchorY, anchorM - i, 1));
 		const y = date.getUTCFullYear();
 		const mi = date.getUTCMonth();
+		const pm = formatPeriodMonth(y, mi);
+		const c = getCycleForPeriod(pm, monthStartDay, timezone);
 		windows.push({
-			periodMonth: formatPeriodMonth(y, mi),
-			fromMs: Date.UTC(y, mi, 1),
-			toMs: Date.UTC(y, mi + 1, 1) - 1
+			periodMonth: pm,
+			fromMs: c.start.getTime(),
+			toMs: c.end.getTime() - 1
 		});
 	}
 
