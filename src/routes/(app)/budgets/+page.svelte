@@ -341,7 +341,7 @@
 					</div>
 					<div class="min-w-0">
 						<Card.Title class="truncate">{cat?.name ?? 'Unknown'}</Card.Title>
-						<Card.Description>{budget.periodMonth}</Card.Description>
+						<Card.Description>Sisa {formatCents(budget.limitCents - spent)}</Card.Description>
 					</div>
 				</div>
 				<div class="relative z-10">
