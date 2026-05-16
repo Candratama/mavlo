@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth/guards';
 import { getDb } from '$lib/server/db';
-import { budgets as budgetsTable, userPreferences, users } from '$lib/server/db/schema';
+import { userPreferences, users } from '$lib/server/db/schema';
 import { listAccounts } from '$lib/server/repositories/accounts';
 import { listCategories } from '$lib/server/repositories/categories';
 import {
@@ -92,27 +92,6 @@ export const load: LayoutServerLoad = async (event) => {
 
 	const categories = allCategories.filter((c) => !c.archived);
 
-	// Ensure every active expense category has a budget row for the current period.
-	// Missing rows are auto-created with limitCents = 0; user can edit to set a real limit.
-	const expenseCategoryIds = categories.filter((c) => c.kind === 'expense').map((c) => c.id);
-	const hasBudget = new Set(budgetList.map((b) => b.categoryId));
-	const missingCategoryIds = expenseCategoryIds.filter((id) => !hasBudget.has(id));
-	let allBudgets = budgetList;
-	if (missingCategoryIds.length > 0) {
-		const inserted = await db
-			.insert(budgetsTable)
-			.values(
-				missingCategoryIds.map((categoryId) => ({
-					userId: user.id,
-					categoryId,
-					periodMonth: cycle.periodMonth,
-					limitCents: 0
-				}))
-			)
-			.returning();
-		allBudgets = [...budgetList, ...inserted];
-	}
-
 	const allAccountsWithBalance = accounts.map((a) => {
 		const s = periodSummary.get(a.id);
 		return {
@@ -130,8 +109,8 @@ export const load: LayoutServerLoad = async (event) => {
 		if (a.type === 'savings') savingsCents += a.balanceCents;
 		else operationalCents += a.balanceCents;
 	}
-	const assignedCents = allBudgets.reduce((s, b) => s + b.limitCents, 0);
-	const remainingBudgetCents = allBudgets.reduce((s, b) => {
+	const assignedCents = budgetList.reduce((s, b) => s + b.limitCents, 0);
+	const remainingBudgetCents = budgetList.reduce((s, b) => {
 		const spent = budgetSpent.get(b.categoryId) ?? 0;
 		return s + Math.max(0, b.limitCents - spent);
 	}, 0);
@@ -155,7 +134,7 @@ export const load: LayoutServerLoad = async (event) => {
 		.reduce((s, t) => s + t.amountCents, 0);
 	const netWorthCents = Array.from(balances.values()).reduce((s, b) => s + b, 0);
 	const budgetLimitCents = assignedCents;
-	const budgetSpentCents = allBudgets.reduce((s, b) => s + (budgetSpent.get(b.categoryId) ?? 0), 0);
+	const budgetSpentCents = budgetList.reduce((s, b) => s + (budgetSpent.get(b.categoryId) ?? 0), 0);
 
 	const accountById = new Map(accounts.map((a) => [a.id, a]));
 	const categoryById = new Map(categories.map((c) => [c.id, c]));
@@ -221,7 +200,7 @@ export const load: LayoutServerLoad = async (event) => {
 		allCategories,
 		transactions,
 		// Budgets page
-		budgets: allBudgets,
+		budgets: budgetList,
 		expenseCategories: categories.filter((c) => c.kind === 'expense'),
 		spentByCategory,
 		subsidies,
