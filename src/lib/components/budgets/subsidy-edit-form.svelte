@@ -61,7 +61,18 @@
 	</div>
 
 	<div class="space-y-1">
-		<Label for="subsidy-edit-amount">Amount</Label>
+		<div class="flex items-center justify-between">
+			<Label for="subsidy-edit-amount">Amount</Label>
+			{#if maxAmount > 0}
+				<button
+					type="button"
+					class="text-primary hover:underline text-xs font-medium"
+					onclick={() => (amountCents = maxAmount)}
+				>
+					Use all ({formatCentsAsCurrency(maxAmount, 'IDR')})
+				</button>
+			{/if}
+		</div>
 		<MoneyInput
 			id="subsidy-edit-amount"
 			name="amountCents"
