@@ -266,7 +266,7 @@
 {#if budget}
 	<!-- Budget progress -->
 	<div
-		class="mb-6 rounded-xl border bg-gradient-to-br {stillOver ? 'from-rose-500/10' : coveredByEff ? 'from-emerald-500/10' : effPct >= 80 ? 'from-amber-500/10' : 'from-emerald-500/10'} via-card to-card p-4"
+		class="mb-6 rounded-xl border bg-gradient-to-br {stillOver ? 'from-rose-500/10' : coveredByEff ? 'from-blue-500/10' : effPct >= 80 ? 'from-amber-500/10' : 'from-emerald-500/10'} via-card to-card p-4"
 	>
 		<div class="mb-3 flex items-baseline justify-between">
 			<span class="text-sm font-semibold">Spent this cycle</span>
@@ -280,7 +280,7 @@
 				{@const overPct = Math.min(100, Math.round(((spentCents - effLimit) / Math.max(1, effLimit)) * 100))}
 				<div class="absolute inset-y-0 right-0 h-full rounded-full bg-rose-500 transition-all" style="width: {overPct}%"></div>
 			{:else if coveredByEff}
-				<div class="h-full rounded-full bg-emerald-500 transition-all" style="width: 100%"></div>
+				<div class="h-full rounded-full bg-blue-500 transition-all" style="width: 100%"></div>
 			{:else}
 				<div
 					class="h-full rounded-full transition-all {effPct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"

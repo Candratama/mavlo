@@ -414,7 +414,7 @@
 							style="width: {overPct}%"
 						></div>
 					{:else if coveredByEff}
-						<div class="h-full bg-emerald-500 transition-all" style="width: 100%"></div>
+						<div class="h-full bg-blue-500 transition-all" style="width: 100%"></div>
 					{:else}
 						<div
 							class="h-full transition-all {effPct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
