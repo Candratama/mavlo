@@ -50,9 +50,6 @@
 	const flowOf = (budgetId: string) =>
 		data.subsidyFlowByBudget[budgetId] ?? { in: 0, out: 0 };
 
-	const effLimitOf = (budget: BudgetRow) =>
-		effectiveLimit(budget.limitCents, flowOf(budget.id));
-
 	const formatCents = (cents: number) => formatCentsAsCurrency(cents, 'IDR');
 
 	const openEdit = (b: BudgetRow) => {
@@ -122,22 +119,18 @@
 
 	const budgetById = $derived(new Map(data.budgets.map((b) => [b.id, b])));
 
-	const subsidiesByBudget = $derived(() => {
-		const inMap = new Map<string, SubsidyRow[]>();
-		const outMap = new Map<string, SubsidyRow[]>();
+	const subsidiesByBudget = $derived.by(() => {
+		const inMap: Record<string, SubsidyRow[]> = {};
+		const outMap: Record<string, SubsidyRow[]> = {};
 		for (const s of data.subsidies) {
-			const inArr = inMap.get(s.toBudgetId) ?? [];
-			inArr.push(s);
-			inMap.set(s.toBudgetId, inArr);
-			const outArr = outMap.get(s.fromBudgetId) ?? [];
-			outArr.push(s);
-			outMap.set(s.fromBudgetId, outArr);
+			(inMap[s.toBudgetId] ??= []).push(s);
+			(outMap[s.fromBudgetId] ??= []).push(s);
 		}
 		return { inMap, outMap };
 	});
 
 	const entriesForBudget = (budgetId: string) => {
-		const { inMap, outMap } = subsidiesByBudget();
+		const { inMap, outMap } = subsidiesByBudget;
 		const entries: {
 			id: string;
 			direction: 'in' | 'out';
@@ -145,7 +138,7 @@
 			amountCents: number;
 			note: string | null;
 		}[] = [];
-		for (const s of inMap.get(budgetId) ?? []) {
+		for (const s of inMap[budgetId] ?? []) {
 			const fromBudget = budgetById.get(s.fromBudgetId);
 			const cat = fromBudget ? categoryById.get(fromBudget.categoryId) : null;
 			entries.push({
@@ -156,7 +149,7 @@
 				note: s.note
 			});
 		}
-		for (const s of outMap.get(budgetId) ?? []) {
+		for (const s of outMap[budgetId] ?? []) {
 			const toBudget = budgetById.get(s.toBudgetId);
 			const cat = toBudget ? categoryById.get(toBudget.categoryId) : null;
 			entries.push({
@@ -329,7 +322,6 @@
 	{#each data.budgets as budget (budget.id)}
 		{@const cat = categoryById.get(budget.categoryId)}
 		{@const spent = data.spentByCategory[budget.categoryId] ?? 0}
-		{@const percentage = pct(spent, budget.limitCents)}
 		{@const over = spent > budget.limitCents}
 		{@const IconComp = getIconByName(cat?.icon) ?? Tag}
 		{@const tint = cat?.color ?? '#8b5cf6'}
