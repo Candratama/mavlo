@@ -36,7 +36,7 @@
 	} = $props();
 
 	let sourceId = $state('');
-	let amountCents = $state(0);
+	let amountCents = $state<number | null>(null);
 	let pending = $state(false);
 
 	const remainingGap = $derived(Math.max(0, targetOverageCents - alreadyCoveredCents));
@@ -154,7 +154,7 @@
 		</Button>
 		<SubmitButton
 			pending={pending}
-			disabled={!sourceId || amountCents <= 0 || amountCents > maxAmount}
+			disabled={!sourceId || !amountCents || amountCents > maxAmount}
 			class="h-12 flex-1 rounded-full !bg-white text-base font-semibold !text-neutral-900 hover:!bg-white/90 md:h-10 md:text-sm"
 		>
 			Subsidize
