@@ -11,11 +11,17 @@ import type {
 	SubsidyCreateInput,
 	SubsidyUpdateInput
 } from '$lib/validation/subsidy';
+import { getCycleForPeriod } from '$lib/utils/cycle';
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
 
 export type SubsidyRow = typeof budgetSubsidies.$inferSelect;
 export type RepoError = { error: string };
+
+export type CycleResolver = {
+	monthStartDay: number;
+	timezone: string;
+};
 
 export async function listSubsidies(
 	db: Db,
@@ -53,20 +59,22 @@ async function getOwnedBudget(db: Db, userId: string, id: string) {
 	return row ?? null;
 }
 
-function periodBounds(periodMonth: string): { fromMs: number; toMs: number } {
-	const [y, m] = periodMonth.split('-').map(Number);
-	const fromMs = Date.UTC(y, m - 1, 1);
-	const toMs = Date.UTC(y, m, 1) - 1;
-	return { fromMs, toMs };
+function periodBounds(
+	periodMonth: string,
+	cycle: CycleResolver
+): { fromMs: number; toMs: number } {
+	const c = getCycleForPeriod(periodMonth, cycle.monthStartDay, cycle.timezone);
+	return { fromMs: c.start.getTime(), toMs: c.end.getTime() - 1 };
 }
 
 async function spentForCategory(
 	db: Db,
 	userId: string,
 	categoryId: string,
-	periodMonth: string
+	periodMonth: string,
+	cycle: CycleResolver
 ): Promise<number> {
-	const { fromMs, toMs } = periodBounds(periodMonth);
+	const { fromMs, toMs } = periodBounds(periodMonth, cycle);
 	const rows = await db
 		.select()
 		.from(transactions)
@@ -103,7 +111,8 @@ async function sumSubsidy(
 export async function createSubsidy(
 	db: Db,
 	userId: string,
-	input: SubsidyCreateInput
+	input: SubsidyCreateInput,
+	cycle: CycleResolver
 ): Promise<SubsidyRow | RepoError> {
 	if (input.fromBudgetId === input.toBudgetId)
 		return { error: 'Source and target must differ' };
@@ -120,9 +129,9 @@ export async function createSubsidy(
 		return { error: 'Budgets must be in the same period' };
 
 	const [toSpent, toSubsidyIn, fromSpent, fromSubsidyOut] = await Promise.all([
-		spentForCategory(db, userId, to.categoryId, to.periodMonth),
+		spentForCategory(db, userId, to.categoryId, to.periodMonth, cycle),
 		sumSubsidy(db, userId, 'toBudgetId', to.id),
-		spentForCategory(db, userId, from.categoryId, from.periodMonth),
+		spentForCategory(db, userId, from.categoryId, from.periodMonth, cycle),
 		sumSubsidy(db, userId, 'fromBudgetId', from.id)
 	]);
 
@@ -153,7 +162,8 @@ export async function createSubsidy(
 export async function updateSubsidy(
 	db: Db,
 	userId: string,
-	input: SubsidyUpdateInput
+	input: SubsidyUpdateInput,
+	cycle: CycleResolver
 ): Promise<SubsidyRow | RepoError> {
 	const existing = await getSubsidy(db, userId, input.id);
 	if (!existing) return { error: 'Subsidy not found' };
@@ -164,7 +174,7 @@ export async function updateSubsidy(
 	if (!from) return { error: 'Source budget not found' };
 
 	const [fromSpent, fromSubsidyOutExcl] = await Promise.all([
-		spentForCategory(db, userId, from.categoryId, from.periodMonth),
+		spentForCategory(db, userId, from.categoryId, from.periodMonth, cycle),
 		sumSubsidy(db, userId, 'fromBudgetId', from.id, existing.id)
 	]);
 

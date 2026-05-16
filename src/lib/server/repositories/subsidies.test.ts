@@ -10,6 +10,7 @@ import {
 
 let h: TestDbHandle;
 const now = () => Date.now();
+const cycle = { monthStartDay: 1, timezone: 'UTC' };
 
 const insertCategory = (id: string, userId: string, name = 'X') => {
 	h.sqlite
@@ -80,7 +81,7 @@ describe('createSubsidy', () => {
 			fromBudgetId: 'b-trans',
 			toBudgetId: 'b-food',
 			amountCents: 100_000
-		});
+		}, cycle);
 		expect('error' in result).toBe(true);
 	});
 
@@ -91,7 +92,7 @@ describe('createSubsidy', () => {
 			fromBudgetId: 'b-trans',
 			toBudgetId: 'b-food',
 			amountCents: 100_000
-		});
+		}, cycle);
 		expect('error' in result).toBe(true);
 	});
 
@@ -102,7 +103,7 @@ describe('createSubsidy', () => {
 			fromBudgetId: 'b-trans',
 			toBudgetId: 'b-food',
 			amountCents: 300_000
-		});
+		}, cycle);
 		expect('error' in result).toBe(true);
 	});
 
@@ -113,7 +114,7 @@ describe('createSubsidy', () => {
 			fromBudgetId: 'b-trans',
 			toBudgetId: 'b-food',
 			amountCents: 200_000
-		});
+		}, cycle);
 		expect('error' in result).toBe(true);
 	});
 
@@ -125,7 +126,7 @@ describe('createSubsidy', () => {
 			fromBudgetId: 'b-trans',
 			toBudgetId: 'b-food-may',
 			amountCents: 100_000
-		});
+		}, cycle);
 		expect('error' in result).toBe(true);
 	});
 
@@ -137,7 +138,7 @@ describe('createSubsidy', () => {
 			fromBudgetId: 'b-trans',
 			toBudgetId: 'b-other',
 			amountCents: 100_000
-		});
+		}, cycle);
 		expect('error' in result).toBe(true);
 	});
 
@@ -149,7 +150,7 @@ describe('createSubsidy', () => {
 			toBudgetId: 'b-food',
 			amountCents: 200_000,
 			note: 'top up'
-		});
+		}, cycle);
 		expect('error' in result).toBe(false);
 		if ('error' in result) return;
 		expect(result.amountCents).toBe(200_000);
@@ -166,7 +167,7 @@ describe('listSubsidies + getSubsidy', () => {
 			fromBudgetId: 'b-trans',
 			toBudgetId: 'b-food',
 			amountCents: 100_000
-		});
+		}, cycle);
 	});
 
 	it('lists subsidies for the period', async () => {
@@ -205,12 +206,12 @@ describe('updateSubsidy', () => {
 			fromBudgetId: 'b-trans',
 			toBudgetId: 'b-food',
 			amountCents: 200_000
-		});
+		}, cycle);
 		if ('error' in created) throw new Error(created.error);
 		const updated = await updateSubsidy(h.db, h.userId, {
 			id: created.id,
 			amountCents: 50_000
-		});
+		}, cycle);
 		expect('error' in updated).toBe(false);
 		if ('error' in updated) return;
 		expect(updated.amountCents).toBe(50_000);
@@ -221,12 +222,12 @@ describe('updateSubsidy', () => {
 			fromBudgetId: 'b-trans',
 			toBudgetId: 'b-food',
 			amountCents: 100_000
-		});
+		}, cycle);
 		if ('error' in created) throw new Error(created.error);
 		const updated = await updateSubsidy(h.db, h.userId, {
 			id: created.id,
 			amountCents: 350_000
-		});
+		}, cycle);
 		expect('error' in updated).toBe(true);
 	});
 
@@ -235,12 +236,12 @@ describe('updateSubsidy', () => {
 			fromBudgetId: 'b-trans',
 			toBudgetId: 'b-food',
 			amountCents: 100_000
-		});
+		}, cycle);
 		if ('error' in created) throw new Error(created.error);
 		const updated = await updateSubsidy(h.db, h.userId, {
 			id: created.id,
 			amountCents: 50_000
-		});
+		}, cycle);
 		if ('error' in updated) throw new Error(updated.error);
 		expect(updated.fromBudgetId).toBe('b-trans');
 		expect(updated.toBudgetId).toBe('b-food');
@@ -250,7 +251,7 @@ describe('updateSubsidy', () => {
 		const result = await updateSubsidy(h.db, h.userId, {
 			id: 'nope',
 			amountCents: 1000
-		});
+		}, cycle);
 		expect('error' in result).toBe(true);
 	});
 });
@@ -263,7 +264,7 @@ describe('deleteSubsidy', () => {
 			fromBudgetId: 'b-trans',
 			toBudgetId: 'b-food',
 			amountCents: 100_000
-		});
+		}, cycle);
 		if ('error' in created) throw new Error(created.error);
 		const deleted = await deleteSubsidy(h.db, h.userId, created.id);
 		expect(deleted?.id).toBe(created.id);
@@ -277,7 +278,7 @@ describe('deleteSubsidy', () => {
 			fromBudgetId: 'b-trans',
 			toBudgetId: 'b-food',
 			amountCents: 100_000
-		});
+		}, cycle);
 		if ('error' in created) throw new Error(created.error);
 		expect(await deleteSubsidy(h.db, h.otherUserId, created.id)).toBeNull();
 	});
@@ -291,7 +292,7 @@ describe('cascade delete on budget', () => {
 			fromBudgetId: 'b-trans',
 			toBudgetId: 'b-food',
 			amountCents: 100_000
-		});
+		}, cycle);
 		if ('error' in created) throw new Error(created.error);
 		h.sqlite.prepare('DELETE FROM budgets WHERE id = ?').run('b-trans');
 		expect(await getSubsidy(h.db, h.userId, created.id)).toBeNull();

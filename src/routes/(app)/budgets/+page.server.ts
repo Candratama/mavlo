@@ -31,6 +31,18 @@ async function purgeUserCaches(event: Parameters<Actions[string]>[0], userId: st
 	await purgeUserCache(userId, allUserCacheNames(cycle.periodMonth, 6));
 }
 
+async function getCycleResolver(
+	event: Parameters<Actions[string]>[0],
+	userId: string
+): Promise<{ monthStartDay: number; timezone: string }> {
+	const db = getDb(event.platform!.env.DB);
+	const prefs = await getPreferences(db, userId);
+	return {
+		monthStartDay: prefs?.monthStartDay ?? 1,
+		timezone: prefs?.timezone ?? 'Asia/Jakarta'
+	};
+}
+
 export const actions: Actions = {
 	create: async (event) => {
 		const user = requireUser(event);
@@ -85,7 +97,8 @@ export const actions: Actions = {
 				message: parsed.error.issues[0]?.message ?? 'Invalid input'
 			});
 		}
-		const result = await createSubsidy(db, user.id, parsed.data);
+		const cycle = await getCycleResolver(event, user.id);
+		const result = await createSubsidy(db, user.id, parsed.data, cycle);
 		if ('error' in result) {
 			return fail(400, { action: 'subsidize', message: result.error });
 		}
@@ -103,7 +116,8 @@ export const actions: Actions = {
 				message: parsed.error.issues[0]?.message ?? 'Invalid input'
 			});
 		}
-		const result = await updateSubsidy(db, user.id, parsed.data);
+		const cycle = await getCycleResolver(event, user.id);
+		const result = await updateSubsidy(db, user.id, parsed.data, cycle);
 		if ('error' in result) {
 			return fail(400, { action: 'updateSubsidy', message: result.error });
 		}
