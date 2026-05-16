@@ -2,7 +2,17 @@ import { fail } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth/guards';
 import { getDb } from '$lib/server/db';
 import { createBudget, updateBudget, deleteBudget } from '$lib/server/repositories/budgets';
+import {
+	createSubsidy,
+	updateSubsidy,
+	deleteSubsidy
+} from '$lib/server/repositories/subsidies';
 import { budgetCreateSchema, budgetUpdateSchema, budgetIdSchema } from '$lib/validation/budget';
+import {
+	subsidyCreateSchema,
+	subsidyUpdateSchema,
+	subsidyIdSchema
+} from '$lib/validation/subsidy';
 import { purgeUserCache, allUserCacheNames } from '$lib/server/cf-cache';
 import { getCurrentCycle } from '$lib/utils/cycle';
 import { getPreferences } from '$lib/server/repositories/preferences';
@@ -63,5 +73,54 @@ export const actions: Actions = {
 		if (!deleted) return fail(404, { action: 'delete', message: 'Budget not found' });
 		await purgeUserCaches(event, user.id);
 		return { success: true, action: 'delete' };
+	},
+	subsidize: async (event) => {
+		const user = requireUser(event);
+		const db = getDb(event.platform!.env.DB);
+		const fd = await event.request.formData();
+		const parsed = subsidyCreateSchema.safeParse(formObject(fd));
+		if (!parsed.success) {
+			return fail(400, {
+				action: 'subsidize',
+				message: parsed.error.issues[0]?.message ?? 'Invalid input'
+			});
+		}
+		const result = await createSubsidy(db, user.id, parsed.data);
+		if ('error' in result) {
+			return fail(400, { action: 'subsidize', message: result.error });
+		}
+		await purgeUserCaches(event, user.id);
+		return { success: true, action: 'subsidize' };
+	},
+	updateSubsidy: async (event) => {
+		const user = requireUser(event);
+		const db = getDb(event.platform!.env.DB);
+		const fd = await event.request.formData();
+		const parsed = subsidyUpdateSchema.safeParse(formObject(fd));
+		if (!parsed.success) {
+			return fail(400, {
+				action: 'updateSubsidy',
+				message: parsed.error.issues[0]?.message ?? 'Invalid input'
+			});
+		}
+		const result = await updateSubsidy(db, user.id, parsed.data);
+		if ('error' in result) {
+			return fail(400, { action: 'updateSubsidy', message: result.error });
+		}
+		await purgeUserCaches(event, user.id);
+		return { success: true, action: 'updateSubsidy' };
+	},
+	deleteSubsidy: async (event) => {
+		const user = requireUser(event);
+		const db = getDb(event.platform!.env.DB);
+		const fd = await event.request.formData();
+		const parsed = subsidyIdSchema.safeParse(formObject(fd));
+		if (!parsed.success) {
+			return fail(400, { action: 'deleteSubsidy', message: 'Invalid id' });
+		}
+		const deleted = await deleteSubsidy(db, user.id, parsed.data.id);
+		if (!deleted) return fail(404, { action: 'deleteSubsidy', message: 'Subsidy not found' });
+		await purgeUserCaches(event, user.id);
+		return { success: true, action: 'deleteSubsidy' };
 	}
 };
