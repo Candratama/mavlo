@@ -414,8 +414,8 @@
 							style="width: {overPct}%"
 						></div>
 					{:else if coveredByEff}
-						{@const redPct = effLimit === 0 ? 0 : Math.round((budget.limitCents / effLimit) * 100)}
-						{@const bluePct = effLimit === 0 ? 0 : Math.round(((spent - budget.limitCents) / effLimit) * 100)}
+						{@const redPct = effLimit === 0 ? 0 : Math.min(100, Math.round((budget.limitCents / effLimit) * 100))}
+						{@const bluePct = effLimit === 0 ? 0 : Math.min(100 - redPct, Math.round(((spent - budget.limitCents) / effLimit) * 100))}
 						<div class="absolute inset-y-0 left-0 h-full bg-rose-500" style="width: {redPct}%"></div>
 						<div class="absolute inset-y-0 h-full bg-blue-500 transition-all" style="left: {redPct}%; width: {bluePct}%"></div>
 					{:else}
@@ -719,15 +719,17 @@
 		{@const fromFlowOut = fromBudget ? (data.subsidyFlowByBudget[fromBudget.id]?.out ?? 0) : 0}
 		{@const remainingExclSelf =
 			(fromBudget?.limitCents ?? 0) - fromSpent - fromFlowOut + subsidyEditTarget.amountCents}
-		<SubsidyEditForm
-			subsidyId={subsidyEditTarget.id}
-			fromName={fromCat?.name ?? 'Unknown'}
-			toName={toCat?.name ?? 'Unknown'}
-			currentAmountCents={subsidyEditTarget.amountCents}
-			sourceRemainingExclSelfCents={remainingExclSelf}
-			currentNote={subsidyEditTarget.note}
-			onClose={() => (subsidyEditOpen = false)}
-		/>
+		{#key subsidyEditTarget.id}
+			<SubsidyEditForm
+				subsidyId={subsidyEditTarget.id}
+				fromName={fromCat?.name ?? 'Unknown'}
+				toName={toCat?.name ?? 'Unknown'}
+				currentAmountCents={subsidyEditTarget.amountCents}
+				sourceRemainingExclSelfCents={remainingExclSelf}
+				currentNote={subsidyEditTarget.note}
+				onClose={() => (subsidyEditOpen = false)}
+			/>
+		{/key}
 	{/if}
 {/snippet}
 

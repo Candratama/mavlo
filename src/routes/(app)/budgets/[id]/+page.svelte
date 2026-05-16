@@ -6,9 +6,6 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import {
 		ArrowLeft,
-		ArrowLeftRight,
-		ArrowDown,
-		ArrowUp,
 		Pencil,
 		Trash2,
 		MoreHorizontal,
@@ -64,9 +61,7 @@
 		budgetTransactions.reduce((s, t) => s + t.amountCents, 0)
 	);
 	const limitCents = $derived(budget?.limitCents ?? 0);
-	const pct = $derived(limitCents > 0 ? Math.min(100, Math.round((spentCents / limitCents) * 100)) : 0);
 	const over = $derived(spentCents > limitCents);
-	const remainingCents = $derived(Math.max(0, limitCents - spentCents));
 
 	const isDesktop = new MediaQuery('(min-width: 768px)');
 
@@ -248,7 +243,7 @@
 						<div class="flex size-8 items-center justify-center rounded-full bg-rose-500/20">
 							<AlertTriangle class="size-4 text-rose-500" />
 						</div>
-					{:else if pct === 100}
+					{:else if effPct === 100}
 						<div class="flex size-8 items-center justify-center rounded-full bg-emerald-500/20">
 							<CheckCircle2 class="size-4 text-emerald-500" />
 						</div>
@@ -280,8 +275,8 @@
 				{@const overPct = Math.min(100, Math.round(((spentCents - effLimit) / Math.max(1, effLimit)) * 100))}
 				<div class="absolute inset-y-0 right-0 h-full rounded-full bg-rose-500 transition-all" style="width: {overPct}%"></div>
 			{:else if coveredByEff}
-				{@const redPct = effLimit === 0 ? 0 : Math.round((budget.limitCents / effLimit) * 100)}
-				{@const bluePct = effLimit === 0 ? 0 : Math.round(((spentCents - budget.limitCents) / effLimit) * 100)}
+				{@const redPct = effLimit === 0 ? 0 : Math.min(100, Math.round((budget.limitCents / effLimit) * 100))}
+				{@const bluePct = effLimit === 0 ? 0 : Math.min(100 - redPct, Math.round(((spentCents - budget.limitCents) / effLimit) * 100))}
 				<div class="absolute inset-y-0 left-0 h-full rounded-full bg-rose-500" style="width: {redPct}%"></div>
 				<div class="absolute inset-y-0 h-full rounded-full bg-blue-500 transition-all" style="left: {redPct}%; width: {bluePct}%"></div>
 			{:else}
@@ -482,15 +477,17 @@
 		{@const fromFlowOut = fromBudget ? (data.subsidyFlowByBudget[fromBudget.id]?.out ?? 0) : 0}
 		{@const remainingExclSelf =
 			(fromBudget?.limitCents ?? 0) - fromSpent - fromFlowOut + subsidyEditTarget.amountCents}
-		<SubsidyEditForm
-			subsidyId={subsidyEditTarget.id}
-			fromName={fromCat?.name ?? 'Unknown'}
-			toName={toCat?.name ?? 'Unknown'}
-			currentAmountCents={subsidyEditTarget.amountCents}
-			sourceRemainingExclSelfCents={remainingExclSelf}
-			currentNote={subsidyEditTarget.note}
-			onClose={() => (subsidyEditOpen = false)}
-		/>
+		{#key subsidyEditTarget.id}
+			<SubsidyEditForm
+				subsidyId={subsidyEditTarget.id}
+				fromName={fromCat?.name ?? 'Unknown'}
+				toName={toCat?.name ?? 'Unknown'}
+				currentAmountCents={subsidyEditTarget.amountCents}
+				sourceRemainingExclSelfCents={remainingExclSelf}
+				currentNote={subsidyEditTarget.note}
+				onClose={() => (subsidyEditOpen = false)}
+			/>
+		{/key}
 	{/if}
 {/snippet}
 
