@@ -280,7 +280,10 @@
 				{@const overPct = Math.min(100, Math.round(((spentCents - effLimit) / Math.max(1, effLimit)) * 100))}
 				<div class="absolute inset-y-0 right-0 h-full rounded-full bg-rose-500 transition-all" style="width: {overPct}%"></div>
 			{:else if coveredByEff}
-				<div class="h-full rounded-full bg-blue-500 transition-all" style="width: 100%"></div>
+				{@const greenPct = effLimit === 0 ? 0 : Math.round((budget.limitCents / effLimit) * 100)}
+				{@const bluePct = effLimit === 0 ? 0 : Math.round(((spentCents - budget.limitCents) / effLimit) * 100)}
+				<div class="absolute inset-y-0 left-0 h-full rounded-full bg-emerald-500" style="width: {greenPct}%"></div>
+				<div class="absolute inset-y-0 h-full rounded-full bg-blue-500 transition-all" style="left: {greenPct}%; width: {bluePct}%"></div>
 			{:else}
 				<div
 					class="h-full rounded-full transition-all {effPct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
