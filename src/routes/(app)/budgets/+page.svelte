@@ -57,6 +57,13 @@
 		editOpen = true;
 	};
 
+	const remainingFor = (b: typeof data.budgets[0]) => {
+		const flow = flowOf(b.id);
+		return b.limitCents + flow.in - (data.spentByCategory[b.categoryId] ?? 0) - flow.out;
+	};
+	const sortedBudgets = $derived(
+		[...data.budgets].sort((a, b) => remainingFor(b) - remainingFor(a))
+	);
 	const totalAllocated = $derived(data.budgets.reduce((s, b) => s + b.limitCents, 0));
 	const totalSpent = $derived(
 		data.budgets.reduce((s, b) => s + (data.spentByCategory[b.categoryId] ?? 0), 0)
@@ -319,7 +326,7 @@
 </Card.Root>
 
 <div class="grid gap-4 md:grid-cols-2">
-	{#each data.budgets as budget (budget.id)}
+	{#each sortedBudgets as budget (budget.id)}
 		{@const cat = categoryById.get(budget.categoryId)}
 		{@const spent = data.spentByCategory[budget.categoryId] ?? 0}
 		{@const over = spent > budget.limitCents}
@@ -343,7 +350,7 @@
 					</div>
 					<div class="min-w-0">
 						<Card.Title class="truncate">{cat?.name ?? 'Unknown'}</Card.Title>
-						<Card.Description>Sisa {formatCents(denom - spent - flow.out)}</Card.Description>
+						<Card.Description>{formatCents(denom - spent - flow.out)} remaining</Card.Description>
 					</div>
 				</div>
 				<div class="relative z-10">
