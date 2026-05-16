@@ -414,10 +414,10 @@
 							style="width: {overPct}%"
 						></div>
 					{:else if coveredByEff}
-						{@const greenPct = effLimit === 0 ? 0 : Math.round((budget.limitCents / effLimit) * 100)}
+						{@const redPct = effLimit === 0 ? 0 : Math.round((budget.limitCents / effLimit) * 100)}
 						{@const bluePct = effLimit === 0 ? 0 : Math.round(((spent - budget.limitCents) / effLimit) * 100)}
-						<div class="absolute inset-y-0 left-0 h-full bg-emerald-500" style="width: {greenPct}%"></div>
-						<div class="absolute inset-y-0 h-full bg-blue-500 transition-all" style="left: {greenPct}%; width: {bluePct}%"></div>
+						<div class="absolute inset-y-0 left-0 h-full bg-rose-500" style="width: {redPct}%"></div>
+						<div class="absolute inset-y-0 h-full bg-blue-500 transition-all" style="left: {redPct}%; width: {bluePct}%"></div>
 					{:else}
 						<div
 							class="h-full transition-all {effPct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
