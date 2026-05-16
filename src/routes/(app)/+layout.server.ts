@@ -123,6 +123,20 @@ export const load: LayoutServerLoad = async (event) => {
 	const totalCashCents = savingsCents + operationalCents;
 	const allocatedCents = savingsCents + remainingBudgetCents;
 
+	// Unbudgeted: expense categories with spending this period but no budget row.
+	const budgetedCategoryIds = new Set(budgetList.map((b) => b.categoryId));
+	const unbudgetedCategories = categories
+		.filter((c) => c.kind === 'expense' && !budgetedCategoryIds.has(c.id))
+		.map((c) => ({
+			categoryId: c.id,
+			categoryName: c.name,
+			categoryIcon: c.icon,
+			categoryColor: c.color,
+			spentCents: budgetSpent.get(c.id) ?? 0
+		}))
+		.filter((c) => c.spentCents > 0)
+		.sort((a, b) => b.spentCents - a.spentCents);
+
 	const spentByCategory: Record<string, number> = Object.fromEntries(budgetSpent.entries());
 
 	// Dashboard stats
@@ -208,6 +222,7 @@ export const load: LayoutServerLoad = async (event) => {
 		spentByCategory,
 		subsidies,
 		subsidyFlowByBudget,
+		unbudgetedCategories,
 		periodMonth: cycle.periodMonth,
 		allocation: {
 			totalCashCents,

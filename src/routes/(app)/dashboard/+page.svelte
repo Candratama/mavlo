@@ -232,6 +232,23 @@
 	</a>
 {/if}
 
+{#if data.unbudgetedCategories.length > 0}
+	{@const totalUnbudgeted = data.unbudgetedCategories.reduce((s, c) => s + c.spentCents, 0)}
+	<a
+		href={resolve('/budgets')}
+		class="mt-3 block rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 transition-colors hover:bg-amber-500/10"
+	>
+		<div class="text-xs font-medium text-amber-600 dark:text-amber-400">
+			⚠ Unbudgeted spending detected
+		</div>
+		<div class="text-muted-foreground mt-1 text-xs">
+			{data.unbudgetedCategories.length} {data.unbudgetedCategories.length === 1 ? 'category' : 'categories'} ·
+			{hideBalance ? maskedAmount : formatCentsAsCurrency(totalUnbudgeted, data.displayCurrency)} untracked.
+			Tap to assign budgets.
+		</div>
+	</a>
+{/if}
+
 <!-- Charts: tab on mobile, grid on desktop -->
 <div class="mt-6">
 	<div class="md:hidden">

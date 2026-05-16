@@ -486,6 +486,59 @@
 	{/each}
 </div>
 
+{#if data.unbudgetedCategories.length > 0}
+	{@const totalUnbudgeted = data.unbudgetedCategories.reduce((s, c) => s + c.spentCents, 0)}
+	<div class="mt-8">
+		<div class="mb-3 flex items-baseline justify-between">
+			<h2 class="text-sm font-semibold">Unbudgeted spending</h2>
+			<span class="text-muted-foreground text-xs tabular-nums">
+				{data.unbudgetedCategories.length} {data.unbudgetedCategories.length === 1 ? 'category' : 'categories'} · {formatCents(totalUnbudgeted)}
+			</span>
+		</div>
+		<p class="text-muted-foreground mb-4 text-xs">
+			You spent on these without a budget. Set one to track future spending.
+		</p>
+		<div class="grid gap-4 md:grid-cols-2">
+			{#each data.unbudgetedCategories as cat (cat.categoryId)}
+				{@const Icon = getIconByName(cat.categoryIcon) ?? Tag}
+				{@const tint = cat.categoryColor ?? '#94a3b8'}
+				<Card.Root class="border-dashed">
+					<Card.Header class="flex flex-row items-center gap-3">
+						<div
+							class="flex size-10 shrink-0 items-center justify-center rounded-lg"
+							style="background-color: {tint}20; color: {tint}"
+						>
+							<Icon class="size-5" />
+						</div>
+						<div class="min-w-0 flex-1">
+							<Card.Title class="truncate">{cat.categoryName}</Card.Title>
+							<Card.Description>No limit set</Card.Description>
+						</div>
+					</Card.Header>
+					<Card.Content>
+						<div class="mb-3 text-sm tabular-nums">
+							<span class="text-expense font-medium">{formatCents(cat.spentCents)}</span>
+							<span class="text-muted-foreground"> spent this period</span>
+						</div>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							class="w-full"
+							onclick={() => {
+								createCategoryId = cat.categoryId;
+								createOpen = true;
+							}}
+						>
+							Set budget
+						</Button>
+					</Card.Content>
+				</Card.Root>
+			{/each}
+		</div>
+	</div>
+{/if}
+
 <!-- Create dialog/sheet -->
 {#snippet createForm()}
 	<form
