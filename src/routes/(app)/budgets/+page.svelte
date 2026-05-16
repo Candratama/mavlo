@@ -325,8 +325,6 @@
 		{@const over = spent > budget.limitCents}
 		{@const IconComp = getIconByName(cat?.icon) ?? Tag}
 		{@const tint = cat?.color ?? '#8b5cf6'}
-		{@const flow = flowOf(budget.id)}
-		{@const denom = budget.limitCents + flow.in}
 		<Card.Root class="relative">
 			<a
 				href="/budgets/{budget.id}"
@@ -343,7 +341,7 @@
 					</div>
 					<div class="min-w-0">
 						<Card.Title class="truncate">{cat?.name ?? 'Unknown'}</Card.Title>
-						<Card.Description>Sisa {formatCents(denom - spent - flow.out)}</Card.Description>
+						<Card.Description>{budget.periodMonth}</Card.Description>
 					</div>
 				</div>
 				<div class="relative z-10">
@@ -391,7 +389,9 @@
 				</div>
 			</Card.Header>
 			<Card.Content class="relative z-10">
+				{@const flow = flowOf(budget.id)}
 				{@const effLimit = effectiveLimit(budget.limitCents, flow)}
+				{@const denom = budget.limitCents + flow.in}
 				{@const stillOver = spent > denom}
 				{@const coveredByEff = over && !stillOver}
 				{@const usedPct = denom === 0 ? (spent + flow.out > 0 ? 100 : 0) : Math.min(100, Math.round(((spent + flow.out) / denom) * 100))}
