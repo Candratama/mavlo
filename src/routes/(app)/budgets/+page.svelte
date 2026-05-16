@@ -283,6 +283,12 @@
 		<span>{formatCents(totalSpent)}</span>
 		<span>{formatCents(totalAllocated)}</span>
 	</div>
+	{#if data.subsidies.length > 0}
+		{@const totalSubsidy = data.subsidies.reduce((s, x) => s + x.amountCents, 0)}
+		<div class="text-muted-foreground mt-2 text-xs">
+			Subsidi aktif: {data.subsidies.length} record, total {formatCents(totalSubsidy)} dipindahkan.
+		</div>
+	{/if}
 </div>
 
 <!-- Mobile: period chip -->
