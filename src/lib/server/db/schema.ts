@@ -96,6 +96,30 @@ export const budgets = sqliteTable(
 	(t) => [index('budgets_user_period_idx').on(t.userId, t.periodMonth)]
 );
 
+export const budgetSubsidies = sqliteTable(
+	'budget_subsidies',
+	{
+		id: cuid().primaryKey(),
+		userId: userIdFk(),
+		periodMonth: text('period_month').notNull(),
+		fromBudgetId: text('from_budget_id')
+			.notNull()
+			.references(() => budgets.id, { onDelete: 'cascade' }),
+		toBudgetId: text('to_budget_id')
+			.notNull()
+			.references(() => budgets.id, { onDelete: 'cascade' }),
+		amountCents: integer('amount_cents', { mode: 'number' }).notNull(),
+		note: text('note'),
+		createdAt: epochMsNow('created_at'),
+		updatedAt: epochMsNow('updated_at')
+	},
+	(t) => [
+		index('subsidies_user_period_idx').on(t.userId, t.periodMonth),
+		index('subsidies_from_idx').on(t.fromBudgetId),
+		index('subsidies_to_idx').on(t.toBudgetId)
+	]
+);
+
 export const userPreferences = sqliteTable('user_preferences', {
 	userId: text('user_id')
 		.primaryKey()
