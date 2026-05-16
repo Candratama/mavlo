@@ -12,7 +12,6 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
 	import {
-		Plus,
 		MoreHorizontal,
 		Pencil,
 		Trash2,
@@ -39,10 +38,8 @@
 
 	type BudgetRow = (typeof data.budgets)[number];
 
-	let createOpen = $state(false);
 	let editOpen = $state(false);
 	let editTarget = $state<BudgetRow | null>(null);
-	let createPending = $state(false);
 	let editPending = $state(false);
 
 	const categoryById = $derived(new Map(data.categories.map((c) => [c.id, c])));
@@ -79,7 +76,6 @@
 		}))
 	);
 
-	let createCategoryId = $state('');
 	let editCategoryId = $state('');
 
 	let subsidyOpen = $state(false);
@@ -169,12 +165,6 @@
 	};
 
 	$effect(() => {
-		if (createOpen && !createCategoryId) {
-			createCategoryId = data.expenseCategories[0]?.id ?? '';
-		}
-	});
-
-	$effect(() => {
 		if (editTarget) editCategoryId = editTarget.categoryId;
 	});
 </script>
@@ -185,9 +175,6 @@
 	<div>
 		<h1 class="mavlo-headline text-2xl font-bold tracking-tight sm:text-3xl">Budgets</h1>
 	</div>
-	<Button class="lift" onclick={() => (createOpen = true)}>
-		<Plus class="mr-1 size-4" /> New budget
-	</Button>
 </div>
 
 <div
@@ -476,106 +463,14 @@
 		<div class="md:col-span-2">
 			<EmptyState
 				icon={Target}
-				title="No budgets for {data.periodMonth}"
-				description="Set a monthly limit per expense category to track your spending."
+				title="No expense categories yet"
+				description="Create an expense category first — a zero-limit budget will be added automatically."
 			>
-				<Button onclick={() => (createOpen = true)}>Add budget</Button>
+				<Button href="/categories">Manage categories</Button>
 			</EmptyState>
 		</div>
 	{/each}
 </div>
-
-<!-- Create dialog/sheet -->
-{#snippet createForm()}
-	<form
-		method="POST"
-		action="?/create"
-		use:enhance={() => {
-			createPending = true;
-			return async ({ result }) => {
-				createPending = false;
-				if (result.type === 'success') {
-					await invalidateAll();
-					createOpen = false;
-					notify.success('Budget created');
-				} else if (result.type === 'failure') {
-					const message = (result.data as { message?: string } | undefined)?.message;
-					notify.error(message ?? 'Could not create budget');
-				}
-			};
-		}}
-		class="space-y-4 p-4"
-	>
-		<div class="space-y-1">
-			<Label>Category</Label>
-			<PickerSheet
-				items={expenseCategoryItems}
-				bind:value={createCategoryId}
-				name="categoryId"
-				placeholder="Select category"
-				title="Category"
-				searchable
-			/>
-		</div>
-		<div class="grid grid-cols-2 gap-3">
-			<div class="space-y-1">
-				<Label for="budget-c-period">Period</Label>
-				<Input
-					id="budget-c-period"
-					type="month"
-					name="periodMonth"
-					required
-					value={data.periodMonth}
-				/>
-			</div>
-			<div class="space-y-1">
-				<Label for="budget-c-limit">Limit</Label>
-				<MoneyInput
-					id="budget-c-limit"
-					name="limitCents"
-					min={1}
-					required
-					class="h-12 text-lg md:h-12 md:text-lg"
-				/>
-			</div>
-		</div>
-		<div class="flex gap-2 pt-2">
-			<Button
-				type="button"
-				variant="outline"
-				onclick={() => (createOpen = false)}
-				class="h-12 flex-1 rounded-full text-base font-semibold md:h-10 md:text-sm"
-			>
-				Cancel
-			</Button>
-			<SubmitButton
-				pending={createPending}
-				class="h-12 flex-1 rounded-full !bg-white text-base font-semibold !text-neutral-900 hover:!bg-white/90 md:h-10 md:text-sm"
-			>
-				Create
-			</SubmitButton>
-		</div>
-	</form>
-{/snippet}
-
-{#if isDesktop.current}
-	<Dialog.Root bind:open={createOpen}>
-		<Dialog.Content>
-			<Dialog.Header><Dialog.Title>New budget</Dialog.Title></Dialog.Header>
-			{@render createForm()}
-		</Dialog.Content>
-	</Dialog.Root>
-{:else}
-	<Sheet.Root bind:open={createOpen}>
-		<Sheet.Content
-			side="bottom"
-			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
-		>
-			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>New budget</Sheet.Title></Sheet.Header>
-			<div class="flex-1 overflow-y-auto">{@render createForm()}</div>
-		</Sheet.Content>
-	</Sheet.Root>
-{/if}
 
 <!-- Edit dialog/sheet -->
 {#snippet editForm()}
