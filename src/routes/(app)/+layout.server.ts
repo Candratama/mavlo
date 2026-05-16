@@ -109,18 +109,21 @@ export const load: LayoutServerLoad = async (event) => {
 		if (a.type === 'savings') savingsCents += a.balanceCents;
 		else operationalCents += a.balanceCents;
 	}
+	const subsidyFlowByBudget: Record<string, { in: number; out: number }> =
+		Object.fromEntries(subsidyFlows.entries());
+
 	const assignedCents = budgetList.reduce((s, b) => s + b.limitCents, 0);
+	// Effective remaining per budget accounts for outgoing subsidy:
+	// money given to other budgets is no longer available to this one.
 	const remainingBudgetCents = budgetList.reduce((s, b) => {
 		const spent = budgetSpent.get(b.categoryId) ?? 0;
-		return s + Math.max(0, b.limitCents - spent);
+		const out = subsidyFlowByBudget[b.id]?.out ?? 0;
+		return s + Math.max(0, b.limitCents - spent - out);
 	}, 0);
 	const totalCashCents = savingsCents + operationalCents;
 	const allocatedCents = savingsCents + remainingBudgetCents;
 
 	const spentByCategory: Record<string, number> = Object.fromEntries(budgetSpent.entries());
-
-	const subsidyFlowByBudget: Record<string, { in: number; out: number }> =
-		Object.fromEntries(subsidyFlows.entries());
 
 	// Dashboard stats
 	const cycleTxns = transactions.filter(
