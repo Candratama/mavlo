@@ -68,7 +68,7 @@ async function spentForCategory(
 ): Promise<number> {
 	const { fromMs, toMs } = periodBounds(periodMonth);
 	const rows = await db
-		.select({ amount: transactions.amountCents })
+		.select()
 		.from(transactions)
 		.where(
 			and(
@@ -79,7 +79,7 @@ async function spentForCategory(
 				between(transactions.occurredAt, fromMs, toMs)
 			)
 		);
-	return rows.reduce((s, r) => s + r.amount, 0);
+	return rows.reduce((s, r) => s + r.amountCents, 0);
 }
 
 async function sumSubsidy(
@@ -94,10 +94,10 @@ async function sumSubsidy(
 	const conds = [eq(budgetSubsidies.userId, userId), eq(col, budgetId)];
 	if (excludeId) conds.push(ne(budgetSubsidies.id, excludeId));
 	const rows = await db
-		.select({ amount: budgetSubsidies.amountCents })
+		.select()
 		.from(budgetSubsidies)
 		.where(and(...conds));
-	return rows.reduce((s, r) => s + r.amount, 0);
+	return rows.reduce((s, r) => s + r.amountCents, 0);
 }
 
 export async function createSubsidy(
