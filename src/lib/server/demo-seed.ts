@@ -1,4 +1,5 @@
 import { type DrizzleD1Database } from 'drizzle-orm/d1';
+import { eq } from 'drizzle-orm';
 import * as schema from '$lib/server/db/schema';
 import {
 	accounts,
@@ -6,9 +7,11 @@ import {
 	transactions,
 	budgets,
 	budgetSubsidies,
+	debts,
 	userPreferences
 } from '$lib/server/db/schema';
 import { DEFAULT_CATEGORIES } from '$lib/server/onboarding-defaults';
+import { ensureDebtPaymentCategory } from '$lib/server/repositories/categories';
 
 type Db = DrizzleD1Database<typeof schema>;
 
@@ -206,5 +209,47 @@ export async function seedDemoData(db: Db, userId: string): Promise<void> {
 			amountCents: 1_000_000,
 			note: 'Demo subsidy: end-of-month food'
 		});
+	}
+
+	// Seed a sample debt (Credit Card BCA) and one payment transaction.
+	// Amounts use standard cents: 100 = Rp 1.00 (IDR), matching the rest of the seed.
+	const [seededDebt] = await db
+		.insert(debts)
+		.values({
+			userId,
+			name: 'Credit Card BCA',
+			type: 'credit_card',
+			lender: 'Bank BCA',
+			principalCents: 1_000_000_000, // Rp 10,000,000
+			currentBalanceCents: 450_000_000, // Rp 4,500,000
+			interestRatePct: 2600, // 26% (stored as basis points × 100)
+			minimumPaymentCents: 25_000_000, // Rp 250,000
+			dueDay: 15,
+			startDate: daysAgoMs(90),
+			accountId: seedAccounts.find((a) => a.type === 'bank')?.id ?? null,
+			status: 'active'
+		})
+		.returning();
+
+	const debtPaymentCatId = await ensureDebtPaymentCategory(db, userId);
+
+	const accForPayment = seedAccounts.find((a) => a.type === 'bank' || a.type === 'cash');
+	if (accForPayment && seededDebt) {
+		await db.insert(transactions).values({
+			userId,
+			accountId: accForPayment.id,
+			categoryId: debtPaymentCatId,
+			debtId: seededDebt.id,
+			amountCents: 50_000_000, // Rp 500,000
+			kind: 'expense',
+			note: 'Demo debt payment',
+			occurredAt: daysAgoMs(5),
+			isSeed: true
+		});
+		// Update balance to reflect the payment made
+		await db
+			.update(debts)
+			.set({ currentBalanceCents: 400_000_000 }) // Rp 4,000,000
+			.where(eq(debts.id, seededDebt.id));
 	}
 }
