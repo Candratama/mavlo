@@ -8,6 +8,7 @@ const baseTransactionFields = {
 	accountId: z.string().min(1, 'Account required'),
 	categoryId: z.string().min(1).optional().or(emptyToUndefined),
 	transferToAccountId: z.string().min(1).optional().or(emptyToUndefined),
+	debtId: z.string().min(1).optional(),
 	amountCents: z.coerce.number().int().positive('Amount must be positive'),
 	kind: transactionKindEnum,
 	note: z.string().trim().max(200).optional().or(emptyToUndefined),
