@@ -27,6 +27,7 @@
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { getIconByName } from '$lib/utils/category-icons.js';
 	import { MediaQuery } from 'svelte/reactivity';
+	import { page } from '$app/state';
 
 	type Account = {
 		id: string;
@@ -48,6 +49,7 @@
 		accountId: string;
 		transferToAccountId: string | null;
 		categoryId: string | null;
+		debtId?: string | null;
 		occurredAt: number;
 		note: string | null;
 	};
@@ -60,6 +62,7 @@
 		defaultKind?: 'income' | 'expense' | 'transfer';
 		defaultAccountId?: string;
 		editTarget?: EditTarget | null;
+		debtTarget?: { id: string; name: string; minimumPaymentCents: number } | null;
 		actionUrl: string;
 		onClose: () => void;
 		onSuccess?: () => void;
@@ -73,6 +76,7 @@
 		defaultKind = 'expense',
 		defaultAccountId,
 		editTarget = null,
+		debtTarget = null,
 		actionUrl,
 		onClose,
 		onSuccess
@@ -87,20 +91,23 @@
 				accountId: editTarget.accountId,
 				transferToAccountId: editTarget.transferToAccountId ?? '',
 				categoryId: editTarget.categoryId ?? '',
+				debtId: editTarget.debtId ?? '',
 				occurredAt: new Date(editTarget.occurredAt).toISOString().slice(0, 10),
 				note: editTarget.note ?? ''
 			};
 		}
+		const resolvedKind = debtTarget ? 'expense' : defaultKind;
 		const validSources =
-			defaultKind === 'transfer' ? accounts : accounts.filter((a) => a.type !== 'savings');
+			resolvedKind === 'transfer' ? accounts : accounts.filter((a) => a.type !== 'savings');
 		const resolvedAccountId = validSources.some((a) => a.id === defaultAccountId)
 			? (defaultAccountId ?? '')
 			: (validSources[0]?.id ?? '');
 		return {
-			kind: defaultKind,
+			kind: resolvedKind,
 			accountId: resolvedAccountId,
 			transferToAccountId: '',
 			categoryId: '',
+			debtId: debtTarget?.id ?? '',
 			occurredAt: todayYmd,
 			note: ''
 		};
@@ -110,11 +117,16 @@
 	let accountId = $state(initialState().accountId);
 	let transferToAccountId = $state(initialState().transferToAccountId);
 	let categoryId = $state(initialState().categoryId);
+	let debtId = $state(initialState().debtId);
 	let occurredAt = $state(initialState().occurredAt);
 	let note = $state(initialState().note);
 	let showNote = $state(initialState().note.length > 0);
 	let pending = $state(false);
-	let amountCents = $state<number | null>(editTarget?.amountCents ?? null);
+	let amountCents = $state<number | null>(
+		debtTarget
+			? debtTarget.minimumPaymentCents
+			: (editTarget?.amountCents ?? null)
+	);
 
 	const sourceAccount = $derived(accounts.find((a) => a.id === accountId));
 	const sourceBalanceCents = $derived(sourceAccount?.balanceCents);
@@ -144,11 +156,29 @@
 		accountId = i.accountId;
 		transferToAccountId = i.transferToAccountId;
 		categoryId = i.categoryId;
+		debtId = i.debtId;
 		occurredAt = i.occurredAt;
 		note = i.note;
 		showNote = i.note.length > 0;
-		amountCents = mode === 'edit' && editTarget ? editTarget.amountCents : null;
+		amountCents = debtTarget
+			? debtTarget.minimumPaymentCents
+			: mode === 'edit' && editTarget
+				? editTarget.amountCents
+				: null;
 	});
+
+	// When a debt is picked, prefill amount if currently empty/0
+	$effect(() => {
+		if (!debtId) return;
+		const picked = activeDebts.find((d: any) => d.id === debtId);
+		if (!picked) return;
+		if (!amountCents || amountCents === 0) {
+			amountCents = picked.minimumPaymentCents;
+		}
+	});
+
+	const activeDebts = $derived((page.data.debts ?? []).filter((d: any) => d.status === 'active'));
+	const pickedDebt = $derived(activeDebts.find((d: any) => d.id === debtId));
 
 	const kindOptions = [
 		{ value: 'expense', label: 'Expense' },
@@ -213,6 +243,15 @@
 		const ids = new Set(categoryItems.map((i) => i.value));
 		if (categoryId && !ids.has(categoryId)) categoryId = '';
 	});
+
+	const debtItems = $derived<PickerItem[]>([
+		{ value: '', label: 'None', icon: CreditCard as unknown as Icon },
+		...activeDebts.map((d: any) => ({
+			value: d.id,
+			label: d.name,
+			icon: CreditCard as unknown as Icon
+		}))
+	]);
 
 	const isToday = $derived(occurredAt === todayYmd);
 	const dateLabel = $derived.by(() => {
@@ -371,6 +410,25 @@
 					usePopover={!isDesktop.current}
 				/>
 			</div>
+		{/if}
+
+		{#if kind === 'expense' && activeDebts.length > 0}
+			<div class="space-y-2">
+				<Label>Link to debt <span class="text-muted-foreground font-normal">(optional)</span></Label>
+				<PickerSheet
+					items={debtItems}
+					bind:value={debtId}
+					name="debtId"
+					placeholder="None"
+					title="Link to debt"
+					usePopover={!isDesktop.current}
+				/>
+				{#if pickedDebt}
+					<p class="text-muted-foreground text-xs">Will reduce {pickedDebt.name} balance</p>
+				{/if}
+			</div>
+		{:else}
+			<input type="hidden" name="debtId" value="" />
 		{/if}
 
 		<div class="flex gap-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:pb-0">
