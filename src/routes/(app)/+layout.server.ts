@@ -19,6 +19,8 @@ import {
 } from '$lib/server/repositories/dashboard-stats';
 import { listSubsidies } from '$lib/server/repositories/subsidies';
 import { computeSubsidyFlows } from '$lib/server/repositories/budget-effective';
+import { listDebts } from '$lib/server/repositories/debts';
+import { computeDebtTotals } from '$lib/server/repositories/debt-stats';
 import { getCurrentCycle, formatCycleLabel } from '$lib/utils/cycle';
 import { cachedJson, CACHE_KEYS } from '$lib/server/cf-cache';
 import type { LayoutServerLoad } from './$types';
@@ -68,7 +70,9 @@ export const load: LayoutServerLoad = async (event) => {
 		dailySpending,
 		monthlyIncomeExpense,
 		subsidies,
-		subsidyFlows
+		subsidyFlows,
+		debtList,
+		debtTotals
 	] = await Promise.all([
 		listAccounts(db, user.id, { includeArchived: true }),
 		listCategories(db, user.id, { includeArchived: true }),
@@ -87,7 +91,9 @@ export const load: LayoutServerLoad = async (event) => {
 			computeMonthlyIncomeExpense(db, user.id, 6, cycle.periodMonth, monthStartDay, timezone)
 		),
 		listSubsidies(db, user.id, { periodMonth: cycle.periodMonth }),
-		computeSubsidyFlows(db, user.id, cycle.periodMonth)
+		computeSubsidyFlows(db, user.id, cycle.periodMonth),
+		listDebts(db, user.id, {}),
+		computeDebtTotals(db, user.id, Date.now())
 	]);
 
 	const categories = allCategories.filter((c) => !c.archived);
@@ -149,7 +155,8 @@ export const load: LayoutServerLoad = async (event) => {
 	const monthExpenseCents = cycleTxns
 		.filter((t) => t.kind === 'expense')
 		.reduce((s, t) => s + t.amountCents, 0);
-	const netWorthCents = Array.from(balances.values()).reduce((s, b) => s + b, 0);
+	const netWorthCents =
+		Array.from(balances.values()).reduce((s, b) => s + b, 0) - debtTotals.totalBalanceCents;
 	const budgetLimitCents = assignedCents;
 	const budgetSpentCents = budgetList.reduce((s, b) => s + (budgetSpent.get(b.categoryId) ?? 0), 0);
 
@@ -223,6 +230,8 @@ export const load: LayoutServerLoad = async (event) => {
 		subsidies,
 		subsidyFlowByBudget,
 		unbudgetedCategories,
+		debts: debtList,
+		debtTotals,
 		periodMonth: cycle.periodMonth,
 		allocation: {
 			totalCashCents,
