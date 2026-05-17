@@ -18,7 +18,6 @@
 		LayoutDashboard,
 		ArrowLeftRight,
 		Wallet,
-		Tag,
 		Target,
 		CreditCard,
 		Settings,
@@ -102,8 +101,7 @@
 		{ href: '/transactions', label: 'Tx', icon: ArrowLeftRight },
 		{ href: '/accounts', label: 'Accounts', icon: Wallet },
 		{ href: '/budgets', label: 'Budgets', icon: Target },
-		{ href: '/debts', label: 'Debts', icon: CreditCard },
-		{ href: '/categories', label: 'Categories', icon: Tag }
+		{ href: '/debts', label: 'Debts', icon: CreditCard }
 	] as const;
 
 	const sidebarNav = [
@@ -111,8 +109,7 @@
 		{ href: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
 		{ href: '/accounts', label: 'Accounts', icon: Wallet },
 		{ href: '/budgets', label: 'Budgets', icon: Target },
-		{ href: '/debts', label: 'Debts', icon: CreditCard },
-		{ href: '/categories', label: 'Categories', icon: Tag }
+		{ href: '/debts', label: 'Debts', icon: CreditCard }
 	] as const;
 
 	const isActive = (href: string) =>

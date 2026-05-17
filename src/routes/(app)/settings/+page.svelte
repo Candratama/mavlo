@@ -22,7 +22,7 @@
 		type SegmentedOption
 	} from '$lib/components/ui/segmented-control.svelte';
 	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
-	import { Smartphone, Download, Share, Check } from 'lucide-svelte';
+	import { Smartphone, Download, Share, Check, Tag } from 'lucide-svelte';
 	import {
 		getPwaInstallState,
 		triggerInstall,
@@ -336,6 +336,19 @@
 						</Button>
 					</form>
 				</div>
+			</Card.Content>
+		</Card.Root>
+
+		<!-- Manage -->
+		<Card.Root>
+			<Card.Header>
+				<Card.Title>Manage</Card.Title>
+				<Card.Description>Configure data used across the app.</Card.Description>
+			</Card.Header>
+			<Card.Content>
+				<Button variant="outline" href="/categories" class="w-full justify-start">
+					<Tag class="mr-2 size-4" /> Categories
+				</Button>
 			</Card.Content>
 		</Card.Root>
 
