@@ -97,6 +97,27 @@ export async function reorderCategories(
 	);
 }
 
+const DEBT_PAYMENT_CATEGORY_NAME = 'Debt Payment';
+
+export async function ensureDebtPaymentCategory(db: Db, userId: string): Promise<string> {
+	const [existing] = await db
+		.select()
+		.from(categories)
+		.where(and(eq(categories.userId, userId), eq(categories.name, DEBT_PAYMENT_CATEGORY_NAME)))
+		.limit(1);
+	if (existing) return existing.id;
+	const [created] = await db
+		.insert(categories)
+		.values({
+			userId,
+			name: DEBT_PAYMENT_CATEGORY_NAME,
+			kind: 'expense',
+			icon: 'wallet'
+		})
+		.returning();
+	return created.id;
+}
+
 const ADJUSTMENT_NAME = 'Balance Adjustment';
 
 export async function getOrCreateAdjustmentCategory(

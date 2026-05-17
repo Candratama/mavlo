@@ -6,7 +6,8 @@ import {
 	updateCategory,
 	archiveCategory,
 	unarchiveCategory,
-	getCategory
+	getCategory,
+	ensureDebtPaymentCategory
 } from './categories';
 
 let h: TestDbHandle;
@@ -44,5 +45,20 @@ describe('categories repository', () => {
 	it('getCategory cross-user returns null', async () => {
 		const c = await createCategory(h.db, h.userId, { name: 'Food', kind: 'expense' });
 		expect(await getCategory(h.db, h.otherUserId, c.id)).toBeNull();
+	});
+});
+
+describe('ensureDebtPaymentCategory', () => {
+	it('creates if missing, returns existing id on second call', async () => {
+		const id1 = await ensureDebtPaymentCategory(h.db, h.userId);
+		const id2 = await ensureDebtPaymentCategory(h.db, h.userId);
+		expect(id1).toBe(id2);
+		expect(typeof id1).toBe('string');
+	});
+
+	it('scoped per user', async () => {
+		const id1 = await ensureDebtPaymentCategory(h.db, h.userId);
+		const id2 = await ensureDebtPaymentCategory(h.db, h.otherUserId);
+		expect(id1).not.toBe(id2);
 	});
 });
