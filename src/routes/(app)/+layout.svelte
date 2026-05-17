@@ -102,7 +102,8 @@
 		{ href: '/transactions', label: 'Tx', icon: ArrowLeftRight },
 		{ href: '/accounts', label: 'Accounts', icon: Wallet },
 		{ href: '/budgets', label: 'Budgets', icon: Target },
-		{ href: '/debts', label: 'Debts', icon: CreditCard }
+		{ href: '/debts', label: 'Debts', icon: CreditCard },
+		{ href: '/categories', label: 'Categories', icon: Tag }
 	] as const;
 
 	const sidebarNav = [
