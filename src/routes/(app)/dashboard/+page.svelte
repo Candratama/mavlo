@@ -34,6 +34,7 @@
 	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { formatCycleLabel } from '$lib/utils/cycle.js';
+	import { dtiRatio, dtiStatus } from '$lib/utils/debt.js';
 	import { getIconByName, type IconComponent } from '$lib/utils/category-icons.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
 	import { setupPullToRefresh } from '$lib/actions/pull-to-refresh.js';
@@ -227,6 +228,39 @@
 				{data.subsidies.length} active {data.subsidies.length === 1 ? 'subsidy' : 'subsidies'} ·
 				{hideBalance ? maskedAmount : formatCentsAsCurrency(totalSubsidy, data.displayCurrency)}
 				redistributed
+			</div>
+		{/if}
+	</a>
+{/if}
+
+{#if data.debts?.some((d: any) => d.status === 'active')}
+	{@const dti = dtiRatio(data.debtTotals?.totalMinPaymentCents ?? 0, data.monthIncomeCents)}
+	{@const dtiState = dtiStatus(dti)}
+	{@const nextPayment = data.debtTotals?.upcomingPayments?.[0]}
+	<a
+		href={resolve('/debts')}
+		class="mt-4 block rounded-xl border bg-gradient-to-br {dtiState === 'unsafe' ? 'from-rose-500/10' : dtiState === 'moderate' ? 'from-amber-500/10' : 'from-primary/10'} via-card to-card hover:bg-accent/20 p-4 transition-colors"
+	>
+		<div class="mb-2 flex items-center justify-between">
+			<span class="text-sm font-semibold">Debt</span>
+			<span class="text-sm font-semibold tabular-nums">
+				{hideBalance ? maskedAmount : formatCentsAsCurrency(data.debtTotals?.totalBalanceCents ?? 0, data.displayCurrency)}
+			</span>
+		</div>
+		<div class="text-muted-foreground flex justify-between text-xs tabular-nums">
+			<span>Monthly minimum</span>
+			<span>{hideBalance ? maskedAmount : formatCentsAsCurrency(data.debtTotals?.totalMinPaymentCents ?? 0, data.displayCurrency)}</span>
+		</div>
+		{#if data.monthIncomeCents > 0}
+			<div class="mt-2 text-xs {dtiState === 'unsafe' ? 'text-rose-500' : dtiState === 'moderate' ? 'text-amber-500' : 'text-muted-foreground'}">
+				DTI {dti}% {dtiState === 'safe' ? '✓' : dtiState === 'moderate' ? '· moderate' : '⚠ above safe threshold'}
+			</div>
+		{/if}
+		{#if nextPayment}
+			<div class="text-muted-foreground mt-2 text-xs">
+				Upcoming: {new Date(nextPayment.dueMs).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ·
+				{hideBalance ? maskedAmount : formatCentsAsCurrency(nextPayment.minAmountCents, data.displayCurrency)} ·
+				{nextPayment.debtName}
 			</div>
 		{/if}
 	</a>
