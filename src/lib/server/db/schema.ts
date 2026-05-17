@@ -64,6 +64,7 @@ export const transactions = sqliteTable(
 		transferToAccountId: text('transfer_to_account_id').references(() => accounts.id, {
 			onDelete: 'restrict'
 		}),
+		debtId: text('debt_id').references(() => debts.id, { onDelete: 'set null' }),
 		amountCents: integer('amount_cents', { mode: 'number' }).notNull(),
 		kind: text('kind', { enum: ['income', 'expense', 'transfer'] }).notNull(),
 		note: text('note'),
@@ -76,7 +77,8 @@ export const transactions = sqliteTable(
 		index('tx_user_idx').on(t.userId),
 		index('tx_user_occurred_idx').on(t.userId, t.occurredAt),
 		index('tx_account_idx').on(t.accountId),
-		index('tx_transfer_to_account_idx').on(t.transferToAccountId)
+		index('tx_transfer_to_account_idx').on(t.transferToAccountId),
+		index('tx_debt_idx').on(t.debtId)
 	]
 );
 
@@ -117,6 +119,37 @@ export const budgetSubsidies = sqliteTable(
 		index('subsidies_user_period_idx').on(t.userId, t.periodMonth),
 		index('subsidies_from_idx').on(t.fromBudgetId),
 		index('subsidies_to_idx').on(t.toBudgetId)
+	]
+);
+
+export const debts = sqliteTable(
+	'debts',
+	{
+		id: cuid().primaryKey(),
+		userId: userIdFk(),
+		name: text('name').notNull(),
+		type: text('type', {
+			enum: ['credit_card', 'kta', 'kpr', 'auto', 'bnpl', 'pinjol', 'informal', 'other']
+		}).notNull(),
+		lender: text('lender'),
+		principalCents: integer('principal_cents', { mode: 'number' }).notNull(),
+		currentBalanceCents: integer('current_balance_cents', { mode: 'number' }).notNull(),
+		interestRatePct: integer('interest_rate_pct', { mode: 'number' }).notNull().default(0),
+		minimumPaymentCents: integer('minimum_payment_cents', { mode: 'number' }).notNull().default(0),
+		dueDay: integer('due_day', { mode: 'number' }),
+		startDate: integer('start_date', { mode: 'number' }).notNull(),
+		maturityDate: integer('maturity_date', { mode: 'number' }),
+		status: text('status', { enum: ['active', 'paid_off', 'in_arrears'] })
+			.notNull()
+			.default('active'),
+		accountId: text('account_id').references(() => accounts.id, { onDelete: 'set null' }),
+		note: text('note'),
+		createdAt: epochMsNow('created_at'),
+		updatedAt: epochMsNow('updated_at')
+	},
+	(t) => [
+		index('debts_user_idx').on(t.userId),
+		index('debts_user_status_idx').on(t.userId, t.status)
 	]
 );
 
