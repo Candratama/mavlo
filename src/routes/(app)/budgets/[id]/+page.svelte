@@ -75,16 +75,22 @@
 	const flow = $derived(
 		budget ? (data.subsidyFlowByBudget[budget.id] ?? { in: 0, out: 0 }) : { in: 0, out: 0 }
 	);
-	const effLimit = $derived(budget ? effectiveLimit(budget.limitCents, flow) : 0);
+	const carryover = $derived(budget?.carryoverDeficitCents ?? 0);
+	const effLimit = $derived(
+		budget ? effectiveLimit(budget.limitCents, flow) - carryover : 0
+	);
 	const denom = $derived((budget?.limitCents ?? 0) + flow.in);
-	const stillOver = $derived(spentCents > denom);
+	const stillOver = $derived(spentCents + carryover > denom);
 	const coveredByEff = $derived(over && !stillOver);
 	const effPct = $derived(
 		denom === 0
-			? spentCents + flow.out > 0
+			? spentCents + flow.out + carryover > 0
 				? 100
 				: 0
-			: Math.min(100, Math.round(((spentCents + flow.out) / denom) * 100))
+			: Math.min(
+					100,
+					Math.round(((spentCents + flow.out + carryover) / denom) * 100)
+				)
 	);
 
 	const subsidiesIn = $derived(
@@ -101,8 +107,9 @@
 			.map((b) => {
 				const spentB = data.spentByCategory[b.categoryId] ?? 0;
 				const out = data.subsidyFlowByBudget[b.id]?.out ?? 0;
+				const carryover = b.carryoverDeficitCents ?? 0;
 				const remaining = sourceRemaining({
-					limitCents: b.limitCents,
+					limitCents: b.limitCents - carryover,
 					spentCents: spentB,
 					subsidyOutCents: out
 				});
@@ -311,7 +318,7 @@
 				<div class="mt-1 font-semibold tabular-nums">
 					{formatCentsAsCurrency(limitCents, currency)}
 				</div>
-				{#if flow.in > 0 || flow.out > 0}
+				{#if flow.in > 0 || flow.out > 0 || carryover > 0}
 					<div class="text-muted-foreground text-[10px]">
 						eff {formatCentsAsCurrency(effLimit, currency)}
 					</div>
@@ -321,13 +328,18 @@
 				<div class="text-muted-foreground uppercase tracking-wider">{stillOver ? 'Over by' : 'Left'}</div>
 				<div class="mt-1 font-semibold tabular-nums {stillOver ? 'text-expense' : 'text-income'}">
 					{#if stillOver}
-						−{formatCentsAsCurrency(spentCents - denom, currency)}
+						−{formatCentsAsCurrency(spentCents + carryover - denom, currency)}
 					{:else}
-						{formatCentsAsCurrency(Math.max(0, denom - spentCents - flow.out), currency)}
+						{formatCentsAsCurrency(Math.max(0, denom - spentCents - flow.out - carryover), currency)}
 					{/if}
 				</div>
 			</div>
 		</div>
+		{#if carryover > 0}
+			<div class="mt-3 text-xs text-amber-500">
+				⤴ Carryover deficit from {budget?.carryoverFromPeriod}: {formatCentsAsCurrency(carryover, currency)}
+			</div>
+		{/if}
 	</div>
 {/if}
 

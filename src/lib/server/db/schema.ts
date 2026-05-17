@@ -92,6 +92,10 @@ export const budgets = sqliteTable(
 			.references(() => categories.id, { onDelete: 'cascade' }),
 		periodMonth: text('period_month').notNull(), // 'YYYY-MM'
 		limitCents: integer('limit_cents', { mode: 'number' }).notNull(),
+		carryoverDeficitCents: integer('carryover_deficit_cents', { mode: 'number' })
+			.notNull()
+			.default(0),
+		carryoverFromPeriod: text('carryover_from_period'),
 		createdAt: epochMsNow('created_at'),
 		updatedAt: epochMsNow('updated_at')
 	},

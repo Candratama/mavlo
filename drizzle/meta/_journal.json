@@ -78,6 +78,13 @@
       "when": 1779011778972,
       "tag": "0010_add_debts",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1779014800000,
+      "tag": "0011_add_budget_carryover",
+      "breakpoints": true
     }
   ]
 }

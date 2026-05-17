@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth/guards';
 import { getDb } from '$lib/server/db';
-import { userPreferences, users } from '$lib/server/db/schema';
+import { budgets as budgetsTable, userPreferences, users } from '$lib/server/db/schema';
 import { listAccounts } from '$lib/server/repositories/accounts';
 import { listCategories } from '$lib/server/repositories/categories';
 import {
@@ -21,7 +21,7 @@ import { listSubsidies } from '$lib/server/repositories/subsidies';
 import { computeSubsidyFlows } from '$lib/server/repositories/budget-effective';
 import { listDebts } from '$lib/server/repositories/debts';
 import { computeDebtTotals } from '$lib/server/repositories/debt-stats';
-import { getCurrentCycle, formatCycleLabel } from '$lib/utils/cycle';
+import { getCurrentCycle, getCycleForPeriod, formatCycleLabel, prevPeriodMonth } from '$lib/utils/cycle';
 import { cachedJson, CACHE_KEYS } from '$lib/server/cf-cache';
 import type { LayoutServerLoad } from './$types';
 
@@ -64,7 +64,7 @@ export const load: LayoutServerLoad = async (event) => {
 		balances,
 		periodSummary,
 		transactions,
-		budgetList,
+		budgetListRaw,
 		budgetSpent,
 		spendingByCategory,
 		dailySpending,
@@ -96,6 +96,41 @@ export const load: LayoutServerLoad = async (event) => {
 		computeDebtTotals(db, user.id, Date.now())
 	]);
 
+	// Carryover: for each current-period budget whose carryoverFromPeriod is stale,
+	// compute uncovered overage from previous period and persist as carryover deficit.
+	const prevPeriod = prevPeriodMonth(cycle.periodMonth);
+	const staleBudgets = budgetListRaw.filter((b) => b.carryoverFromPeriod !== prevPeriod);
+	let budgetList = budgetListRaw;
+	if (staleBudgets.length > 0) {
+		const prevBudgets = await listBudgets(db, user.id, { periodMonth: prevPeriod });
+		const prevByCategoryId = new Map(prevBudgets.map((b) => [b.categoryId, b]));
+		const prevCycle = getCycleForPeriod(prevPeriod, monthStartDay, timezone);
+		const [prevSpent, prevFlows] = await Promise.all([
+			computeBudgetSpent(db, user.id, prevCycle.start.getTime(), prevCycle.end.getTime() - 1),
+			computeSubsidyFlows(db, user.id, prevPeriod)
+		]);
+		for (const cur of staleBudgets) {
+			const prev = prevByCategoryId.get(cur.categoryId);
+			let carryover = 0;
+			if (prev) {
+				const spent = prevSpent.get(prev.categoryId) ?? 0;
+				const flow = prevFlows.get(prev.id) ?? { in: 0, out: 0 };
+				const effLimit =
+					prev.limitCents + flow.in - flow.out - prev.carryoverDeficitCents;
+				carryover = Math.max(0, spent - effLimit);
+			}
+			await db
+				.update(budgetsTable)
+				.set({
+					carryoverDeficitCents: carryover,
+					carryoverFromPeriod: prevPeriod,
+					updatedAt: Date.now()
+				})
+				.where(eq(budgetsTable.id, cur.id));
+		}
+		budgetList = await listBudgets(db, user.id, { periodMonth: cycle.periodMonth });
+	}
+
 	const categories = allCategories.filter((c) => !c.archived);
 
 	const allAccountsWithBalance = accounts.map((a) => {
@@ -119,12 +154,12 @@ export const load: LayoutServerLoad = async (event) => {
 		Object.fromEntries(subsidyFlows.entries());
 
 	const assignedCents = budgetList.reduce((s, b) => s + b.limitCents, 0);
-	// Effective remaining per budget accounts for outgoing subsidy:
-	// money given to other budgets is no longer available to this one.
+	// Effective remaining per budget accounts for outgoing subsidy AND carryover
+	// deficit from previous period.
 	const remainingBudgetCents = budgetList.reduce((s, b) => {
 		const spent = budgetSpent.get(b.categoryId) ?? 0;
 		const flow = subsidyFlowByBudget[b.id] ?? { in: 0, out: 0 };
-		return s + Math.max(0, b.limitCents + flow.in - spent - flow.out);
+		return s + Math.max(0, b.limitCents + flow.in - spent - flow.out - b.carryoverDeficitCents);
 	}, 0);
 	const totalCashCents = savingsCents + operationalCents;
 	const allocatedCents = savingsCents + remainingBudgetCents;

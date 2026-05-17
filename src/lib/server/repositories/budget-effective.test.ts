@@ -16,10 +16,10 @@ beforeEach(() => {
 		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
 		.run('cat2', h.userId, 'Transport', 'expense', now, now);
 	h.sqlite
-		.prepare('INSERT INTO budgets VALUES (?, ?, ?, ?, ?, ?, ?)')
+		.prepare('INSERT INTO budgets VALUES (?, ?, ?, ?, ?, 0, NULL, ?, ?)')
 		.run('b1', h.userId, 'cat1', '2026-04', 1_000_000, now, now);
 	h.sqlite
-		.prepare('INSERT INTO budgets VALUES (?, ?, ?, ?, ?, ?, ?)')
+		.prepare('INSERT INTO budgets VALUES (?, ?, ?, ?, ?, 0, NULL, ?, ?)')
 		.run('b2', h.userId, 'cat2', '2026-04', 500_000, now, now);
 });
 

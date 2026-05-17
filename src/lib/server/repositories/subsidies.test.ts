@@ -26,7 +26,7 @@ const insertBudget = (
 	userId?: string
 ) => {
 	h.sqlite
-		.prepare('INSERT INTO budgets VALUES (?, ?, ?, ?, ?, ?, ?)')
+		.prepare('INSERT INTO budgets VALUES (?, ?, ?, ?, ?, 0, NULL, ?, ?)')
 		.run(id, userId ?? h.userId, categoryId, period, limit, now(), now());
 };
 

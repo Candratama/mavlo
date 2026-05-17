@@ -67,6 +67,14 @@ function periodMonthStr(year: number, month1to12: number): string {
 	return `${year}-${String(month1to12).padStart(2, '0')}`;
 }
 
+export function prevPeriodMonth(periodYYYYMM: string): string {
+	const [yStr, mStr] = periodYYYYMM.split('-');
+	const y = Number(yStr);
+	const m = Number(mStr);
+	const prev = m === 1 ? { y: y - 1, m: 12 } : { y, m: m - 1 };
+	return periodMonthStr(prev.y, prev.m);
+}
+
 function addMonths(year: number, month1to12: number, delta: number): { y: number; m: number } {
 	const idx = year * 12 + (month1to12 - 1) + delta;
 	return { y: Math.floor(idx / 12), m: (idx % 12) + 1 };

@@ -70,6 +70,8 @@ const budgetsTableSql = `
 		category_id TEXT NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
 		period_month TEXT NOT NULL,
 		limit_cents INTEGER NOT NULL,
+		carryover_deficit_cents INTEGER NOT NULL DEFAULT 0,
+		carryover_from_period TEXT,
 		created_at INTEGER NOT NULL,
 		updated_at INTEGER NOT NULL
 	)

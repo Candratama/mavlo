@@ -98,8 +98,9 @@
 			.map((b) => {
 				const spentB = data.spentByCategory[b.categoryId] ?? 0;
 				const out = (data.subsidyFlowByBudget[b.id]?.out) ?? 0;
+				const carryover = b.carryoverDeficitCents ?? 0;
 				const remaining = sourceRemaining({
-					limitCents: b.limitCents,
+					limitCents: b.limitCents - carryover,
 					spentCents: spentB,
 					subsidyOutCents: out
 				});
@@ -398,10 +399,13 @@
 				</div>
 			</Card.Header>
 			<Card.Content class="relative z-10">
-				{@const effLimit = effectiveLimit(budget.limitCents, flow)}
-				{@const stillOver = spent > denom}
+				{@const flow = flowOf(budget.id)}
+				{@const carryover = budget.carryoverDeficitCents ?? 0}
+				{@const effLimit = effectiveLimit(budget.limitCents, flow) - carryover}
+				{@const denom = budget.limitCents + flow.in}
+				{@const stillOver = spent + carryover > denom}
 				{@const coveredByEff = over && !stillOver}
-				{@const usedPct = denom === 0 ? (spent + flow.out > 0 ? 100 : 0) : Math.min(100, Math.round(((spent + flow.out) / denom) * 100))}
+				{@const usedPct = denom === 0 ? (spent + flow.out + carryover > 0 ? 100 : 0) : Math.min(100, Math.round(((spent + flow.out + carryover) / denom) * 100))}
 				<div class="mb-2 flex items-baseline justify-between text-sm tabular-nums">
 					<span class={stillOver ? 'text-expense font-medium' : ''}>
 						{formatCents(spent)}
@@ -455,6 +459,11 @@
 				{#if flow.out > 0}
 					<p class="text-muted-foreground mt-1 text-xs">
 						↑ outgoing subsidy {formatCents(flow.out)}
+					</p>
+				{/if}
+				{#if carryover > 0}
+					<p class="mt-1 text-xs text-amber-500">
+						⤴ carryover deficit {formatCents(carryover)}
 					</p>
 				{/if}
 				{#if stillOver}
