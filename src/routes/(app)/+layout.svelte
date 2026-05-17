@@ -20,6 +20,7 @@
 		Wallet,
 		Tag,
 		Target,
+		CreditCard,
 		Settings,
 		LogOut,
 		Home
@@ -38,7 +39,7 @@
 
 	// (B) Aggressive prefetch — preload main route code + data after dashboard mount.
 	// Subsequent navigations between the 4 main pages feel instant.
-	const MAIN_ROUTES = ['/dashboard', '/transactions', '/accounts', '/budgets'];
+	const MAIN_ROUTES = ['/dashboard', '/transactions', '/accounts', '/budgets', '/debts'];
 	onMount(() => {
 		// Code first (small, synchronous JS)
 		MAIN_ROUTES.forEach((r) => {
@@ -101,15 +102,16 @@
 		{ href: '/transactions', label: 'Tx', icon: ArrowLeftRight },
 		{ href: '/accounts', label: 'Accounts', icon: Wallet },
 		{ href: '/budgets', label: 'Budgets', icon: Target },
-		{ href: '/categories', label: 'Categories', icon: Tag }
+		{ href: '/debts', label: 'Debts', icon: CreditCard }
 	] as const;
 
 	const sidebarNav = [
 		{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
 		{ href: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
 		{ href: '/accounts', label: 'Accounts', icon: Wallet },
-		{ href: '/categories', label: 'Categories', icon: Tag },
-		{ href: '/budgets', label: 'Budgets', icon: Target }
+		{ href: '/budgets', label: 'Budgets', icon: Target },
+		{ href: '/debts', label: 'Debts', icon: CreditCard },
+		{ href: '/categories', label: 'Categories', icon: Tag }
 	] as const;
 
 	const isActive = (href: string) =>
