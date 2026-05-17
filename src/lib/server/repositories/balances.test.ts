@@ -21,7 +21,7 @@ const insertTx = (
 ) => {
 	const now = Date.now();
 	h.sqlite
-		.prepare('INSERT INTO transactions VALUES (?, ?, ?, NULL, ?, ?, NULL, ?, ?, ?, NULL, 0)')
+		.prepare('INSERT INTO transactions VALUES (?, ?, ?, NULL, ?, ?, NULL, ?, ?, ?, NULL, NULL, 0)')
 		.run(args.id, h.userId, args.accountId, args.amount, args.kind, now, now, now);
 };
 
@@ -53,7 +53,7 @@ describe('computeAccountBalances', () => {
 			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
 			.run('acc-other', h.otherUserId, 'Other', 'cash', 'IDR', 0, now, now);
 		h.sqlite
-			.prepare('INSERT INTO transactions VALUES (?, ?, ?, NULL, ?, ?, NULL, ?, ?, ?, NULL, 0)')
+			.prepare('INSERT INTO transactions VALUES (?, ?, ?, NULL, ?, ?, NULL, ?, ?, ?, NULL, NULL, 0)')
 			.run('tother', h.otherUserId, 'acc-other', 99999, 'expense', now, now, now);
 
 		const map = await computeAccountBalances(h.db, h.userId);
@@ -66,7 +66,7 @@ describe('computeAccountBalances', () => {
 		const now = Date.now();
 		// 11-placeholder INSERT shape (transfer_to_account_id is the 11th column, last position)
 		h.sqlite
-			.prepare('INSERT INTO transactions VALUES (?, ?, ?, NULL, ?, ?, NULL, ?, ?, ?, ?, 0)')
+			.prepare('INSERT INTO transactions VALUES (?, ?, ?, NULL, ?, ?, NULL, ?, ?, ?, ?, NULL, 0)')
 			.run('t-transfer', h.userId, 'acc1', 30000, 'transfer', now, now, now, 'acc2');
 
 		const map = await computeAccountBalances(h.db, h.userId);
@@ -81,7 +81,7 @@ describe('computeAccountBalances', () => {
 			.run('acc-other', h.otherUserId, 'Other', 'cash', 'IDR', 0, now, now);
 		// Simulate (would never happen via validators) a cross-user row pointing dest at our acc1
 		h.sqlite
-			.prepare('INSERT INTO transactions VALUES (?, ?, ?, NULL, ?, ?, NULL, ?, ?, ?, ?, 0)')
+			.prepare('INSERT INTO transactions VALUES (?, ?, ?, NULL, ?, ?, NULL, ?, ?, ?, ?, NULL, 0)')
 			.run('t-x', h.otherUserId, 'acc-other', 99999, 'transfer', now, now, now, 'acc1');
 
 		const map = await computeAccountBalances(h.db, h.userId);
@@ -91,7 +91,7 @@ describe('computeAccountBalances', () => {
 	it('deleting a transfer restores both accounts to pre-transfer balance', async () => {
 		const now = Date.now();
 		h.sqlite
-			.prepare('INSERT INTO transactions VALUES (?, ?, ?, NULL, ?, ?, NULL, ?, ?, ?, ?, 0)')
+			.prepare('INSERT INTO transactions VALUES (?, ?, ?, NULL, ?, ?, NULL, ?, ?, ?, ?, NULL, 0)')
 			.run('t-tx', h.userId, 'acc1', 25000, 'transfer', now, now, now, 'acc2');
 
 		const after = await computeAccountBalances(h.db, h.userId);

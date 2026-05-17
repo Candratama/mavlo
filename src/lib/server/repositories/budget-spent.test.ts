@@ -34,7 +34,7 @@ const insertTx = (
 	const accountId = options.accountId ?? 'acc1';
 	h.sqlite
 		.prepare(
-			`INSERT INTO transactions VALUES (?, ?, ?, ${cat}, ?, ?, NULL, ?, ?, ?, ${transferTo}, 0)`
+			`INSERT INTO transactions VALUES (?, ?, ?, ${cat}, ?, ?, NULL, ?, ?, ?, ${transferTo}, NULL, 0)`
 		)
 		.run(id, userId, accountId, amount, kind, occurredAt, occurredAt, occurredAt);
 };

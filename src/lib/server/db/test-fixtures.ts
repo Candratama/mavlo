@@ -58,6 +58,7 @@ const transactionsTableSql = `
 		created_at INTEGER NOT NULL,
 		updated_at INTEGER NOT NULL,
 		transfer_to_account_id TEXT REFERENCES accounts(id) ON DELETE RESTRICT,
+		debt_id TEXT,
 		is_seed INTEGER NOT NULL DEFAULT 0
 	)
 `;
@@ -88,6 +89,28 @@ const budgetSubsidiesTableSql = `
 	)
 `;
 
+const debtsTableSql = `
+	CREATE TABLE debts (
+		id TEXT NOT NULL PRIMARY KEY,
+		user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		name TEXT NOT NULL,
+		type TEXT NOT NULL,
+		lender TEXT,
+		principal_cents INTEGER NOT NULL,
+		current_balance_cents INTEGER NOT NULL,
+		interest_rate_pct INTEGER NOT NULL DEFAULT 0,
+		minimum_payment_cents INTEGER NOT NULL DEFAULT 0,
+		due_day INTEGER,
+		start_date INTEGER NOT NULL,
+		maturity_date INTEGER,
+		status TEXT NOT NULL DEFAULT 'active',
+		account_id TEXT REFERENCES accounts(id) ON DELETE SET NULL,
+		note TEXT,
+		created_at INTEGER NOT NULL,
+		updated_at INTEGER NOT NULL
+	)
+`;
+
 export interface TestDbHandle {
 	db: BetterSQLite3Database<typeof schema>;
 	userId: string;
@@ -96,7 +119,7 @@ export interface TestDbHandle {
 }
 
 export function createTestDb(opts: {
-	tables: ('accounts' | 'categories' | 'transactions' | 'budgets' | 'budget_subsidies')[];
+	tables: ('accounts' | 'categories' | 'transactions' | 'budgets' | 'budget_subsidies' | 'debts')[];
 }): TestDbHandle {
 	const sqlite = new Database(':memory:');
 	const db = drizzle(sqlite, { schema });
@@ -105,6 +128,7 @@ export function createTestDb(opts: {
 	sqlite.prepare(usersTableSql).run();
 	if (opts.tables.includes('accounts')) sqlite.prepare(accountsTableSql).run();
 	if (opts.tables.includes('categories')) sqlite.prepare(categoriesTableSql).run();
+	if (opts.tables.includes('debts')) sqlite.prepare(debtsTableSql).run();
 	if (opts.tables.includes('transactions')) sqlite.prepare(transactionsTableSql).run();
 	if (opts.tables.includes('budgets')) sqlite.prepare(budgetsTableSql).run();
 	if (opts.tables.includes('budget_subsidies'))

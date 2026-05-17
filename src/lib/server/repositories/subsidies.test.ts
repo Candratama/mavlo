@@ -46,7 +46,7 @@ const insertExpense = (
 ) => {
 	h.sqlite
 		.prepare(
-			`INSERT INTO transactions VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, NULL, 0)`
+			`INSERT INTO transactions VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, NULL, NULL, 0)`
 		)
 		.run(
 			id,
