@@ -329,29 +329,9 @@
 	</div>
 
 	{#if showDueDay}
-		<div class="space-y-2">
-			<div class="flex items-baseline justify-between">
-				<Label>Due day <span class="text-muted-foreground">(optional)</span></Label>
-				{#if dueDay}
-					<span class="text-muted-foreground text-xs">
-						Every month on day {dueDay}
-					</span>
-				{/if}
-			</div>
-			<input type="hidden" name="dueDay" value={dueDay ?? ''} />
-			<div class="grid grid-cols-7 gap-1">
-				{#each Array.from({ length: 31 }, (_, i) => i + 1) as d (d)}
-					<button
-						type="button"
-						onclick={() => (dueDay = dueDay === d ? null : d)}
-						class="flex h-9 items-center justify-center rounded-md border text-xs tabular-nums transition-colors {dueDay === d
-							? 'border-primary bg-primary text-primary-foreground font-semibold'
-							: 'border-border hover:bg-accent text-foreground'}"
-					>
-						{d}
-					</button>
-				{/each}
-			</div>
+		<div class="space-y-1">
+			<Label for="debt-due">Due day (1–31) <span class="text-muted-foreground">(optional)</span></Label>
+			<Input id="debt-due" type="number" name="dueDay" min={1} max={31} bind:value={dueDay} />
 			{#if !dueDay && dueDayExpected}
 				<p class="text-xs text-amber-500">
 					💡 Set due day to see upcoming payment reminders on dashboard.
