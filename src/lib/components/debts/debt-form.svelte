@@ -7,14 +7,24 @@
 	import MoneyInput from '$lib/components/forms/money-input.svelte';
 	import SubmitButton from '$lib/components/forms/submit-button.svelte';
 	import PickerSheet, { type PickerItem } from '$lib/components/ui/picker-sheet.svelte';
-	import { CreditCard, Wallet, Car, Home, Tag } from 'lucide-svelte';
+	import { CreditCard, Wallet, Car, Home, Tag, User as UserIcon } from 'lucide-svelte';
 	import { notify } from '$lib/utils/toast.js';
 	import { parseAprToInt, formatApr } from '$lib/utils/debt';
+
+	type DebtType =
+		| 'credit_card'
+		| 'kta'
+		| 'kpr'
+		| 'auto'
+		| 'bnpl'
+		| 'pinjol'
+		| 'informal'
+		| 'other';
 
 	type DebtRow = {
 		id: string;
 		name: string;
-		type: 'credit_card' | 'kta' | 'kpr' | 'auto' | 'bnpl' | 'pinjol' | 'informal' | 'other';
+		type: DebtType;
 		lender: string | null;
 		principalCents: number;
 		currentBalanceCents: number;
@@ -37,12 +47,12 @@
 	let {
 		mode,
 		initial,
-		creditAccounts,
+		accounts,
 		onClose
 	}: {
 		mode: 'create' | 'edit';
 		initial: DebtRow | null;
-		creditAccounts: Account[];
+		accounts: Account[];
 		onClose: () => void;
 	} = $props();
 
@@ -56,13 +66,13 @@
 		{ value: 'auto', label: 'Auto loan', icon: toIcon(Car) },
 		{ value: 'bnpl', label: 'Buy now pay later (BNPL)', icon: toIcon(Tag) },
 		{ value: 'pinjol', label: 'Online lending (Pinjol)', icon: toIcon(Wallet) },
-		{ value: 'informal', label: 'Informal (family/friend)', icon: toIcon(Wallet) },
+		{ value: 'informal', label: 'Informal (family/friend)', icon: toIcon(UserIcon) },
 		{ value: 'other', label: 'Other', icon: toIcon(Wallet) }
 	];
 
 	// State
 	let name = $state(initial?.name ?? '');
-	let type = $state<DebtRow['type']>(initial?.type ?? 'credit_card');
+	let type = $state<DebtType>(initial?.type ?? 'credit_card');
 	let lender = $state(initial?.lender ?? '');
 	let principalCents = $state<number | null>(initial?.principalCents ?? null);
 	let currentBalanceCents = $state<number | null>(initial?.currentBalanceCents ?? null);
@@ -81,6 +91,18 @@
 	let note = $state(initial?.note ?? '');
 	let pending = $state(false);
 
+	// Funding toggle (create mode only): "I just received this money"
+	let funded = $state(false);
+	let fundedAccountId = $state('');
+
+	// When user toggles funded on, auto-fill currentBalance = principal so they
+	// don't have to type the same number twice.
+	$effect(() => {
+		if (funded && principalCents != null && (currentBalanceCents == null || currentBalanceCents === 0)) {
+			currentBalanceCents = principalCents;
+		}
+	});
+
 	const interestRatePctInt = $derived(parseAprToInt(aprDisplay) ?? 0);
 	const startDateMs = $derived(startDateStr ? new Date(startDateStr).getTime() : 0);
 	const maturityDateMs = $derived(maturityDateStr ? new Date(maturityDateStr).getTime() : null);
@@ -88,10 +110,63 @@
 	const showDueDay = $derived(type !== 'bnpl' && type !== 'informal');
 	const showLinkedAccount = $derived(type === 'credit_card');
 	const showMaturityDate = $derived(type === 'kpr' || type === 'auto' || type === 'bnpl');
-	const principalLabel = $derived(type === 'credit_card' ? 'Credit limit' : 'Principal');
+	const showApr = $derived(type !== 'informal');
+	const showFundingToggle = $derived(mode === 'create' && type !== 'credit_card');
+
+	const isInformal = $derived(type === 'informal');
+	const principalLabel = $derived(
+		type === 'credit_card' ? 'Credit limit' : 'Amount borrowed'
+	);
+	const lenderLabel = $derived(
+		isInformal ? 'Person you owe' : type === 'other' ? 'Lender / source' : 'Lender'
+	);
+	const namePlaceholder = $derived.by(() => {
+		switch (type) {
+			case 'credit_card':
+				return 'e.g., BCA Visa';
+			case 'kta':
+				return 'e.g., KTA BRI';
+			case 'kpr':
+				return 'e.g., KPR rumah';
+			case 'auto':
+				return 'e.g., Mobil avanza';
+			case 'bnpl':
+				return 'e.g., Shopee PayLater';
+			case 'pinjol':
+				return 'e.g., Akulaku';
+			case 'informal':
+				return 'e.g., Pinjam mas Andre';
+			default:
+				return '';
+		}
+	});
+	const lenderPlaceholder = $derived.by(() => {
+		switch (type) {
+			case 'credit_card':
+			case 'kta':
+			case 'kpr':
+				return 'e.g., Bank BCA';
+			case 'auto':
+				return 'e.g., Adira Finance';
+			case 'bnpl':
+				return 'e.g., Shopee';
+			case 'pinjol':
+				return 'e.g., Akulaku';
+			case 'informal':
+				return 'e.g., Mas Andre';
+			default:
+				return '';
+		}
+	});
+
+	const creditAccounts = $derived(accounts.filter((a) => a.type === 'credit'));
+	const fundingAccounts = $derived(accounts.filter((a) => a.type !== 'credit'));
 
 	const accountItems = $derived<PickerItem[]>(
 		creditAccounts.map((a) => ({ value: a.id, label: a.name, icon: toIcon(CreditCard) }))
+	);
+	const fundingItems = $derived<PickerItem[]>(
+		fundingAccounts.map((a) => ({ value: a.id, label: a.name, icon: toIcon(Wallet) }))
 	);
 </script>
 
@@ -124,11 +199,6 @@
 	{/if}
 
 	<div class="space-y-1">
-		<Label for="debt-name">Name</Label>
-		<Input id="debt-name" name="name" bind:value={name} required maxlength={100} />
-	</div>
-
-	<div class="space-y-1">
 		<Label>Type</Label>
 		<PickerSheet
 			items={typeItems}
@@ -140,9 +210,65 @@
 	</div>
 
 	<div class="space-y-1">
-		<Label for="debt-lender">Lender (optional)</Label>
-		<Input id="debt-lender" name="lender" bind:value={lender} maxlength={100} />
+		<Label for="debt-name">Name</Label>
+		<Input
+			id="debt-name"
+			name="name"
+			bind:value={name}
+			required
+			maxlength={100}
+			placeholder={namePlaceholder}
+		/>
 	</div>
+
+	<div class="space-y-1">
+		<Label for="debt-lender">{lenderLabel} <span class="text-muted-foreground">(optional)</span></Label>
+		<Input
+			id="debt-lender"
+			name="lender"
+			bind:value={lender}
+			maxlength={100}
+			placeholder={lenderPlaceholder}
+		/>
+	</div>
+
+	{#if showFundingToggle}
+		<div class="rounded-lg border bg-muted/30 p-3">
+			<label class="flex cursor-pointer items-start gap-3">
+				<input
+					type="checkbox"
+					bind:checked={funded}
+					name="funded"
+					value="1"
+					class="mt-1 size-4 accent-primary"
+				/>
+				<div class="flex-1">
+					<div class="text-sm font-medium">I just received this money</div>
+					<div class="text-muted-foreground text-xs">
+						Toggle on if the funds were deposited recently. We'll add an income transaction.
+					</div>
+				</div>
+			</label>
+			{#if funded}
+				<div class="mt-3 space-y-1">
+					<Label>Money goes to</Label>
+					{#if fundingAccounts.length === 0}
+						<p class="text-muted-foreground text-xs">
+							No cash/bank accounts found. Add one in Accounts first.
+						</p>
+					{:else}
+						<PickerSheet
+							items={fundingItems}
+							bind:value={fundedAccountId}
+							name="fundedAccountId"
+							placeholder="Pick account"
+							title="Account"
+						/>
+					{/if}
+				</div>
+			{/if}
+		</div>
+	{/if}
 
 	<div class="grid grid-cols-2 gap-3">
 		<div class="space-y-1">
@@ -170,19 +296,21 @@
 	</div>
 
 	<div class="grid grid-cols-2 gap-3">
-		<div class="space-y-1">
-			<Label for="debt-apr">APR %</Label>
-			<Input
-				id="debt-apr"
-				type="text"
-				inputmode="decimal"
-				pattern="[0-9.]*"
-				bind:value={aprDisplay}
-				placeholder="26.0"
-			/>
-		</div>
-		<div class="space-y-1">
-			<Label for="debt-min">Min payment</Label>
+		{#if showApr}
+			<div class="space-y-1">
+				<Label for="debt-apr">APR %</Label>
+				<Input
+					id="debt-apr"
+					type="text"
+					inputmode="decimal"
+					pattern="[0-9.]*"
+					bind:value={aprDisplay}
+					placeholder="26.0"
+				/>
+			</div>
+		{/if}
+		<div class={showApr ? 'space-y-1' : 'space-y-1 col-span-2'}>
+			<Label for="debt-min">Min payment <span class="text-muted-foreground">(optional)</span></Label>
 			<MoneyInput
 				id="debt-min"
 				name="minimumPaymentCents"
@@ -195,7 +323,7 @@
 
 	{#if showDueDay}
 		<div class="space-y-1">
-			<Label for="debt-due">Due day (1–31)</Label>
+			<Label for="debt-due">Due day (1–31) <span class="text-muted-foreground">(optional)</span></Label>
 			<Input id="debt-due" type="number" name="dueDay" min={1} max={31} bind:value={dueDay} />
 		</div>
 	{/if}
@@ -207,7 +335,7 @@
 		</div>
 		{#if showMaturityDate}
 			<div class="space-y-1">
-				<Label for="debt-maturity">Maturity date</Label>
+				<Label for="debt-maturity">Maturity date <span class="text-muted-foreground">(optional)</span></Label>
 				<Input id="debt-maturity" type="date" bind:value={maturityDateStr} />
 			</div>
 		{/if}
@@ -215,7 +343,7 @@
 
 	{#if showLinkedAccount && creditAccounts.length > 0}
 		<div class="space-y-1">
-			<Label>Linked account (optional)</Label>
+			<Label>Linked credit account <span class="text-muted-foreground">(optional)</span></Label>
 			<PickerSheet
 				items={accountItems}
 				bind:value={accountId}
@@ -227,7 +355,7 @@
 	{/if}
 
 	<div class="space-y-1">
-		<Label for="debt-note">Note (optional)</Label>
+		<Label for="debt-note">Note <span class="text-muted-foreground">(optional)</span></Label>
 		<Input id="debt-note" name="note" bind:value={note} maxlength={200} />
 	</div>
 

@@ -7,6 +7,8 @@ import {
 	deleteDebt,
 	markDebtPaidOff
 } from '$lib/server/repositories/debts';
+import { createTransaction } from '$lib/server/repositories/transactions';
+import { ensureLoanProceedsCategory } from '$lib/server/repositories/categories';
 import { debtCreateSchema, debtUpdateSchema, debtIdSchema } from '$lib/validation/debt';
 import { purgeUserCache, allUserCacheNames } from '$lib/server/cf-cache';
 import { getCurrentCycle } from '$lib/utils/cycle';
@@ -31,6 +33,8 @@ export const actions: Actions = {
 		const user = requireUser(event);
 		const db = getDb(event.platform!.env.DB);
 		const fd = await event.request.formData();
+		const funded = fd.get('funded') === '1';
+		const fundedAccountId = (fd.get('fundedAccountId') as string | null) || null;
 		const parsed = debtCreateSchema.safeParse(formObject(fd));
 		if (!parsed.success) {
 			return fail(400, {
@@ -40,6 +44,21 @@ export const actions: Actions = {
 		}
 		const result = await createDebt(db, user.id, parsed.data);
 		if ('error' in result) return fail(400, { action: 'create', message: result.error });
+
+		// Funding flow: user just received the money → record as income tx.
+		// Skip for credit_card (no upfront cash, balance built via spending).
+		if (funded && fundedAccountId && parsed.data.type !== 'credit_card') {
+			const categoryId = await ensureLoanProceedsCategory(db, user.id);
+			await createTransaction(db, user.id, {
+				accountId: fundedAccountId,
+				categoryId,
+				amountCents: parsed.data.principalCents,
+				kind: 'income',
+				note: `Loan proceeds — ${parsed.data.name}`,
+				occurredAt: parsed.data.startDate
+			});
+		}
+
 		await purgeUserCaches(event, user.id);
 		return { success: true, action: 'create' };
 	},

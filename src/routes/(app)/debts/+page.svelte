@@ -41,9 +41,7 @@
 
 	const formatCents = (cents: number) => formatCentsAsCurrency(cents, 'IDR');
 
-	const creditAccounts = $derived(
-		data.allAccounts.filter((a) => a.type === 'credit' && !a.archived)
-	);
+	const debtFormAccounts = $derived(data.allAccounts.filter((a) => !a.archived));
 
 	const activeDebts = $derived(data.debts.filter((d) => d.status === 'active'));
 	const paidOffDebts = $derived(data.debts.filter((d) => d.status === 'paid_off'));
@@ -293,7 +291,12 @@
 {/if}
 
 {#snippet createForm()}
-	<DebtForm mode="create" initial={null} {creditAccounts} onClose={() => (createOpen = false)} />
+	<DebtForm
+		mode="create"
+		initial={null}
+		accounts={debtFormAccounts}
+		onClose={() => (createOpen = false)}
+	/>
 {/snippet}
 
 {#snippet editForm()}
@@ -302,7 +305,7 @@
 			<DebtForm
 				mode="edit"
 				initial={editTarget}
-				{creditAccounts}
+				accounts={debtFormAccounts}
 				onClose={() => (editOpen = false)}
 			/>
 		{/key}

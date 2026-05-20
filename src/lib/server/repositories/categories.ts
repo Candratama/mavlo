@@ -118,6 +118,34 @@ export async function ensureDebtPaymentCategory(db: Db, userId: string): Promise
 	return created.id;
 }
 
+const LOAN_PROCEEDS_CATEGORY_NAME = 'Loan Proceeds';
+
+export async function ensureLoanProceedsCategory(db: Db, userId: string): Promise<string> {
+	const [existing] = await db
+		.select()
+		.from(categories)
+		.where(
+			and(
+				eq(categories.userId, userId),
+				eq(categories.name, LOAN_PROCEEDS_CATEGORY_NAME),
+				eq(categories.kind, 'income')
+			)
+		)
+		.limit(1);
+	if (existing) return existing.id;
+	const [created] = await db
+		.insert(categories)
+		.values({
+			userId,
+			name: LOAN_PROCEEDS_CATEGORY_NAME,
+			kind: 'income',
+			icon: 'banknote',
+			color: '#10b981'
+		})
+		.returning();
+	return created.id;
+}
+
 const ADJUSTMENT_NAME = 'Balance Adjustment';
 
 export async function getOrCreateAdjustmentCategory(
