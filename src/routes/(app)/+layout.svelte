@@ -135,10 +135,16 @@
 			id: 'other',
 			icon: MoreHorizontal,
 			label: 'Other',
-			onClick: () => (otherOpen = true)
+			onClick: () => (otherOpen = !otherOpen)
 		}
 	]);
 	const isOtherActive = $derived(otherNav.some((n) => isActive(n.href)));
+
+	$effect(() => {
+		// Close popup when route changes to a non-sub-route page.
+		page.url.pathname;
+		if (!isOtherActive) otherOpen = false;
+	});
 	const limelightActive = $derived.by(() => {
 		const i = primaryNav.findIndex((n) => isActive(n.href));
 		if (i >= 0) return i;
@@ -312,14 +318,6 @@
 				iconContainerClass="px-4 py-5"
 			/>
 			{#if otherVisible}
-				{#if !isOtherActive}
-					<button
-						type="button"
-						aria-label="Close menu"
-						class="fixed inset-0 z-30 cursor-default bg-transparent"
-						onclick={() => (otherOpen = false)}
-					></button>
-				{/if}
 				<div
 					class="absolute bottom-full right-2 z-40 mb-2 flex flex-col gap-1 rounded-full border border-white/10 bg-white/10 p-2 shadow-lg backdrop-blur-xl dark:bg-black/30"
 				>
