@@ -22,8 +22,11 @@
 		CreditCard,
 		Settings,
 		LogOut,
-		Home
+		Home,
+		Tag,
+		MoreHorizontal
 	} from 'lucide-svelte';
+	import * as Sheet from '$lib/components/ui/sheet';
 
 	let { children, data } = $props();
 
@@ -96,12 +99,18 @@
 		return getLastUsed().accountId ?? data.accounts?.[0]?.id;
 	});
 
+	let otherOpen = $state(false);
+
 	const primaryNav = [
 		{ href: '/dashboard', label: 'Home', icon: LayoutDashboard },
 		{ href: '/transactions', label: 'Tx', icon: ArrowLeftRight },
 		{ href: '/accounts', label: 'Accounts', icon: Wallet },
-		{ href: '/budgets', label: 'Budgets', icon: Target },
-		{ href: '/debts', label: 'Debts', icon: CreditCard }
+		{ href: '/budgets', label: 'Budgets', icon: Target }
+	] as const;
+
+	const otherNav = [
+		{ href: '/debts', label: 'Debts', icon: CreditCard },
+		{ href: '/categories', label: 'Categories', icon: Tag }
 	] as const;
 
 	const sidebarNav = [
@@ -109,21 +118,33 @@
 		{ href: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
 		{ href: '/accounts', label: 'Accounts', icon: Wallet },
 		{ href: '/budgets', label: 'Budgets', icon: Target },
-		{ href: '/debts', label: 'Debts', icon: CreditCard }
+		{ href: '/debts', label: 'Debts', icon: CreditCard },
+		{ href: '/categories', label: 'Categories', icon: Tag }
 	] as const;
 
 	const isActive = (href: string) =>
 		page.url.pathname === href || page.url.pathname.startsWith(href + '/');
 
-	const limelightItems = $derived<LimelightNavItem[]>(
-		primaryNav.map((n) => ({
+	const limelightItems = $derived<LimelightNavItem[]>([
+		...primaryNav.map((n) => ({
 			id: n.href,
 			icon: n.icon,
 			label: n.label,
 			href: n.href
-		}))
-	);
-	const limelightActive = $derived(primaryNav.findIndex((n) => isActive(n.href)));
+		})),
+		{
+			id: 'other',
+			icon: MoreHorizontal,
+			label: 'Other',
+			onClick: () => (otherOpen = true)
+		}
+	]);
+	const limelightActive = $derived.by(() => {
+		const i = primaryNav.findIndex((n) => isActive(n.href));
+		if (i >= 0) return i;
+		if (otherNav.some((n) => isActive(n.href))) return primaryNav.length;
+		return -1;
+	});
 
 	const initials = $derived(
 		(data.user.name ?? 'U')
@@ -299,6 +320,33 @@
 		</div>
 	{/if}
 </div>
+
+<Sheet.Root bind:open={otherOpen}>
+	<Sheet.Content
+		side="bottom"
+		class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
+	>
+		<Sheet.Header class="p-4 pb-2 text-left">
+			<Sheet.Title>More</Sheet.Title>
+		</Sheet.Header>
+		<nav class="flex flex-col gap-1 p-2">
+			{#each otherNav as item (item.href)}
+				<a
+					href={item.href}
+					onclick={() => (otherOpen = false)}
+					class="hover:bg-accent flex items-center gap-3 rounded-lg px-3 py-3 text-sm {isActive(
+						item.href
+					)
+						? 'bg-accent font-medium'
+						: ''}"
+				>
+					<item.icon class="size-5" />
+					{item.label}
+				</a>
+			{/each}
+		</nav>
+	</Sheet.Content>
+</Sheet.Root>
 
 <style>
 	.nav-progress-bar {
