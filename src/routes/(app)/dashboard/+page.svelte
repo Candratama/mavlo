@@ -366,7 +366,7 @@
 				title="No transactions yet"
 				description="Add a transaction to see it here."
 			>
-				<Button onclick={() => openAddTransaction('expense')}>Add transaction</Button>
+				<Button onclick={() => openAddTransaction({ defaultKind: 'expense' })}>Add transaction</Button>
 			</EmptyState>
 		{:else}
 			<ul class="divide-y">

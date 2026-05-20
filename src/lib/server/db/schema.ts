@@ -148,6 +148,7 @@ export const debts = sqliteTable(
 			.default('active'),
 		accountId: text('account_id').references(() => accounts.id, { onDelete: 'set null' }),
 		note: text('note'),
+		interestAppliedFromPeriod: text('interest_applied_from_period'),
 		createdAt: epochMsNow('created_at'),
 		updatedAt: epochMsNow('updated_at')
 	},

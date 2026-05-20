@@ -85,6 +85,13 @@
       "when": 1779014800000,
       "tag": "0011_add_budget_carryover",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1779263500000,
+      "tag": "0012_add_debt_interest_tracking",
+      "breakpoints": true
     }
   ]
 }

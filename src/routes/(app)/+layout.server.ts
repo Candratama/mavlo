@@ -2,7 +2,12 @@ import { eq } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth/guards';
 import { getDb } from '$lib/server/db';
-import { budgets as budgetsTable, userPreferences, users } from '$lib/server/db/schema';
+import {
+	budgets as budgetsTable,
+	debts as debtsTable,
+	userPreferences,
+	users
+} from '$lib/server/db/schema';
 import { listAccounts } from '$lib/server/repositories/accounts';
 import { listCategories } from '$lib/server/repositories/categories';
 import {
@@ -71,8 +76,8 @@ export const load: LayoutServerLoad = async (event) => {
 		monthlyIncomeExpense,
 		subsidies,
 		subsidyFlows,
-		debtList,
-		debtTotals
+		debtListRaw,
+		debtTotalsRaw
 	] = await Promise.all([
 		listAccounts(db, user.id, { includeArchived: true }),
 		listCategories(db, user.id, { includeArchived: true }),
@@ -129,6 +134,66 @@ export const load: LayoutServerLoad = async (event) => {
 				.where(eq(budgetsTable.id, cur.id));
 		}
 		budgetList = await listBudgets(db, user.id, { periodMonth: cycle.periodMonth });
+	}
+
+	let debtList = debtListRaw;
+	let debtTotals = debtTotalsRaw;
+
+	// Debt interest accrual + late-payment detection at period rollover.
+	// For each active debt whose interestAppliedFromPeriod !== current period:
+	//   1. Bump currentBalance by one month of interest (balance × APR/12)
+	//   2. Stamp interestAppliedFromPeriod = current period
+	// For each active debt with dueDay set, current cycle day > dueDay, and no
+	// payment recorded in current cycle → flip status to 'in_arrears'.
+	const debtsNeedingInterest = debtList.filter(
+		(d) =>
+			d.status === 'active' &&
+			d.interestRatePct > 0 &&
+			d.currentBalanceCents > 0 &&
+			d.interestAppliedFromPeriod !== cycle.periodMonth
+	);
+	let debtsRefreshNeeded = false;
+	for (const d of debtsNeedingInterest) {
+		const monthlyInterest = Math.round(
+			(d.currentBalanceCents * d.interestRatePct) / 12 / 100 / 100
+		);
+		await db
+			.update(debtsTable)
+			.set({
+				currentBalanceCents: d.currentBalanceCents + monthlyInterest,
+				interestAppliedFromPeriod: cycle.periodMonth,
+				updatedAt: Date.now()
+			})
+			.where(eq(debtsTable.id, d.id));
+		debtsRefreshNeeded = true;
+	}
+
+	// Late-payment detection. Only checks debts with dueDay set, in active status.
+	const nowZ = new Date(Date.now());
+	const dayOfMonth = nowZ.getUTCDate();
+	for (const d of debtList) {
+		if (d.status !== 'active' || !d.dueDay) continue;
+		if (dayOfMonth <= d.dueDay) continue;
+		// Check if any payment in current cycle
+		const cycleHasPayment = transactions.some(
+			(t) =>
+				(t as { debtId?: string | null }).debtId === d.id &&
+				t.kind === 'expense' &&
+				t.occurredAt >= cycleFromMs &&
+				t.occurredAt <= cycleToMs
+		);
+		if (!cycleHasPayment) {
+			await db
+				.update(debtsTable)
+				.set({ status: 'in_arrears', updatedAt: Date.now() })
+				.where(eq(debtsTable.id, d.id));
+			debtsRefreshNeeded = true;
+		}
+	}
+
+	if (debtsRefreshNeeded) {
+		debtList = await listDebts(db, user.id, {});
+		debtTotals = await computeDebtTotals(db, user.id, Date.now());
 	}
 
 	const categories = allCategories.filter((c) => !c.archived);

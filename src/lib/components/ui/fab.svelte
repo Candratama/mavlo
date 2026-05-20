@@ -10,7 +10,7 @@
 <button
 	type="button"
 	aria-label="Add transaction"
-	onclick={() => openAddTransaction('expense')}
+	onclick={() => openAddTransaction({ defaultKind: 'expense' })}
 	class={cn(
 		'mavlo-pill flex size-16 shrink-0 items-center justify-center rounded-full border !bg-white/80 text-neutral-900 backdrop-blur-md transition-transform hover:-translate-y-0.5 hover:!bg-white/90 active:scale-95',
 		className

@@ -232,7 +232,7 @@
 	<div>
 		<h1 class="mavlo-headline text-2xl font-bold tracking-tight sm:text-3xl">Transactions</h1>
 	</div>
-	<Button class="lift hidden md:inline-flex" onclick={() => openAddTransaction('expense')}>
+	<Button class="lift hidden md:inline-flex" onclick={() => openAddTransaction({ defaultKind: 'expense' })}>
 		<Plus class="mr-1 size-4" /> New transaction
 	</Button>
 </div>
@@ -510,7 +510,7 @@
 									title="No transactions in this range"
 									description="Try a different date range or add a new transaction."
 								>
-									<Button onclick={() => openAddTransaction('expense')}>Add transaction</Button>
+									<Button onclick={() => openAddTransaction({ defaultKind: 'expense' })}>Add transaction</Button>
 								</EmptyState>
 							</Table.Cell>
 						</Table.Row>
@@ -585,7 +585,7 @@
 			title="No transactions in this range"
 			description="Try a different date range or add a new transaction."
 		>
-			<Button onclick={() => openAddTransaction('expense')}>Add transaction</Button>
+			<Button onclick={() => openAddTransaction({ defaultKind: 'expense' })}>Add transaction</Button>
 		</EmptyState>
 	{/each}
 </div>
