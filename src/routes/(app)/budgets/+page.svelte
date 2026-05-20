@@ -89,6 +89,26 @@
 	let createCategoryId = $state('');
 	let editCategoryId = $state('');
 
+	// Debt budget suggestion: when active debts exist but no budget covers them.
+	const debtPaymentCategory = $derived(
+		data.categories.find((c) => c.name === 'Debt Payment' && c.kind === 'expense')
+	);
+	const activeDebts = $derived(data.debts.filter((d) => d.status === 'active'));
+	const totalMinPayments = $derived(
+		activeDebts.reduce((s, d) => s + d.minimumPaymentCents, 0)
+	);
+	const debtBudgetExists = $derived(
+		debtPaymentCategory
+			? data.budgets.some(
+					(b) =>
+						b.categoryId === debtPaymentCategory.id && b.periodMonth === data.periodMonth
+				)
+			: false
+	);
+	const showDebtBudgetSuggestion = $derived(
+		activeDebts.length > 0 && totalMinPayments > 0 && !debtBudgetExists
+	);
+
 	let subsidyOpen = $state(false);
 	let subsidyTarget = $state<BudgetRow | null>(null);
 
@@ -501,6 +521,42 @@
 		</div>
 	{/each}
 </div>
+
+{#if showDebtBudgetSuggestion}
+	<div class="mt-6 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+		<div class="mb-2 flex items-baseline justify-between gap-2">
+			<h2 class="text-sm font-semibold text-amber-600 dark:text-amber-400">
+				💳 Cover your debt minimums
+			</h2>
+			<span class="text-muted-foreground text-xs tabular-nums">
+				{activeDebts.length} {activeDebts.length === 1 ? 'debt' : 'debts'}
+			</span>
+		</div>
+		<p class="text-muted-foreground mb-3 text-xs">
+			You have {formatCents(totalMinPayments)} in monthly debt minimums but no budget for
+			them. Allocate them so you don't accidentally overspend elsewhere.
+		</p>
+		<form
+			method="POST"
+			action="?/setDebtBudget"
+			use:enhance={() => async ({ result }) => {
+				if (result.type === 'success') {
+					await invalidateAll();
+					notify.success('Debt payment budget set');
+				} else if (result.type === 'failure') {
+					const message = (result.data as { message?: string } | undefined)?.message;
+					notify.error(message ?? 'Could not set budget');
+				}
+			}}
+		>
+			<input type="hidden" name="limitCents" value={totalMinPayments} />
+			<input type="hidden" name="periodMonth" value={data.periodMonth} />
+			<Button type="submit" variant="outline" class="w-full">
+				Set {formatCents(totalMinPayments)}/month for Debt Payment
+			</Button>
+		</form>
+	</div>
+{/if}
 
 {#if data.unbudgetedCategories.length > 0}
 	{@const totalUnbudgeted = data.unbudgetedCategories.reduce((s, c) => s + c.spentCents, 0)}
