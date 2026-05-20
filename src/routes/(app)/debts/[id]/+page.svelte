@@ -3,9 +3,12 @@
 	import { Button } from '$lib/components/ui/button';
 	import { ArrowLeft, CreditCard, Wallet, Car, Home, Tag, Calendar } from 'lucide-svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
-	import { paidPercent, formatApr, nextDueDate, payoffProjection } from '$lib/utils/debt';
+	import { paidPercent, formatApr, nextDueDate, payoffProjection, parseAprToInt } from '$lib/utils/debt';
 	import EmptyState from '$lib/components/empty-state.svelte';
 	import { openAddTransaction } from '$lib/stores/add-transaction.svelte.js';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import MoneyInput from '$lib/components/forms/money-input.svelte';
 
 	let { data } = $props();
 
@@ -45,6 +48,21 @@
 					Date.now()
 				)
 			: null
+	);
+
+	// Refinance simulator state
+	let refiAprDisplay = $state('');
+	let refiPaymentCents = $state<number | null>(null);
+	const refiAprIntPct = $derived(parseAprToInt(refiAprDisplay) ?? 0);
+	const refiProjection = $derived(
+		debt && refiPaymentCents && refiPaymentCents > 0
+			? payoffProjection(debt.currentBalanceCents, refiPaymentCents, refiAprIntPct, Date.now())
+			: null
+	);
+	const refiSavingsCents = $derived(
+		projection && refiProjection
+			? projection.totalInterestCents - refiProjection.totalInterestCents
+			: 0
 	);
 
 	const currency = $derived(data.accounts[0]?.currency ?? 'IDR');
@@ -182,6 +200,62 @@
 			⚠ Minimum payment too low — barely covers interest. Debt will grow.
 			Increase payment to make progress.
 		</div>
+	{/if}
+
+	{#if debt.currentBalanceCents > 0}
+		<details class="mb-6 rounded-xl border bg-card p-4">
+			<summary class="cursor-pointer text-sm font-semibold">Refinance simulator</summary>
+			<div class="text-muted-foreground mt-2 mb-3 text-xs">
+				Compare savings if you refinance to a different APR or payment.
+			</div>
+			<div class="grid grid-cols-2 gap-3">
+				<div class="space-y-1">
+					<Label for="refi-apr">New APR %</Label>
+					<Input
+						id="refi-apr"
+						type="text"
+						inputmode="decimal"
+						pattern="[0-9.]*"
+						bind:value={refiAprDisplay}
+						placeholder="12.0"
+					/>
+				</div>
+				<div class="space-y-1">
+					<Label for="refi-pay">New monthly payment</Label>
+					<MoneyInput
+						id="refi-pay"
+						name="refiPay"
+						min={1}
+						bind:value={refiPaymentCents}
+						class="h-12 text-lg md:h-12 md:text-lg"
+					/>
+				</div>
+			</div>
+			{#if refiProjection}
+				<div class="mt-3 grid grid-cols-3 gap-3 text-xs">
+					<div>
+						<div class="text-muted-foreground uppercase tracking-wider">Months</div>
+						<div class="mt-1 font-semibold tabular-nums">{refiProjection.months}</div>
+					</div>
+					<div>
+						<div class="text-muted-foreground uppercase tracking-wider">Total interest</div>
+						<div class="mt-1 font-semibold tabular-nums">
+							{formatCentsAsCurrency(refiProjection.totalInterestCents, currency)}
+						</div>
+					</div>
+					<div>
+						<div class="text-muted-foreground uppercase tracking-wider">Savings</div>
+						<div class="mt-1 font-semibold tabular-nums {refiSavingsCents > 0 ? 'text-emerald-500' : refiSavingsCents < 0 ? 'text-expense' : ''}">
+							{refiSavingsCents > 0 ? '+' : ''}{formatCentsAsCurrency(refiSavingsCents, currency)}
+						</div>
+					</div>
+				</div>
+			{:else if refiPaymentCents && refiPaymentCents > 0}
+				<p class="mt-3 text-xs text-rose-500">
+					Payment too low to cover interest at this APR — debt would grow.
+				</p>
+			{/if}
+		</details>
 	{/if}
 
 	<div class="mb-3 text-sm font-semibold">Payment history</div>
