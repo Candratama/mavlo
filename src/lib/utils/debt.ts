@@ -40,3 +40,48 @@ export function nextDueDate(dueDay: number, fromMs: number): number {
 	}
 	return Date.UTC(year, month + 1, dueDay);
 }
+
+export type PayoffProjection = {
+	months: number;
+	totalInterestCents: number;
+	totalPaidCents: number;
+	freeAtMs: number;
+} | null;
+
+/**
+ * Compute payoff timeline given current balance, monthly payment, and APR.
+ * Returns null when the payment can't cover monthly interest (debt grows forever)
+ * or when balance/payment is non-positive.
+ *
+ * @param balanceCents Current outstanding balance in cents
+ * @param monthlyPaymentCents Monthly payment amount in cents
+ * @param aprIntPct APR stored as int × 100 (e.g., 2600 = 26%)
+ * @param fromMs Anchor date for the "free at" projection (defaults to now)
+ */
+export function payoffProjection(
+	balanceCents: number,
+	monthlyPaymentCents: number,
+	aprIntPct: number,
+	fromMs: number = Date.now()
+): PayoffProjection {
+	if (balanceCents <= 0 || monthlyPaymentCents <= 0) return null;
+
+	const monthlyRate = aprIntPct / 12 / 100 / 100;
+
+	let months: number;
+	if (monthlyRate === 0) {
+		months = Math.ceil(balanceCents / monthlyPaymentCents);
+	} else {
+		const monthlyInterest = balanceCents * monthlyRate;
+		if (monthlyPaymentCents <= monthlyInterest) return null;
+		// months = -ln(1 - balance*rate/payment) / ln(1 + rate)
+		const inner = 1 - (balanceCents * monthlyRate) / monthlyPaymentCents;
+		months = Math.ceil(-Math.log(inner) / Math.log(1 + monthlyRate));
+	}
+
+	const totalPaidCents = monthlyPaymentCents * months;
+	const totalInterestCents = Math.max(0, totalPaidCents - balanceCents);
+	const freeAtMs = new Date(fromMs).setUTCMonth(new Date(fromMs).getUTCMonth() + months);
+
+	return { months, totalInterestCents, totalPaidCents, freeAtMs };
+}

@@ -5,7 +5,8 @@ import {
 	parseAprToInt,
 	dtiRatio,
 	dtiStatus,
-	nextDueDate
+	nextDueDate,
+	payoffProjection
 } from './debt';
 
 describe('paidPercent', () => {
@@ -116,5 +117,47 @@ describe('nextDueDate', () => {
 		const d = new Date(result);
 		expect(d.getUTCMonth()).toBe(5); // June
 		expect(d.getUTCDate()).toBe(15);
+	});
+});
+
+describe('payoffProjection', () => {
+	it('returns null when balance is zero', () => {
+		expect(payoffProjection(0, 100_000, 2600)).toBeNull();
+	});
+
+	it('returns null when payment is zero', () => {
+		expect(payoffProjection(1_000_000, 0, 2600)).toBeNull();
+	});
+
+	it('zero APR: months = ceil(balance / payment)', () => {
+		const r = payoffProjection(1_000_000, 100_000, 0);
+		expect(r?.months).toBe(10);
+		expect(r?.totalInterestCents).toBe(0);
+	});
+
+	it('null when payment cannot cover monthly interest', () => {
+		// 10M at 26% APR has monthly interest ≈ 216,667. Pay 100k < that → infinite.
+		expect(payoffProjection(10_000_000, 100_000, 2600)).toBeNull();
+	});
+
+	it('computes months and interest for typical CC', () => {
+		// Rp 5M balance, Rp 500K/month, 26% APR
+		const r = payoffProjection(5_000_000, 500_000, 2600);
+		expect(r).not.toBeNull();
+		if (!r) return;
+		expect(r.months).toBeGreaterThan(10);
+		expect(r.months).toBeLessThan(13);
+		expect(r.totalInterestCents).toBeGreaterThan(0);
+		expect(r.totalPaidCents).toBeGreaterThan(5_000_000);
+	});
+
+	it('larger payment = fewer months + less interest', () => {
+		const slow = payoffProjection(5_000_000, 300_000, 2600);
+		const fast = payoffProjection(5_000_000, 800_000, 2600);
+		expect(slow).not.toBeNull();
+		expect(fast).not.toBeNull();
+		if (!slow || !fast) return;
+		expect(fast.months).toBeLessThan(slow.months);
+		expect(fast.totalInterestCents).toBeLessThan(slow.totalInterestCents);
 	});
 });

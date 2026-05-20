@@ -3,7 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { ArrowLeft, CreditCard, Wallet, Car, Home, Tag, Calendar } from 'lucide-svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
-	import { paidPercent, formatApr, nextDueDate } from '$lib/utils/debt';
+	import { paidPercent, formatApr, nextDueDate, payoffProjection } from '$lib/utils/debt';
 	import EmptyState from '$lib/components/empty-state.svelte';
 	import { openAddTransaction } from '$lib/stores/add-transaction.svelte.js';
 
@@ -36,6 +36,16 @@
 
 	const paid = $derived(debt ? paidPercent(debt.principalCents, debt.currentBalanceCents) : 0);
 	const nextDue = $derived(debt && debt.dueDay ? nextDueDate(debt.dueDay, Date.now()) : null);
+	const projection = $derived(
+		debt
+			? payoffProjection(
+					debt.currentBalanceCents,
+					debt.minimumPaymentCents,
+					debt.interestRatePct,
+					Date.now()
+				)
+			: null
+	);
 
 	const currency = $derived(data.accounts[0]?.currency ?? 'IDR');
 
@@ -136,6 +146,43 @@
 	>
 		Record payment
 	</Button>
+
+	{#if projection}
+		<div class="mb-6 rounded-xl border bg-gradient-to-br from-primary/10 via-card to-card p-4">
+			<div class="mb-2 text-sm font-semibold">Payoff projection</div>
+			<div class="text-muted-foreground mb-3 text-xs">
+				Paying {formatCentsAsCurrency(debt.minimumPaymentCents, currency)}/month at {formatApr(
+					debt.interestRatePct
+				)} APR
+			</div>
+			<div class="grid grid-cols-3 gap-3 text-xs">
+				<div>
+					<div class="text-muted-foreground uppercase tracking-wider">Months</div>
+					<div class="mt-1 font-semibold tabular-nums">{projection.months}</div>
+				</div>
+				<div>
+					<div class="text-muted-foreground uppercase tracking-wider">Total interest</div>
+					<div class="mt-1 font-semibold tabular-nums">
+						{formatCentsAsCurrency(projection.totalInterestCents, currency)}
+					</div>
+				</div>
+				<div>
+					<div class="text-muted-foreground uppercase tracking-wider">Debt-free by</div>
+					<div class="mt-1 font-semibold tabular-nums">
+						{new Date(projection.freeAtMs).toLocaleDateString('en-US', {
+							month: 'short',
+							year: 'numeric'
+						})}
+					</div>
+				</div>
+			</div>
+		</div>
+	{:else if debt.minimumPaymentCents > 0 && debt.currentBalanceCents > 0}
+		<div class="mb-6 rounded-xl border border-rose-500/30 bg-rose-500/5 p-4 text-xs text-rose-500">
+			⚠ Minimum payment too low — barely covers interest. Debt will grow.
+			Increase payment to make progress.
+		</div>
+	{/if}
 
 	<div class="mb-3 text-sm font-semibold">Payment history</div>
 
