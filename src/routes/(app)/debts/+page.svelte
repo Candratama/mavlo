@@ -23,7 +23,16 @@
 	} from 'lucide-svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
-	import { paidPercent, formatApr, dtiRatio, dtiStatus } from '$lib/utils/debt';
+	import {
+		paidPercent,
+		formatApr,
+		dtiRatio,
+		dtiStatus,
+		payoffProjection,
+		prioritizedDebtIds,
+		type PriorityStrategy
+	} from '$lib/utils/debt';
+	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
 	import DebtForm from '$lib/components/debts/debt-form.svelte';
@@ -44,11 +53,56 @@
 
 	const debtFormAccounts = $derived(data.allAccounts.filter((a) => !a.archived));
 
-	const activeDebts = $derived(data.debts.filter((d) => d.status === 'active'));
+	const STRATEGY_KEY = 'mavlo:debtStrategy';
+	let strategy = $state<PriorityStrategy>('avalanche');
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		const stored = window.localStorage.getItem(STRATEGY_KEY);
+		if (stored === 'avalanche' || stored === 'snowball') strategy = stored;
+	});
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		window.localStorage.setItem(STRATEGY_KEY, strategy);
+	});
+
+	const arrearsDebts = $derived(data.debts.filter((d) => d.status === 'in_arrears'));
+	const activeDebtsRaw = $derived(data.debts.filter((d) => d.status === 'active'));
 	const paidOffDebts = $derived(data.debts.filter((d) => d.status === 'paid_off'));
+
+	const priorityOrder = $derived(prioritizedDebtIds(activeDebtsRaw, strategy));
+	const activeDebts = $derived.by(() => {
+		const idx = new Map(priorityOrder.map((id, i) => [id, i]));
+		return [...activeDebtsRaw].sort((a, b) => (idx.get(a.id) ?? 0) - (idx.get(b.id) ?? 0));
+	});
+	const topPriorityDebtId = $derived(priorityOrder[0] ?? null);
 
 	const dti = $derived(dtiRatio(data.debtTotals.totalMinPaymentCents, data.monthIncomeCents));
 	const dtiState = $derived(dtiStatus(dti));
+
+	// Aggregate debt-free date: pick the latest payoff among all active debts.
+	const aggregateFreeAtMs = $derived.by(() => {
+		const now = Date.now();
+		let latest = 0;
+		let anyValid = false;
+		for (const d of activeDebtsRaw) {
+			if (d.minimumPaymentCents <= 0 || d.currentBalanceCents <= 0) continue;
+			const p = payoffProjection(
+				d.currentBalanceCents,
+				d.minimumPaymentCents,
+				d.interestRatePct,
+				now
+			);
+			if (!p) continue;
+			anyValid = true;
+			if (p.freeAtMs > latest) latest = p.freeAtMs;
+		}
+		return anyValid ? latest : null;
+	});
+
+	const strategyOptions = [
+		{ value: 'avalanche', label: 'Avalanche' },
+		{ value: 'snowball', label: 'Snowball' }
+	];
 
 	const typeIcons: Record<string, typeof CreditCard> = {
 		credit_card: CreditCard,
@@ -128,6 +182,38 @@
 				</div>
 			{/if}
 		</div>
+		{#if aggregateFreeAtMs}
+			<div class="mt-3 text-xs text-muted-foreground">
+				Debt-free by
+				<span class="text-foreground font-medium">
+					{new Date(aggregateFreeAtMs).toLocaleDateString('en-US', {
+						month: 'short',
+						year: 'numeric'
+					})}
+				</span>
+				at current payments
+			</div>
+		{/if}
+	</div>
+{/if}
+
+{#if activeDebtsRaw.length > 1}
+	<div class="mb-4 flex items-center justify-between gap-2">
+		<div class="text-muted-foreground text-xs">
+			Payoff strategy
+		</div>
+		<SegmentedControl options={strategyOptions} bind:value={strategy} ariaLabel="Strategy" />
+	</div>
+{/if}
+
+{#if arrearsDebts.length > 0}
+	<div class="mb-4 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs">
+		<div class="font-medium text-rose-500">
+			⚠ {arrearsDebts.length} debt{arrearsDebts.length === 1 ? '' : 's'} past due
+		</div>
+		<div class="text-muted-foreground mt-1">
+			{arrearsDebts.map((d) => d.name).join(', ')}. Record a payment to clear the status.
+		</div>
 	</div>
 {/if}
 
@@ -136,7 +222,8 @@
 		{@const Icon = typeIcons[debt.type] ?? Wallet}
 		{@const paid = paidPercent(debt.principalCents, debt.currentBalanceCents)}
 		{@const aprHigh = debt.interestRatePct > 2000}
-		<Card.Root class="relative">
+		{@const isTopPriority = debt.id === topPriorityDebtId && activeDebtsRaw.length > 1}
+		<Card.Root class="relative {isTopPriority ? 'border-primary/50 ring-1 ring-primary/30' : ''}">
 			<a
 				href="/debts/{debt.id}"
 				class="absolute inset-0 rounded-[inherit] z-0"
@@ -150,7 +237,14 @@
 						<Icon class="size-5" />
 					</div>
 					<div class="min-w-0">
-						<Card.Title class="truncate">{debt.name}</Card.Title>
+						<div class="flex items-center gap-2">
+							<Card.Title class="truncate">{debt.name}</Card.Title>
+							{#if isTopPriority}
+								<span class="bg-primary/15 text-primary inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider">
+									Pay first
+								</span>
+							{/if}
+						</div>
 						<Card.Description>
 							{typeLabels[debt.type]}{#if debt.lender} · {debt.lender}{/if}
 						</Card.Description>

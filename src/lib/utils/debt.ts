@@ -41,6 +41,25 @@ export function nextDueDate(dueDay: number, fromMs: number): number {
 	return Date.UTC(year, month + 1, dueDay);
 }
 
+export type PriorityStrategy = 'avalanche' | 'snowball';
+
+/**
+ * Return debt IDs sorted by priority under the chosen strategy.
+ * Avalanche = highest APR first (minimizes interest paid).
+ * Snowball = smallest balance first (psychological wins).
+ */
+export function prioritizedDebtIds<
+	T extends { id: string; interestRatePct: number; currentBalanceCents: number }
+>(debts: T[], strategy: PriorityStrategy): string[] {
+	const copy = [...debts];
+	if (strategy === 'avalanche') {
+		copy.sort((a, b) => b.interestRatePct - a.interestRatePct);
+	} else {
+		copy.sort((a, b) => a.currentBalanceCents - b.currentBalanceCents);
+	}
+	return copy.map((d) => d.id);
+}
+
 export type PayoffProjection = {
 	months: number;
 	totalInterestCents: number;
