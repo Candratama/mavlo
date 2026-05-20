@@ -319,7 +319,7 @@
 			/>
 			{#if otherVisible}
 				<div
-					class="absolute bottom-full right-2 z-40 mb-2 flex flex-col gap-1 rounded-full border border-white/10 bg-white/10 p-2 shadow-lg backdrop-blur-xl dark:bg-black/30"
+					class="mavlo-pill mavlo-pill-solid absolute bottom-full right-2 z-40 mb-2 flex flex-col gap-1 rounded-full p-2"
 				>
 					{#each otherNav as item (item.href)}
 						<a
