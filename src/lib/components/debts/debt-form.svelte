@@ -108,6 +108,13 @@
 	const maturityDateMs = $derived(maturityDateStr ? new Date(maturityDateStr).getTime() : null);
 
 	const showDueDay = $derived(type !== 'bnpl' && type !== 'informal');
+	const dueDayExpected = $derived(
+		type === 'credit_card' ||
+			type === 'kta' ||
+			type === 'kpr' ||
+			type === 'auto' ||
+			type === 'pinjol'
+	);
 	const showLinkedAccount = $derived(type === 'credit_card');
 	const showMaturityDate = $derived(type === 'kpr' || type === 'auto' || type === 'bnpl');
 	const showApr = $derived(type !== 'informal');
@@ -325,6 +332,11 @@
 		<div class="space-y-1">
 			<Label for="debt-due">Due day (1–31) <span class="text-muted-foreground">(optional)</span></Label>
 			<Input id="debt-due" type="number" name="dueDay" min={1} max={31} bind:value={dueDay} />
+			{#if !dueDay && dueDayExpected}
+				<p class="text-xs text-amber-500">
+					💡 Set due day to see upcoming payment reminders on dashboard.
+				</p>
+			{/if}
 		</div>
 	{/if}
 
