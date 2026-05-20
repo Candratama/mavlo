@@ -113,7 +113,12 @@
 		};
 	}
 
-	let kind = $state<'income' | 'expense' | 'transfer'>(initialState().kind);
+	let uiKind = $state<'income' | 'expense' | 'transfer' | 'debt'>(
+		debtTarget ? 'debt' : initialState().kind
+	);
+	const kind = $derived<'income' | 'expense' | 'transfer'>(
+		uiKind === 'debt' ? 'expense' : uiKind
+	);
 	let accountId = $state(initialState().accountId);
 	let transferToAccountId = $state(initialState().transferToAccountId);
 	let categoryId = $state(initialState().categoryId);
@@ -152,7 +157,7 @@
 	$effect(() => {
 		if (!open) return;
 		const i = initialState();
-		kind = i.kind;
+		uiKind = debtTarget ? 'debt' : i.kind;
 		accountId = i.accountId;
 		transferToAccountId = i.transferToAccountId;
 		categoryId = i.categoryId;
@@ -195,7 +200,8 @@
 	const kindOptions = [
 		{ value: 'expense', label: 'Expense' },
 		{ value: 'income', label: 'Income' },
-		{ value: 'transfer', label: 'Transfer' }
+		{ value: 'transfer', label: 'Transfer' },
+		{ value: 'debt', label: 'Debt' }
 	];
 
 	type Icon = PickerItem['icon'];
@@ -314,7 +320,7 @@
 		{/if}
 
 		{#if mode === 'create'}
-			<SegmentedControl options={kindOptions} bind:value={kind} ariaLabel="Transaction kind" />
+			<SegmentedControl options={kindOptions} bind:value={uiKind} ariaLabel="Transaction kind" />
 		{/if}
 		<input type="hidden" name="kind" value={kind} />
 
@@ -426,21 +432,28 @@
 			<input type="hidden" name="categoryId" value={categoryId} />
 		{/if}
 
-		{#if kind === 'expense' && activeDebts.length > 0}
-			<div class="space-y-2">
-				<Label>Link to debt <span class="text-muted-foreground font-normal">(optional)</span></Label>
-				<PickerSheet
-					items={debtItems}
-					bind:value={debtId}
-					name="debtId"
-					placeholder="None"
-					title="Link to debt"
-					usePopover={!isDesktop.current}
-				/>
-				{#if pickedDebt}
-					<p class="text-muted-foreground text-xs">Will reduce {pickedDebt.name} balance</p>
-				{/if}
-			</div>
+		{#if uiKind === 'debt'}
+			{#if activeDebts.length > 0}
+				<div class="space-y-2">
+					<Label>Pay debt</Label>
+					<PickerSheet
+						items={debtItems}
+						bind:value={debtId}
+						name="debtId"
+						placeholder="Pick debt"
+						title="Pay debt"
+						usePopover={!isDesktop.current}
+					/>
+					{#if pickedDebt}
+						<p class="text-muted-foreground text-xs">Will reduce {pickedDebt.name} balance</p>
+					{/if}
+				</div>
+			{:else}
+				<input type="hidden" name="debtId" value="" />
+				<p class="text-muted-foreground text-xs">
+					No active debts. Add one in <a href="/debts" class="text-primary underline">Debts</a>.
+				</p>
+			{/if}
 		{:else}
 			<input type="hidden" name="debtId" value="" />
 		{/if}
