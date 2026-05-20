@@ -116,6 +116,9 @@
 	let uiKind = $state<'income' | 'expense' | 'transfer' | 'debt'>(
 		debtTarget ? 'debt' : initialState().kind
 	);
+	// Sub-action within Debt tab. Determined by picked debt direction when set,
+	// else default 'repay'. User can switch via the sub-action buttons.
+	let debtSubAction = $state<'repay' | 'collect'>('repay');
 	let accountId = $state(initialState().accountId);
 	let transferToAccountId = $state(initialState().transferToAccountId);
 	let categoryId = $state(initialState().categoryId);
@@ -131,12 +134,16 @@
 	);
 
 	const activeDebts = $derived((page.data.debts ?? []).filter((d: any) => d.status === 'active'));
+	const borrowedDebts = $derived(
+		activeDebts.filter((d: any) => (d.direction ?? 'borrowed') === 'borrowed')
+	);
+	const lentDebts = $derived(activeDebts.filter((d: any) => d.direction === 'lent'));
 	const pickedDebt = $derived(activeDebts.find((d: any) => d.id === debtId));
-	// Map 'debt' UI mode to underlying kind based on picked debt direction:
-	//   lent (someone owes me) + collecting → income
-	//   borrowed (I owe) + repaying → expense
+	// Map 'debt' UI mode to underlying kind based on sub-action.
+	//   repay (I owe → pay) → expense
+	//   collect (they owe → receive) → income
 	const kind = $derived<'income' | 'expense' | 'transfer'>(
-		uiKind === 'debt' ? (pickedDebt?.direction === 'lent' ? 'income' : 'expense') : uiKind
+		uiKind === 'debt' ? (debtSubAction === 'collect' ? 'income' : 'expense') : uiKind
 	);
 
 	const sourceAccount = $derived(accounts.find((a) => a.id === accountId));
@@ -164,6 +171,10 @@
 		if (!open) return;
 		const i = initialState();
 		uiKind = debtTarget ? 'debt' : i.kind;
+		if (debtTarget) {
+			const td = activeDebts.find((d: any) => d.id === debtTarget.id);
+			debtSubAction = td?.direction === 'lent' ? 'collect' : 'repay';
+		}
 		accountId = i.accountId;
 		transferToAccountId = i.transferToAccountId;
 		categoryId = i.categoryId;
@@ -272,14 +283,23 @@
 		if (categoryId && !ids.has(categoryId)) categoryId = '';
 	});
 
+	// Filter pool by sub-action: repay shows borrowed debts, collect shows lent.
+	const debtPool = $derived(debtSubAction === 'collect' ? lentDebts : borrowedDebts);
 	const debtItems = $derived<PickerItem[]>([
 		{ value: '', label: 'None', icon: CreditCard as unknown as Icon },
-		...activeDebts.map((d: any) => ({
+		...debtPool.map((d: any) => ({
 			value: d.id,
 			label: d.name,
 			icon: CreditCard as unknown as Icon
 		}))
 	]);
+	// Reset debtId if it no longer matches the current pool when sub-action flips.
+	$effect(() => {
+		if (uiKind !== 'debt') return;
+		if (debtId && !debtPool.some((d: any) => d.id === debtId)) {
+			debtId = '';
+		}
+	});
 
 	const isToday = $derived(occurredAt === todayYmd);
 	const dateLabel = $derived.by(() => {
@@ -443,15 +463,45 @@
 		{/if}
 
 		{#if uiKind === 'debt'}
-			{#if activeDebts.length > 0}
+			<div class="space-y-2">
+				<Label>Action</Label>
+				<div class="grid grid-cols-2 gap-2">
+					<button
+						type="button"
+						onclick={() => (debtSubAction = 'repay')}
+						class="rounded-lg border p-3 text-left transition-colors {debtSubAction === 'repay'
+							? 'border-primary bg-primary/10'
+							: 'hover:bg-accent'}"
+					>
+						<div class="text-sm font-medium">Repay</div>
+						<div class="text-muted-foreground text-xs">Pay money I owe</div>
+					</button>
+					<button
+						type="button"
+						onclick={() => (debtSubAction = 'collect')}
+						class="rounded-lg border p-3 text-left transition-colors {debtSubAction ===
+						'collect'
+							? 'border-primary bg-primary/10'
+							: 'hover:bg-accent'}"
+					>
+						<div class="text-sm font-medium">Collect</div>
+						<div class="text-muted-foreground text-xs">Receive money owed to me</div>
+					</button>
+				</div>
+				<div class="text-muted-foreground mt-1 text-xs">
+					Need a new debt? <a href="/debts" class="text-primary underline">Add it on Debts page</a>
+					to also borrow or lend.
+				</div>
+			</div>
+			{#if debtPool.length > 0}
 				<div class="space-y-2">
-					<Label>Pay debt</Label>
+					<Label>{debtSubAction === 'collect' ? 'Collect from' : 'Pay debt'}</Label>
 					<PickerSheet
 						items={debtItems}
 						bind:value={debtId}
 						name="debtId"
 						placeholder="Pick debt"
-						title="Pay debt"
+						title={debtSubAction === 'collect' ? 'Collect from' : 'Pay debt'}
 						usePopover={!isDesktop.current}
 					/>
 					{#if pickedDebt}
@@ -461,7 +511,8 @@
 			{:else}
 				<input type="hidden" name="debtId" value="" />
 				<p class="text-muted-foreground text-xs">
-					No active debts. Add one in <a href="/debts" class="text-primary underline">Debts</a>.
+					No {debtSubAction === 'collect' ? 'lent' : 'borrowed'} debts.
+					<a href="/debts" class="text-primary underline">Add one</a>.
 				</p>
 			{/if}
 		{:else}
