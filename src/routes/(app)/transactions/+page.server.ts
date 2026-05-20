@@ -9,6 +9,7 @@ import {
 } from '$lib/server/repositories/transactions';
 import { getAccount } from '$lib/server/repositories/accounts';
 import { computeAccountBalances } from '$lib/server/repositories/balances';
+import { ensureDebtPaymentCategory } from '$lib/server/repositories/categories';
 import {
 	transactionCreateSchema,
 	transactionUpdateSchema,
@@ -82,6 +83,10 @@ export const actions: Actions = {
 				});
 			}
 		}
+		// If linked to a debt and category not set, force category to Debt Payment.
+		if (parsed.data.debtId && !parsed.data.categoryId && parsed.data.kind === 'expense') {
+			parsed.data.categoryId = await ensureDebtPaymentCategory(db, user.id);
+		}
 		const created = await createTransaction(db, user.id, parsed.data);
 		await purgeUserCaches(event, user.id);
 		return { success: true, action: 'create', transaction: created };
@@ -125,6 +130,9 @@ export const actions: Actions = {
 			if (parsed.data.amountCents > available) {
 				return fail(400, { action: 'update', message: 'Insufficient balance in source account' });
 			}
+		}
+		if (parsed.data.debtId && !parsed.data.categoryId && parsed.data.kind === 'expense') {
+			parsed.data.categoryId = await ensureDebtPaymentCategory(db, user.id);
 		}
 		const updated = await updateTransaction(db, user.id, parsed.data);
 		if (!updated) return fail(404, { action: 'update', message: 'Transaction not found' });

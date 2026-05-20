@@ -180,6 +180,18 @@
 	const activeDebts = $derived((page.data.debts ?? []).filter((d: any) => d.status === 'active'));
 	const pickedDebt = $derived(activeDebts.find((d: any) => d.id === debtId));
 
+	const debtPaymentCategory = $derived(
+		categories.find((c) => c.name === 'Debt Payment' && c.kind === 'expense')
+	);
+
+	// When a debt is linked, force category to "Debt Payment" so the user
+	// doesn't have to pick + budgets/reports stay consistent.
+	$effect(() => {
+		if (debtId && debtPaymentCategory && categoryId !== debtPaymentCategory.id) {
+			categoryId = debtPaymentCategory.id;
+		}
+	});
+
 	const kindOptions = [
 		{ value: 'expense', label: 'Expense' },
 		{ value: 'income', label: 'Income' },
@@ -397,7 +409,7 @@
 					usePopover={!isDesktop.current}
 				/>
 			</div>
-		{:else}
+		{:else if !debtId}
 			<div class="space-y-2">
 				<Label>Category</Label>
 				<PickerSheet
@@ -410,6 +422,8 @@
 					usePopover={!isDesktop.current}
 				/>
 			</div>
+		{:else}
+			<input type="hidden" name="categoryId" value={categoryId} />
 		{/if}
 
 		{#if kind === 'expense' && activeDebts.length > 0}
