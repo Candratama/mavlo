@@ -113,7 +113,12 @@
 		};
 	}
 
-	let kind = $state<'income' | 'expense' | 'transfer'>(initialState().kind);
+	let uiKind = $state<'income' | 'expense' | 'transfer' | 'debt'>(
+		debtTarget ? 'debt' : initialState().kind
+	);
+	// Sub-action within Debt tab. Determined by picked debt direction when set,
+	// else default 'repay'. User can switch via the sub-action buttons.
+	let debtSubAction = $state<'repay' | 'collect'>('repay');
 	let accountId = $state(initialState().accountId);
 	let transferToAccountId = $state(initialState().transferToAccountId);
 	let categoryId = $state(initialState().categoryId);
@@ -126,6 +131,19 @@
 		debtTarget
 			? debtTarget.minimumPaymentCents
 			: (editTarget?.amountCents ?? null)
+	);
+
+	const activeDebts = $derived((page.data.debts ?? []).filter((d: any) => d.status === 'active'));
+	const borrowedDebts = $derived(
+		activeDebts.filter((d: any) => (d.direction ?? 'borrowed') === 'borrowed')
+	);
+	const lentDebts = $derived(activeDebts.filter((d: any) => d.direction === 'lent'));
+	const pickedDebt = $derived(activeDebts.find((d: any) => d.id === debtId));
+	// Map 'debt' UI mode to underlying kind based on sub-action.
+	//   repay (I owe → pay) → expense
+	//   collect (they owe → receive) → income
+	const kind = $derived<'income' | 'expense' | 'transfer'>(
+		uiKind === 'debt' ? (debtSubAction === 'collect' ? 'income' : 'expense') : uiKind
 	);
 
 	const sourceAccount = $derived(accounts.find((a) => a.id === accountId));
@@ -152,7 +170,11 @@
 	$effect(() => {
 		if (!open) return;
 		const i = initialState();
-		kind = i.kind;
+		uiKind = debtTarget ? 'debt' : i.kind;
+		if (debtTarget) {
+			const td = activeDebts.find((d: any) => d.id === debtTarget.id);
+			debtSubAction = td?.direction === 'lent' ? 'collect' : 'repay';
+		}
 		accountId = i.accountId;
 		transferToAccountId = i.transferToAccountId;
 		categoryId = i.categoryId;
@@ -177,13 +199,30 @@
 		}
 	});
 
-	const activeDebts = $derived((page.data.debts ?? []).filter((d: any) => d.status === 'active'));
-	const pickedDebt = $derived(activeDebts.find((d: any) => d.id === debtId));
+	const debtPaymentCategory = $derived(
+		categories.find((c) => c.name === 'Debt Payment' && c.kind === 'expense')
+	);
+	const loanCollectedCategory = $derived(
+		categories.find((c) => c.name === 'Loan Collected' && c.kind === 'income')
+	);
+
+	// When a debt is linked, force category to the correct auto-category based
+	// on direction (borrowed → Debt Payment, lent → Loan Collected). If the
+	// category doesn't exist client-side yet, server lazily creates it.
+	$effect(() => {
+		if (!debtId) return;
+		const target =
+			pickedDebt?.direction === 'lent' ? loanCollectedCategory : debtPaymentCategory;
+		if (target && categoryId !== target.id) {
+			categoryId = target.id;
+		}
+	});
 
 	const kindOptions = [
 		{ value: 'expense', label: 'Expense' },
 		{ value: 'income', label: 'Income' },
-		{ value: 'transfer', label: 'Transfer' }
+		{ value: 'transfer', label: 'Transfer' },
+		{ value: 'debt', label: 'Debt' }
 	];
 
 	type Icon = PickerItem['icon'];
@@ -244,14 +283,23 @@
 		if (categoryId && !ids.has(categoryId)) categoryId = '';
 	});
 
+	// Filter pool by sub-action: repay shows borrowed debts, collect shows lent.
+	const debtPool = $derived(debtSubAction === 'collect' ? lentDebts : borrowedDebts);
 	const debtItems = $derived<PickerItem[]>([
 		{ value: '', label: 'None', icon: CreditCard as unknown as Icon },
-		...activeDebts.map((d: any) => ({
+		...debtPool.map((d: any) => ({
 			value: d.id,
 			label: d.name,
 			icon: CreditCard as unknown as Icon
 		}))
 	]);
+	// Reset debtId if it no longer matches the current pool when sub-action flips.
+	$effect(() => {
+		if (uiKind !== 'debt') return;
+		if (debtId && !debtPool.some((d: any) => d.id === debtId)) {
+			debtId = '';
+		}
+	});
 
 	const isToday = $derived(occurredAt === todayYmd);
 	const dateLabel = $derived.by(() => {
@@ -302,7 +350,7 @@
 		{/if}
 
 		{#if mode === 'create'}
-			<SegmentedControl options={kindOptions} bind:value={kind} ariaLabel="Transaction kind" />
+			<SegmentedControl options={kindOptions} bind:value={uiKind} ariaLabel="Transaction kind" />
 		{/if}
 		<input type="hidden" name="kind" value={kind} />
 
@@ -397,7 +445,7 @@
 					usePopover={!isDesktop.current}
 				/>
 			</div>
-		{:else}
+		{:else if !debtId}
 			<div class="space-y-2">
 				<Label>Category</Label>
 				<PickerSheet
@@ -410,23 +458,63 @@
 					usePopover={!isDesktop.current}
 				/>
 			</div>
+		{:else}
+			<input type="hidden" name="categoryId" value={categoryId} />
 		{/if}
 
-		{#if kind === 'expense' && activeDebts.length > 0}
+		{#if uiKind === 'debt'}
 			<div class="space-y-2">
-				<Label>Link to debt <span class="text-muted-foreground font-normal">(optional)</span></Label>
-				<PickerSheet
-					items={debtItems}
-					bind:value={debtId}
-					name="debtId"
-					placeholder="None"
-					title="Link to debt"
-					usePopover={!isDesktop.current}
-				/>
-				{#if pickedDebt}
-					<p class="text-muted-foreground text-xs">Will reduce {pickedDebt.name} balance</p>
-				{/if}
+				<Label>Action</Label>
+				<div class="grid grid-cols-2 gap-2">
+					<button
+						type="button"
+						onclick={() => (debtSubAction = 'repay')}
+						class="rounded-lg border p-3 text-left transition-colors {debtSubAction === 'repay'
+							? 'border-primary bg-primary/10'
+							: 'hover:bg-accent'}"
+					>
+						<div class="text-sm font-medium">Repay</div>
+						<div class="text-muted-foreground text-xs">Pay money I owe</div>
+					</button>
+					<button
+						type="button"
+						onclick={() => (debtSubAction = 'collect')}
+						class="rounded-lg border p-3 text-left transition-colors {debtSubAction ===
+						'collect'
+							? 'border-primary bg-primary/10'
+							: 'hover:bg-accent'}"
+					>
+						<div class="text-sm font-medium">Collect</div>
+						<div class="text-muted-foreground text-xs">Receive money owed to me</div>
+					</button>
+				</div>
+				<div class="text-muted-foreground mt-1 text-xs">
+					Need a new debt? <a href="/debts" class="text-primary underline">Add it on Debts page</a>
+					to also borrow or lend.
+				</div>
 			</div>
+			{#if debtPool.length > 0}
+				<div class="space-y-2">
+					<Label>{debtSubAction === 'collect' ? 'Collect from' : 'Pay debt'}</Label>
+					<PickerSheet
+						items={debtItems}
+						bind:value={debtId}
+						name="debtId"
+						placeholder="Pick debt"
+						title={debtSubAction === 'collect' ? 'Collect from' : 'Pay debt'}
+						usePopover={!isDesktop.current}
+					/>
+					{#if pickedDebt}
+						<p class="text-muted-foreground text-xs">Will reduce {pickedDebt.name} balance</p>
+					{/if}
+				</div>
+			{:else}
+				<input type="hidden" name="debtId" value="" />
+				<p class="text-muted-foreground text-xs">
+					No {debtSubAction === 'collect' ? 'lent' : 'borrowed'} debts.
+					<a href="/debts" class="text-primary underline">Add one</a>.
+				</p>
+			{/if}
 		{:else}
 			<input type="hidden" name="debtId" value="" />
 		{/if}

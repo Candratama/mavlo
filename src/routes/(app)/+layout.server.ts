@@ -256,7 +256,9 @@ export const load: LayoutServerLoad = async (event) => {
 		.filter((t) => t.kind === 'expense')
 		.reduce((s, t) => s + t.amountCents, 0);
 	const netWorthCents =
-		Array.from(balances.values()).reduce((s, b) => s + b, 0) - debtTotals.totalBalanceCents;
+		Array.from(balances.values()).reduce((s, b) => s + b, 0) -
+		debtTotals.totalBalanceCents +
+		debtTotals.totalReceivableCents;
 	const budgetLimitCents = assignedCents;
 	const budgetSpentCents = budgetList.reduce((s, b) => s + (budgetSpent.get(b.categoryId) ?? 0), 0);
 

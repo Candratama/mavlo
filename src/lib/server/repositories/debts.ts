@@ -13,10 +13,14 @@ export type RepoError = { error: string };
 export async function listDebts(
 	db: Db,
 	userId: string,
-	filter: { status?: 'active' | 'paid_off' | 'in_arrears' }
+	filter: {
+		status?: 'active' | 'paid_off' | 'in_arrears';
+		direction?: 'borrowed' | 'lent';
+	}
 ): Promise<DebtRow[]> {
 	const conds = [eq(debts.userId, userId)];
 	if (filter.status) conds.push(eq(debts.status, filter.status));
+	if (filter.direction) conds.push(eq(debts.direction, filter.direction));
 	return db.select().from(debts).where(and(...conds));
 }
 
@@ -32,7 +36,9 @@ export async function getDebt(db: Db, userId: string, id: string): Promise<DebtR
 async function validateAccountLink(
 	db: Db,
 	userId: string,
-	accountId: string | null | undefined
+	accountId: string | null | undefined,
+	debtType: string,
+	direction: 'borrowed' | 'lent'
 ): Promise<RepoError | null> {
 	if (!accountId) return null;
 	const [acc] = await db
@@ -41,7 +47,10 @@ async function validateAccountLink(
 		.where(and(eq(accounts.userId, userId), eq(accounts.id, accountId)))
 		.limit(1);
 	if (!acc) return { error: 'Account not found' };
-	if (acc.type !== 'credit') return { error: 'Linked account must be credit-type' };
+	// Credit-type constraint only applies to user's own credit card debts.
+	if (direction === 'borrowed' && debtType === 'credit_card' && acc.type !== 'credit') {
+		return { error: 'Linked account must be credit-type for a credit card debt' };
+	}
 	return null;
 }
 
@@ -50,7 +59,13 @@ export async function createDebt(
 	userId: string,
 	input: DebtCreateInput
 ): Promise<DebtRow | RepoError> {
-	const err = await validateAccountLink(db, userId, input.accountId);
+	const err = await validateAccountLink(
+		db,
+		userId,
+		input.accountId,
+		input.type,
+		input.direction ?? 'borrowed'
+	);
 	if (err) return err;
 	const [row] = await db
 		.insert(debts)
@@ -67,6 +82,7 @@ export async function createDebt(
 			startDate: input.startDate,
 			maturityDate: input.maturityDate ?? null,
 			accountId: input.accountId ?? null,
+			direction: input.direction ?? 'borrowed',
 			note: input.note ?? null
 		})
 		.returning();
@@ -80,7 +96,13 @@ export async function updateDebt(
 ): Promise<DebtRow | RepoError> {
 	const existing = await getDebt(db, userId, input.id);
 	if (!existing) return { error: 'Debt not found' };
-	const err = await validateAccountLink(db, userId, input.accountId);
+	const err = await validateAccountLink(
+		db,
+		userId,
+		input.accountId,
+		input.type,
+		input.direction ?? existing.direction
+	);
 	if (err) return err;
 	const [row] = await db
 		.update(debts)
@@ -96,6 +118,7 @@ export async function updateDebt(
 			startDate: input.startDate,
 			maturityDate: input.maturityDate ?? null,
 			accountId: input.accountId ?? null,
+			direction: input.direction ?? existing.direction,
 			status: input.status ?? existing.status,
 			note: input.note ?? null,
 			updatedAt: Date.now()

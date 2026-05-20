@@ -35,6 +35,7 @@
 		maturityDate: number | null;
 		status: 'active' | 'paid_off' | 'in_arrears';
 		accountId: string | null;
+		direction: 'borrowed' | 'lent';
 		note: string | null;
 	};
 
@@ -71,8 +72,9 @@
 	];
 
 	// State
+	let direction = $state<'borrowed' | 'lent'>(initial?.direction ?? 'borrowed');
 	let name = $state(initial?.name ?? '');
-	let type = $state<DebtType>(initial?.type ?? 'credit_card');
+	let type = $state<DebtType>(initial?.type ?? (direction === 'lent' ? 'informal' : 'credit_card'));
 	let lender = $state(initial?.lender ?? '');
 	let principalCents = $state<number | null>(initial?.principalCents ?? null);
 	let currentBalanceCents = $state<number | null>(initial?.currentBalanceCents ?? null);
@@ -107,25 +109,35 @@
 	const startDateMs = $derived(startDateStr ? new Date(startDateStr).getTime() : 0);
 	const maturityDateMs = $derived(maturityDateStr ? new Date(maturityDateStr).getTime() : null);
 
-	const showDueDay = $derived(type !== 'bnpl' && type !== 'informal');
+	const isLent = $derived(direction === 'lent');
+	const isInformal = $derived(type === 'informal');
+
+	const showDueDay = $derived(!isLent && type !== 'bnpl' && type !== 'informal');
 	const dueDayExpected = $derived(
-		type === 'credit_card' ||
-			type === 'kta' ||
-			type === 'kpr' ||
-			type === 'auto' ||
-			type === 'pinjol'
+		!isLent &&
+			(type === 'credit_card' ||
+				type === 'kta' ||
+				type === 'kpr' ||
+				type === 'auto' ||
+				type === 'pinjol')
 	);
-	const showLinkedAccount = $derived(type === 'credit_card');
-	const showMaturityDate = $derived(type === 'kpr' || type === 'auto' || type === 'bnpl');
-	const showApr = $derived(type !== 'informal');
+	const showLinkedAccount = $derived(!isLent && type === 'credit_card');
+	const showMaturityDate = $derived(!isLent && (type === 'kpr' || type === 'auto' || type === 'bnpl'));
+	const showApr = $derived(!isLent && type !== 'informal');
+	const showMinPayment = $derived(!isLent);
 	const showFundingToggle = $derived(mode === 'create' && type !== 'credit_card');
 
-	const isInformal = $derived(type === 'informal');
 	const principalLabel = $derived(
-		type === 'credit_card' ? 'Credit limit' : 'Amount borrowed'
+		isLent ? 'Amount lent' : type === 'credit_card' ? 'Credit limit' : 'Amount borrowed'
 	);
 	const lenderLabel = $derived(
-		isInformal ? 'Person you owe' : type === 'other' ? 'Lender / source' : 'Lender'
+		isLent
+			? 'Person you lent to'
+			: isInformal
+				? 'Person you owe'
+				: type === 'other'
+					? 'Lender / source'
+					: 'Lender'
 	);
 	const namePlaceholder = $derived.by(() => {
 		switch (type) {
@@ -201,8 +213,37 @@
 	{/if}
 	<input type="hidden" name="interestRatePct" value={interestRatePctInt} />
 	<input type="hidden" name="startDate" value={startDateMs} />
+	<input type="hidden" name="direction" value={direction} />
 	{#if maturityDateMs}
 		<input type="hidden" name="maturityDate" value={maturityDateMs} />
+	{/if}
+
+	{#if mode === 'create'}
+		<div class="space-y-1">
+			<Label>Direction</Label>
+			<div class="grid grid-cols-2 gap-2">
+				<button
+					type="button"
+					onclick={() => (direction = 'borrowed')}
+					class="rounded-lg border p-3 text-left transition-colors {direction === 'borrowed'
+						? 'border-primary bg-primary/10'
+						: 'hover:bg-accent'}"
+				>
+					<div class="text-sm font-medium">I owe</div>
+					<div class="text-muted-foreground text-xs">I borrowed money</div>
+				</button>
+				<button
+					type="button"
+					onclick={() => (direction = 'lent')}
+					class="rounded-lg border p-3 text-left transition-colors {direction === 'lent'
+						? 'border-primary bg-primary/10'
+						: 'hover:bg-accent'}"
+				>
+					<div class="text-sm font-medium">They owe</div>
+					<div class="text-muted-foreground text-xs">I lent money to someone</div>
+				</button>
+			</div>
+		</div>
 	{/if}
 
 	<div class="space-y-1">
@@ -250,15 +291,21 @@
 					class="mt-1 size-4 accent-primary"
 				/>
 				<div class="flex-1">
-					<div class="text-sm font-medium">I just received this money</div>
+					<div class="text-sm font-medium">
+						{isLent ? 'I just gave this money' : 'I just received this money'}
+					</div>
 					<div class="text-muted-foreground text-xs">
-						Toggle on if the funds were deposited recently. We'll add an income transaction.
+						{#if isLent}
+							Toggle on if the money left your account recently. We'll add an expense transaction.
+						{:else}
+							Toggle on if the funds were deposited recently. We'll add an income transaction.
+						{/if}
 					</div>
 				</div>
 			</label>
 			{#if funded}
 				<div class="mt-3 space-y-1">
-					<Label>Money goes to</Label>
+					<Label>{isLent ? 'Money came from' : 'Money goes to'}</Label>
 					{#if fundingAccounts.length === 0}
 						<p class="text-muted-foreground text-xs">
 							No cash/bank accounts found. Add one in Accounts first.
@@ -302,31 +349,35 @@
 		</div>
 	</div>
 
-	<div class="grid grid-cols-2 gap-3">
-		{#if showApr}
-			<div class="space-y-1">
-				<Label for="debt-apr">APR %</Label>
-				<Input
-					id="debt-apr"
-					type="text"
-					inputmode="decimal"
-					pattern="[0-9.]*"
-					bind:value={aprDisplay}
-					placeholder="26.0"
-				/>
-			</div>
-		{/if}
-		<div class={showApr ? 'space-y-1' : 'space-y-1 col-span-2'}>
-			<Label for="debt-min">Min payment <span class="text-muted-foreground">(optional)</span></Label>
-			<MoneyInput
-				id="debt-min"
-				name="minimumPaymentCents"
-				min={0}
-				bind:value={minimumPaymentCents}
-				class="h-12 text-lg md:h-12 md:text-lg"
-			/>
+	{#if showApr || showMinPayment}
+		<div class="grid grid-cols-2 gap-3">
+			{#if showApr}
+				<div class="space-y-1">
+					<Label for="debt-apr">APR %</Label>
+					<Input
+						id="debt-apr"
+						type="text"
+						inputmode="decimal"
+						pattern="[0-9.]*"
+						bind:value={aprDisplay}
+						placeholder="26.0"
+					/>
+				</div>
+			{/if}
+			{#if showMinPayment}
+				<div class={showApr ? 'space-y-1' : 'space-y-1 col-span-2'}>
+					<Label for="debt-min">Min payment <span class="text-muted-foreground">(optional)</span></Label>
+					<MoneyInput
+						id="debt-min"
+						name="minimumPaymentCents"
+						min={0}
+						bind:value={minimumPaymentCents}
+						class="h-12 text-lg md:h-12 md:text-lg"
+					/>
+				</div>
+			{/if}
 		</div>
-	</div>
+	{/if}
 
 	{#if showDueDay}
 		<div class="space-y-1">

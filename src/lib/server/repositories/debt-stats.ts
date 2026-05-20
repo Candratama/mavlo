@@ -8,8 +8,11 @@ import { nextDueDate } from '$lib/utils/debt';
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
 
 export type DebtTotals = {
+	// Money user owes (liabilities)
 	totalBalanceCents: number;
 	totalMinPaymentCents: number;
+	// Money owed to user (receivables)
+	totalReceivableCents: number;
 	upcomingPayments: Array<{
 		debtId: string;
 		debtName: string;
@@ -32,9 +35,14 @@ export async function computeDebtTotals(
 
 	let totalBalanceCents = 0;
 	let totalMinPaymentCents = 0;
+	let totalReceivableCents = 0;
 	const upcomingPayments: DebtTotals['upcomingPayments'] = [];
 
 	for (const r of rows) {
+		if (r.direction === 'lent') {
+			totalReceivableCents += r.currentBalanceCents;
+			continue;
+		}
 		totalBalanceCents += r.currentBalanceCents;
 		totalMinPaymentCents += r.minimumPaymentCents;
 		if (r.dueDay) {
@@ -52,5 +60,5 @@ export async function computeDebtTotals(
 
 	upcomingPayments.sort((a, b) => a.dueMs - b.dueMs);
 
-	return { totalBalanceCents, totalMinPaymentCents, upcomingPayments };
+	return { totalBalanceCents, totalMinPaymentCents, totalReceivableCents, upcomingPayments };
 }

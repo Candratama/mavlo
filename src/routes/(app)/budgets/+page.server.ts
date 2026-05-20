@@ -2,6 +2,7 @@ import { fail } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth/guards';
 import { getDb } from '$lib/server/db';
 import { createBudget, updateBudget, deleteBudget } from '$lib/server/repositories/budgets';
+import { ensureDebtPaymentCategory } from '$lib/server/repositories/categories';
 import {
 	createSubsidy,
 	updateSubsidy,
@@ -136,5 +137,22 @@ export const actions: Actions = {
 		if (!deleted) return fail(404, { action: 'deleteSubsidy', message: 'Subsidy not found' });
 		await purgeUserCaches(event, user.id);
 		return { success: true, action: 'deleteSubsidy' };
+	},
+	setDebtBudget: async (event) => {
+		const user = requireUser(event);
+		const db = getDb(event.platform!.env.DB);
+		const fd = await event.request.formData();
+		const limitCents = Number(fd.get('limitCents'));
+		const periodMonth = String(fd.get('periodMonth') ?? '');
+		if (!Number.isFinite(limitCents) || limitCents <= 0) {
+			return fail(400, { action: 'setDebtBudget', message: 'Limit must be positive' });
+		}
+		if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(periodMonth)) {
+			return fail(400, { action: 'setDebtBudget', message: 'Invalid period' });
+		}
+		const categoryId = await ensureDebtPaymentCategory(db, user.id);
+		await createBudget(db, user.id, { categoryId, periodMonth, limitCents });
+		await purgeUserCaches(event, user.id);
+		return { success: true, action: 'setDebtBudget' };
 	}
 };
