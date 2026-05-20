@@ -27,6 +27,7 @@
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
 	import DebtForm from '$lib/components/debts/debt-form.svelte';
+	import { openAddTransaction } from '$lib/stores/add-transaction.svelte.js';
 
 	let { data } = $props();
 
@@ -240,6 +241,26 @@
 					{#if debt.dueDay} · Due day {debt.dueDay}{/if}
 					{#if debt.minimumPaymentCents > 0} · Min {formatCents(debt.minimumPaymentCents)}{/if}
 				</p>
+				<Button
+					type="button"
+					variant="outline"
+					size="sm"
+					class="mt-3 w-full"
+					onclick={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						openAddTransaction({
+							defaultKind: 'expense',
+							debtTarget: {
+								id: debt.id,
+								name: debt.name,
+								minimumPaymentCents: debt.minimumPaymentCents
+							}
+						});
+					}}
+				>
+					Pay
+				</Button>
 			</Card.Content>
 		</Card.Root>
 	{:else}

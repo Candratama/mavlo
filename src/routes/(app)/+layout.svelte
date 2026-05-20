@@ -301,6 +301,7 @@
 		accounts={data.accounts ?? []}
 		categories={data.categories ?? []}
 		defaultKind={txState.defaultKind}
+		debtTarget={txState.debtTarget}
 		{defaultAccountId}
 		actionUrl="/transactions?/create"
 		onClose={closeAddTransaction}

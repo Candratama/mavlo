@@ -5,6 +5,7 @@
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { paidPercent, formatApr, nextDueDate } from '$lib/utils/debt';
 	import EmptyState from '$lib/components/empty-state.svelte';
+	import { openAddTransaction } from '$lib/stores/add-transaction.svelte.js';
 
 	let { data } = $props();
 
@@ -120,6 +121,21 @@
 			</div>
 		{/if}
 	</div>
+
+	<Button
+		class="mb-6 w-full"
+		onclick={() =>
+			openAddTransaction({
+				defaultKind: 'expense',
+				debtTarget: {
+					id: debt.id,
+					name: debt.name,
+					minimumPaymentCents: debt.minimumPaymentCents
+				}
+			})}
+	>
+		Record payment
+	</Button>
 
 	<div class="mb-3 text-sm font-semibold">Payment history</div>
 
