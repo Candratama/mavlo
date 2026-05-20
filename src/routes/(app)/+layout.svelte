@@ -26,7 +26,6 @@
 		Tag,
 		MoreHorizontal
 	} from 'lucide-svelte';
-	import * as Sheet from '$lib/components/ui/sheet';
 
 	let { children, data } = $props();
 
@@ -303,12 +302,40 @@
 	<div
 		class="fixed inset-x-0 bottom-0 z-40 flex items-center justify-center gap-2 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden"
 	>
-		<LimelightNav
-			items={limelightItems}
-			activeIndex={limelightActive}
-			class="mavlo-pill mavlo-pill-solid"
-			iconContainerClass="px-4 py-5"
-		/>
+		<div class="relative">
+			<LimelightNav
+				items={limelightItems}
+				activeIndex={limelightActive}
+				class="mavlo-pill mavlo-pill-solid"
+				iconContainerClass="px-4 py-5"
+			/>
+			{#if otherOpen}
+				<button
+					type="button"
+					aria-label="Close menu"
+					class="fixed inset-0 z-30 cursor-default bg-transparent"
+					onclick={() => (otherOpen = false)}
+				></button>
+				<div
+					class="mavlo-pill mavlo-pill-solid absolute bottom-full right-2 z-40 mb-2 flex flex-col gap-1 p-2"
+				>
+					{#each otherNav as item (item.href)}
+						<a
+							href={item.href}
+							onclick={() => (otherOpen = false)}
+							aria-label={item.label}
+							class="flex size-11 items-center justify-center rounded-full transition-opacity hover:opacity-100 {isActive(
+								item.href
+							)
+								? 'text-primary opacity-100'
+								: 'opacity-60'}"
+						>
+							<item.icon class="size-5" />
+						</a>
+					{/each}
+				</div>
+			{/if}
+		</div>
 		<Fab />
 	</div>
 
@@ -321,32 +348,6 @@
 	{/if}
 </div>
 
-<Sheet.Root bind:open={otherOpen}>
-	<Sheet.Content
-		side="bottom"
-		class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
-	>
-		<Sheet.Header class="p-4 pb-2 text-left">
-			<Sheet.Title>More</Sheet.Title>
-		</Sheet.Header>
-		<nav class="flex flex-col gap-1 p-2">
-			{#each otherNav as item (item.href)}
-				<a
-					href={item.href}
-					onclick={() => (otherOpen = false)}
-					class="hover:bg-accent flex items-center gap-3 rounded-lg px-3 py-3 text-sm {isActive(
-						item.href
-					)
-						? 'bg-accent font-medium'
-						: ''}"
-				>
-					<item.icon class="size-5" />
-					{item.label}
-				</a>
-			{/each}
-		</nav>
-	</Sheet.Content>
-</Sheet.Root>
 
 <style>
 	.nav-progress-bar {
