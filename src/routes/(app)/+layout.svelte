@@ -138,12 +138,14 @@
 			onClick: () => (otherOpen = true)
 		}
 	]);
+	const isOtherActive = $derived(otherNav.some((n) => isActive(n.href)));
 	const limelightActive = $derived.by(() => {
 		const i = primaryNav.findIndex((n) => isActive(n.href));
 		if (i >= 0) return i;
-		if (otherNav.some((n) => isActive(n.href))) return primaryNav.length;
+		if (isOtherActive) return primaryNav.length;
 		return -1;
 	});
+	const otherVisible = $derived(otherOpen || isOtherActive);
 
 	const initials = $derived(
 		(data.user.name ?? 'U')
@@ -309,15 +311,17 @@
 				class="mavlo-pill mavlo-pill-solid"
 				iconContainerClass="px-4 py-5"
 			/>
-			{#if otherOpen}
-				<button
-					type="button"
-					aria-label="Close menu"
-					class="fixed inset-0 z-30 cursor-default bg-transparent"
-					onclick={() => (otherOpen = false)}
-				></button>
+			{#if otherVisible}
+				{#if !isOtherActive}
+					<button
+						type="button"
+						aria-label="Close menu"
+						class="fixed inset-0 z-30 cursor-default bg-transparent"
+						onclick={() => (otherOpen = false)}
+					></button>
+				{/if}
 				<div
-					class="mavlo-pill mavlo-pill-solid absolute bottom-full right-2 z-40 mb-2 flex flex-col gap-1 p-2"
+					class="absolute bottom-full right-2 z-40 mb-2 flex flex-col gap-1 rounded-full border border-white/10 bg-white/10 p-2 shadow-lg backdrop-blur-xl dark:bg-black/30"
 				>
 					{#each otherNav as item (item.href)}
 						<a
