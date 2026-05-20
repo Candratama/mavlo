@@ -12,6 +12,7 @@ const debtTypeEnum = z.enum([
 ]);
 
 const debtStatusEnum = z.enum(['active', 'paid_off', 'in_arrears']);
+const debtDirectionEnum = z.enum(['borrowed', 'lent']);
 
 export const debtCreateSchema = z
 	.object({
@@ -26,6 +27,7 @@ export const debtCreateSchema = z
 		startDate: z.coerce.number().int(),
 		maturityDate: z.coerce.number().int().optional(),
 		accountId: z.string().min(1).optional(),
+		direction: debtDirectionEnum.optional(),
 		note: z.string().max(200, 'Note too long').optional()
 	})
 	.refine((d) => d.maturityDate == null || d.maturityDate > d.startDate, {

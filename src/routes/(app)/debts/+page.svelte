@@ -65,9 +65,31 @@
 		window.localStorage.setItem(STRATEGY_KEY, strategy);
 	});
 
-	const arrearsDebts = $derived(data.debts.filter((d) => d.status === 'in_arrears'));
-	const activeDebtsRaw = $derived(data.debts.filter((d) => d.status === 'active'));
-	const paidOffDebts = $derived(data.debts.filter((d) => d.status === 'paid_off'));
+	const DIRECTION_KEY = 'mavlo:debtDirection';
+	let directionTab = $state<'borrowed' | 'lent'>('borrowed');
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		const stored = window.localStorage.getItem(DIRECTION_KEY);
+		if (stored === 'borrowed' || stored === 'lent') directionTab = stored;
+	});
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		window.localStorage.setItem(DIRECTION_KEY, directionTab);
+	});
+
+	const directionOptions = [
+		{ value: 'borrowed', label: 'I owe' },
+		{ value: 'lent', label: 'They owe' }
+	];
+
+	const debtsInTab = $derived(data.debts.filter((d) => (d.direction ?? 'borrowed') === directionTab));
+	const hasLentDebts = $derived(
+		data.debts.some((d) => (d.direction ?? 'borrowed') === 'lent')
+	);
+
+	const arrearsDebts = $derived(debtsInTab.filter((d) => d.status === 'in_arrears'));
+	const activeDebtsRaw = $derived(debtsInTab.filter((d) => d.status === 'active'));
+	const paidOffDebts = $derived(debtsInTab.filter((d) => d.status === 'paid_off'));
 
 	const priorityOrder = $derived(prioritizedDebtIds(activeDebtsRaw, strategy));
 	const activeDebts = $derived.by(() => {
@@ -141,22 +163,40 @@
 	</Button>
 </div>
 
-{#if data.debts.length > 0}
+{#if hasLentDebts || directionTab === 'lent'}
+	<div class="mb-4">
+		<SegmentedControl
+			options={directionOptions}
+			bind:value={directionTab}
+			ariaLabel="Debt direction"
+		/>
+	</div>
+{/if}
+
+{#if debtsInTab.length > 0}
 	<div
-		class="mb-6 rounded-xl border bg-gradient-to-br {dtiState === 'unsafe'
-			? 'from-rose-500/10'
-			: dtiState === 'moderate'
-				? 'from-amber-500/10'
-				: 'from-emerald-500/10'} via-card to-card p-4 sm:p-5"
+		class="mb-6 rounded-xl border bg-gradient-to-br {directionTab === 'lent'
+			? 'from-emerald-500/10'
+			: dtiState === 'unsafe'
+				? 'from-rose-500/10'
+				: dtiState === 'moderate'
+					? 'from-amber-500/10'
+					: 'from-emerald-500/10'} via-card to-card p-4 sm:p-5"
 	>
 		<div class="mb-3 flex items-start justify-between gap-3">
 			<div>
-				<div class="text-muted-foreground text-xs tracking-wider uppercase">Total owed</div>
+				<div class="text-muted-foreground text-xs tracking-wider uppercase">
+					{directionTab === 'lent' ? 'Total receivable' : 'Total owed'}
+				</div>
 				<div class="mt-1 text-2xl font-bold tracking-tight tabular-nums sm:text-3xl">
-					{formatCents(data.debtTotals.totalBalanceCents)}
+					{formatCents(
+						directionTab === 'lent'
+							? data.debtTotals.totalReceivableCents
+							: data.debtTotals.totalBalanceCents
+					)}
 				</div>
 			</div>
-			{#if dtiState === 'unsafe'}
+			{#if directionTab === 'borrowed' && dtiState === 'unsafe'}
 				<div
 					class="flex size-10 shrink-0 items-center justify-center rounded-full bg-rose-500/15 text-rose-500"
 				>
@@ -164,25 +204,29 @@
 				</div>
 			{/if}
 		</div>
-		<div class="grid grid-cols-2 gap-3 text-xs">
-			<div>
-				<div class="text-muted-foreground tracking-wider uppercase">Monthly minimum</div>
-				<div class="mt-1 font-semibold tabular-nums">
-					{formatCents(data.debtTotals.totalMinPaymentCents)}
-				</div>
-			</div>
-			{#if data.monthIncomeCents > 0}
+		{#if directionTab === 'borrowed'}
+			<div class="grid grid-cols-2 gap-3 text-xs">
 				<div>
-					<div class="text-muted-foreground tracking-wider uppercase">DTI ratio</div>
-					<div
-						class="mt-1 font-semibold tabular-nums {dtiState === 'unsafe' ? 'text-expense' : ''}"
-					>
-						{dti}% {dtiState === 'safe' ? '✓' : dtiState === 'moderate' ? '·' : '⚠'}
+					<div class="text-muted-foreground tracking-wider uppercase">Monthly minimum</div>
+					<div class="mt-1 font-semibold tabular-nums">
+						{formatCents(data.debtTotals.totalMinPaymentCents)}
 					</div>
 				</div>
-			{/if}
-		</div>
-		{#if aggregateFreeAtMs}
+				{#if data.monthIncomeCents > 0}
+					<div>
+						<div class="text-muted-foreground tracking-wider uppercase">DTI ratio</div>
+						<div
+							class="mt-1 font-semibold tabular-nums {dtiState === 'unsafe'
+								? 'text-expense'
+								: ''}"
+						>
+							{dti}% {dtiState === 'safe' ? '✓' : dtiState === 'moderate' ? '·' : '⚠'}
+						</div>
+					</div>
+				{/if}
+			</div>
+		{/if}
+		{#if directionTab === 'borrowed' && aggregateFreeAtMs}
 			<div class="mt-3 text-xs text-muted-foreground">
 				Debt-free by
 				<span class="text-foreground font-medium">
@@ -344,7 +388,7 @@
 						e.preventDefault();
 						e.stopPropagation();
 						openAddTransaction({
-							defaultKind: 'expense',
+							defaultKind: directionTab === 'lent' ? 'income' : 'expense',
 							debtTarget: {
 								id: debt.id,
 								name: debt.name,
@@ -353,7 +397,7 @@
 						});
 					}}
 				>
-					Pay
+					{directionTab === 'lent' ? 'Collect' : 'Pay'}
 				</Button>
 			</Card.Content>
 		</Card.Root>

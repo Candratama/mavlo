@@ -92,6 +92,13 @@
       "when": 1779263500000,
       "tag": "0012_add_debt_interest_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1779268600000,
+      "tag": "0013_add_debt_direction",
+      "breakpoints": true
     }
   ]
 }

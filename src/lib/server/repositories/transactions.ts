@@ -11,7 +11,27 @@ import type {
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
 
-async function applyDebtPayment(db: Db, userId: string, debtId: string, deltaCents: number) {
+/**
+ * Returns true when this tx kind should reduce the given debt's balance:
+ *  - borrowed + expense = repayment
+ *  - lent + income = collection
+ */
+function txReducesDebtBalance(
+	debtDirection: 'borrowed' | 'lent',
+	txKind: 'income' | 'expense' | 'transfer'
+): boolean {
+	if (debtDirection === 'borrowed' && txKind === 'expense') return true;
+	if (debtDirection === 'lent' && txKind === 'income') return true;
+	return false;
+}
+
+async function applyDebtPayment(
+	db: Db,
+	userId: string,
+	debtId: string,
+	txKind: 'income' | 'expense' | 'transfer',
+	deltaCents: number
+) {
 	// deltaCents positive = pay down (reduce balance), negative = restore
 	const [debt] = await db
 		.select()
@@ -19,6 +39,7 @@ async function applyDebtPayment(db: Db, userId: string, debtId: string, deltaCen
 		.where(and(eq(debts.userId, userId), eq(debts.id, debtId)))
 		.limit(1);
 	if (!debt) return;
+	if (!txReducesDebtBalance(debt.direction, txKind)) return;
 	const newBalance = Math.max(0, debt.currentBalanceCents - deltaCents);
 	const newStatus =
 		newBalance === 0 && debt.status === 'active'
@@ -72,8 +93,8 @@ export async function createTransaction(db: Db, userId: string, input: Transacti
 			occurredAt: input.occurredAt
 		})
 		.returning();
-	if (row.kind === 'expense' && row.debtId) {
-		await applyDebtPayment(db, userId, row.debtId, row.amountCents);
+	if (row.debtId) {
+		await applyDebtPayment(db, userId, row.debtId, row.kind, row.amountCents);
 	}
 	return row;
 }
@@ -97,12 +118,12 @@ export async function updateTransaction(db: Db, userId: string, input: Transacti
 		.returning();
 	if (!row) return null;
 	// Reverse old debt effect
-	if (existing && existing.debtId && existing.kind === 'expense') {
-		await applyDebtPayment(db, userId, existing.debtId, -existing.amountCents);
+	if (existing && existing.debtId) {
+		await applyDebtPayment(db, userId, existing.debtId, existing.kind, -existing.amountCents);
 	}
 	// Apply new debt effect
-	if (input.debtId && input.kind === 'expense') {
-		await applyDebtPayment(db, userId, input.debtId, input.amountCents);
+	if (input.debtId) {
+		await applyDebtPayment(db, userId, input.debtId, input.kind, input.amountCents);
 	}
 	return row;
 }
@@ -113,8 +134,8 @@ export async function deleteTransaction(db: Db, userId: string, id: string) {
 		.delete(transactions)
 		.where(and(eq(transactions.userId, userId), eq(transactions.id, id)))
 		.returning();
-	if (row && existing && existing.debtId && existing.kind === 'expense') {
-		await applyDebtPayment(db, userId, existing.debtId, -existing.amountCents);
+	if (row && existing && existing.debtId) {
+		await applyDebtPayment(db, userId, existing.debtId, existing.kind, -existing.amountCents);
 	}
 	return row ?? null;
 }

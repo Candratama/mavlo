@@ -147,6 +147,9 @@ export const debts = sqliteTable(
 			.notNull()
 			.default('active'),
 		accountId: text('account_id').references(() => accounts.id, { onDelete: 'set null' }),
+		direction: text('direction', { enum: ['borrowed', 'lent'] })
+			.notNull()
+			.default('borrowed'),
 		note: text('note'),
 		interestAppliedFromPeriod: text('interest_applied_from_period'),
 		createdAt: epochMsNow('created_at'),

@@ -9,7 +9,11 @@ import {
 } from '$lib/server/repositories/transactions';
 import { getAccount } from '$lib/server/repositories/accounts';
 import { computeAccountBalances } from '$lib/server/repositories/balances';
-import { ensureDebtPaymentCategory } from '$lib/server/repositories/categories';
+import {
+	ensureDebtPaymentCategory,
+	ensureLoanCollectedCategory
+} from '$lib/server/repositories/categories';
+import { getDebt } from '$lib/server/repositories/debts';
 import {
 	transactionCreateSchema,
 	transactionUpdateSchema,
@@ -83,9 +87,17 @@ export const actions: Actions = {
 				});
 			}
 		}
-		// If linked to a debt and category not set, force category to Debt Payment.
-		if (parsed.data.debtId && !parsed.data.categoryId && parsed.data.kind === 'expense') {
-			parsed.data.categoryId = await ensureDebtPaymentCategory(db, user.id);
+		// If linked to a debt and category not set, force the auto-category that
+		// matches the debt direction.
+		if (parsed.data.debtId && !parsed.data.categoryId) {
+			const linkedDebt = await getDebt(db, user.id, parsed.data.debtId);
+			if (linkedDebt) {
+				if (linkedDebt.direction === 'lent' && parsed.data.kind === 'income') {
+					parsed.data.categoryId = await ensureLoanCollectedCategory(db, user.id);
+				} else if (linkedDebt.direction === 'borrowed' && parsed.data.kind === 'expense') {
+					parsed.data.categoryId = await ensureDebtPaymentCategory(db, user.id);
+				}
+			}
 		}
 		const created = await createTransaction(db, user.id, parsed.data);
 		await purgeUserCaches(event, user.id);
@@ -131,8 +143,15 @@ export const actions: Actions = {
 				return fail(400, { action: 'update', message: 'Insufficient balance in source account' });
 			}
 		}
-		if (parsed.data.debtId && !parsed.data.categoryId && parsed.data.kind === 'expense') {
-			parsed.data.categoryId = await ensureDebtPaymentCategory(db, user.id);
+		if (parsed.data.debtId && !parsed.data.categoryId) {
+			const linkedDebt = await getDebt(db, user.id, parsed.data.debtId);
+			if (linkedDebt) {
+				if (linkedDebt.direction === 'lent' && parsed.data.kind === 'income') {
+					parsed.data.categoryId = await ensureLoanCollectedCategory(db, user.id);
+				} else if (linkedDebt.direction === 'borrowed' && parsed.data.kind === 'expense') {
+					parsed.data.categoryId = await ensureDebtPaymentCategory(db, user.id);
+				}
+			}
 		}
 		const updated = await updateTransaction(db, user.id, parsed.data);
 		if (!updated) return fail(404, { action: 'update', message: 'Transaction not found' });

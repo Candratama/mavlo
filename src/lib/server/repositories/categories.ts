@@ -118,6 +118,62 @@ export async function ensureDebtPaymentCategory(db: Db, userId: string): Promise
 	return created.id;
 }
 
+const MONEY_LENT_OUT_CATEGORY_NAME = 'Money Lent Out';
+
+export async function ensureMoneyLentOutCategory(db: Db, userId: string): Promise<string> {
+	const [existing] = await db
+		.select()
+		.from(categories)
+		.where(
+			and(
+				eq(categories.userId, userId),
+				eq(categories.name, MONEY_LENT_OUT_CATEGORY_NAME),
+				eq(categories.kind, 'expense')
+			)
+		)
+		.limit(1);
+	if (existing) return existing.id;
+	const [created] = await db
+		.insert(categories)
+		.values({
+			userId,
+			name: MONEY_LENT_OUT_CATEGORY_NAME,
+			kind: 'expense',
+			icon: 'arrow-up-right',
+			color: '#f59e0b'
+		})
+		.returning();
+	return created.id;
+}
+
+const LOAN_COLLECTED_CATEGORY_NAME = 'Loan Collected';
+
+export async function ensureLoanCollectedCategory(db: Db, userId: string): Promise<string> {
+	const [existing] = await db
+		.select()
+		.from(categories)
+		.where(
+			and(
+				eq(categories.userId, userId),
+				eq(categories.name, LOAN_COLLECTED_CATEGORY_NAME),
+				eq(categories.kind, 'income')
+			)
+		)
+		.limit(1);
+	if (existing) return existing.id;
+	const [created] = await db
+		.insert(categories)
+		.values({
+			userId,
+			name: LOAN_COLLECTED_CATEGORY_NAME,
+			kind: 'income',
+			icon: 'arrow-down-left',
+			color: '#10b981'
+		})
+		.returning();
+	return created.id;
+}
+
 const LOAN_PROCEEDS_CATEGORY_NAME = 'Loan Proceeds';
 
 export async function ensureLoanProceedsCategory(db: Db, userId: string): Promise<string> {

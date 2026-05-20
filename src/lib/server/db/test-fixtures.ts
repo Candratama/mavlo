@@ -107,6 +107,7 @@ const debtsTableSql = `
 		maturity_date INTEGER,
 		status TEXT NOT NULL DEFAULT 'active',
 		account_id TEXT REFERENCES accounts(id) ON DELETE SET NULL,
+		direction TEXT NOT NULL DEFAULT 'borrowed',
 		note TEXT,
 		interest_applied_from_period TEXT,
 		created_at INTEGER NOT NULL,

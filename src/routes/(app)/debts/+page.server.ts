@@ -8,7 +8,10 @@ import {
 	markDebtPaidOff
 } from '$lib/server/repositories/debts';
 import { createTransaction } from '$lib/server/repositories/transactions';
-import { ensureLoanProceedsCategory } from '$lib/server/repositories/categories';
+import {
+	ensureLoanProceedsCategory,
+	ensureMoneyLentOutCategory
+} from '$lib/server/repositories/categories';
 import { debtCreateSchema, debtUpdateSchema, debtIdSchema } from '$lib/validation/debt';
 import { purgeUserCache, allUserCacheNames } from '$lib/server/cf-cache';
 import { getCurrentCycle } from '$lib/utils/cycle';
@@ -45,18 +48,33 @@ export const actions: Actions = {
 		const result = await createDebt(db, user.id, parsed.data);
 		if ('error' in result) return fail(400, { action: 'create', message: result.error });
 
-		// Funding flow: user just received the money → record as income tx.
+		// Funding flow: handle direction-aware tx creation.
 		// Skip for credit_card (no upfront cash, balance built via spending).
 		if (funded && fundedAccountId && parsed.data.type !== 'credit_card') {
-			const categoryId = await ensureLoanProceedsCategory(db, user.id);
-			await createTransaction(db, user.id, {
-				accountId: fundedAccountId,
-				categoryId,
-				amountCents: parsed.data.principalCents,
-				kind: 'income',
-				note: `Loan proceeds — ${parsed.data.name}`,
-				occurredAt: parsed.data.startDate
-			});
+			const direction = parsed.data.direction ?? 'borrowed';
+			if (direction === 'lent') {
+				// User gave money out → expense tx in their account.
+				const categoryId = await ensureMoneyLentOutCategory(db, user.id);
+				await createTransaction(db, user.id, {
+					accountId: fundedAccountId,
+					categoryId,
+					amountCents: parsed.data.principalCents,
+					kind: 'expense',
+					note: `Lent to ${parsed.data.name}`,
+					occurredAt: parsed.data.startDate
+				});
+			} else {
+				// User received money → income tx.
+				const categoryId = await ensureLoanProceedsCategory(db, user.id);
+				await createTransaction(db, user.id, {
+					accountId: fundedAccountId,
+					categoryId,
+					amountCents: parsed.data.principalCents,
+					kind: 'income',
+					note: `Loan proceeds — ${parsed.data.name}`,
+					occurredAt: parsed.data.startDate
+				});
+			}
 		}
 
 		await purgeUserCaches(event, user.id);

@@ -116,9 +116,6 @@
 	let uiKind = $state<'income' | 'expense' | 'transfer' | 'debt'>(
 		debtTarget ? 'debt' : initialState().kind
 	);
-	const kind = $derived<'income' | 'expense' | 'transfer'>(
-		uiKind === 'debt' ? 'expense' : uiKind
-	);
 	let accountId = $state(initialState().accountId);
 	let transferToAccountId = $state(initialState().transferToAccountId);
 	let categoryId = $state(initialState().categoryId);
@@ -131,6 +128,15 @@
 		debtTarget
 			? debtTarget.minimumPaymentCents
 			: (editTarget?.amountCents ?? null)
+	);
+
+	const activeDebts = $derived((page.data.debts ?? []).filter((d: any) => d.status === 'active'));
+	const pickedDebt = $derived(activeDebts.find((d: any) => d.id === debtId));
+	// Map 'debt' UI mode to underlying kind based on picked debt direction:
+	//   lent (someone owes me) + collecting → income
+	//   borrowed (I owe) + repaying → expense
+	const kind = $derived<'income' | 'expense' | 'transfer'>(
+		uiKind === 'debt' ? (pickedDebt?.direction === 'lent' ? 'income' : 'expense') : uiKind
 	);
 
 	const sourceAccount = $derived(accounts.find((a) => a.id === accountId));
@@ -182,18 +188,22 @@
 		}
 	});
 
-	const activeDebts = $derived((page.data.debts ?? []).filter((d: any) => d.status === 'active'));
-	const pickedDebt = $derived(activeDebts.find((d: any) => d.id === debtId));
-
 	const debtPaymentCategory = $derived(
 		categories.find((c) => c.name === 'Debt Payment' && c.kind === 'expense')
 	);
+	const loanCollectedCategory = $derived(
+		categories.find((c) => c.name === 'Loan Collected' && c.kind === 'income')
+	);
 
-	// When a debt is linked, force category to "Debt Payment" so the user
-	// doesn't have to pick + budgets/reports stay consistent.
+	// When a debt is linked, force category to the correct auto-category based
+	// on direction (borrowed → Debt Payment, lent → Loan Collected). If the
+	// category doesn't exist client-side yet, server lazily creates it.
 	$effect(() => {
-		if (debtId && debtPaymentCategory && categoryId !== debtPaymentCategory.id) {
-			categoryId = debtPaymentCategory.id;
+		if (!debtId) return;
+		const target =
+			pickedDebt?.direction === 'lent' ? loanCollectedCategory : debtPaymentCategory;
+		if (target && categoryId !== target.id) {
+			categoryId = target.id;
 		}
 	});
 
