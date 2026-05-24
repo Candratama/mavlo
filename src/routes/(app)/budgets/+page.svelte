@@ -59,7 +59,8 @@
 
 	const remainingFor = (b: typeof data.budgets[0]) => {
 		const flow = flowOf(b.id);
-		return b.limitCents + flow.in - (data.spentByCategory[b.categoryId] ?? 0) - flow.out;
+		const carryover = b.carryoverDeficitCents ?? 0;
+		return b.limitCents + flow.in - (data.spentByCategory[b.categoryId] ?? 0) - flow.out - carryover;
 	};
 	const sortedBudgets = $derived(
 		[...data.budgets].sort((a, b) => remainingFor(b) - remainingFor(a))
@@ -354,6 +355,7 @@
 		{@const IconComp = getIconByName(cat?.icon) ?? Tag}
 		{@const tint = cat?.color ?? '#8b5cf6'}
 		{@const flow = flowOf(budget.id)}
+		{@const carryover = budget.carryoverDeficitCents ?? 0}
 		{@const denom = budget.limitCents + flow.in}
 		<Card.Root class="relative">
 			<a
@@ -371,7 +373,7 @@
 					</div>
 					<div class="min-w-0">
 						<Card.Title class="truncate">{cat?.name ?? 'Unknown'}</Card.Title>
-						<Card.Description>{formatCents(denom - spent - flow.out)} remaining</Card.Description>
+						<Card.Description>{formatCents(Math.max(0, denom - spent - flow.out - carryover))} remaining</Card.Description>
 					</div>
 				</div>
 				<div class="relative z-10">
@@ -419,10 +421,8 @@
 				</div>
 			</Card.Header>
 			<Card.Content class="relative z-10">
-				{@const flow = flowOf(budget.id)}
-				{@const carryover = budget.carryoverDeficitCents ?? 0}
 				{@const effLimit = effectiveLimit(budget.limitCents, flow) - carryover}
-				{@const denom = budget.limitCents + flow.in}
+				{@const reducedLimit = budget.limitCents - carryover}
 				{@const stillOver = spent + carryover > denom}
 				{@const coveredByEff = over && !stillOver}
 				{@const usedPct = denom === 0 ? (spent + flow.out + carryover > 0 ? 100 : 0) : Math.min(100, Math.round(((spent + flow.out + carryover) / denom) * 100))}
@@ -431,7 +431,7 @@
 						{formatCents(spent)}
 					</span>
 					<span class="text-muted-foreground">
-						of {formatCents(budget.limitCents)}
+						of {formatCents(reducedLimit)}
 						{#if flow.in > 0 || flow.out > 0}
 							<span class="text-xs">(eff {formatCents(effLimit)})</span>
 						{/if}
@@ -439,35 +439,47 @@
 				</div>
 				<div class="bg-muted relative h-2 overflow-hidden rounded-full">
 					{#if stillOver}
-						<div class="absolute inset-y-0 left-0 h-full bg-amber-500" style="width: 100%"></div>
-						{@const overPct = denom === 0 ? 100 : Math.min(100, Math.round(((spent - denom) / denom) * 100))}
+						{@const carryPct = denom === 0 ? 0 : Math.min(100, Math.round((carryover / denom) * 100))}
+						{#if carryPct > 0}
+							<div class="absolute inset-y-0 left-0 h-full bg-orange-500/70" style="width: {carryPct}%"></div>
+						{/if}
+						<div class="absolute inset-y-0 h-full bg-amber-500" style="left: {carryPct}%; width: {100 - carryPct}%"></div>
+						{@const overPct = denom === 0 ? 100 : Math.min(100, Math.round(((spent + carryover - denom) / denom) * 100))}
 						<div
 							class="absolute inset-y-0 right-0 h-full bg-rose-500 transition-all"
 							style="width: {overPct}%"
 						></div>
 					{:else if coveredByEff}
-						{@const redPct = denom === 0 ? 0 : Math.min(100, Math.round((budget.limitCents / denom) * 100))}
-						{@const bluePct = denom === 0 ? 0 : Math.min(100 - redPct, Math.round(((spent - budget.limitCents) / denom) * 100))}
-						<div class="absolute inset-y-0 left-0 h-full bg-rose-500" style="width: {redPct}%"></div>
-						<div class="absolute inset-y-0 h-full bg-blue-500 transition-all" style="left: {redPct}%; width: {bluePct}%"></div>
+						{@const carryPct = denom === 0 ? 0 : Math.min(100, Math.round((carryover / denom) * 100))}
+						{@const redPct = denom === 0 ? 0 : Math.min(100 - carryPct, Math.round((budget.limitCents / denom) * 100))}
+						{@const bluePct = denom === 0 ? 0 : Math.min(100 - carryPct - redPct, Math.round(((spent - budget.limitCents) / denom) * 100))}
+						{#if carryPct > 0}
+							<div class="absolute inset-y-0 left-0 h-full bg-orange-500/70" style="width: {carryPct}%"></div>
+						{/if}
+						<div class="absolute inset-y-0 h-full bg-rose-500" style="left: {carryPct}%; width: {redPct}%"></div>
+						<div class="absolute inset-y-0 h-full bg-blue-500 transition-all" style="left: {carryPct + redPct}%; width: {bluePct}%"></div>
 					{:else}
-						{@const spentPct = denom === 0 ? 0 : Math.min(100, Math.round((spent / denom) * 100))}
-						{@const outPct = denom === 0 ? 0 : Math.min(100 - spentPct, Math.round((flow.out / denom) * 100))}
+						{@const carryPct = denom === 0 ? 0 : Math.min(100, Math.round((carryover / denom) * 100))}
+						{@const spentPct = denom === 0 ? 0 : Math.min(100 - carryPct, Math.round((spent / denom) * 100))}
+						{@const outPct = denom === 0 ? 0 : Math.min(100 - carryPct - spentPct, Math.round((flow.out / denom) * 100))}
+						{#if carryPct > 0}
+							<div class="absolute inset-y-0 left-0 h-full bg-orange-500/70" style="width: {carryPct}%"></div>
+						{/if}
 						<div
-							class="absolute inset-y-0 left-0 h-full transition-all {spentPct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
-							style="width: {spentPct}%"
+							class="absolute inset-y-0 h-full transition-all {carryPct + spentPct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
+							style="left: {carryPct}%; width: {spentPct}%"
 						></div>
 						{#if flow.out > 0}
 							<div
 								class="absolute inset-y-0 h-full bg-purple-500 transition-all"
-								style="left: {spentPct}%; width: {outPct}%"
+								style="left: {carryPct + spentPct}%; width: {outPct}%"
 							></div>
 						{/if}
 					{/if}
 				</div>
 				<p class="text-muted-foreground mt-2 text-xs">
 					{usedPct}% used{#if stillOver}
-						· over by {formatCents(spent - denom)}{:else if coveredByEff}
+						· over by {formatCents(spent + carryover - denom)}{:else if coveredByEff}
 						· covered by subsidy
 					{/if}
 				</p>

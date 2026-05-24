@@ -283,25 +283,37 @@
 		</div>
 		<div class="bg-muted relative mb-3 h-2.5 overflow-hidden rounded-full">
 			{#if stillOver}
-				<div class="absolute inset-y-0 left-0 h-full rounded-full bg-amber-500" style="width: 100%"></div>
-				{@const overPct = denom === 0 ? 100 : Math.min(100, Math.round(((spentCents - denom) / denom) * 100))}
+				{@const carryPct = denom === 0 ? 0 : Math.min(100, Math.round((carryover / denom) * 100))}
+				{#if carryPct > 0}
+					<div class="absolute inset-y-0 left-0 h-full bg-orange-500/70" style="width: {carryPct}%"></div>
+				{/if}
+				<div class="absolute inset-y-0 h-full bg-amber-500" style="left: {carryPct}%; width: {100 - carryPct}%"></div>
+				{@const overPct = denom === 0 ? 100 : Math.min(100, Math.round(((spentCents + carryover - denom) / denom) * 100))}
 				<div class="absolute inset-y-0 right-0 h-full rounded-full bg-rose-500 transition-all" style="width: {overPct}%"></div>
 			{:else if coveredByEff}
-				{@const redPct = denom === 0 ? 0 : Math.min(100, Math.round((budget.limitCents / denom) * 100))}
-				{@const bluePct = denom === 0 ? 0 : Math.min(100 - redPct, Math.round(((spentCents - budget.limitCents) / denom) * 100))}
-				<div class="absolute inset-y-0 left-0 h-full rounded-full bg-rose-500" style="width: {redPct}%"></div>
-				<div class="absolute inset-y-0 h-full rounded-full bg-blue-500 transition-all" style="left: {redPct}%; width: {bluePct}%"></div>
+				{@const carryPct = denom === 0 ? 0 : Math.min(100, Math.round((carryover / denom) * 100))}
+				{@const redPct = denom === 0 ? 0 : Math.min(100 - carryPct, Math.round((budget.limitCents / denom) * 100))}
+				{@const bluePct = denom === 0 ? 0 : Math.min(100 - carryPct - redPct, Math.round(((spentCents - budget.limitCents) / denom) * 100))}
+				{#if carryPct > 0}
+					<div class="absolute inset-y-0 left-0 h-full bg-orange-500/70" style="width: {carryPct}%"></div>
+				{/if}
+				<div class="absolute inset-y-0 h-full bg-rose-500" style="left: {carryPct}%; width: {redPct}%"></div>
+				<div class="absolute inset-y-0 h-full rounded-full bg-blue-500 transition-all" style="left: {carryPct + redPct}%; width: {bluePct}%"></div>
 			{:else}
-				{@const spentPct = denom === 0 ? 0 : Math.min(100, Math.round((spentCents / denom) * 100))}
-				{@const outPct = denom === 0 ? 0 : Math.min(100 - spentPct, Math.round((flow.out / denom) * 100))}
+				{@const carryPct = denom === 0 ? 0 : Math.min(100, Math.round((carryover / denom) * 100))}
+				{@const spentPct = denom === 0 ? 0 : Math.min(100 - carryPct, Math.round((spentCents / denom) * 100))}
+				{@const outPct = denom === 0 ? 0 : Math.min(100 - carryPct - spentPct, Math.round((flow.out / denom) * 100))}
+				{#if carryPct > 0}
+					<div class="absolute inset-y-0 left-0 h-full bg-orange-500/70" style="width: {carryPct}%"></div>
+				{/if}
 				<div
-					class="absolute inset-y-0 left-0 h-full rounded-full transition-all {spentPct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
-					style="width: {spentPct}%"
+					class="absolute inset-y-0 h-full rounded-full transition-all {carryPct + spentPct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
+					style="left: {carryPct}%; width: {spentPct}%"
 				></div>
 				{#if flow.out > 0}
 					<div
 						class="absolute inset-y-0 h-full rounded-full bg-purple-500 transition-all"
-						style="left: {spentPct}%; width: {outPct}%"
+						style="left: {carryPct + spentPct}%; width: {outPct}%"
 					></div>
 				{/if}
 			{/if}
@@ -316,9 +328,9 @@
 			<div>
 				<div class="text-muted-foreground uppercase tracking-wider">Limit</div>
 				<div class="mt-1 font-semibold tabular-nums">
-					{formatCentsAsCurrency(limitCents, currency)}
+					{formatCentsAsCurrency(limitCents - carryover, currency)}
 				</div>
-				{#if flow.in > 0 || flow.out > 0 || carryover > 0}
+				{#if flow.in > 0 || flow.out > 0}
 					<div class="text-muted-foreground text-[10px]">
 						eff {formatCentsAsCurrency(effLimit, currency)}
 					</div>
