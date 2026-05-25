@@ -24,7 +24,7 @@ beforeEach(() => {
 		.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
 		.run('acc-other', h.otherUserId, 'Cash', 'cash', 'IDR', 0, now, now);
 	h.sqlite
-		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
+		.prepare('INSERT INTO categories (id, user_id, name, kind, color, icon, archived, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
 		.run('cat1', h.userId, 'Food', 'expense', now, now);
 });
 

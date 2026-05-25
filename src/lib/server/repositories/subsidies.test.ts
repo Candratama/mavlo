@@ -14,7 +14,7 @@ const cycle = { monthStartDay: 1, timezone: 'UTC' };
 
 const insertCategory = (id: string, userId: string, name = 'X') => {
 	h.sqlite
-		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
+		.prepare('INSERT INTO categories (id, user_id, name, kind, color, icon, archived, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
 		.run(id, userId, name, 'expense', now(), now());
 };
 

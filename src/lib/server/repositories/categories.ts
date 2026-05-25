@@ -34,6 +34,7 @@ export async function createCategory(db: Db, userId: string, input: CategoryCrea
 			userId,
 			name: input.name,
 			kind: input.kind,
+			expenseType: input.kind === 'expense' ? input.expenseType : 'variable',
 			color: input.color ?? null,
 			icon: input.icon ?? null
 		})
@@ -47,6 +48,7 @@ export async function updateCategory(db: Db, userId: string, input: CategoryUpda
 		.set({
 			name: input.name,
 			kind: input.kind,
+			expenseType: input.kind === 'expense' ? input.expenseType : 'variable',
 			color: input.color ?? null,
 			icon: input.icon ?? null,
 			updatedAt: Date.now()
@@ -112,6 +114,7 @@ export async function ensureDebtPaymentCategory(db: Db, userId: string): Promise
 			userId,
 			name: DEBT_PAYMENT_CATEGORY_NAME,
 			kind: 'expense',
+			expenseType: 'fixed',
 			icon: 'wallet'
 		})
 		.returning();

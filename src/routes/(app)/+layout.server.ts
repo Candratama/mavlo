@@ -20,7 +20,8 @@ import { computeBudgetSpent } from '$lib/server/repositories/budget-spent';
 import {
 	computeSpendingByCategory,
 	computeDailySpending,
-	computeMonthlyIncomeExpense
+	computeMonthlyIncomeExpense,
+	computeFinancialHealth
 } from '$lib/server/repositories/dashboard-stats';
 import { listSubsidies } from '$lib/server/repositories/subsidies';
 import { computeSubsidyFlows } from '$lib/server/repositories/budget-effective';
@@ -74,6 +75,7 @@ export const load: LayoutServerLoad = async (event) => {
 		spendingByCategory,
 		dailySpending,
 		monthlyIncomeExpense,
+		financialHealth,
 		subsidies,
 		subsidyFlows,
 		debtListRaw,
@@ -94,6 +96,9 @@ export const load: LayoutServerLoad = async (event) => {
 		),
 		cachedJson(user.id, CACHE_KEYS.monthlyIncomeExpense(cycle.periodMonth, 6), 60, () =>
 			computeMonthlyIncomeExpense(db, user.id, 6, cycle.periodMonth, monthStartDay, timezone)
+		),
+		cachedJson(user.id, CACHE_KEYS.financialHealth(cycle.periodMonth), 60, () =>
+			computeFinancialHealth(db, user.id, cycle.periodMonth, monthStartDay, timezone)
 		),
 		listSubsidies(db, user.id, { periodMonth: cycle.periodMonth }),
 		computeSubsidyFlows(db, user.id, cycle.periodMonth),
@@ -180,7 +185,7 @@ export const load: LayoutServerLoad = async (event) => {
 				(t as { debtId?: string | null }).debtId === d.id &&
 				t.kind === 'expense' &&
 				t.occurredAt >= cycleFromMs &&
-				t.occurredAt <= cycleToMs
+				t.occurredAt < cycle.end.getTime()
 		);
 		if (!cycleHasPayment) {
 			await db
@@ -247,7 +252,7 @@ export const load: LayoutServerLoad = async (event) => {
 
 	// Dashboard stats
 	const cycleTxns = transactions.filter(
-		(t) => t.occurredAt >= cycleFromMs && t.occurredAt <= cycleToMs
+		(t) => t.occurredAt >= cycleFromMs && t.occurredAt < cycle.end.getTime()
 	);
 	const monthIncomeCents = cycleTxns
 		.filter((t) => t.kind === 'income')
@@ -352,6 +357,7 @@ export const load: LayoutServerLoad = async (event) => {
 		spendingByCategory,
 		dailySpending,
 		monthlyIncomeExpense,
+		financialHealth,
 		topCategory,
 		budgetLimitCents,
 		budgetSpentCents

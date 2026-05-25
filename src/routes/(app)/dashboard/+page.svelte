@@ -65,6 +65,33 @@
 	const cycleNetCents = $derived(data.monthIncomeCents - data.monthExpenseCents);
 	const trendingUp = $derived(cycleNetCents >= 0);
 
+	const healthTone = $derived.by(() => {
+		const status = data.financialHealth?.status;
+		if (status === 'healthy') return 'from-emerald-500/10 border-emerald-500/20';
+		if (status === 'warning') return 'from-amber-500/10 border-amber-500/20';
+		return 'from-rose-500/10 border-rose-500/20';
+	});
+
+	const healthLabel = $derived.by(() => {
+		const status = data.financialHealth?.status;
+		if (status === 'healthy') return 'Healthy';
+		if (status === 'warning') return 'Watch';
+		return 'Deficit';
+	});
+
+	const healthAdvice = $derived.by(() => {
+		const h = data.financialHealth;
+		if (!h) return '';
+		const top = h.topLeaks.map((x: { categoryName: string }) => x.categoryName).join(', ');
+		if (h.realNetCents < 0) {
+			return `Defisit riil ${formatCentsAsCurrency(Math.abs(h.realNetCents), data.displayCurrency)}. Kurangi ${top || 'variable expense'} bulan depan.`;
+		}
+		if (h.status === 'warning') {
+			return `Surplus tipis. Jaga variable expense${top ? `: ${top}` : ''}.`;
+		}
+		return `Cashflow sehat. Pertahankan batas variable expense${top ? `: ${top}` : ''}.`;
+	});
+
 	const budgetPercent = $derived(
 		data.budgetLimitCents > 0
 			? Math.min(100, Math.round((data.budgetSpentCents / data.budgetLimitCents) * 100))

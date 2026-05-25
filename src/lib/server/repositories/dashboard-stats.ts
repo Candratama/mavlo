@@ -188,3 +188,118 @@ export async function computeMonthlyIncomeExpense(
 
 	return result;
 }
+
+export type FinancialHealthStatus = 'healthy' | 'warning' | 'danger';
+export type ExpenseType = 'fixed' | 'variable';
+
+export interface FinancialHealthTopLeak {
+	categoryId: string;
+	categoryName: string;
+	amountCents: number;
+	expenseType: ExpenseType;
+}
+
+export interface FinancialHealthSummary {
+	grossIncomeCents: number;
+	excludedIncomeCents: number;
+	realIncomeCents: number;
+	expenseCents: number;
+	fixedExpenseCents: number;
+	variableExpenseCents: number;
+	realNetCents: number;
+	status: FinancialHealthStatus;
+	topLeaks: FinancialHealthTopLeak[];
+}
+
+const excludedIncomeCategoryNames = new Set(['Loan Proceeds', 'Balance Adjustment']);
+
+const statusForFinancialHealth = (
+	realIncomeCents: number,
+	expenseCents: number,
+	realNetCents: number
+): FinancialHealthStatus => {
+	if (realIncomeCents <= 0) return expenseCents > 0 ? 'danger' : 'warning';
+	if (realNetCents < 0) return 'danger';
+	if (realNetCents < realIncomeCents * 0.1) return 'warning';
+	return 'healthy';
+};
+
+export async function computeFinancialHealth(
+	db: Db,
+	userId: string,
+	periodMonth: string,
+	monthStartDay: number,
+	timezone: string
+): Promise<FinancialHealthSummary> {
+	const cycle = getCycleForPeriod(periodMonth, monthStartDay, timezone);
+	const fromMs = cycle.start.getTime();
+	const toMsExclusive = cycle.end.getTime();
+
+	const [txRows, catRows] = await Promise.all([
+		db
+			.select()
+			.from(transactions)
+			.where(
+				and(
+					eq(transactions.userId, userId),
+					between(transactions.occurredAt, fromMs, toMsExclusive - 1)
+				)
+			),
+		db.select().from(categories).where(eq(categories.userId, userId))
+	]);
+
+	const categoryById = new Map(catRows.map((c) => [c.id, c]));
+	let grossIncomeCents = 0;
+	let excludedIncomeCents = 0;
+	let expenseCents = 0;
+	let fixedExpenseCents = 0;
+	let variableExpenseCents = 0;
+	const expenseTotals = new Map<string, FinancialHealthTopLeak>();
+
+	for (const tx of txRows) {
+		const category = tx.categoryId ? categoryById.get(tx.categoryId) : undefined;
+		if (tx.kind === 'income') {
+			grossIncomeCents += tx.amountCents;
+			if (category && excludedIncomeCategoryNames.has(category.name)) {
+				excludedIncomeCents += tx.amountCents;
+			}
+			continue;
+		}
+		if (tx.kind !== 'expense') continue;
+
+		expenseCents += tx.amountCents;
+		const expenseType = category?.expenseType === 'fixed' ? 'fixed' : 'variable';
+		if (expenseType === 'fixed') fixedExpenseCents += tx.amountCents;
+		else variableExpenseCents += tx.amountCents;
+
+		if (!category) continue;
+		const current = expenseTotals.get(category.id);
+		if (current) current.amountCents += tx.amountCents;
+		else {
+			expenseTotals.set(category.id, {
+				categoryId: category.id,
+				categoryName: category.name,
+				amountCents: tx.amountCents,
+				expenseType
+			});
+		}
+	}
+
+	const variableLeaks = [...expenseTotals.values()].filter((row) => row.expenseType === 'variable');
+	const leakPool = variableLeaks.length > 0 ? variableLeaks : [...expenseTotals.values()];
+	const topLeaks = leakPool.sort((a, b) => b.amountCents - a.amountCents).slice(0, 3);
+	const realIncomeCents = grossIncomeCents - excludedIncomeCents;
+	const realNetCents = realIncomeCents - expenseCents;
+
+	return {
+		grossIncomeCents,
+		excludedIncomeCents,
+		realIncomeCents,
+		expenseCents,
+		fixedExpenseCents,
+		variableExpenseCents,
+		realNetCents,
+		status: statusForFinancialHealth(realIncomeCents, expenseCents, realNetCents),
+		topLeaks
+	};
+}

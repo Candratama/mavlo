@@ -99,6 +99,13 @@
       "when": 1779268600000,
       "tag": "0013_add_debt_direction",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1779679200000,
+      "tag": "0014_category_expense_type",
+      "breakpoints": true
     }
   ]
 }

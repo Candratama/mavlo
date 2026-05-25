@@ -42,6 +42,9 @@ export const categories = sqliteTable(
 		userId: userIdFk(),
 		name: text('name').notNull(),
 		kind: text('kind', { enum: ['income', 'expense'] }).notNull(),
+		expenseType: text('expense_type', { enum: ['fixed', 'variable'] })
+			.notNull()
+			.default('variable'),
 		color: text('color'),
 		icon: text('icon'),
 		archived: integer('archived', { mode: 'boolean' }).notNull().default(false),

@@ -36,6 +36,7 @@ const categoriesTableSql = `
 		user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 		name TEXT NOT NULL,
 		kind TEXT NOT NULL,
+			expense_type TEXT NOT NULL DEFAULT 'variable',
 		color TEXT,
 		icon TEXT,
 		archived INTEGER NOT NULL DEFAULT 0,

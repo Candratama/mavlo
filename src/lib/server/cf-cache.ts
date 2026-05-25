@@ -70,12 +70,14 @@ export const CACHE_KEYS = {
 	spendingByCategory: (period: string) => `dash/spending-by-cat/${period}`,
 	dailySpending: (period: string) => `dash/daily/${period}`,
 	monthlyIncomeExpense: (period: string, monthsBack: number) =>
-		`dash/monthly/${period}/${monthsBack}`
+		`dash/monthly/${period}/${monthsBack}`,
+	financialHealth: (period: string) => `dash/financial-health/${period}`
 } as const;
 
 // All cache names a user has — used by purge.
 export const allUserCacheNames = (period: string, monthsBack: number): string[] => [
 	CACHE_KEYS.spendingByCategory(period),
 	CACHE_KEYS.dailySpending(period),
-	CACHE_KEYS.monthlyIncomeExpense(period, monthsBack)
+	CACHE_KEYS.monthlyIncomeExpense(period, monthsBack),
+	CACHE_KEYS.financialHealth(period)
 ];

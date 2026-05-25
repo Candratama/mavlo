@@ -59,11 +59,13 @@
 	];
 
 	let createKind = $state<'income' | 'expense'>('expense');
+	let createExpenseType = $state<'fixed' | 'variable'>('variable');
 	let createColor = $state('');
 	let createCustomColor = $state(false);
 	let createIcon = $state('');
 
 	let editKind = $state<'income' | 'expense'>('expense');
+	let editExpenseType = $state<'fixed' | 'variable'>('variable');
 	let editColor = $state('');
 	let editCustomColor = $state(false);
 	let editIcon = $state('');
@@ -73,6 +75,7 @@
 			const t = editTarget;
 			const c = t.color ?? '';
 			editKind = t.kind;
+			editExpenseType = t.expenseType === 'fixed' ? 'fixed' : 'variable';
 			editColor = c;
 			editCustomColor = !!c && !PRESET_SWATCHES.includes(c);
 			editIcon = t.icon ?? '';
@@ -281,7 +284,14 @@
 									<Tag class="text-muted-foreground size-4" />
 								{/if}
 							</div>
-							<a href="/categories/{category.id}" class="min-w-0 flex-1 truncate font-medium hover:underline">{category.name}</a>
+							<div class="min-w-0 flex-1">
+								<a href="/categories/{category.id}" class="block truncate font-medium hover:underline">
+									{category.name}
+								</a>
+								{#if category.kind === 'expense'}
+									<div class="text-muted-foreground text-xs capitalize">{category.expenseType}</div>
+								{/if}
+							</div>
 							{@render rowMenu(category)}
 						</li>
 					{/each}
@@ -397,6 +407,7 @@
 		action="?/create"
 		use:enhance={({ formData }) => {
 			formData.set('kind', createKind);
+			formData.set('expenseType', createKind === 'expense' ? createExpenseType : 'variable');
 			formData.set('color', createColor);
 			formData.set('icon', createIcon);
 			createPending = true;
@@ -422,6 +433,20 @@
 			<Label>Kind</Label>
 			<SegmentedControl options={kindSegmentOptions} bind:value={createKind} name="kind" />
 		</div>
+		{#if createKind === 'expense'}
+			<div class="space-y-2">
+				<Label>Expense type</Label>
+				<SegmentedControl
+					options={[
+						{ value: 'variable', label: 'Variable' },
+						{ value: 'fixed', label: 'Fixed' }
+					]}
+					bind:value={createExpenseType}
+					ariaLabel="Expense type"
+				/>
+				<p class="text-muted-foreground text-xs">Fixed is for rent, bills, and recurring obligations. Variable is what you can reduce this month.</p>
+			</div>
+		{/if}
 		<div class="space-y-2">
 			<div class="flex items-center justify-between">
 				<Label>Color</Label>
@@ -552,6 +577,7 @@
 		action="?/update"
 		use:enhance={({ formData }) => {
 			formData.set('kind', editKind);
+			formData.set('expenseType', editKind === 'expense' ? editExpenseType : 'variable');
 			formData.set('color', editColor);
 			formData.set('icon', editIcon);
 			editPending = true;
@@ -578,6 +604,20 @@
 			<Label>Kind</Label>
 			<SegmentedControl options={kindSegmentOptions} bind:value={editKind} name="kind" />
 		</div>
+		{#if editKind === 'expense'}
+			<div class="space-y-2">
+				<Label>Expense type</Label>
+				<SegmentedControl
+					options={[
+						{ value: 'variable', label: 'Variable' },
+						{ value: 'fixed', label: 'Fixed' }
+					]}
+					bind:value={editExpenseType}
+					ariaLabel="Expense type"
+				/>
+				<p class="text-muted-foreground text-xs">Fixed is for rent, bills, and recurring obligations. Variable is what you can reduce this month.</p>
+			</div>
+		{/if}
 		<div class="space-y-2">
 			<div class="flex items-center justify-between">
 				<Label>Color</Label>

@@ -3,7 +3,8 @@ import { createTestDb, type TestDbHandle } from '$lib/server/db/test-fixtures';
 import {
 	computeSpendingByCategory,
 	computeDailySpending,
-	computeMonthlyIncomeExpense
+	computeMonthlyIncomeExpense,
+	computeFinancialHealth
 } from './dashboard-stats';
 
 let h: TestDbHandle;
@@ -17,17 +18,29 @@ beforeEach(() => {
 		.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
 		.run('acc1', h.userId, 'Cash', 'cash', 'IDR', 0, now, now);
 	h.sqlite
-		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
-		.run('cat-food', h.userId, 'Food', 'expense', now, now);
+		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
+		.run('cat-food', h.userId, 'Food', 'expense', 'variable', now, now);
 	h.sqlite
-		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
-		.run('cat-transport', h.userId, 'Transport', 'expense', now, now);
+		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
+		.run('cat-transport', h.userId, 'Transport', 'expense', 'variable', now, now);
+	h.sqlite
+		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
+		.run('cat-rent', h.userId, 'Home Rent', 'expense', 'fixed', now, now);
+	h.sqlite
+		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
+		.run('cat-salary', h.userId, 'Salary', 'income', 'variable', now, now);
+	h.sqlite
+		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
+		.run('cat-loan', h.userId, 'Loan Proceeds', 'income', 'variable', now, now);
+	h.sqlite
+		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
+		.run('cat-adjust', h.userId, 'Balance Adjustment', 'income', 'variable', now, now);
 });
 
 const insertTx = (
 	id: string,
 	categoryId: string | null,
-	kind: 'income' | 'expense',
+	kind: 'income' | 'expense' | 'transfer',
 	amount: number,
 	occurredAt: number
 ) => {
@@ -90,5 +103,71 @@ describe('computeMonthlyIncomeExpense', () => {
 		expect(feb).toMatchObject({ incomeCents: 200000, expenseCents: 100000 });
 		const apr = rows.find((r) => r.periodMonth === '2026-04');
 		expect(apr).toMatchObject({ incomeCents: 0, expenseCents: 50000 });
+	});
+});
+
+describe('computeFinancialHealth', () => {
+	it('uses half-open cycle boundaries and excludes next-cycle salary', async () => {
+		insertTx('salary-apr', 'cat-salary', 'income', 8_000_000, Date.UTC(2026, 3, 25));
+		insertTx('salary-may', 'cat-salary', 'income', 8_000_000, Date.UTC(2026, 4, 25));
+		insertTx('rent', 'cat-rent', 'expense', 1_000_000, Date.UTC(2026, 3, 26));
+
+		const health = await computeFinancialHealth(h.db, h.userId, '2026-04', 25, 'UTC');
+
+		expect(health.grossIncomeCents).toBe(8_000_000);
+		expect(health.expenseCents).toBe(1_000_000);
+		expect(health.realNetCents).toBe(7_000_000);
+	});
+
+	it('excludes loan proceeds and balance adjustments from real income', async () => {
+		insertTx('salary', 'cat-salary', 'income', 8_000_000, Date.UTC(2026, 3, 25));
+		insertTx('loan', 'cat-loan', 'income', 1_150_000, Date.UTC(2026, 4, 21));
+		insertTx('adjust', 'cat-adjust', 'income', 21_543, Date.UTC(2026, 4, 24));
+		insertTx('food', 'cat-food', 'expense', 2_000_000, Date.UTC(2026, 4, 1));
+
+		const health = await computeFinancialHealth(h.db, h.userId, '2026-04', 25, 'UTC');
+
+		expect(health.grossIncomeCents).toBe(9_171_543);
+		expect(health.excludedIncomeCents).toBe(1_171_543);
+		expect(health.realIncomeCents).toBe(8_000_000);
+		expect(health.realNetCents).toBe(6_000_000);
+	});
+
+	it('splits fixed and variable expenses and prefers variable top leaks', async () => {
+		insertTx('salary', 'cat-salary', 'income', 10_000_000, Date.UTC(2026, 3, 25));
+		insertTx('rent', 'cat-rent', 'expense', 5_000_000, Date.UTC(2026, 3, 26));
+		insertTx('food', 'cat-food', 'expense', 2_500_000, Date.UTC(2026, 4, 1));
+		insertTx('transport', 'cat-transport', 'expense', 1_500_000, Date.UTC(2026, 4, 2));
+
+		const health = await computeFinancialHealth(h.db, h.userId, '2026-04', 25, 'UTC');
+
+		expect(health.fixedExpenseCents).toBe(5_000_000);
+		expect(health.variableExpenseCents).toBe(4_000_000);
+		expect(health.topLeaks).toEqual([
+			{ categoryId: 'cat-food', categoryName: 'Food', amountCents: 2_500_000, expenseType: 'variable' },
+			{
+				categoryId: 'cat-transport',
+				categoryName: 'Transport',
+				amountCents: 1_500_000,
+				expenseType: 'variable'
+			}
+		]);
+	});
+
+	it('sets danger warning healthy statuses', async () => {
+		insertTx('danger-income', 'cat-salary', 'income', 5_000_000, Date.UTC(2026, 3, 25));
+		insertTx('danger-expense', 'cat-food', 'expense', 6_000_000, Date.UTC(2026, 3, 26));
+		const danger = await computeFinancialHealth(h.db, h.userId, '2026-04', 25, 'UTC');
+		expect(danger.status).toBe('danger');
+
+		insertTx('warning-income', 'cat-salary', 'income', 10_000_000, Date.UTC(2026, 5, 25));
+		insertTx('warning-expense', 'cat-food', 'expense', 9_500_000, Date.UTC(2026, 5, 26));
+		const warning = await computeFinancialHealth(h.db, h.userId, '2026-06', 25, 'UTC');
+		expect(warning.status).toBe('warning');
+
+		insertTx('healthy-income', 'cat-salary', 'income', 10_000_000, Date.UTC(2026, 6, 25));
+		insertTx('healthy-expense', 'cat-food', 'expense', 8_500_000, Date.UTC(2026, 6, 26));
+		const healthy = await computeFinancialHealth(h.db, h.userId, '2026-07', 25, 'UTC');
+		expect(healthy.status).toBe('healthy');
 	});
 });
