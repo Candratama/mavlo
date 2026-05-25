@@ -20,7 +20,7 @@ import {
 	transactionIdSchema
 } from '$lib/validation/transaction';
 import { purgeUserCache, allUserCacheNames } from '$lib/server/cf-cache';
-import { getCurrentCycle } from '$lib/utils/cycle';
+import { getCurrentCycle, ymdToZonedDayStartMs } from '$lib/utils/cycle';
 import { getPreferences } from '$lib/server/repositories/preferences';
 import type { Actions } from './$types';
 
@@ -35,17 +35,12 @@ async function purgeUserCaches(event: Parameters<Actions[string]>[0], userId: st
 	await purgeUserCache(userId, allUserCacheNames(cycle.periodMonth, 6));
 }
 
-const ymdToMs = (s: string | null): number | undefined => {
-	if (!s) return undefined;
-	const t = Date.parse(`${s}T00:00:00.000Z`);
-	return Number.isNaN(t) ? undefined : t;
-};
-
 const formObject = (fd: FormData) => Object.fromEntries(fd.entries());
 
-const parseDateMs = (s: FormDataEntryValue | null): number | undefined => {
+const parseDateMs = (s: FormDataEntryValue | null, timezone: string): number | undefined => {
 	if (typeof s !== 'string' || !s) return undefined;
-	return ymdToMs(s);
+	const t = ymdToZonedDayStartMs(s, timezone);
+	return Number.isNaN(t) ? undefined : t;
 };
 
 export const actions: Actions = {
@@ -53,7 +48,9 @@ export const actions: Actions = {
 		const user = requireUser(event);
 		const db = getDb(event.platform!.env.DB);
 		const fd = await event.request.formData();
-		const occurredAtMs = parseDateMs(fd.get('occurredAt'));
+		const prefs = await getPreferences(db, user.id);
+		const timezone = prefs?.timezone ?? 'Asia/Jakarta';
+		const occurredAtMs = parseDateMs(fd.get('occurredAt'), timezone);
 		const parsed = transactionCreateSchema.safeParse({
 			...formObject(fd),
 			occurredAt: occurredAtMs ?? 0
@@ -107,7 +104,9 @@ export const actions: Actions = {
 		const user = requireUser(event);
 		const db = getDb(event.platform!.env.DB);
 		const fd = await event.request.formData();
-		const occurredAtMs = parseDateMs(fd.get('occurredAt'));
+		const prefs = await getPreferences(db, user.id);
+		const timezone = prefs?.timezone ?? 'Asia/Jakarta';
+		const occurredAtMs = parseDateMs(fd.get('occurredAt'), timezone);
 		const parsed = transactionUpdateSchema.safeParse({
 			...formObject(fd),
 			occurredAt: occurredAtMs ?? 0

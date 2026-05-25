@@ -35,6 +35,7 @@
 	import { SvelteURLSearchParams, SvelteMap } from 'svelte/reactivity';
 	import AddTransactionSheet from '$lib/components/forms/add-transaction-sheet.svelte';
 	import { openAddTransaction } from '$lib/stores/add-transaction.svelte.js';
+	import { formatYmdInTimezone, ymdToZonedDayStartMs } from '$lib/utils/cycle.js';
 
 	let { data } = $props();
 
@@ -49,8 +50,9 @@
 		kind: page.url.searchParams.get('kind') ?? ''
 	});
 
+	const timezone = $derived(data.timezone ?? 'Asia/Jakarta');
 	const ymdToMs = (s: string) => {
-		const t = Date.parse(`${s}T00:00:00.000Z`);
+		const t = ymdToZonedDayStartMs(s, timezone);
 		return Number.isNaN(t) ? null : t;
 	};
 	const dayMs = 24 * 60 * 60 * 1000;
@@ -95,7 +97,7 @@
 
 	const formatAmount = (cents: number, currency: string) => formatCentsAsCurrency(cents, currency);
 
-	const formatDate = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+	const formatDate = (ms: number) => formatYmdInTimezone(new Date(ms), timezone);
 
 	const openEdit = (t: TxRow) => {
 		editTarget = t;
@@ -200,10 +202,10 @@
 	const groupedByDay = $derived.by<DayGroup[]>(() => {
 		const byDay = new SvelteMap<string, DayGroup>();
 		for (const tx of filteredTransactions) {
-			const key = new Date(tx.occurredAt).toISOString().slice(0, 10);
+			const key = formatYmdInTimezone(new Date(tx.occurredAt), timezone);
 			let g = byDay.get(key);
 			if (!g) {
-				const date = new Date(`${key}T00:00:00.000Z`);
+				const date = new Date(tx.occurredAt);
 				g = {
 					key,
 					dateLabel: date.toLocaleDateString('en-US', {
@@ -211,7 +213,7 @@
 						month: 'long',
 						day: 'numeric',
 						year: 'numeric',
-						timeZone: 'UTC'
+						timeZone: timezone
 					}),
 					netCents: 0,
 					items: []

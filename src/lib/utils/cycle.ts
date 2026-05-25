@@ -63,6 +63,18 @@ function zonedDayStartUtc(year: number, month1to12: number, day: number, timezon
 	return new Date(Date.UTC(year, month1to12 - 1, day, 0, 0, 0) - offsetMs);
 }
 
+export function formatYmdInTimezone(date: Date, timezone: string): string {
+	const { y, m, d } = getZonedYearMonthDay(date, timezone);
+	return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+
+export function ymdToZonedDayStartMs(ymd: string, timezone: string): number {
+	const match = ymd.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+	if (!match) return Number.NaN;
+	const date = zonedDayStartUtc(Number(match[1]), Number(match[2]), Number(match[3]), timezone);
+	return date.getTime();
+}
+
 function periodMonthStr(year: number, month1to12: number): string {
 	return `${year}-${String(month1to12).padStart(2, '0')}`;
 }

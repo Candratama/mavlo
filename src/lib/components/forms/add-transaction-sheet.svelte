@@ -540,7 +540,7 @@
 {/snippet}
 
 {#if isDesktop.current}
-	<Dialog.Root bind:open>
+	 5<Dialog.Root bind:open>
 		<Dialog.Content>
 			<Dialog.Header>
 				<Dialog.Title>{mode === 'create' ? 'New transaction' : 'Edit transaction'}</Dialog.Title>

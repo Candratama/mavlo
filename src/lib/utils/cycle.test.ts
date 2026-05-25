@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { getCurrentCycle, getCycleForPeriod, formatCycleLabel } from './cycle';
+import {
+	getCurrentCycle,
+	getCycleForPeriod,
+	formatCycleLabel,
+	formatYmdInTimezone,
+	ymdToZonedDayStartMs
+} from './cycle';
 
 const TZ = 'Asia/Jakarta';
 
@@ -67,5 +73,18 @@ describe('formatCycleLabel', () => {
 		const c = getCycleForPeriod('2026-09', 25, TZ);
 		const label = formatCycleLabel(c, 25, 'en');
 		expect(label).toMatch(/Sep 25.*Oct 24/);
+	});
+});
+
+describe('transaction calendar dates', () => {
+	it('formats today in the configured timezone instead of UTC', () => {
+		const jakartaAfterMidnight = new Date('2026-05-24T18:00:00.000Z');
+		expect(formatYmdInTimezone(jakartaAfterMidnight, TZ)).toBe('2026-05-25');
+	});
+
+	it('parses a YYYY-MM-DD as start of day in the configured timezone', () => {
+		expect(new Date(ymdToZonedDayStartMs('2026-05-25', TZ)).toISOString()).toBe(
+			'2026-05-24T17:00:00.000Z'
+		);
 	});
 });
