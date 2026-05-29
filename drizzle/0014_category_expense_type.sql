@@ -1,0 +1,1 @@
+ALTER TABLE `categories` ADD `expense_type` text DEFAULT 'variable' NOT NULL;
