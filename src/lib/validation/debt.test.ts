@@ -63,9 +63,9 @@ describe('debtCreateSchema', () => {
 		expect(
 			debtCreateSchema.safeParse({ ...valid, maturityDate: valid.startDate - 1 }).success
 		).toBe(false);
-		expect(
-			debtCreateSchema.safeParse({ ...valid, maturityDate: valid.startDate }).success
-		).toBe(false);
+		expect(debtCreateSchema.safeParse({ ...valid, maturityDate: valid.startDate }).success).toBe(
+			false
+		);
 	});
 
 	it('accepts maturityDate > startDate', () => {
@@ -102,15 +102,15 @@ describe('debtUpdateSchema', () => {
 	});
 
 	it('accepts optional status', () => {
-		expect(
-			debtUpdateSchema.safeParse({ ...valid, id: 'd1', status: 'paid_off' }).success
-		).toBe(true);
+		expect(debtUpdateSchema.safeParse({ ...valid, id: 'd1', status: 'paid_off' }).success).toBe(
+			true
+		);
 	});
 
 	it('rejects unknown status', () => {
-		expect(
-			debtUpdateSchema.safeParse({ ...valid, id: 'd1', status: 'invalid' }).success
-		).toBe(false);
+		expect(debtUpdateSchema.safeParse({ ...valid, id: 'd1', status: 'invalid' }).success).toBe(
+			false
+		);
 	});
 });
 

@@ -320,7 +320,7 @@
 			/>
 			{#if otherVisible}
 				<div
-					class="mavlo-pill mavlo-pill-solid absolute bottom-full right-2 z-40 mb-2 flex flex-col gap-1 rounded-full p-2"
+					class="mavlo-pill mavlo-pill-solid absolute right-2 bottom-full z-40 mb-2 flex flex-col gap-1 rounded-full p-2"
 				>
 					{#each otherNav as item (item.href)}
 						<a
@@ -350,7 +350,6 @@
 		</div>
 	{/if}
 </div>
-
 
 <style>
 	.nav-progress-bar {

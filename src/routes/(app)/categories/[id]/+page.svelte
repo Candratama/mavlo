@@ -39,14 +39,10 @@
 	);
 
 	const totalIncome = $derived(
-		categoryTransactions
-			.filter((t) => t.kind === 'income')
-			.reduce((s, t) => s + t.amountCents, 0)
+		categoryTransactions.filter((t) => t.kind === 'income').reduce((s, t) => s + t.amountCents, 0)
 	);
 	const totalExpense = $derived(
-		categoryTransactions
-			.filter((t) => t.kind === 'expense')
-			.reduce((s, t) => s + t.amountCents, 0)
+		categoryTransactions.filter((t) => t.kind === 'expense').reduce((s, t) => s + t.amountCents, 0)
 	);
 
 	const currency = $derived(data.accounts[0]?.currency ?? 'IDR');
@@ -89,9 +85,7 @@
 		editOpen = true;
 	};
 
-	const IconComp = $derived(
-		category?.icon ? (getIconByName(category.icon) ?? Tag) : Tag
-	);
+	const IconComp = $derived(category?.icon ? (getIconByName(category.icon) ?? Tag) : Tag);
 </script>
 
 <svelte:head>
@@ -99,15 +93,12 @@
 </svelte:head>
 
 <div class="mb-6">
-	<Button variant="ghost" size="sm" class="-ml-2 mb-3" href="/categories">
+	<Button variant="ghost" size="sm" class="mb-3 -ml-2" href="/categories">
 		<ArrowLeft class="mr-1 size-4" /> Categories
 	</Button>
 
 	{#if category}
-		<div
-			class="mavlo-pill relative overflow-hidden rounded-2xl p-5"
-			style="min-height: 120px;"
-		>
+		<div class="mavlo-pill relative overflow-hidden rounded-2xl p-5" style="min-height: 120px;">
 			<div
 				aria-hidden="true"
 				class="pointer-events-none absolute inset-0 opacity-70"
@@ -175,7 +166,9 @@
 		</div>
 	{/if}
 	{#if category?.kind === 'income' && totalExpense === 0}
-		<div class="via-card to-card rounded-xl border bg-gradient-to-br from-rose-500/10 p-4 opacity-40">
+		<div
+			class="via-card to-card rounded-xl border bg-gradient-to-br from-rose-500/10 p-4 opacity-40"
+		>
 			<div class="text-muted-foreground flex items-center gap-2 text-xs tracking-wider uppercase">
 				<span class="bg-expense/15 inline-flex size-6 items-center justify-center rounded-full">
 					<ArrowUp class="text-expense size-3.5" />
@@ -188,7 +181,9 @@
 		</div>
 	{/if}
 	{#if category?.kind === 'expense' && totalIncome === 0}
-		<div class="via-card to-card rounded-xl border bg-gradient-to-br from-emerald-500/10 p-4 opacity-40">
+		<div
+			class="via-card to-card rounded-xl border bg-gradient-to-br from-emerald-500/10 p-4 opacity-40"
+		>
 			<div class="text-muted-foreground flex items-center gap-2 text-xs tracking-wider uppercase">
 				<span class="bg-income/15 inline-flex size-6 items-center justify-center rounded-full">
 					<ArrowDown class="text-income size-3.5" />
@@ -224,7 +219,8 @@
 				{#each group.items as tx (tx.id)}
 					{@const acc = accountById.get(tx.accountId)}
 					{@const cat = tx.categoryId ? categoryById.get(tx.categoryId) : null}
-					{@const RowIcon = tx.kind === 'transfer' ? ArrowLeftRight : (getIconByName(cat?.icon) ?? Tag)}
+					{@const RowIcon =
+						tx.kind === 'transfer' ? ArrowLeftRight : (getIconByName(cat?.icon) ?? Tag)}
 					{@const rowTint =
 						cat?.color ??
 						(tx.kind === 'income' ? '#10b981' : tx.kind === 'transfer' ? '#3b82f6' : '#94a3b8')}
@@ -251,15 +247,21 @@
 										? 'text-income'
 										: 'text-transfer'}"
 							>
-								{tx.kind === 'expense' ? '−' : tx.kind === 'income' ? '+' : ''}{formatCentsAsCurrency(
-									tx.amountCents,
-									acc?.currency ?? currency
-								)}
+								{tx.kind === 'expense'
+									? '−'
+									: tx.kind === 'income'
+										? '+'
+										: ''}{formatCentsAsCurrency(tx.amountCents, acc?.currency ?? currency)}
 							</span>
 							<DropdownMenu.Root>
 								<DropdownMenu.Trigger>
 									{#snippet child({ props })}
-										<Button {...props} variant="ghost" size="icon" class="size-11 shrink-0 md:size-8">
+										<Button
+											{...props}
+											variant="ghost"
+											size="icon"
+											class="size-11 shrink-0 md:size-8"
+										>
 											<MoreHorizontal class="size-4" />
 										</Button>
 									{/snippet}
@@ -277,7 +279,8 @@
 													await invalidateAll();
 													notify.success('Transaction deleted');
 												} else if (result.type === 'failure') {
-													const message = (result.data as { message?: string } | undefined)?.message;
+													const message = (result.data as { message?: string } | undefined)
+														?.message;
 													notify.error(message ?? 'Could not delete transaction');
 												}
 											}}

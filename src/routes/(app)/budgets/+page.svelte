@@ -47,8 +47,7 @@
 
 	const categoryById = $derived(new Map(data.categories.map((c) => [c.id, c])));
 
-	const flowOf = (budgetId: string) =>
-		data.subsidyFlowByBudget[budgetId] ?? { in: 0, out: 0 };
+	const flowOf = (budgetId: string) => data.subsidyFlowByBudget[budgetId] ?? { in: 0, out: 0 };
 
 	const formatCents = (cents: number) => formatCentsAsCurrency(cents, 'IDR');
 
@@ -57,10 +56,12 @@
 		editOpen = true;
 	};
 
-	const remainingFor = (b: typeof data.budgets[0]) => {
+	const remainingFor = (b: (typeof data.budgets)[0]) => {
 		const flow = flowOf(b.id);
 		const carryover = b.carryoverDeficitCents ?? 0;
-		return b.limitCents + flow.in - (data.spentByCategory[b.categoryId] ?? 0) - flow.out - carryover;
+		return (
+			b.limitCents + flow.in - (data.spentByCategory[b.categoryId] ?? 0) - flow.out - carryover
+		);
 	};
 	const sortedBudgets = $derived(
 		[...data.budgets].sort((a, b) => remainingFor(b) - remainingFor(a))
@@ -95,14 +96,11 @@
 		data.categories.find((c) => c.name === 'Debt Payment' && c.kind === 'expense')
 	);
 	const activeDebts = $derived(data.debts.filter((d) => d.status === 'active'));
-	const totalMinPayments = $derived(
-		activeDebts.reduce((s, d) => s + d.minimumPaymentCents, 0)
-	);
+	const totalMinPayments = $derived(activeDebts.reduce((s, d) => s + d.minimumPaymentCents, 0));
 	const debtBudgetExists = $derived(
 		debtPaymentCategory
 			? data.budgets.some(
-					(b) =>
-						b.categoryId === debtPaymentCategory.id && b.periodMonth === data.periodMonth
+					(b) => b.categoryId === debtPaymentCategory.id && b.periodMonth === data.periodMonth
 				)
 			: false
 	);
@@ -118,7 +116,7 @@
 			.filter((b) => b.id !== target.id && b.periodMonth === target.periodMonth)
 			.map((b) => {
 				const spentB = data.spentByCategory[b.categoryId] ?? 0;
-				const out = (data.subsidyFlowByBudget[b.id]?.out) ?? 0;
+				const out = data.subsidyFlowByBudget[b.id]?.out ?? 0;
 				const carryover = b.carryoverDeficitCents ?? 0;
 				const remaining = sourceRemaining({
 					limitCents: b.limitCents - carryover,
@@ -308,7 +306,8 @@
 	{#if data.subsidies.length > 0}
 		{@const totalSubsidy = data.subsidies.reduce((s, x) => s + x.amountCents, 0)}
 		<div class="text-muted-foreground mt-2 text-xs">
-			Active subsidies: {data.subsidies.length} record{data.subsidies.length === 1 ? '' : 's'}, total {formatCents(totalSubsidy)} transferred.
+			Active subsidies: {data.subsidies.length} record{data.subsidies.length === 1 ? '' : 's'},
+			total {formatCents(totalSubsidy)} transferred.
 		</div>
 	{/if}
 </div>
@@ -360,7 +359,7 @@
 		<Card.Root class="relative">
 			<a
 				href="/budgets/{budget.id}"
-				class="absolute inset-0 rounded-[inherit] z-0"
+				class="absolute inset-0 z-0 rounded-[inherit]"
 				aria-label="View {cat?.name ?? 'budget'} transactions"
 			></a>
 			<Card.Header class="flex flex-row items-start justify-between gap-3">
@@ -373,51 +372,53 @@
 					</div>
 					<div class="min-w-0">
 						<Card.Title class="truncate">{cat?.name ?? 'Unknown'}</Card.Title>
-						<Card.Description>{formatCents(Math.max(0, denom - spent - flow.out - carryover))} remaining</Card.Description>
+						<Card.Description
+							>{formatCents(Math.max(0, denom - spent - flow.out - carryover))} remaining</Card.Description
+						>
 					</div>
 				</div>
 				<div class="relative z-10">
-				<DropdownMenu.Root>
-					<DropdownMenu.Trigger>
-						{#snippet child({ props })}
-							<Button {...props} variant="ghost" size="icon" class="size-11 shrink-0 md:size-8">
-								<MoreHorizontal class="size-4" />
-							</Button>
-						{/snippet}
-					</DropdownMenu.Trigger>
-					<DropdownMenu.Content align="end">
-						<DropdownMenu.Item onclick={() => openEdit(budget)}>
-							<Pencil class="mr-2 size-4" /> Edit
-						</DropdownMenu.Item>
-						<form
-							method="POST"
-							action="?/delete"
-							use:enhance={() =>
-								async ({ result }) => {
-									if (result.type === 'success') {
-										await invalidateAll();
-										notify.success('Budget deleted');
-									} else if (result.type === 'failure') {
-										const message = (result.data as { message?: string } | undefined)?.message;
-										notify.error(message ?? 'Could not delete budget');
-									}
-								}}
-						>
-							<input type="hidden" name="id" value={budget.id} />
-							<DropdownMenu.Item>
-								{#snippet child({ props })}
-									<button
-										{...props}
-										type="submit"
-										class="text-destructive hover:bg-accent/50 flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm"
-									>
-										<Trash2 class="size-4" /> Delete
-									</button>
-								{/snippet}
+					<DropdownMenu.Root>
+						<DropdownMenu.Trigger>
+							{#snippet child({ props })}
+								<Button {...props} variant="ghost" size="icon" class="size-11 shrink-0 md:size-8">
+									<MoreHorizontal class="size-4" />
+								</Button>
+							{/snippet}
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content align="end">
+							<DropdownMenu.Item onclick={() => openEdit(budget)}>
+								<Pencil class="mr-2 size-4" /> Edit
 							</DropdownMenu.Item>
-						</form>
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
+							<form
+								method="POST"
+								action="?/delete"
+								use:enhance={() =>
+									async ({ result }) => {
+										if (result.type === 'success') {
+											await invalidateAll();
+											notify.success('Budget deleted');
+										} else if (result.type === 'failure') {
+											const message = (result.data as { message?: string } | undefined)?.message;
+											notify.error(message ?? 'Could not delete budget');
+										}
+									}}
+							>
+								<input type="hidden" name="id" value={budget.id} />
+								<DropdownMenu.Item>
+									{#snippet child({ props })}
+										<button
+											{...props}
+											type="submit"
+											class="text-destructive hover:bg-accent/50 flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm"
+										>
+											<Trash2 class="size-4" /> Delete
+										</button>
+									{/snippet}
+								</DropdownMenu.Item>
+							</form>
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
 				</div>
 			</Card.Header>
 			<Card.Content class="relative z-10">
@@ -425,7 +426,12 @@
 				{@const reducedLimit = budget.limitCents - carryover}
 				{@const stillOver = spent + carryover > denom}
 				{@const coveredByEff = over && !stillOver}
-				{@const usedPct = denom === 0 ? (spent + flow.out + carryover > 0 ? 100 : 0) : Math.min(100, Math.round(((spent + flow.out + carryover) / denom) * 100))}
+				{@const usedPct =
+					denom === 0
+						? spent + flow.out + carryover > 0
+							? 100
+							: 0
+						: Math.min(100, Math.round(((spent + flow.out + carryover) / denom) * 100))}
 				<div class="mb-2 flex items-baseline justify-between text-sm tabular-nums">
 					<span class={stillOver ? 'text-expense font-medium' : ''}>
 						{formatCents(spent)}
@@ -439,34 +445,73 @@
 				</div>
 				<div class="bg-muted relative h-2 overflow-hidden rounded-full">
 					{#if stillOver}
-						{@const carryPct = denom === 0 ? 0 : Math.min(100, Math.round((carryover / denom) * 100))}
+						{@const carryPct =
+							denom === 0 ? 0 : Math.min(100, Math.round((carryover / denom) * 100))}
 						{#if carryPct > 0}
-							<div class="absolute inset-y-0 left-0 h-full bg-orange-500/70" style="width: {carryPct}%"></div>
+							<div
+								class="absolute inset-y-0 left-0 h-full bg-orange-500/70"
+								style="width: {carryPct}%"
+							></div>
 						{/if}
-						<div class="absolute inset-y-0 h-full bg-amber-500" style="left: {carryPct}%; width: {100 - carryPct}%"></div>
-						{@const overPct = denom === 0 ? 100 : Math.min(100, Math.round(((spent + carryover - denom) / denom) * 100))}
+						<div
+							class="absolute inset-y-0 h-full bg-amber-500"
+							style="left: {carryPct}%; width: {100 - carryPct}%"
+						></div>
+						{@const overPct =
+							denom === 0
+								? 100
+								: Math.min(100, Math.round(((spent + carryover - denom) / denom) * 100))}
 						<div
 							class="absolute inset-y-0 right-0 h-full bg-rose-500 transition-all"
 							style="width: {overPct}%"
 						></div>
 					{:else if coveredByEff}
-						{@const carryPct = denom === 0 ? 0 : Math.min(100, Math.round((carryover / denom) * 100))}
-						{@const redPct = denom === 0 ? 0 : Math.min(100 - carryPct, Math.round((budget.limitCents / denom) * 100))}
-						{@const bluePct = denom === 0 ? 0 : Math.min(100 - carryPct - redPct, Math.round(((spent - budget.limitCents) / denom) * 100))}
+						{@const carryPct =
+							denom === 0 ? 0 : Math.min(100, Math.round((carryover / denom) * 100))}
+						{@const redPct =
+							denom === 0
+								? 0
+								: Math.min(100 - carryPct, Math.round((budget.limitCents / denom) * 100))}
+						{@const bluePct =
+							denom === 0
+								? 0
+								: Math.min(
+										100 - carryPct - redPct,
+										Math.round(((spent - budget.limitCents) / denom) * 100)
+									)}
 						{#if carryPct > 0}
-							<div class="absolute inset-y-0 left-0 h-full bg-orange-500/70" style="width: {carryPct}%"></div>
-						{/if}
-						<div class="absolute inset-y-0 h-full bg-rose-500" style="left: {carryPct}%; width: {redPct}%"></div>
-						<div class="absolute inset-y-0 h-full bg-blue-500 transition-all" style="left: {carryPct + redPct}%; width: {bluePct}%"></div>
-					{:else}
-						{@const carryPct = denom === 0 ? 0 : Math.min(100, Math.round((carryover / denom) * 100))}
-						{@const spentPct = denom === 0 ? 0 : Math.min(100 - carryPct, Math.round((spent / denom) * 100))}
-						{@const outPct = denom === 0 ? 0 : Math.min(100 - carryPct - spentPct, Math.round((flow.out / denom) * 100))}
-						{#if carryPct > 0}
-							<div class="absolute inset-y-0 left-0 h-full bg-orange-500/70" style="width: {carryPct}%"></div>
+							<div
+								class="absolute inset-y-0 left-0 h-full bg-orange-500/70"
+								style="width: {carryPct}%"
+							></div>
 						{/if}
 						<div
-							class="absolute inset-y-0 h-full transition-all {carryPct + spentPct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
+							class="absolute inset-y-0 h-full bg-rose-500"
+							style="left: {carryPct}%; width: {redPct}%"
+						></div>
+						<div
+							class="absolute inset-y-0 h-full bg-blue-500 transition-all"
+							style="left: {carryPct + redPct}%; width: {bluePct}%"
+						></div>
+					{:else}
+						{@const carryPct =
+							denom === 0 ? 0 : Math.min(100, Math.round((carryover / denom) * 100))}
+						{@const spentPct =
+							denom === 0 ? 0 : Math.min(100 - carryPct, Math.round((spent / denom) * 100))}
+						{@const outPct =
+							denom === 0
+								? 0
+								: Math.min(100 - carryPct - spentPct, Math.round((flow.out / denom) * 100))}
+						{#if carryPct > 0}
+							<div
+								class="absolute inset-y-0 left-0 h-full bg-orange-500/70"
+								style="width: {carryPct}%"
+							></div>
+						{/if}
+						<div
+							class="absolute inset-y-0 h-full transition-all {carryPct + spentPct >= 80
+								? 'bg-amber-500'
+								: 'bg-emerald-500'}"
 							style="left: {carryPct}%; width: {spentPct}%"
 						></div>
 						{#if flow.out > 0}
@@ -515,10 +560,7 @@
 						Subsidize from another budget
 					</Button>
 				{/if}
-				<SubsidyList
-					entries={entriesForBudget(budget.id)}
-					onEdit={openSubsidyEdit}
-				/>
+				<SubsidyList entries={entriesForBudget(budget.id)} onEdit={openSubsidyEdit} />
 			</Card.Content>
 		</Card.Root>
 	{:else}
@@ -541,25 +583,27 @@
 				💳 Cover your debt minimums
 			</h2>
 			<span class="text-muted-foreground text-xs tabular-nums">
-				{activeDebts.length} {activeDebts.length === 1 ? 'debt' : 'debts'}
+				{activeDebts.length}
+				{activeDebts.length === 1 ? 'debt' : 'debts'}
 			</span>
 		</div>
 		<p class="text-muted-foreground mb-3 text-xs">
-			You have {formatCents(totalMinPayments)} in monthly debt minimums but no budget for
-			them. Allocate them so you don't accidentally overspend elsewhere.
+			You have {formatCents(totalMinPayments)} in monthly debt minimums but no budget for them. Allocate
+			them so you don't accidentally overspend elsewhere.
 		</p>
 		<form
 			method="POST"
 			action="?/setDebtBudget"
-			use:enhance={() => async ({ result }) => {
-				if (result.type === 'success') {
-					await invalidateAll();
-					notify.success('Debt payment budget set');
-				} else if (result.type === 'failure') {
-					const message = (result.data as { message?: string } | undefined)?.message;
-					notify.error(message ?? 'Could not set budget');
-				}
-			}}
+			use:enhance={() =>
+				async ({ result }) => {
+					if (result.type === 'success') {
+						await invalidateAll();
+						notify.success('Debt payment budget set');
+					} else if (result.type === 'failure') {
+						const message = (result.data as { message?: string } | undefined)?.message;
+						notify.error(message ?? 'Could not set budget');
+					}
+				}}
 		>
 			<input type="hidden" name="limitCents" value={totalMinPayments} />
 			<input type="hidden" name="periodMonth" value={data.periodMonth} />
@@ -576,7 +620,10 @@
 		<div class="mb-3 flex items-baseline justify-between">
 			<h2 class="text-sm font-semibold">Unbudgeted spending</h2>
 			<span class="text-muted-foreground text-xs tabular-nums">
-				{data.unbudgetedCategories.length} {data.unbudgetedCategories.length === 1 ? 'category' : 'categories'} · {formatCents(totalUnbudgeted)}
+				{data.unbudgetedCategories.length}
+				{data.unbudgetedCategories.length === 1 ? 'category' : 'categories'} · {formatCents(
+					totalUnbudgeted
+				)}
 			</span>
 		</div>
 		<p class="text-muted-foreground mb-4 text-xs">
@@ -841,7 +888,9 @@
 			side="bottom"
 			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
 		>
-			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Subsidize budget</Sheet.Title></Sheet.Header>
+			<Sheet.Header class="p-4 pb-2 text-left"
+				><Sheet.Title>Subsidize budget</Sheet.Title></Sheet.Header
+			>
 			<div class="flex-1 overflow-y-auto">{@render subsidyForm()}</div>
 		</Sheet.Content>
 	</Sheet.Root>
@@ -884,7 +933,8 @@
 			side="bottom"
 			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
 		>
-			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Edit subsidy</Sheet.Title></Sheet.Header>
+			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Edit subsidy</Sheet.Title></Sheet.Header
+			>
 			<div class="flex-1 overflow-y-auto">{@render subsidyEditFormSnippet()}</div>
 		</Sheet.Content>
 	</Sheet.Root>

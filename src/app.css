@@ -149,11 +149,14 @@
 		overscroll-behavior: none;
 	}
 	/* Prevent callout on long-press (images, links) in PWA */
-	img, a {
+	img,
+	a {
 		-webkit-touch-callout: none;
 	}
 	/* Prevent text selection during swipe gestures */
-	.mavlo-pill, nav, [role="tablist"] {
+	.mavlo-pill,
+	nav,
+	[role='tablist'] {
 		-webkit-user-select: none;
 		user-select: none;
 	}

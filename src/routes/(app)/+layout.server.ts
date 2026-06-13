@@ -27,7 +27,12 @@ import { listSubsidies } from '$lib/server/repositories/subsidies';
 import { computeSubsidyFlows } from '$lib/server/repositories/budget-effective';
 import { listDebts } from '$lib/server/repositories/debts';
 import { computeDebtTotals } from '$lib/server/repositories/debt-stats';
-import { getCurrentCycle, getCycleForPeriod, formatCycleLabel, prevPeriodMonth } from '$lib/utils/cycle';
+import {
+	getCurrentCycle,
+	getCycleForPeriod,
+	formatCycleLabel,
+	prevPeriodMonth
+} from '$lib/utils/cycle';
 import { cachedJson, CACHE_KEYS } from '$lib/server/cf-cache';
 import type { LayoutServerLoad } from './$types';
 
@@ -125,8 +130,7 @@ export const load: LayoutServerLoad = async (event) => {
 			if (prev) {
 				const spent = prevSpent.get(prev.categoryId) ?? 0;
 				const flow = prevFlows.get(prev.id) ?? { in: 0, out: 0 };
-				const effLimit =
-					prev.limitCents + flow.in - flow.out - prev.carryoverDeficitCents;
+				const effLimit = prev.limitCents + flow.in - flow.out - prev.carryoverDeficitCents;
 				carryover = Math.max(0, spent - effLimit);
 			}
 			await db
@@ -220,8 +224,9 @@ export const load: LayoutServerLoad = async (event) => {
 		if (a.type === 'savings') savingsCents += a.balanceCents;
 		else operationalCents += a.balanceCents;
 	}
-	const subsidyFlowByBudget: Record<string, { in: number; out: number }> =
-		Object.fromEntries(subsidyFlows.entries());
+	const subsidyFlowByBudget: Record<string, { in: number; out: number }> = Object.fromEntries(
+		subsidyFlows.entries()
+	);
 
 	const assignedCents = budgetList.reduce((s, b) => s + b.limitCents, 0);
 	// Effective remaining per budget accounts for outgoing subsidy AND carryover

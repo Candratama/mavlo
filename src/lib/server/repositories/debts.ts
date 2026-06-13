@@ -21,7 +21,10 @@ export async function listDebts(
 	const conds = [eq(debts.userId, userId)];
 	if (filter.status) conds.push(eq(debts.status, filter.status));
 	if (filter.direction) conds.push(eq(debts.direction, filter.direction));
-	return db.select().from(debts).where(and(...conds));
+	return db
+		.select()
+		.from(debts)
+		.where(and(...conds));
 }
 
 export async function getDebt(db: Db, userId: string, id: string): Promise<DebtRow | null> {
@@ -136,11 +139,7 @@ export async function deleteDebt(db: Db, userId: string, id: string): Promise<De
 	return row ?? null;
 }
 
-export async function markDebtPaidOff(
-	db: Db,
-	userId: string,
-	id: string
-): Promise<DebtRow | null> {
+export async function markDebtPaidOff(db: Db, userId: string, id: string): Promise<DebtRow | null> {
 	const [row] = await db
 		.update(debts)
 		.set({ status: 'paid_off', currentBalanceCents: 0, updatedAt: Date.now() })

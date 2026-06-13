@@ -1,13 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createTestDb, type TestDbHandle } from '$lib/server/db/test-fixtures';
-import {
-	createDebt,
-	deleteDebt,
-	getDebt,
-	listDebts,
-	markDebtPaidOff,
-	updateDebt
-} from './debts';
+import { createDebt, deleteDebt, getDebt, listDebts, markDebtPaidOff, updateDebt } from './debts';
 
 let h: TestDbHandle;
 const now = () => Date.now();

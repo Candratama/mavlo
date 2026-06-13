@@ -136,9 +136,7 @@
 	let showNote = $state(initialState().note.length > 0);
 	let pending = $state(false);
 	let amountCents = $state<number | null>(
-		debtTarget
-			? debtTarget.minimumPaymentCents
-			: (editTarget?.amountCents ?? null)
+		debtTarget ? debtTarget.minimumPaymentCents : (editTarget?.amountCents ?? null)
 	);
 
 	const activeDebts = $derived((page.data.debts ?? []).filter((d: any) => d.status === 'active'));
@@ -219,8 +217,7 @@
 	// category doesn't exist client-side yet, server lazily creates it.
 	$effect(() => {
 		if (!debtId) return;
-		const target =
-			pickedDebt?.direction === 'lent' ? loanCollectedCategory : debtPaymentCategory;
+		const target = pickedDebt?.direction === 'lent' ? loanCollectedCategory : debtPaymentCategory;
 		if (target && categoryId !== target.id) {
 			categoryId = target.id;
 		}
@@ -487,8 +484,7 @@
 					<button
 						type="button"
 						onclick={() => (debtSubAction = 'collect')}
-						class="rounded-lg border p-3 text-left transition-colors {debtSubAction ===
-						'collect'
+						class="rounded-lg border p-3 text-left transition-colors {debtSubAction === 'collect'
 							? 'border-primary bg-primary/10'
 							: 'hover:bg-accent'}"
 					>

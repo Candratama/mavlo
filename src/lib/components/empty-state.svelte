@@ -15,7 +15,9 @@
 
 <div class="flex flex-col items-center justify-center gap-4 px-4 py-14 text-center">
 	<div class="relative">
-		<div class="bg-muted/60 border-border/50 flex size-14 items-center justify-center rounded-2xl border shadow-sm">
+		<div
+			class="bg-muted/60 border-border/50 flex size-14 items-center justify-center rounded-2xl border shadow-sm"
+		>
 			<Icon class="text-muted-foreground size-6" />
 		</div>
 	</div>

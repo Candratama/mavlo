@@ -136,8 +136,7 @@ export function createTestDb(opts: {
 	if (opts.tables.includes('debts')) sqlite.prepare(debtsTableSql).run();
 	if (opts.tables.includes('transactions')) sqlite.prepare(transactionsTableSql).run();
 	if (opts.tables.includes('budgets')) sqlite.prepare(budgetsTableSql).run();
-	if (opts.tables.includes('budget_subsidies'))
-		sqlite.prepare(budgetSubsidiesTableSql).run();
+	if (opts.tables.includes('budget_subsidies')) sqlite.prepare(budgetSubsidiesTableSql).run();
 
 	const now = Date.now();
 	const userId = 'user_test_1';

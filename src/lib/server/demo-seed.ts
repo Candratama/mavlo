@@ -191,7 +191,10 @@ export async function seedDemoData(db: Db, userId: string): Promise<void> {
 
 	let seededBudgets: { id: string; categoryId: string }[] = [];
 	if (budgetRows.length > 0) {
-		seededBudgets = await db.insert(budgets).values(budgetRows).returning({ id: budgets.id, categoryId: budgets.categoryId });
+		seededBudgets = await db
+			.insert(budgets)
+			.values(budgetRows)
+			.returning({ id: budgets.id, categoryId: budgets.categoryId });
 	}
 
 	// Seed a sample subsidy: Transport (slack) → Food (overspent).

@@ -21,20 +21,14 @@ describe('effectiveLimit', () => {
 
 describe('sourceRemaining', () => {
 	it('returns positive when limit > spent + out', () => {
-		expect(
-			sourceRemaining({ limitCents: 1000, spentCents: 300, subsidyOutCents: 200 })
-		).toBe(500);
+		expect(sourceRemaining({ limitCents: 1000, spentCents: 300, subsidyOutCents: 200 })).toBe(500);
 	});
 
 	it('returns 0 when fully used', () => {
-		expect(
-			sourceRemaining({ limitCents: 1000, spentCents: 800, subsidyOutCents: 200 })
-		).toBe(0);
+		expect(sourceRemaining({ limitCents: 1000, spentCents: 800, subsidyOutCents: 200 })).toBe(0);
 	});
 
 	it('returns negative when over-committed', () => {
-		expect(
-			sourceRemaining({ limitCents: 1000, spentCents: 900, subsidyOutCents: 200 })
-		).toBe(-100);
+		expect(sourceRemaining({ limitCents: 1000, spentCents: 900, subsidyOutCents: 200 })).toBe(-100);
 	});
 });

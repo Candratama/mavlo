@@ -57,9 +57,7 @@
 			: []
 	);
 
-	const spentCents = $derived(
-		budgetTransactions.reduce((s, t) => s + t.amountCents, 0)
-	);
+	const spentCents = $derived(budgetTransactions.reduce((s, t) => s + t.amountCents, 0));
 	const limitCents = $derived(budget?.limitCents ?? 0);
 	const over = $derived(spentCents > limitCents);
 
@@ -68,17 +66,13 @@
 	type SubsidyRow = (typeof data.subsidies)[number];
 
 	const budgetById = $derived(new Map(data.budgets.map((b) => [b.id, b])));
-	const allCategoriesById = $derived(
-		new Map(data.allCategories.map((c) => [c.id, c]))
-	);
+	const allCategoriesById = $derived(new Map(data.allCategories.map((c) => [c.id, c])));
 
 	const flow = $derived(
 		budget ? (data.subsidyFlowByBudget[budget.id] ?? { in: 0, out: 0 }) : { in: 0, out: 0 }
 	);
 	const carryover = $derived(budget?.carryoverDeficitCents ?? 0);
-	const effLimit = $derived(
-		budget ? effectiveLimit(budget.limitCents, flow) - carryover : 0
-	);
+	const effLimit = $derived(budget ? effectiveLimit(budget.limitCents, flow) - carryover : 0);
 	const denom = $derived((budget?.limitCents ?? 0) + flow.in);
 	const stillOver = $derived(spentCents + carryover > denom);
 	const coveredByEff = $derived(over && !stillOver);
@@ -87,10 +81,7 @@
 			? spentCents + flow.out + carryover > 0
 				? 100
 				: 0
-			: Math.min(
-					100,
-					Math.round(((spentCents + flow.out + carryover) / denom) * 100)
-				)
+			: Math.min(100, Math.round(((spentCents + flow.out + carryover) / denom) * 100))
 	);
 
 	const subsidiesIn = $derived(
@@ -205,9 +196,7 @@
 		editOpen = true;
 	};
 
-	const CatIcon = $derived(
-		category?.icon ? (getIconByName(category.icon) ?? Tag) : Tag
-	);
+	const CatIcon = $derived(category?.icon ? (getIconByName(category.icon) ?? Tag) : Tag);
 </script>
 
 <svelte:head>
@@ -215,15 +204,12 @@
 </svelte:head>
 
 <div class="mb-6">
-	<Button variant="ghost" size="sm" class="-ml-2 mb-3" href="/budgets">
+	<Button variant="ghost" size="sm" class="mb-3 -ml-2" href="/budgets">
 		<ArrowLeft class="mr-1 size-4" /> Budgets
 	</Button>
 
 	{#if budget && category}
-		<div
-			class="mavlo-pill relative overflow-hidden rounded-2xl p-5"
-			style="min-height: 120px;"
-		>
+		<div class="mavlo-pill relative overflow-hidden rounded-2xl p-5" style="min-height: 120px;">
 			<div
 				aria-hidden="true"
 				class="pointer-events-none absolute inset-0 opacity-70"
@@ -260,7 +246,10 @@
 							<CheckCircle2 class="size-4 text-emerald-500" />
 						</div>
 					{:else}
-						<div class="flex size-8 items-center justify-center rounded-full" style="background-color: {tint}20">
+						<div
+							class="flex size-8 items-center justify-center rounded-full"
+							style="background-color: {tint}20"
+						>
 							<Target class="size-4" style="color: {tint}" />
 						</div>
 					{/if}
@@ -273,7 +262,13 @@
 {#if budget}
 	<!-- Budget progress -->
 	<div
-		class="mb-6 rounded-xl border bg-gradient-to-br {stillOver ? 'from-rose-500/10' : coveredByEff ? 'from-blue-500/10' : effPct >= 80 ? 'from-amber-500/10' : 'from-emerald-500/10'} via-card to-card p-4"
+		class="mb-6 rounded-xl border bg-gradient-to-br {stillOver
+			? 'from-rose-500/10'
+			: coveredByEff
+				? 'from-blue-500/10'
+				: effPct >= 80
+					? 'from-amber-500/10'
+					: 'from-emerald-500/10'} via-card to-card p-4"
 	>
 		<div class="mb-3 flex items-baseline justify-between">
 			<span class="text-sm font-semibold">Spent this cycle</span>
@@ -285,29 +280,66 @@
 			{#if stillOver}
 				{@const carryPct = denom === 0 ? 0 : Math.min(100, Math.round((carryover / denom) * 100))}
 				{#if carryPct > 0}
-					<div class="absolute inset-y-0 left-0 h-full bg-orange-500/70" style="width: {carryPct}%"></div>
-				{/if}
-				<div class="absolute inset-y-0 h-full bg-amber-500" style="left: {carryPct}%; width: {100 - carryPct}%"></div>
-				{@const overPct = denom === 0 ? 100 : Math.min(100, Math.round(((spentCents + carryover - denom) / denom) * 100))}
-				<div class="absolute inset-y-0 right-0 h-full rounded-full bg-rose-500 transition-all" style="width: {overPct}%"></div>
-			{:else if coveredByEff}
-				{@const carryPct = denom === 0 ? 0 : Math.min(100, Math.round((carryover / denom) * 100))}
-				{@const redPct = denom === 0 ? 0 : Math.min(100 - carryPct, Math.round((budget.limitCents / denom) * 100))}
-				{@const bluePct = denom === 0 ? 0 : Math.min(100 - carryPct - redPct, Math.round(((spentCents - budget.limitCents) / denom) * 100))}
-				{#if carryPct > 0}
-					<div class="absolute inset-y-0 left-0 h-full bg-orange-500/70" style="width: {carryPct}%"></div>
-				{/if}
-				<div class="absolute inset-y-0 h-full bg-rose-500" style="left: {carryPct}%; width: {redPct}%"></div>
-				<div class="absolute inset-y-0 h-full rounded-full bg-blue-500 transition-all" style="left: {carryPct + redPct}%; width: {bluePct}%"></div>
-			{:else}
-				{@const carryPct = denom === 0 ? 0 : Math.min(100, Math.round((carryover / denom) * 100))}
-				{@const spentPct = denom === 0 ? 0 : Math.min(100 - carryPct, Math.round((spentCents / denom) * 100))}
-				{@const outPct = denom === 0 ? 0 : Math.min(100 - carryPct - spentPct, Math.round((flow.out / denom) * 100))}
-				{#if carryPct > 0}
-					<div class="absolute inset-y-0 left-0 h-full bg-orange-500/70" style="width: {carryPct}%"></div>
+					<div
+						class="absolute inset-y-0 left-0 h-full bg-orange-500/70"
+						style="width: {carryPct}%"
+					></div>
 				{/if}
 				<div
-					class="absolute inset-y-0 h-full rounded-full transition-all {carryPct + spentPct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
+					class="absolute inset-y-0 h-full bg-amber-500"
+					style="left: {carryPct}%; width: {100 - carryPct}%"
+				></div>
+				{@const overPct =
+					denom === 0
+						? 100
+						: Math.min(100, Math.round(((spentCents + carryover - denom) / denom) * 100))}
+				<div
+					class="absolute inset-y-0 right-0 h-full rounded-full bg-rose-500 transition-all"
+					style="width: {overPct}%"
+				></div>
+			{:else if coveredByEff}
+				{@const carryPct = denom === 0 ? 0 : Math.min(100, Math.round((carryover / denom) * 100))}
+				{@const redPct =
+					denom === 0 ? 0 : Math.min(100 - carryPct, Math.round((budget.limitCents / denom) * 100))}
+				{@const bluePct =
+					denom === 0
+						? 0
+						: Math.min(
+								100 - carryPct - redPct,
+								Math.round(((spentCents - budget.limitCents) / denom) * 100)
+							)}
+				{#if carryPct > 0}
+					<div
+						class="absolute inset-y-0 left-0 h-full bg-orange-500/70"
+						style="width: {carryPct}%"
+					></div>
+				{/if}
+				<div
+					class="absolute inset-y-0 h-full bg-rose-500"
+					style="left: {carryPct}%; width: {redPct}%"
+				></div>
+				<div
+					class="absolute inset-y-0 h-full rounded-full bg-blue-500 transition-all"
+					style="left: {carryPct + redPct}%; width: {bluePct}%"
+				></div>
+			{:else}
+				{@const carryPct = denom === 0 ? 0 : Math.min(100, Math.round((carryover / denom) * 100))}
+				{@const spentPct =
+					denom === 0 ? 0 : Math.min(100 - carryPct, Math.round((spentCents / denom) * 100))}
+				{@const outPct =
+					denom === 0
+						? 0
+						: Math.min(100 - carryPct - spentPct, Math.round((flow.out / denom) * 100))}
+				{#if carryPct > 0}
+					<div
+						class="absolute inset-y-0 left-0 h-full bg-orange-500/70"
+						style="width: {carryPct}%"
+					></div>
+				{/if}
+				<div
+					class="absolute inset-y-0 h-full rounded-full transition-all {carryPct + spentPct >= 80
+						? 'bg-amber-500'
+						: 'bg-emerald-500'}"
 					style="left: {carryPct}%; width: {spentPct}%"
 				></div>
 				{#if flow.out > 0}
@@ -320,13 +352,13 @@
 		</div>
 		<div class="grid grid-cols-3 gap-3 text-xs">
 			<div>
-				<div class="text-muted-foreground uppercase tracking-wider">Spent</div>
+				<div class="text-muted-foreground tracking-wider uppercase">Spent</div>
 				<div class="mt-1 font-semibold tabular-nums {stillOver ? 'text-expense' : ''}">
 					{formatCentsAsCurrency(spentCents, currency)}
 				</div>
 			</div>
 			<div>
-				<div class="text-muted-foreground uppercase tracking-wider">Limit</div>
+				<div class="text-muted-foreground tracking-wider uppercase">Limit</div>
 				<div class="mt-1 font-semibold tabular-nums">
 					{formatCentsAsCurrency(limitCents - carryover, currency)}
 				</div>
@@ -337,26 +369,34 @@
 				{/if}
 			</div>
 			<div>
-				<div class="text-muted-foreground uppercase tracking-wider">{stillOver ? 'Over by' : 'Left'}</div>
+				<div class="text-muted-foreground tracking-wider uppercase">
+					{stillOver ? 'Over by' : 'Left'}
+				</div>
 				<div class="mt-1 font-semibold tabular-nums {stillOver ? 'text-expense' : 'text-income'}">
 					{#if stillOver}
 						−{formatCentsAsCurrency(spentCents + carryover - denom, currency)}
 					{:else}
-						{formatCentsAsCurrency(Math.max(0, denom - spentCents - flow.out - carryover), currency)}
+						{formatCentsAsCurrency(
+							Math.max(0, denom - spentCents - flow.out - carryover),
+							currency
+						)}
 					{/if}
 				</div>
 			</div>
 		</div>
 		{#if carryover > 0}
 			<div class="mt-3 text-xs text-amber-500">
-				⤴ Carryover deficit from {budget?.carryoverFromPeriod}: {formatCentsAsCurrency(carryover, currency)}
+				⤴ Carryover deficit from {budget?.carryoverFromPeriod}: {formatCentsAsCurrency(
+					carryover,
+					currency
+				)}
 			</div>
 		{/if}
 	</div>
 {/if}
 
 {#if budget}
-	<div class="mb-6 rounded-xl border bg-card p-4">
+	<div class="bg-card mb-6 rounded-xl border p-4">
 		<div class="mb-3 flex items-center justify-between">
 			<h2 class="text-sm font-semibold">Subsidies</h2>
 			{#if stillOver}
@@ -416,7 +456,12 @@
 							<DropdownMenu.Root>
 								<DropdownMenu.Trigger>
 									{#snippet child({ props })}
-										<Button {...props} variant="ghost" size="icon" class="size-11 shrink-0 md:size-8">
+										<Button
+											{...props}
+											variant="ghost"
+											size="icon"
+											class="size-11 shrink-0 md:size-8"
+										>
 											<MoreHorizontal class="size-4" />
 										</Button>
 									{/snippet}
@@ -434,7 +479,8 @@
 													await invalidateAll();
 													notify.success('Transaction deleted');
 												} else if (result.type === 'failure') {
-													const message = (result.data as { message?: string } | undefined)?.message;
+													const message = (result.data as { message?: string } | undefined)
+														?.message;
 													notify.error(message ?? 'Could not delete transaction');
 												}
 											}}
@@ -498,7 +544,7 @@
 			targetCategoryName={cat?.name ?? 'Unknown'}
 			targetOverageCents={Math.max(0, overage)}
 			alreadyCoveredCents={flow.in}
-			eligibleSources={eligibleSources}
+			{eligibleSources}
 			onClose={() => (subsidyOpen = false)}
 		/>
 	{/if}
@@ -547,7 +593,9 @@
 			side="bottom"
 			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
 		>
-			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Subsidize budget</Sheet.Title></Sheet.Header>
+			<Sheet.Header class="p-4 pb-2 text-left"
+				><Sheet.Title>Subsidize budget</Sheet.Title></Sheet.Header
+			>
 			<div class="flex-1 overflow-y-auto">{@render subsidyCreateSnippet()}</div>
 		</Sheet.Content>
 	</Sheet.Root>
@@ -556,7 +604,8 @@
 			side="bottom"
 			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
 		>
-			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Edit subsidy</Sheet.Title></Sheet.Header>
+			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Edit subsidy</Sheet.Title></Sheet.Header
+			>
 			<div class="flex-1 overflow-y-auto">{@render subsidyEditSnippet()}</div>
 		</Sheet.Content>
 	</Sheet.Root>

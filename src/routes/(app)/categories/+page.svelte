@@ -285,7 +285,10 @@
 								{/if}
 							</div>
 							<div class="min-w-0 flex-1">
-								<a href="/categories/{category.id}" class="block truncate font-medium hover:underline">
+								<a
+									href="/categories/{category.id}"
+									class="block truncate font-medium hover:underline"
+								>
 									{category.name}
 								</a>
 								{#if category.kind === 'expense'}
@@ -367,7 +370,9 @@
 						{/if}
 					</div>
 					<div class="min-w-0 flex-1">
-						<a href="/categories/{category.id}" class="truncate font-medium hover:underline block">{category.name}</a>
+						<a href="/categories/{category.id}" class="block truncate font-medium hover:underline"
+							>{category.name}</a
+						>
 						<div class="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
 							<span class="capitalize">{category.kind}</span>
 						</div>
@@ -444,7 +449,10 @@
 					bind:value={createExpenseType}
 					ariaLabel="Expense type"
 				/>
-				<p class="text-muted-foreground text-xs">Fixed is for rent, bills, and recurring obligations. Variable is what you can reduce this month.</p>
+				<p class="text-muted-foreground text-xs">
+					Fixed is for rent, bills, and recurring obligations. Variable is what you can reduce this
+					month.
+				</p>
 			</div>
 		{/if}
 		<div class="space-y-2">
@@ -615,7 +623,10 @@
 					bind:value={editExpenseType}
 					ariaLabel="Expense type"
 				/>
-				<p class="text-muted-foreground text-xs">Fixed is for rent, bills, and recurring obligations. Variable is what you can reduce this month.</p>
+				<p class="text-muted-foreground text-xs">
+					Fixed is for rent, bills, and recurring obligations. Variable is what you can reduce this
+					month.
+				</p>
 			</div>
 		{/if}
 		<div class="space-y-2">

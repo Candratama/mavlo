@@ -53,11 +53,9 @@
 	class="space-y-4 p-4"
 >
 	<input type="hidden" name="id" value={subsidyId} />
-	<div class="rounded-lg bg-muted/40 p-3 text-sm">
+	<div class="bg-muted/40 rounded-lg p-3 text-sm">
 		<div class="font-medium">{fromName} → {toName}</div>
-		<div class="text-muted-foreground mt-1 text-xs">
-			From/to cannot be changed.
-		</div>
+		<div class="text-muted-foreground mt-1 text-xs">From/to cannot be changed.</div>
 	</div>
 
 	<div class="space-y-1">
@@ -66,7 +64,7 @@
 			{#if maxAmount > 0}
 				<button
 					type="button"
-					class="text-primary hover:underline text-xs font-medium"
+					class="text-primary text-xs font-medium hover:underline"
 					onclick={() => (amountCents = maxAmount)}
 				>
 					Use all ({formatCentsAsCurrency(maxAmount, 'IDR')})
@@ -101,7 +99,7 @@
 			Cancel
 		</Button>
 		<SubmitButton
-			pending={pending}
+			{pending}
 			disabled={amountCents <= 0 || amountCents > maxAmount}
 			class="h-12 flex-1 rounded-full !bg-white text-base font-semibold !text-neutral-900 hover:!bg-white/90 md:h-10 md:text-sm"
 		>

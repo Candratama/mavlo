@@ -112,16 +112,13 @@
 </svelte:head>
 
 <div class="mb-6">
-	<Button variant="ghost" size="sm" class="-ml-2 mb-3" href="/accounts">
+	<Button variant="ghost" size="sm" class="mb-3 -ml-2" href="/accounts">
 		<ArrowLeft class="mr-1 size-4" /> Accounts
 	</Button>
 
 	{#if account}
 		{@const IconComp = typeIcons[account.type as keyof typeof typeIcons] ?? Wallet}
-		<div
-			class="mavlo-pill relative overflow-hidden rounded-2xl p-5"
-			style="min-height: 120px;"
-		>
+		<div class="mavlo-pill relative overflow-hidden rounded-2xl p-5" style="min-height: 120px;">
 			<div
 				aria-hidden="true"
 				class="pointer-events-none absolute inset-0 opacity-70"
@@ -212,9 +209,7 @@
 			<ul class="space-y-2">
 				{#each group.items as tx (tx.id)}
 					{@const acc = accountById.get(tx.accountId)}
-					{@const destAcc = tx.transferToAccountId
-						? accountById.get(tx.transferToAccountId)
-						: null}
+					{@const destAcc = tx.transferToAccountId ? accountById.get(tx.transferToAccountId) : null}
 					{@const cat = tx.categoryId ? categoryById.get(tx.categoryId) : null}
 					{@const IconComp =
 						tx.kind === 'transfer' ? ArrowLeftRight : (getIconByName(cat?.icon) ?? Tag)}
@@ -259,7 +254,12 @@
 							<DropdownMenu.Root>
 								<DropdownMenu.Trigger>
 									{#snippet child({ props })}
-										<Button {...props} variant="ghost" size="icon" class="size-11 shrink-0 md:size-8">
+										<Button
+											{...props}
+											variant="ghost"
+											size="icon"
+											class="size-11 shrink-0 md:size-8"
+										>
 											<MoreHorizontal class="size-4" />
 										</Button>
 									{/snippet}

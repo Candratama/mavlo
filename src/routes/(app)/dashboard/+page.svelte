@@ -266,27 +266,55 @@
 	{@const nextPayment = data.debtTotals?.upcomingPayments?.[0]}
 	<a
 		href={resolve('/debts')}
-		class="mt-4 block rounded-xl border bg-gradient-to-br {dtiState === 'unsafe' ? 'from-rose-500/10' : dtiState === 'moderate' ? 'from-amber-500/10' : 'from-primary/10'} via-card to-card hover:bg-accent/20 p-4 transition-colors"
+		class="mt-4 block rounded-xl border bg-gradient-to-br {dtiState === 'unsafe'
+			? 'from-rose-500/10'
+			: dtiState === 'moderate'
+				? 'from-amber-500/10'
+				: 'from-primary/10'} via-card to-card hover:bg-accent/20 p-4 transition-colors"
 	>
 		<div class="mb-2 flex items-center justify-between">
 			<span class="text-sm font-semibold">Debt</span>
 			<span class="text-sm font-semibold tabular-nums">
-				{hideBalance ? maskedAmount : formatCentsAsCurrency(data.debtTotals?.totalBalanceCents ?? 0, data.displayCurrency)}
+				{hideBalance
+					? maskedAmount
+					: formatCentsAsCurrency(data.debtTotals?.totalBalanceCents ?? 0, data.displayCurrency)}
 			</span>
 		</div>
 		<div class="text-muted-foreground flex justify-between text-xs tabular-nums">
 			<span>Monthly minimum</span>
-			<span>{hideBalance ? maskedAmount : formatCentsAsCurrency(data.debtTotals?.totalMinPaymentCents ?? 0, data.displayCurrency)}</span>
+			<span
+				>{hideBalance
+					? maskedAmount
+					: formatCentsAsCurrency(
+							data.debtTotals?.totalMinPaymentCents ?? 0,
+							data.displayCurrency
+						)}</span
+			>
 		</div>
 		{#if data.monthIncomeCents > 0}
-			<div class="mt-2 text-xs {dtiState === 'unsafe' ? 'text-rose-500' : dtiState === 'moderate' ? 'text-amber-500' : 'text-muted-foreground'}">
-				DTI {dti}% {dtiState === 'safe' ? '✓' : dtiState === 'moderate' ? '· moderate' : '⚠ above safe threshold'}
+			<div
+				class="mt-2 text-xs {dtiState === 'unsafe'
+					? 'text-rose-500'
+					: dtiState === 'moderate'
+						? 'text-amber-500'
+						: 'text-muted-foreground'}"
+			>
+				DTI {dti}% {dtiState === 'safe'
+					? '✓'
+					: dtiState === 'moderate'
+						? '· moderate'
+						: '⚠ above safe threshold'}
 			</div>
 		{/if}
 		{#if nextPayment}
 			<div class="text-muted-foreground mt-2 text-xs">
-				Upcoming: {new Date(nextPayment.dueMs).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ·
-				{hideBalance ? maskedAmount : formatCentsAsCurrency(nextPayment.minAmountCents, data.displayCurrency)} ·
+				Upcoming: {new Date(nextPayment.dueMs).toLocaleDateString('en-US', {
+					month: 'short',
+					day: 'numeric'
+				})} ·
+				{hideBalance
+					? maskedAmount
+					: formatCentsAsCurrency(nextPayment.minAmountCents, data.displayCurrency)} ·
 				{nextPayment.debtName}
 			</div>
 		{/if}
@@ -303,7 +331,8 @@
 			⚠ Unbudgeted spending detected
 		</div>
 		<div class="text-muted-foreground mt-1 text-xs">
-			{data.unbudgetedCategories.length} {data.unbudgetedCategories.length === 1 ? 'category' : 'categories'} ·
+			{data.unbudgetedCategories.length}
+			{data.unbudgetedCategories.length === 1 ? 'category' : 'categories'} ·
 			{hideBalance ? maskedAmount : formatCentsAsCurrency(totalUnbudgeted, data.displayCurrency)} untracked.
 			Tap to assign budgets.
 		</div>
@@ -393,7 +422,9 @@
 				title="No transactions yet"
 				description="Add a transaction to see it here."
 			>
-				<Button onclick={() => openAddTransaction({ defaultKind: 'expense' })}>Add transaction</Button>
+				<Button onclick={() => openAddTransaction({ defaultKind: 'expense' })}
+					>Add transaction</Button
+				>
 			</EmptyState>
 		{:else}
 			<ul class="divide-y">

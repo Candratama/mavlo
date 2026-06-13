@@ -11,6 +11,7 @@ Add a debt tracking feature to Mavlo: a new `debts` table for tracking credit ca
 ## Motivation
 
 Personal finance apps that track only spending miss the second half of the picture: liabilities. Without debt tracking:
+
 - Net worth is overstated (cash without subtracting what's owed)
 - Users don't see total monthly debt servicing cost
 - High-interest debt isn't surfaced as a priority
@@ -20,16 +21,16 @@ This feature surfaces the full debt position, links payments back to specific de
 
 ## Decisions
 
-| # | Question | Choice |
-|---|----------|--------|
-| 1 | Storage model | Separate `debts` table (not modeled as accounts) |
-| 2 | Account linkage | Optional `accountId` on debt — for credit cards, link to the credit-type account (display only in Phase 1, no auto-sync) |
-| 3 | Payment recording | Transactions get a new optional `debtId` column; linked expense reduces `currentBalanceCents` server-side |
-| 4 | Interest tracking | Manual entry only in Phase 1 (auto-accrual is Phase 2) |
-| 5 | Net worth | Subtract `sum(debts.currentBalanceCents)` from sum of account balances |
-| 6 | Lending OUT | Out of scope (user as creditor) |
-| 7 | DTI metric | Compute `monthlyMinPayments / monthlyIncome`, warn at >36% |
-| 8 | Payoff projection | Out of scope for Phase 1 (Phase 2) |
+| #   | Question          | Choice                                                                                                                   |
+| --- | ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Storage model     | Separate `debts` table (not modeled as accounts)                                                                         |
+| 2   | Account linkage   | Optional `accountId` on debt — for credit cards, link to the credit-type account (display only in Phase 1, no auto-sync) |
+| 3   | Payment recording | Transactions get a new optional `debtId` column; linked expense reduces `currentBalanceCents` server-side                |
+| 4   | Interest tracking | Manual entry only in Phase 1 (auto-accrual is Phase 2)                                                                   |
+| 5   | Net worth         | Subtract `sum(debts.currentBalanceCents)` from sum of account balances                                                   |
+| 6   | Lending OUT       | Out of scope (user as creditor)                                                                                          |
+| 7   | DTI metric        | Compute `monthlyMinPayments / monthlyIncome`, warn at >36%                                                               |
+| 8   | Payoff projection | Out of scope for Phase 1 (Phase 2)                                                                                       |
 
 ## Data Model
 
@@ -37,33 +38,35 @@ This feature surfaces the full debt position, links payments back to specific de
 
 ```ts
 export const debts = sqliteTable(
-  'debts',
-  {
-    id: cuid().primaryKey(),
-    userId: userIdFk(),
-    name: text('name').notNull(),
-    type: text('type', {
-      enum: ['credit_card', 'kta', 'kpr', 'auto', 'bnpl', 'pinjol', 'informal', 'other']
-    }).notNull(),
-    lender: text('lender'),
-    principalCents: integer('principal_cents', { mode: 'number' }).notNull(),
-    currentBalanceCents: integer('current_balance_cents', { mode: 'number' }).notNull(),
-    interestRatePct: integer('interest_rate_pct', { mode: 'number' }).notNull().default(0),
-    // Stored as integer percent × 100 (so 26.5% → 2650) to avoid floats.
-    minimumPaymentCents: integer('minimum_payment_cents', { mode: 'number' }).notNull().default(0),
-    dueDay: integer('due_day', { mode: 'number' }), // 1-31, nullable for BNPL
-    startDate: integer('start_date', { mode: 'number' }).notNull(),
-    maturityDate: integer('maturity_date', { mode: 'number' }),
-    status: text('status', { enum: ['active', 'paid_off', 'in_arrears'] }).notNull().default('active'),
-    accountId: text('account_id').references(() => accounts.id, { onDelete: 'set null' }),
-    note: text('note'),
-    createdAt: epochMsNow('created_at'),
-    updatedAt: epochMsNow('updated_at')
-  },
-  (t) => [
-    index('debts_user_idx').on(t.userId),
-    index('debts_user_status_idx').on(t.userId, t.status)
-  ]
+	'debts',
+	{
+		id: cuid().primaryKey(),
+		userId: userIdFk(),
+		name: text('name').notNull(),
+		type: text('type', {
+			enum: ['credit_card', 'kta', 'kpr', 'auto', 'bnpl', 'pinjol', 'informal', 'other']
+		}).notNull(),
+		lender: text('lender'),
+		principalCents: integer('principal_cents', { mode: 'number' }).notNull(),
+		currentBalanceCents: integer('current_balance_cents', { mode: 'number' }).notNull(),
+		interestRatePct: integer('interest_rate_pct', { mode: 'number' }).notNull().default(0),
+		// Stored as integer percent × 100 (so 26.5% → 2650) to avoid floats.
+		minimumPaymentCents: integer('minimum_payment_cents', { mode: 'number' }).notNull().default(0),
+		dueDay: integer('due_day', { mode: 'number' }), // 1-31, nullable for BNPL
+		startDate: integer('start_date', { mode: 'number' }).notNull(),
+		maturityDate: integer('maturity_date', { mode: 'number' }),
+		status: text('status', { enum: ['active', 'paid_off', 'in_arrears'] })
+			.notNull()
+			.default('active'),
+		accountId: text('account_id').references(() => accounts.id, { onDelete: 'set null' }),
+		note: text('note'),
+		createdAt: epochMsNow('created_at'),
+		updatedAt: epochMsNow('updated_at')
+	},
+	(t) => [
+		index('debts_user_idx').on(t.userId),
+		index('debts_user_status_idx').on(t.userId, t.status)
+	]
 );
 ```
 
@@ -82,6 +85,7 @@ Add index `tx_debt_idx` on `debtId` for payment-history queries.
 `src/lib/validation/debt.ts` (Zod):
 
 **Create:**
+
 - `name`: non-empty, max 100
 - `type`: enum value
 - `lender`: optional, max 100
@@ -117,16 +121,19 @@ markDebtPaidOff(db, userId, id): DebtRow | null
 ### Payment-side hooks (in `transactions.ts` repo)
 
 When inserting an expense transaction with `debtId`:
+
 - Verify debt belongs to user
 - After insert, decrement `debts.currentBalanceCents` by `transaction.amountCents`
 - Clamp at 0 (no negative balances — overpayments stop at zero)
 - If `currentBalanceCents === 0` and status was 'active', auto-flip to `paid_off`
 
 When updating a transaction:
+
 - If `debtId` changed (added, removed, or switched), reverse the old debt's balance and apply to the new one.
 - If amount changed and debtId unchanged, reverse old amount and apply new.
 
 When deleting a transaction with `debtId`:
+
 - Add the amount back to the debt's balance.
 - If status was `paid_off` and balance becomes >0, flip back to `active`.
 
@@ -164,12 +171,14 @@ Transactions actions (existing `src/routes/(app)/transactions/+page.server.ts`) 
 ## Page Loads
 
 `src/routes/(app)/+layout.server.ts` adds in parallel:
+
 - `listDebts(db, user.id, {})` → `debts: DebtRow[]`
 - `computeDebtTotals(db, user.id)` → `debtTotals: {...}`
 
 Net worth:
+
 ```ts
-netWorthCents = sum(balances) - debtTotals.totalBalanceCents
+netWorthCents = sum(balances) - debtTotals.totalBalanceCents;
 ```
 
 DTI ratio: `debtTotals.totalMinPaymentCents / monthIncomeCents`. Computed in dashboard page (client-side).
@@ -202,6 +211,7 @@ Paid-off debts (collapsed):
 ```
 
 Card shows:
+
 - Type icon + name + lender
 - Balance / principal
 - Bar (% paid down — `(principal - balance) / principal * 100`)
@@ -244,6 +254,7 @@ Payment history derives from `data.transactions.filter(t => t.debtId === params.
 Same pattern as budget create/edit (Dialog desktop, Sheet mobile).
 
 Form fields:
+
 - Name (text, required)
 - Type (PickerSheet — credit_card, kta, kpr, auto, bnpl, pinjol, informal, other)
 - Lender (text, optional)
@@ -258,6 +269,7 @@ Form fields:
 - Note (text, optional, max 200)
 
 **Smart defaults by type:**
+
 - `credit_card`: APR placeholder 26, dueDay shown
 - `bnpl`: APR 0, dueDay hidden, minPayment required
 - `kpr`/`auto`: APR placeholder 12, maturityDate shown
@@ -268,6 +280,7 @@ Form fields:
 Existing `src/lib/components/forms/add-transaction-sheet.svelte` extends:
 
 When `kind === 'expense'`:
+
 - Add optional "Link to debt" PickerSheet listing active debts
 - When debt is picked:
   - Auto-set category to "Debt Payment" (create category on first use)
@@ -275,10 +288,12 @@ When `kind === 'expense'`:
   - Show hint "Will reduce {debtName} balance"
 
 When form submitted:
+
 - Hidden field `debtId` posts along
 - Server inserts transaction → repo hook decrements debt balance
 
 When transaction is edited via the sheet:
+
 - Same `debtId` field — repo handles change/reverse-and-reapply.
 
 ## UI — Dashboard widget
@@ -308,17 +323,17 @@ A new category "Debt Payment" (kind=`expense`, icon `wallet`) is auto-created on
 
 ## Edge Cases
 
-| Case | Behavior |
-|------|----------|
-| Delete debt with payment history | Confirm dialog. FK cascade sets `transactions.debt_id` to NULL but keeps the transactions. |
-| Edit transaction's amount that's linked to debt | Repo reverses old amount, applies new — net change applied to balance. |
-| Edit transaction to remove debt link | Reverse old debt balance, no new application. |
-| Edit transaction to add debt link | Apply new debt balance reduction. |
-| Overpayment (tx amount > debt balance) | Balance clamped at 0; tx still records full amount as expense; toast "Overpaid by X — debt marked paid". |
-| Demo seed | One sample credit card debt with one payment transaction. |
-| Multi-currency | Out of scope, single-currency assumption holds. |
-| Auto-archive paid-off debts | Status flips to `paid_off`; UI groups them in collapsed section. |
-| Restoring a paid-off debt to active | Edit modal → status select → save. |
+| Case                                            | Behavior                                                                                                 |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Delete debt with payment history                | Confirm dialog. FK cascade sets `transactions.debt_id` to NULL but keeps the transactions.               |
+| Edit transaction's amount that's linked to debt | Repo reverses old amount, applies new — net change applied to balance.                                   |
+| Edit transaction to remove debt link            | Reverse old debt balance, no new application.                                                            |
+| Edit transaction to add debt link               | Apply new debt balance reduction.                                                                        |
+| Overpayment (tx amount > debt balance)          | Balance clamped at 0; tx still records full amount as expense; toast "Overpaid by X — debt marked paid". |
+| Demo seed                                       | One sample credit card debt with one payment transaction.                                                |
+| Multi-currency                                  | Out of scope, single-currency assumption holds.                                                          |
+| Auto-archive paid-off debts                     | Status flips to `paid_off`; UI groups them in collapsed section.                                         |
+| Restoring a paid-off debt to active             | Edit modal → status select → save.                                                                       |
 
 ## Testing
 

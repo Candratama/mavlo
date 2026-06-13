@@ -9,6 +9,7 @@ Add a dashboard card that explains monthly financial health using the active fin
 V1 adds one dashboard section: Financial Health. It is rule-based, not AI-generated.
 
 Included:
+
 - Use active cycle boundaries with half-open range: `start <= occurred_at < end`.
 - Add expense classification to categories: `fixed` or `variable`.
 - Gross income: all income transactions in cycle.
@@ -22,6 +23,7 @@ Included:
 - Advice text explaining key issue and next action.
 
 Excluded:
+
 - AI advice generation.
 - New budget editing flow.
 - Debt payoff planning.
@@ -31,6 +33,7 @@ Excluded:
 ## User Experience
 
 Dashboard shows a card with:
+
 - Status label.
 - Real income.
 - Expense.
@@ -58,10 +61,12 @@ If real income is zero, status is `danger` when expense > 0, otherwise `warning`
 ## Category Classification
 
 Expense categories get a required `expense_type` value:
+
 - `fixed`: required or recurring expenses that are hard to reduce within the month, such as rent, internet, electricity, debt payment, and recurring subscriptions.
 - `variable`: controllable expenses that can be reduced during the month, such as food, transport, shopping, gifts, travel, and other discretionary spending.
 
 Existing expense categories are backfilled with a practical default:
+
 - fixed: Home Rent, Internet, Electricity, Monthly Service, Debt Payment.
 - variable: all other expense categories.
 
@@ -74,6 +79,7 @@ A schema migration adds `expense_type` to categories. Server load for dashboard 
 ## Testing
 
 Unit tests cover:
+
 - Half-open cycle boundary excludes next salary date.
 - Loan proceeds excluded from real income.
 - Balance adjustment excluded from real income.
@@ -82,6 +88,7 @@ Unit tests cover:
 - Top leak categories prefer variable expenses and order by amount.
 
 Manual check:
+
 - Dashboard renders card for Wahyu cycle 25 Apr <= tx < 25 May.
 - Real income excludes Loan Proceeds and Balance Adjustment.
 - Category form can set fixed or variable for expense categories.

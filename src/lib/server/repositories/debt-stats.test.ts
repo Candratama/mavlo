@@ -31,8 +31,16 @@ describe('computeDebtTotals', () => {
 	});
 
 	it('sums active debts', async () => {
-		await createDebt(h.db, h.userId, baseDebt({ currentBalanceCents: 3_000_000, minimumPaymentCents: 200_000 }));
-		await createDebt(h.db, h.userId, baseDebt({ currentBalanceCents: 5_000_000, minimumPaymentCents: 300_000 }));
+		await createDebt(
+			h.db,
+			h.userId,
+			baseDebt({ currentBalanceCents: 3_000_000, minimumPaymentCents: 200_000 })
+		);
+		await createDebt(
+			h.db,
+			h.userId,
+			baseDebt({ currentBalanceCents: 5_000_000, minimumPaymentCents: 300_000 })
+		);
 		const result = await computeDebtTotals(h.db, h.userId);
 		expect(result.totalBalanceCents).toBe(8_000_000);
 		expect(result.totalMinPaymentCents).toBe(500_000);
@@ -55,8 +63,16 @@ describe('computeDebtTotals', () => {
 
 	it('lists upcoming payments within 30 days', async () => {
 		const now = Date.UTC(2026, 4, 10); // May 10, 2026
-		await createDebt(h.db, h.userId, baseDebt({ name: 'A', dueDay: 15, minimumPaymentCents: 100_000 })); // May 15
-		await createDebt(h.db, h.userId, baseDebt({ name: 'B', dueDay: 20, minimumPaymentCents: 200_000 })); // May 20
+		await createDebt(
+			h.db,
+			h.userId,
+			baseDebt({ name: 'A', dueDay: 15, minimumPaymentCents: 100_000 })
+		); // May 15
+		await createDebt(
+			h.db,
+			h.userId,
+			baseDebt({ name: 'B', dueDay: 20, minimumPaymentCents: 200_000 })
+		); // May 20
 		await createDebt(h.db, h.userId, baseDebt({ name: 'C' })); // no dueDay
 		const result = await computeDebtTotals(h.db, h.userId, now);
 		expect(result.upcomingPayments).toHaveLength(2);

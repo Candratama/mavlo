@@ -11,15 +11,7 @@
 	import { notify } from '$lib/utils/toast.js';
 	import { parseAprToInt, formatApr } from '$lib/utils/debt';
 
-	type DebtType =
-		| 'credit_card'
-		| 'kta'
-		| 'kpr'
-		| 'auto'
-		| 'bnpl'
-		| 'pinjol'
-		| 'informal'
-		| 'other';
+	type DebtType = 'credit_card' | 'kta' | 'kpr' | 'auto' | 'bnpl' | 'pinjol' | 'informal' | 'other';
 
 	type DebtRow = {
 		id: string;
@@ -100,7 +92,11 @@
 	// When user toggles funded on, auto-fill currentBalance = principal so they
 	// don't have to type the same number twice.
 	$effect(() => {
-		if (funded && principalCents != null && (currentBalanceCents == null || currentBalanceCents === 0)) {
+		if (
+			funded &&
+			principalCents != null &&
+			(currentBalanceCents == null || currentBalanceCents === 0)
+		) {
 			currentBalanceCents = principalCents;
 		}
 	});
@@ -122,7 +118,9 @@
 				type === 'pinjol')
 	);
 	const showLinkedAccount = $derived(!isLent && type === 'credit_card');
-	const showMaturityDate = $derived(!isLent && (type === 'kpr' || type === 'auto' || type === 'bnpl'));
+	const showMaturityDate = $derived(
+		!isLent && (type === 'kpr' || type === 'auto' || type === 'bnpl')
+	);
 	const showApr = $derived(!isLent && type !== 'informal');
 	const showMinPayment = $derived(!isLent);
 	const showFundingToggle = $derived(mode === 'create' && type !== 'credit_card');
@@ -270,7 +268,9 @@
 	</div>
 
 	<div class="space-y-1">
-		<Label for="debt-lender">{lenderLabel} <span class="text-muted-foreground">(optional)</span></Label>
+		<Label for="debt-lender"
+			>{lenderLabel} <span class="text-muted-foreground">(optional)</span></Label
+		>
 		<Input
 			id="debt-lender"
 			name="lender"
@@ -281,14 +281,14 @@
 	</div>
 
 	{#if showFundingToggle}
-		<div class="rounded-lg border bg-muted/30 p-3">
+		<div class="bg-muted/30 rounded-lg border p-3">
 			<label class="flex cursor-pointer items-start gap-3">
 				<input
 					type="checkbox"
 					bind:checked={funded}
 					name="funded"
 					value="1"
-					class="mt-1 size-4 accent-primary"
+					class="accent-primary mt-1 size-4"
 				/>
 				<div class="flex-1">
 					<div class="text-sm font-medium">
@@ -365,8 +365,10 @@
 				</div>
 			{/if}
 			{#if showMinPayment}
-				<div class={showApr ? 'space-y-1' : 'space-y-1 col-span-2'}>
-					<Label for="debt-min">Min payment <span class="text-muted-foreground">(optional)</span></Label>
+				<div class={showApr ? 'space-y-1' : 'col-span-2 space-y-1'}>
+					<Label for="debt-min"
+						>Min payment <span class="text-muted-foreground">(optional)</span></Label
+					>
 					<MoneyInput
 						id="debt-min"
 						name="minimumPaymentCents"
@@ -381,7 +383,9 @@
 
 	{#if showDueDay}
 		<div class="space-y-1">
-			<Label for="debt-due">Due day (1–31) <span class="text-muted-foreground">(optional)</span></Label>
+			<Label for="debt-due"
+				>Due day (1–31) <span class="text-muted-foreground">(optional)</span></Label
+			>
 			<Input id="debt-due" type="number" name="dueDay" min={1} max={31} bind:value={dueDay} />
 			{#if !dueDay && dueDayExpected}
 				<p class="text-xs text-amber-500">
@@ -398,7 +402,9 @@
 		</div>
 		{#if showMaturityDate}
 			<div class="space-y-1">
-				<Label for="debt-maturity">Maturity date <span class="text-muted-foreground">(optional)</span></Label>
+				<Label for="debt-maturity"
+					>Maturity date <span class="text-muted-foreground">(optional)</span></Label
+				>
 				<Input id="debt-maturity" type="date" bind:value={maturityDateStr} />
 			</div>
 		{/if}

@@ -44,8 +44,10 @@
 				{#each entries as e (e.id)}
 					<li class="flex items-center justify-between gap-2">
 						<span class="truncate">
-							{e.direction === 'in' ? '↓' : '↑'} {formatCentsAsCurrency(e.amountCents, 'IDR')}
-							{e.direction === 'in' ? 'from' : 'to'} {e.counterpartName}
+							{e.direction === 'in' ? '↓' : '↑'}
+							{formatCentsAsCurrency(e.amountCents, 'IDR')}
+							{e.direction === 'in' ? 'from' : 'to'}
+							{e.counterpartName}
 						</span>
 						<span class="flex shrink-0 items-center gap-1">
 							<Button
@@ -77,7 +79,7 @@
 								onclick={(ev) => ev.stopPropagation()}
 							>
 								<input type="hidden" name="id" value={e.id} />
-								<Button type="submit" variant="ghost" size="icon" class="size-7 text-destructive">
+								<Button type="submit" variant="ghost" size="icon" class="text-destructive size-7">
 									<Trash2 class="size-3" />
 								</Button>
 							</form>

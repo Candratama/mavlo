@@ -16,12 +16,7 @@ export async function computeSubsidyFlows(
 	const rows = await db
 		.select()
 		.from(budgetSubsidies)
-		.where(
-			and(
-				eq(budgetSubsidies.userId, userId),
-				eq(budgetSubsidies.periodMonth, periodMonth)
-			)
-		);
+		.where(and(eq(budgetSubsidies.userId, userId), eq(budgetSubsidies.periodMonth, periodMonth)));
 
 	const map: SubsidyFlowMap = new Map();
 	const bump = (id: string, key: 'in' | 'out', amount: number) => {

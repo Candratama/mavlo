@@ -43,9 +43,7 @@
 
 	const selectedSource = $derived(eligibleSources.find((s) => s.budgetId === sourceId));
 	const maxAmount = $derived(
-		selectedSource
-			? Math.min(remainingGap, selectedSource.sourceRemainingCents)
-			: remainingGap
+		selectedSource ? Math.min(remainingGap, selectedSource.sourceRemainingCents) : remainingGap
 	);
 
 	type Icon = PickerItem['icon'];
@@ -79,7 +77,7 @@
 	class="space-y-4 p-4"
 >
 	<input type="hidden" name="toBudgetId" value={targetBudgetId} />
-	<div class="rounded-lg bg-muted/40 p-3 text-sm">
+	<div class="bg-muted/40 rounded-lg p-3 text-sm">
 		<div class="font-medium">{targetCategoryName}</div>
 		<div class="text-muted-foreground mt-1 text-xs">
 			Shortfall: {formatCentsAsCurrency(targetOverageCents, 'IDR')}
@@ -95,9 +93,7 @@
 	<div class="space-y-1">
 		<Label>Source</Label>
 		{#if sourceItems.length === 0}
-			<p class="text-muted-foreground text-sm">
-				No budget with remaining allocation.
-			</p>
+			<p class="text-muted-foreground text-sm">No budget with remaining allocation.</p>
 		{:else}
 			<PickerSheet
 				items={sourceItems}
@@ -116,7 +112,7 @@
 			{#if maxAmount > 0}
 				<button
 					type="button"
-					class="text-primary hover:underline text-xs font-medium"
+					class="text-primary text-xs font-medium hover:underline"
 					onclick={() => (amountCents = maxAmount)}
 				>
 					Use all ({formatCentsAsCurrency(maxAmount, 'IDR')})
@@ -153,7 +149,7 @@
 			Cancel
 		</Button>
 		<SubmitButton
-			pending={pending}
+			{pending}
 			disabled={!sourceId || !amountCents || amountCents > maxAmount}
 			class="h-12 flex-1 rounded-full !bg-white text-base font-semibold !text-neutral-900 hover:!bg-white/90 md:h-10 md:text-sm"
 		>

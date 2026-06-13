@@ -46,7 +46,9 @@ const insertTx = (
 ) => {
 	const cat = categoryId ? `'${categoryId}'` : 'NULL';
 	h.sqlite
-		.prepare(`INSERT INTO transactions VALUES (?, ?, 'acc1', ${cat}, ?, ?, NULL, ?, ?, ?, NULL, NULL, 0)`)
+		.prepare(
+			`INSERT INTO transactions VALUES (?, ?, 'acc1', ${cat}, ?, ?, NULL, ?, ?, ?, NULL, NULL, 0)`
+		)
 		.run(id, h.userId, amount, kind, occurredAt, occurredAt, occurredAt);
 };
 
@@ -144,7 +146,12 @@ describe('computeFinancialHealth', () => {
 		expect(health.fixedExpenseCents).toBe(5_000_000);
 		expect(health.variableExpenseCents).toBe(4_000_000);
 		expect(health.topLeaks).toEqual([
-			{ categoryId: 'cat-food', categoryName: 'Food', amountCents: 2_500_000, expenseType: 'variable' },
+			{
+				categoryId: 'cat-food',
+				categoryName: 'Food',
+				amountCents: 2_500_000,
+				expenseType: 'variable'
+			},
 			{
 				categoryId: 'cat-transport',
 				categoryName: 'Transport',

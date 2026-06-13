@@ -41,6 +41,7 @@
 ### Task 1: Add category expense_type schema + migration
 
 **Files:**
+
 - Modify: `src/lib/server/db/schema.ts:38-52`
 - Create: `drizzle/0014_category_expense_type.sql`
 - Modify: `src/lib/server/db/test-fixtures.ts`
@@ -82,7 +83,9 @@ export const categories = sqliteTable(
 		userId: userIdFk(),
 		name: text('name').notNull(),
 		kind: text('kind', { enum: ['income', 'expense'] }).notNull(),
-		expenseType: text('expense_type', { enum: ['fixed', 'variable'] }).notNull().default('variable'),
+		expenseType: text('expense_type', { enum: ['fixed', 'variable'] })
+			.notNull()
+			.default('variable'),
 		color: text('color'),
 		icon: text('icon'),
 		archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
@@ -139,6 +142,7 @@ git commit -m "feat(db): classify expense categories"
 ### Task 2: Implement financial health repository function with TDD
 
 **Files:**
+
 - Modify: `src/lib/server/repositories/dashboard-stats.ts`
 - Modify: `src/lib/server/repositories/dashboard-stats.test.ts`
 
@@ -219,7 +223,12 @@ describe('computeFinancialHealth', () => {
 		expect(health.fixedExpenseCents).toBe(5_000_000);
 		expect(health.variableExpenseCents).toBe(4_000_000);
 		expect(health.topLeaks).toEqual([
-			{ categoryId: 'cat-food', categoryName: 'Food', amountCents: 2_500_000, expenseType: 'variable' },
+			{
+				categoryId: 'cat-food',
+				categoryName: 'Food',
+				amountCents: 2_500_000,
+				expenseType: 'variable'
+			},
 			{
 				categoryId: 'cat-transport',
 				categoryName: 'Transport',
@@ -401,6 +410,7 @@ git commit -m "feat(dashboard): compute financial health"
 ### Task 3: Wire financial health into layout data
 
 **Files:**
+
 - Modify: `src/routes/(app)/+layout.server.ts`
 
 - [ ] **Step 1: Add failing type/reference usage**
@@ -408,7 +418,7 @@ git commit -m "feat(dashboard): compute financial health"
 In `src/routes/(app)/+layout.server.ts`, update import from dashboard stats to include:
 
 ```ts
-computeFinancialHealth
+computeFinancialHealth;
 ```
 
 Add `financialHealth` to the `Promise.all` destructuring after `monthlyIncomeExpense`:
@@ -448,13 +458,13 @@ financialHealth,
 In `src/routes/(app)/+layout.server.ts`, change local cycle transaction filters from inclusive end:
 
 ```ts
-t.occurredAt >= cycleFromMs && t.occurredAt <= cycleToMs
+t.occurredAt >= cycleFromMs && t.occurredAt <= cycleToMs;
 ```
 
 to half-open via existing `cycle.end.getTime()`:
 
 ```ts
-t.occurredAt >= cycleFromMs && t.occurredAt < cycle.end.getTime()
+t.occurredAt >= cycleFromMs && t.occurredAt < cycle.end.getTime();
 ```
 
 Apply to `cycleHasPayment` and `cycleTxns` only.
@@ -481,6 +491,7 @@ git commit -m "feat(dashboard): load financial health"
 ### Task 4: Render Financial Health card
 
 **Files:**
+
 - Modify: `src/routes/(app)/dashboard/+page.svelte`
 
 - [ ] **Step 1: Add card state helpers**
@@ -529,7 +540,7 @@ After the cycle dual-stat block (`</div>` around current Income/Expense cards) a
 				<p class="text-muted-foreground text-xs tracking-wider uppercase">Financial Health</p>
 				<h3 class="text-lg font-semibold">{healthLabel}</h3>
 			</div>
-			<div class="rounded-full border bg-background/60 px-3 py-1 text-xs font-medium">
+			<div class="bg-background/60 rounded-full border px-3 py-1 text-xs font-medium">
 				This cycle
 			</div>
 		</div>
@@ -538,7 +549,9 @@ After the cycle dual-stat block (`</div>` around current Income/Expense cards) a
 			<div>
 				<div class="text-muted-foreground text-xs">Real income</div>
 				<div class="font-semibold tabular-nums">
-					{hideBalance ? maskedAmount : formatCentsAsCurrency(h.realIncomeCents, data.displayCurrency)}
+					{hideBalance
+						? maskedAmount
+						: formatCentsAsCurrency(h.realIncomeCents, data.displayCurrency)}
 				</div>
 			</div>
 			<div>
@@ -550,27 +563,35 @@ After the cycle dual-stat block (`</div>` around current Income/Expense cards) a
 			<div>
 				<div class="text-muted-foreground text-xs">Fixed</div>
 				<div class="font-semibold tabular-nums">
-					{hideBalance ? maskedAmount : formatCentsAsCurrency(h.fixedExpenseCents, data.displayCurrency)}
+					{hideBalance
+						? maskedAmount
+						: formatCentsAsCurrency(h.fixedExpenseCents, data.displayCurrency)}
 				</div>
 			</div>
 			<div>
 				<div class="text-muted-foreground text-xs">Variable</div>
 				<div class="font-semibold tabular-nums">
-					{hideBalance ? maskedAmount : formatCentsAsCurrency(h.variableExpenseCents, data.displayCurrency)}
+					{hideBalance
+						? maskedAmount
+						: formatCentsAsCurrency(h.variableExpenseCents, data.displayCurrency)}
 				</div>
 			</div>
 		</div>
 
-		<div class="mt-3 rounded-lg bg-background/50 p-3 text-sm">
+		<div class="bg-background/50 mt-3 rounded-lg p-3 text-sm">
 			<div class="flex items-center justify-between gap-3">
 				<span class="text-muted-foreground">Real net</span>
-				<span class="font-semibold tabular-nums {h.realNetCents < 0 ? 'text-expense' : 'text-income'}">
+				<span
+					class="font-semibold tabular-nums {h.realNetCents < 0 ? 'text-expense' : 'text-income'}"
+				>
 					{hideBalance ? maskedAmount : formatCentsAsCurrency(h.realNetCents, data.displayCurrency)}
 				</span>
 			</div>
 			{#if h.excludedIncomeCents > 0}
 				<div class="text-muted-foreground mt-1 text-xs">
-					Excluded non-operating income: {hideBalance ? maskedAmount : formatCentsAsCurrency(h.excludedIncomeCents, data.displayCurrency)}
+					Excluded non-operating income: {hideBalance
+						? maskedAmount
+						: formatCentsAsCurrency(h.excludedIncomeCents, data.displayCurrency)}
 				</div>
 			{/if}
 		</div>
@@ -578,8 +599,12 @@ After the cycle dual-stat block (`</div>` around current Income/Expense cards) a
 		{#if h.topLeaks.length > 0}
 			<div class="mt-3 flex flex-wrap gap-2">
 				{#each h.topLeaks as leak}
-					<span class="bg-background/60 text-muted-foreground rounded-full border px-2.5 py-1 text-xs">
-						{leak.categoryName} · {hideBalance ? maskedAmount : formatCentsAsCurrency(leak.amountCents, data.displayCurrency)}
+					<span
+						class="bg-background/60 text-muted-foreground rounded-full border px-2.5 py-1 text-xs"
+					>
+						{leak.categoryName} · {hideBalance
+							? maskedAmount
+							: formatCentsAsCurrency(leak.amountCents, data.displayCurrency)}
 					</span>
 				{/each}
 			</div>
@@ -612,6 +637,7 @@ git commit -m "feat(dashboard): show financial health card"
 ### Task 5: Add fixed/variable controls to category forms
 
 **Files:**
+
 - Modify: `src/routes/(app)/categories/+page.server.ts`
 - Modify: `src/routes/(app)/categories/+page.svelte`
 - Modify: `src/routes/(app)/categories/[id]/+page.server.ts`
@@ -632,7 +658,8 @@ Expected: identify create/edit actions in list page and detail page.
 In category create/update actions, parse:
 
 ```ts
-const expenseType = kind === 'expense' && formData.get('expenseType') === 'fixed' ? 'fixed' : 'variable';
+const expenseType =
+	kind === 'expense' && formData.get('expenseType') === 'fixed' ? 'fixed' : 'variable';
 ```
 
 Include in inserted/updated values:
@@ -686,7 +713,10 @@ In both create and edit forms, render only when kind is expense:
 			bind:value={createExpenseType}
 			ariaLabel="Expense type"
 		/>
-		<p class="text-muted-foreground text-xs">Fixed is for rent, bills, and recurring obligations. Variable is what you can reduce this month.</p>
+		<p class="text-muted-foreground text-xs">
+			Fixed is for rent, bills, and recurring obligations. Variable is what you can reduce this
+			month.
+		</p>
 	</div>
 {/if}
 ```
@@ -730,6 +760,7 @@ git commit -m "feat(categories): edit expense type"
 ### Task 6: Verify app behavior end-to-end
 
 **Files:**
+
 - No planned code edits. Fix only if verification reveals defects.
 
 - [ ] **Step 1: Run full automated verification**
@@ -772,6 +803,7 @@ Expected: Vite dev server starts without errors.
 - [ ] **Step 4: Manual browser check**
 
 Open dashboard and verify:
+
 - Financial Health card visible.
 - Cycle uses `25 Apr <= tx < 25 May` for current configured cycle.
 - Real income excludes `Loan Proceeds` and `Balance Adjustment`.
@@ -780,6 +812,7 @@ Open dashboard and verify:
 - Hide balance masks all financial health amounts.
 
 Open Categories and verify:
+
 - Expense create/edit shows fixed/variable control.
 - Income create/edit does not show fixed/variable control.
 - Changing an expense category type persists after refresh.
@@ -800,6 +833,7 @@ If no fixes were required, do not commit.
 ## Self-Review
 
 Spec coverage:
+
 - Half-open cycle: Task 2 tests and Task 3 layout normalization.
 - Expense classification: Tasks 1 and 5.
 - Gross/excluded/real income: Task 2.
@@ -812,6 +846,7 @@ Spec coverage:
 Placeholder scan: no TBD/TODO placeholders. Task 5 has conditional detail-page work because current code must be inspected before editing exact fields; command and required changes are explicit.
 
 Type consistency:
+
 - DB column: `expense_type`.
 - Drizzle property: `expenseType`.
 - Form field: `expenseType`.

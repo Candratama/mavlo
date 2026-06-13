@@ -234,7 +234,10 @@
 	<div>
 		<h1 class="mavlo-headline text-2xl font-bold tracking-tight sm:text-3xl">Transactions</h1>
 	</div>
-	<Button class="lift hidden md:inline-flex" onclick={() => openAddTransaction({ defaultKind: 'expense' })}>
+	<Button
+		class="lift hidden md:inline-flex"
+		onclick={() => openAddTransaction({ defaultKind: 'expense' })}
+	>
 		<Plus class="mr-1 size-4" /> New transaction
 	</Button>
 </div>
@@ -304,7 +307,13 @@
 			<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
 				<div class="space-y-1">
 					<Label for="filter-from">From</Label>
-					<DatePicker id="filter-from" name="from" bind:value={fFrom} placeholder="From" title="From date" />
+					<DatePicker
+						id="filter-from"
+						name="from"
+						bind:value={fFrom}
+						placeholder="From"
+						title="From date"
+					/>
 				</div>
 				<div class="space-y-1">
 					<Label for="filter-to">To</Label>
@@ -512,7 +521,9 @@
 									title="No transactions in this range"
 									description="Try a different date range or add a new transaction."
 								>
-									<Button onclick={() => openAddTransaction({ defaultKind: 'expense' })}>Add transaction</Button>
+									<Button onclick={() => openAddTransaction({ defaultKind: 'expense' })}
+										>Add transaction</Button
+									>
 								</EmptyState>
 							</Table.Cell>
 						</Table.Row>
@@ -587,7 +598,8 @@
 			title="No transactions in this range"
 			description="Try a different date range or add a new transaction."
 		>
-			<Button onclick={() => openAddTransaction({ defaultKind: 'expense' })}>Add transaction</Button>
+			<Button onclick={() => openAddTransaction({ defaultKind: 'expense' })}>Add transaction</Button
+			>
 		</EmptyState>
 	{/each}
 </div>

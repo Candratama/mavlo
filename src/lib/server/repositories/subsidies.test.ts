@@ -14,7 +14,9 @@ const cycle = { monthStartDay: 1, timezone: 'UTC' };
 
 const insertCategory = (id: string, userId: string, name = 'X') => {
 	h.sqlite
-		.prepare('INSERT INTO categories (id, user_id, name, kind, color, icon, archived, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
+		.prepare(
+			'INSERT INTO categories (id, user_id, name, kind, color, icon, archived, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)'
+		)
 		.run(id, userId, name, 'expense', now(), now());
 };
 
@@ -45,9 +47,7 @@ const insertExpense = (
 	userId?: string
 ) => {
 	h.sqlite
-		.prepare(
-			`INSERT INTO transactions VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, NULL, NULL, 0)`
-		)
+		.prepare(`INSERT INTO transactions VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, NULL, NULL, 0)`)
 		.run(
 			id,
 			userId ?? h.userId,
@@ -77,44 +77,64 @@ beforeEach(() => {
 describe('createSubsidy', () => {
 	it('rejects when target not overspent', async () => {
 		insertExpense('t1', 'cat-food', 500_000, apr2026Mid);
-		const result = await createSubsidy(h.db, h.userId, {
-			fromBudgetId: 'b-trans',
-			toBudgetId: 'b-food',
-			amountCents: 100_000
-		}, cycle);
+		const result = await createSubsidy(
+			h.db,
+			h.userId,
+			{
+				fromBudgetId: 'b-trans',
+				toBudgetId: 'b-food',
+				amountCents: 100_000
+			},
+			cycle
+		);
 		expect('error' in result).toBe(true);
 	});
 
 	it('rejects when source has no remaining', async () => {
 		insertExpense('t1', 'cat-food', 1_200_000, apr2026Mid);
 		insertExpense('t2', 'cat-trans', 500_000, apr2026Mid);
-		const result = await createSubsidy(h.db, h.userId, {
-			fromBudgetId: 'b-trans',
-			toBudgetId: 'b-food',
-			amountCents: 100_000
-		}, cycle);
+		const result = await createSubsidy(
+			h.db,
+			h.userId,
+			{
+				fromBudgetId: 'b-trans',
+				toBudgetId: 'b-food',
+				amountCents: 100_000
+			},
+			cycle
+		);
 		expect('error' in result).toBe(true);
 	});
 
 	it('rejects when amount exceeds source remaining', async () => {
 		insertExpense('t1', 'cat-food', 1_500_000, apr2026Mid);
 		insertExpense('t2', 'cat-trans', 300_000, apr2026Mid);
-		const result = await createSubsidy(h.db, h.userId, {
-			fromBudgetId: 'b-trans',
-			toBudgetId: 'b-food',
-			amountCents: 300_000
-		}, cycle);
+		const result = await createSubsidy(
+			h.db,
+			h.userId,
+			{
+				fromBudgetId: 'b-trans',
+				toBudgetId: 'b-food',
+				amountCents: 300_000
+			},
+			cycle
+		);
 		expect('error' in result).toBe(true);
 	});
 
 	it('rejects when amount exceeds target overage', async () => {
 		insertExpense('t1', 'cat-food', 1_100_000, apr2026Mid);
 		insertExpense('t2', 'cat-trans', 200_000, apr2026Mid);
-		const result = await createSubsidy(h.db, h.userId, {
-			fromBudgetId: 'b-trans',
-			toBudgetId: 'b-food',
-			amountCents: 200_000
-		}, cycle);
+		const result = await createSubsidy(
+			h.db,
+			h.userId,
+			{
+				fromBudgetId: 'b-trans',
+				toBudgetId: 'b-food',
+				amountCents: 200_000
+			},
+			cycle
+		);
 		expect('error' in result).toBe(true);
 	});
 
@@ -122,11 +142,16 @@ describe('createSubsidy', () => {
 		insertBudget('b-food-may', 'cat-food', 1_000_000, '2026-05');
 		insertExpense('t1', 'cat-food', 1_500_000, apr2026Mid);
 		insertExpense('t2', 'cat-trans', 200_000, apr2026Mid);
-		const result = await createSubsidy(h.db, h.userId, {
-			fromBudgetId: 'b-trans',
-			toBudgetId: 'b-food-may',
-			amountCents: 100_000
-		}, cycle);
+		const result = await createSubsidy(
+			h.db,
+			h.userId,
+			{
+				fromBudgetId: 'b-trans',
+				toBudgetId: 'b-food-may',
+				amountCents: 100_000
+			},
+			cycle
+		);
 		expect('error' in result).toBe(true);
 	});
 
@@ -134,23 +159,33 @@ describe('createSubsidy', () => {
 		insertCategory('cat-other', h.otherUserId);
 		insertBudget('b-other', 'cat-other', 1_000_000, '2026-04', h.otherUserId);
 		insertExpense('t1', 'cat-other', 1_500_000, apr2026Mid, 'acc1', h.otherUserId);
-		const result = await createSubsidy(h.db, h.userId, {
-			fromBudgetId: 'b-trans',
-			toBudgetId: 'b-other',
-			amountCents: 100_000
-		}, cycle);
+		const result = await createSubsidy(
+			h.db,
+			h.userId,
+			{
+				fromBudgetId: 'b-trans',
+				toBudgetId: 'b-other',
+				amountCents: 100_000
+			},
+			cycle
+		);
 		expect('error' in result).toBe(true);
 	});
 
 	it('creates valid subsidy', async () => {
 		insertExpense('t1', 'cat-food', 1_200_000, apr2026Mid);
 		insertExpense('t2', 'cat-trans', 200_000, apr2026Mid);
-		const result = await createSubsidy(h.db, h.userId, {
-			fromBudgetId: 'b-trans',
-			toBudgetId: 'b-food',
-			amountCents: 200_000,
-			note: 'top up'
-		}, cycle);
+		const result = await createSubsidy(
+			h.db,
+			h.userId,
+			{
+				fromBudgetId: 'b-trans',
+				toBudgetId: 'b-food',
+				amountCents: 200_000,
+				note: 'top up'
+			},
+			cycle
+		);
 		expect('error' in result).toBe(false);
 		if ('error' in result) return;
 		expect(result.amountCents).toBe(200_000);
@@ -163,11 +198,16 @@ describe('listSubsidies + getSubsidy', () => {
 	beforeEach(async () => {
 		insertExpense('t1', 'cat-food', 1_200_000, apr2026Mid);
 		insertExpense('t2', 'cat-trans', 200_000, apr2026Mid);
-		await createSubsidy(h.db, h.userId, {
-			fromBudgetId: 'b-trans',
-			toBudgetId: 'b-food',
-			amountCents: 100_000
-		}, cycle);
+		await createSubsidy(
+			h.db,
+			h.userId,
+			{
+				fromBudgetId: 'b-trans',
+				toBudgetId: 'b-food',
+				amountCents: 100_000
+			},
+			cycle
+		);
 	});
 
 	it('lists subsidies for the period', async () => {
@@ -202,56 +242,91 @@ describe('updateSubsidy', () => {
 	});
 
 	it('allows reducing amount even when target no longer overspent', async () => {
-		const created = await createSubsidy(h.db, h.userId, {
-			fromBudgetId: 'b-trans',
-			toBudgetId: 'b-food',
-			amountCents: 200_000
-		}, cycle);
+		const created = await createSubsidy(
+			h.db,
+			h.userId,
+			{
+				fromBudgetId: 'b-trans',
+				toBudgetId: 'b-food',
+				amountCents: 200_000
+			},
+			cycle
+		);
 		if ('error' in created) throw new Error(created.error);
-		const updated = await updateSubsidy(h.db, h.userId, {
-			id: created.id,
-			amountCents: 50_000
-		}, cycle);
+		const updated = await updateSubsidy(
+			h.db,
+			h.userId,
+			{
+				id: created.id,
+				amountCents: 50_000
+			},
+			cycle
+		);
 		expect('error' in updated).toBe(false);
 		if ('error' in updated) return;
 		expect(updated.amountCents).toBe(50_000);
 	});
 
 	it('rejects amount exceeding source slack (excluding self)', async () => {
-		const created = await createSubsidy(h.db, h.userId, {
-			fromBudgetId: 'b-trans',
-			toBudgetId: 'b-food',
-			amountCents: 100_000
-		}, cycle);
+		const created = await createSubsidy(
+			h.db,
+			h.userId,
+			{
+				fromBudgetId: 'b-trans',
+				toBudgetId: 'b-food',
+				amountCents: 100_000
+			},
+			cycle
+		);
 		if ('error' in created) throw new Error(created.error);
-		const updated = await updateSubsidy(h.db, h.userId, {
-			id: created.id,
-			amountCents: 350_000
-		}, cycle);
+		const updated = await updateSubsidy(
+			h.db,
+			h.userId,
+			{
+				id: created.id,
+				amountCents: 350_000
+			},
+			cycle
+		);
 		expect('error' in updated).toBe(true);
 	});
 
 	it('ignores from/to in payload (immutable)', async () => {
-		const created = await createSubsidy(h.db, h.userId, {
-			fromBudgetId: 'b-trans',
-			toBudgetId: 'b-food',
-			amountCents: 100_000
-		}, cycle);
+		const created = await createSubsidy(
+			h.db,
+			h.userId,
+			{
+				fromBudgetId: 'b-trans',
+				toBudgetId: 'b-food',
+				amountCents: 100_000
+			},
+			cycle
+		);
 		if ('error' in created) throw new Error(created.error);
-		const updated = await updateSubsidy(h.db, h.userId, {
-			id: created.id,
-			amountCents: 50_000
-		}, cycle);
+		const updated = await updateSubsidy(
+			h.db,
+			h.userId,
+			{
+				id: created.id,
+				amountCents: 50_000
+			},
+			cycle
+		);
 		if ('error' in updated) throw new Error(updated.error);
 		expect(updated.fromBudgetId).toBe('b-trans');
 		expect(updated.toBudgetId).toBe('b-food');
 	});
 
 	it('returns error for unknown id', async () => {
-		const result = await updateSubsidy(h.db, h.userId, {
-			id: 'nope',
-			amountCents: 1000
-		}, cycle);
+		const result = await updateSubsidy(
+			h.db,
+			h.userId,
+			{
+				id: 'nope',
+				amountCents: 1000
+			},
+			cycle
+		);
 		expect('error' in result).toBe(true);
 	});
 });
@@ -260,11 +335,16 @@ describe('deleteSubsidy', () => {
 	it('deletes own subsidy', async () => {
 		insertExpense('t1', 'cat-food', 1_200_000, apr2026Mid);
 		insertExpense('t2', 'cat-trans', 200_000, apr2026Mid);
-		const created = await createSubsidy(h.db, h.userId, {
-			fromBudgetId: 'b-trans',
-			toBudgetId: 'b-food',
-			amountCents: 100_000
-		}, cycle);
+		const created = await createSubsidy(
+			h.db,
+			h.userId,
+			{
+				fromBudgetId: 'b-trans',
+				toBudgetId: 'b-food',
+				amountCents: 100_000
+			},
+			cycle
+		);
 		if ('error' in created) throw new Error(created.error);
 		const deleted = await deleteSubsidy(h.db, h.userId, created.id);
 		expect(deleted?.id).toBe(created.id);
@@ -274,11 +354,16 @@ describe('deleteSubsidy', () => {
 	it('cross-user delete returns null', async () => {
 		insertExpense('t1', 'cat-food', 1_200_000, apr2026Mid);
 		insertExpense('t2', 'cat-trans', 200_000, apr2026Mid);
-		const created = await createSubsidy(h.db, h.userId, {
-			fromBudgetId: 'b-trans',
-			toBudgetId: 'b-food',
-			amountCents: 100_000
-		}, cycle);
+		const created = await createSubsidy(
+			h.db,
+			h.userId,
+			{
+				fromBudgetId: 'b-trans',
+				toBudgetId: 'b-food',
+				amountCents: 100_000
+			},
+			cycle
+		);
 		if ('error' in created) throw new Error(created.error);
 		expect(await deleteSubsidy(h.db, h.otherUserId, created.id)).toBeNull();
 	});
@@ -288,11 +373,16 @@ describe('cascade delete on budget', () => {
 	it('removes subsidies when source budget is deleted', async () => {
 		insertExpense('t1', 'cat-food', 1_200_000, apr2026Mid);
 		insertExpense('t2', 'cat-trans', 200_000, apr2026Mid);
-		const created = await createSubsidy(h.db, h.userId, {
-			fromBudgetId: 'b-trans',
-			toBudgetId: 'b-food',
-			amountCents: 100_000
-		}, cycle);
+		const created = await createSubsidy(
+			h.db,
+			h.userId,
+			{
+				fromBudgetId: 'b-trans',
+				toBudgetId: 'b-food',
+				amountCents: 100_000
+			},
+			cycle
+		);
 		if ('error' in created) throw new Error(created.error);
 		h.sqlite.prepare('DELETE FROM budgets WHERE id = ?').run('b-trans');
 		expect(await getSubsidy(h.db, h.userId, created.id)).toBeNull();

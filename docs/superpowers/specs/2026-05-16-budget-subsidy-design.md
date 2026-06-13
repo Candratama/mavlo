@@ -14,14 +14,14 @@ Today, if a user overspends in one budget (e.g., Food = 1.2M IDR spent against 1
 
 ## Decisions
 
-| # | Question | Choice |
-|---|----------|--------|
-| 1 | Storage semantics | New `budget_subsidies` table (separate from `transactions`) |
-| 2 | Trigger | Manual only |
-| 3 | When allowed | Only when target budget is overspent; source must have remaining unallocated room |
-| 4 | Multiple sources | Single source per subsidy record; multiple records allowed |
-| 5 | UI display | Dual — show both original and effective limits |
-| 6 | Edit/delete | Editable (`amountCents`, `note`) and deletable |
+| #   | Question          | Choice                                                                            |
+| --- | ----------------- | --------------------------------------------------------------------------------- |
+| 1   | Storage semantics | New `budget_subsidies` table (separate from `transactions`)                       |
+| 2   | Trigger           | Manual only                                                                       |
+| 3   | When allowed      | Only when target budget is overspent; source must have remaining unallocated room |
+| 4   | Multiple sources  | Single source per subsidy record; multiple records allowed                        |
+| 5   | UI display        | Dual — show both original and effective limits                                    |
+| 6   | Edit/delete       | Editable (`amountCents`, `note`) and deletable                                    |
 
 ## Data Model
 
@@ -29,31 +29,32 @@ New table `budget_subsidies` in `src/lib/server/db/schema.ts`:
 
 ```ts
 export const budgetSubsidies = sqliteTable(
-  'budget_subsidies',
-  {
-    id: cuid().primaryKey(),
-    userId: userIdFk(),
-    periodMonth: text('period_month').notNull(),     // 'YYYY-MM'
-    fromBudgetId: text('from_budget_id')
-      .notNull()
-      .references(() => budgets.id, { onDelete: 'cascade' }),
-    toBudgetId: text('to_budget_id')
-      .notNull()
-      .references(() => budgets.id, { onDelete: 'cascade' }),
-    amountCents: integer('amount_cents', { mode: 'number' }).notNull(),
-    note: text('note'),
-    createdAt: epochMsNow('created_at'),
-    updatedAt: epochMsNow('updated_at')
-  },
-  (t) => [
-    index('subsidies_user_period_idx').on(t.userId, t.periodMonth),
-    index('subsidies_from_idx').on(t.fromBudgetId),
-    index('subsidies_to_idx').on(t.toBudgetId)
-  ]
+	'budget_subsidies',
+	{
+		id: cuid().primaryKey(),
+		userId: userIdFk(),
+		periodMonth: text('period_month').notNull(), // 'YYYY-MM'
+		fromBudgetId: text('from_budget_id')
+			.notNull()
+			.references(() => budgets.id, { onDelete: 'cascade' }),
+		toBudgetId: text('to_budget_id')
+			.notNull()
+			.references(() => budgets.id, { onDelete: 'cascade' }),
+		amountCents: integer('amount_cents', { mode: 'number' }).notNull(),
+		note: text('note'),
+		createdAt: epochMsNow('created_at'),
+		updatedAt: epochMsNow('updated_at')
+	},
+	(t) => [
+		index('subsidies_user_period_idx').on(t.userId, t.periodMonth),
+		index('subsidies_from_idx').on(t.fromBudgetId),
+		index('subsidies_to_idx').on(t.toBudgetId)
+	]
 );
 ```
 
 **Notes:**
+
 - `fromBudgetId` / `toBudgetId` reference `budgets.id` directly (not `categoryId`) because budgets are period-scoped and subsidies inherit that scoping. Deleting either budget cascades to subsidy rows.
 - `periodMonth` is denormalized for fast per-month filtering without joining `budgets`.
 - `amountCents` is always positive; reversing a subsidy = delete + re-create.
@@ -65,6 +66,7 @@ Migration: add a new Drizzle migration file `drizzle/0009_add_budget_subsidies.s
 Defined in `src/lib/validation/subsidy.ts` (Zod) and enforced again in repository layer.
 
 **Create:**
+
 - `fromBudgetId !== toBudgetId`
 - Both budgets exist, belong to user, share the same `periodMonth`
 - `amountCents > 0`, integer cents
@@ -83,6 +85,7 @@ Defined in `src/lib/validation/subsidy.ts` (Zod) and enforced again in repositor
 - `note` optional, max 200 characters
 
 **Update:**
+
 - Only `amountCents` and `note` are editable. `fromBudgetId` and `toBudgetId` are immutable — ignored if present in payload.
 - The "target overspent" check is **dropped** for update (a user adjusting an existing subsidy down should not be blocked just because the target is now balanced). To remove a subsidy entirely, the user deletes it.
 - All other create validations apply, treating the current record as excluded from sums:
@@ -96,6 +99,7 @@ Defined in `src/lib/validation/subsidy.ts` (Zod) and enforced again in repositor
   - `note` ≤ 200 chars
 
 **Delete:**
+
 - No additional constraints. FK cascade handles budget deletion.
 
 ## Repositories
@@ -121,11 +125,8 @@ computeSubsidyFlows(db, userId, periodMonth): Map<string, { in: number; out: num
 ### `src/lib/utils/budget.ts` (new, shared client/server util)
 
 ```ts
-function effectiveLimit(
-  limitCents: number,
-  flow: { in: number; out: number }
-): number {
-  return limitCents + flow.in - flow.out;
+function effectiveLimit(limitCents: number, flow: { in: number; out: number }): number {
+	return limitCents + flow.in - flow.out;
 }
 ```
 
@@ -192,12 +193,14 @@ stillOver       = spent > effLimit
 ### Labels under bar
 
 For a budget with `subsidyIn > 0`:
+
 ```
 1.2jt of 1jt (eff 1.2jt — disubsidi 200rb dari Transportasi)
 100% used (eff)
 ```
 
 For a budget with `subsidyOut > 0`:
+
 ```
 300rb of 500rb (eff 300rb — subsidi 200rb ke Makan)
 ```
@@ -209,11 +212,13 @@ Render on cards where `stillOver === true`. Disabled with tooltip when no other 
 ### Subsidy list (collapsible)
 
 On cards with any `subsidyIn` or `subsidyOut`, a small collapsible footer:
+
 ```
 [chevron] 2 subsidi aktif
   ↓ 200rb dari Transportasi   [edit] [hapus]
   ↑ 100rb ke Hiburan          [edit] [hapus]
 ```
+
 Default collapsed.
 
 ### Summary section
@@ -227,6 +232,7 @@ File: `src/routes/(app)/budgets/[id]/+page.svelte`
 ### Header
 
 Show effective vs original when a subsidy is present:
+
 ```
 Limit: 1jt  [+200rb disubsidi]  → eff 1.2jt
 ```
@@ -234,6 +240,7 @@ Limit: 1jt  [+200rb disubsidi]  → eff 1.2jt
 ### Subsidy panel
 
 A new section between the header and the transaction list:
+
 ```
 ┌─ Subsidi ──────────────────────────────┐
 │ Masuk (200rb dari Transportasi)        │
@@ -306,15 +313,15 @@ Inline action in the subsidy list row; POST form to `?/deleteSubsidy` with `inva
 
 ## Edge Cases
 
-| Case | Behavior |
-|------|----------|
-| Budget deleted while referenced by a subsidy | FK cascade removes the subsidy row. UI re-renders from fresh data. |
-| New spending on a source after subsidy makes the source itself overspent | Allowed. Source becomes a new overspent card; user may subsidize it from another budget. |
-| User edits source budget limit downward such that `sourceRemaining < 0` | Allowed. Show a warning on the source card ("subsidi melebihi limit baru"). User resolves manually. |
-| Subsidy across different `periodMonth`s | Rejected at validation. |
-| Multiple budgets for the same category across different periods | No conflict; subsidy references `budgetId`. |
-| Multi-currency | Out of scope; current app assumes a single user currency. |
-| Demo seed | Add 1–2 sample subsidy rows in `src/lib/server/demo-seed.ts` so the feature appears for new demo accounts. |
+| Case                                                                     | Behavior                                                                                                   |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| Budget deleted while referenced by a subsidy                             | FK cascade removes the subsidy row. UI re-renders from fresh data.                                         |
+| New spending on a source after subsidy makes the source itself overspent | Allowed. Source becomes a new overspent card; user may subsidize it from another budget.                   |
+| User edits source budget limit downward such that `sourceRemaining < 0`  | Allowed. Show a warning on the source card ("subsidi melebihi limit baru"). User resolves manually.        |
+| Subsidy across different `periodMonth`s                                  | Rejected at validation.                                                                                    |
+| Multiple budgets for the same category across different periods          | No conflict; subsidy references `budgetId`.                                                                |
+| Multi-currency                                                           | Out of scope; current app assumes a single user currency.                                                  |
+| Demo seed                                                                | Add 1–2 sample subsidy rows in `src/lib/server/demo-seed.ts` so the feature appears for new demo accounts. |
 
 ## Testing
 

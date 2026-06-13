@@ -77,7 +77,7 @@
 		value={dateValue}
 		onValueChange={(v) => onSelect(v as DateValue | undefined)}
 		class={mobile
-			? 'w-full text-base [--cell-size:calc((100vw-2rem)/7)] [--cell-radius:calc(var(--radius)+0.5rem)]'
+			? 'w-full text-base [--cell-radius:calc(var(--radius)+0.5rem)] [--cell-size:calc((100vw-2rem)/7)]'
 			: '[--cell-size:--spacing(9)]'}
 	/>
 {/snippet}
@@ -122,7 +122,9 @@
 			<Sheet.Header class="p-4 pb-2 text-left">
 				<Sheet.Title>{title}</Sheet.Title>
 			</Sheet.Header>
-			<div class="flex flex-1 items-start overflow-y-auto px-2 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
+			<div
+				class="flex flex-1 items-start overflow-y-auto px-2 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))]"
+			>
 				{@render body(true)}
 			</div>
 		</Sheet.Content>

@@ -1,16 +1,9 @@
 import { and, between, eq, isNotNull, ne } from 'drizzle-orm';
 import { type DrizzleD1Database } from 'drizzle-orm/d1';
 import { type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import {
-	budgets,
-	budgetSubsidies,
-	transactions
-} from '$lib/server/db/schema';
+import { budgets, budgetSubsidies, transactions } from '$lib/server/db/schema';
 import * as schema from '$lib/server/db/schema';
-import type {
-	SubsidyCreateInput,
-	SubsidyUpdateInput
-} from '$lib/validation/subsidy';
+import type { SubsidyCreateInput, SubsidyUpdateInput } from '$lib/validation/subsidy';
 import { getCycleForPeriod } from '$lib/utils/cycle';
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
@@ -29,19 +22,14 @@ export async function listSubsidies(
 	filter: { periodMonth?: string }
 ): Promise<SubsidyRow[]> {
 	const conds = [eq(budgetSubsidies.userId, userId)];
-	if (filter.periodMonth)
-		conds.push(eq(budgetSubsidies.periodMonth, filter.periodMonth));
+	if (filter.periodMonth) conds.push(eq(budgetSubsidies.periodMonth, filter.periodMonth));
 	return db
 		.select()
 		.from(budgetSubsidies)
 		.where(and(...conds));
 }
 
-export async function getSubsidy(
-	db: Db,
-	userId: string,
-	id: string
-): Promise<SubsidyRow | null> {
+export async function getSubsidy(db: Db, userId: string, id: string): Promise<SubsidyRow | null> {
 	const [row] = await db
 		.select()
 		.from(budgetSubsidies)
@@ -59,10 +47,7 @@ async function getOwnedBudget(db: Db, userId: string, id: string) {
 	return row ?? null;
 }
 
-function periodBounds(
-	periodMonth: string,
-	cycle: CycleResolver
-): { fromMs: number; toMs: number } {
+function periodBounds(periodMonth: string, cycle: CycleResolver): { fromMs: number; toMs: number } {
 	const c = getCycleForPeriod(periodMonth, cycle.monthStartDay, cycle.timezone);
 	return { fromMs: c.start.getTime(), toMs: c.end.getTime() - 1 };
 }
@@ -97,8 +82,7 @@ async function sumSubsidy(
 	budgetId: string,
 	excludeId?: string
 ): Promise<number> {
-	const col =
-		field === 'fromBudgetId' ? budgetSubsidies.fromBudgetId : budgetSubsidies.toBudgetId;
+	const col = field === 'fromBudgetId' ? budgetSubsidies.fromBudgetId : budgetSubsidies.toBudgetId;
 	const conds = [eq(budgetSubsidies.userId, userId), eq(col, budgetId)];
 	if (excludeId) conds.push(ne(budgetSubsidies.id, excludeId));
 	const rows = await db
@@ -114,10 +98,8 @@ export async function createSubsidy(
 	input: SubsidyCreateInput,
 	cycle: CycleResolver
 ): Promise<SubsidyRow | RepoError> {
-	if (input.fromBudgetId === input.toBudgetId)
-		return { error: 'Source and target must differ' };
-	if (input.amountCents <= 0)
-		return { error: 'Amount must be positive' };
+	if (input.fromBudgetId === input.toBudgetId) return { error: 'Source and target must differ' };
+	if (input.amountCents <= 0) return { error: 'Amount must be positive' };
 
 	const [from, to] = await Promise.all([
 		getOwnedBudget(db, userId, input.fromBudgetId),
@@ -125,8 +107,7 @@ export async function createSubsidy(
 	]);
 	if (!from) return { error: 'Source budget not found' };
 	if (!to) return { error: 'Target budget not found' };
-	if (from.periodMonth !== to.periodMonth)
-		return { error: 'Budgets must be in the same period' };
+	if (from.periodMonth !== to.periodMonth) return { error: 'Budgets must be in the same period' };
 
 	const [toSpent, toSubsidyIn, fromSpent, fromSubsidyOut] = await Promise.all([
 		spentForCategory(db, userId, to.categoryId, to.periodMonth, cycle),
@@ -142,8 +123,7 @@ export async function createSubsidy(
 	if (sourceSlack <= 0) return { error: 'Source has no remaining allocation' };
 
 	const cap = Math.min(targetOverage, sourceSlack);
-	if (input.amountCents > cap)
-		return { error: `Amount exceeds cap (${cap})` };
+	if (input.amountCents > cap) return { error: `Amount exceeds cap (${cap})` };
 
 	const [row] = await db
 		.insert(budgetSubsidies)
@@ -189,9 +169,7 @@ export async function updateSubsidy(
 			note: input.note ?? null,
 			updatedAt: Date.now()
 		})
-		.where(
-			and(eq(budgetSubsidies.userId, userId), eq(budgetSubsidies.id, input.id))
-		)
+		.where(and(eq(budgetSubsidies.userId, userId), eq(budgetSubsidies.id, input.id)))
 		.returning();
 	return row ?? { error: 'Subsidy not found' };
 }

@@ -16,38 +16,39 @@
 
 ### New files
 
-| Path | Responsibility |
-|------|----------------|
-| `drizzle/0009_add_budget_subsidies.sql` | DB migration: create table + indexes |
-| `src/lib/validation/subsidy.ts` | Zod schemas + inferred types |
-| `src/lib/validation/subsidy.test.ts` | Validation unit tests |
-| `src/lib/server/repositories/subsidies.ts` | CRUD + business-rule enforcement |
-| `src/lib/server/repositories/subsidies.test.ts` | Repository unit tests |
-| `src/lib/server/repositories/budget-effective.ts` | `computeSubsidyFlows` aggregator |
-| `src/lib/server/repositories/budget-effective.test.ts` | Aggregator unit tests |
-| `src/lib/utils/budget.ts` | `effectiveLimit` pure helper (shared) |
-| `src/lib/utils/budget.test.ts` | Helper unit tests |
-| `src/lib/components/budgets/subsidy-create-form.svelte` | Form snippet for creating subsidies |
-| `src/lib/components/budgets/subsidy-edit-form.svelte` | Form snippet for editing subsidies |
-| `src/lib/components/budgets/subsidy-list.svelte` | Collapsible/inline subsidy list with delete + edit-trigger |
+| Path                                                    | Responsibility                                             |
+| ------------------------------------------------------- | ---------------------------------------------------------- |
+| `drizzle/0009_add_budget_subsidies.sql`                 | DB migration: create table + indexes                       |
+| `src/lib/validation/subsidy.ts`                         | Zod schemas + inferred types                               |
+| `src/lib/validation/subsidy.test.ts`                    | Validation unit tests                                      |
+| `src/lib/server/repositories/subsidies.ts`              | CRUD + business-rule enforcement                           |
+| `src/lib/server/repositories/subsidies.test.ts`         | Repository unit tests                                      |
+| `src/lib/server/repositories/budget-effective.ts`       | `computeSubsidyFlows` aggregator                           |
+| `src/lib/server/repositories/budget-effective.test.ts`  | Aggregator unit tests                                      |
+| `src/lib/utils/budget.ts`                               | `effectiveLimit` pure helper (shared)                      |
+| `src/lib/utils/budget.test.ts`                          | Helper unit tests                                          |
+| `src/lib/components/budgets/subsidy-create-form.svelte` | Form snippet for creating subsidies                        |
+| `src/lib/components/budgets/subsidy-edit-form.svelte`   | Form snippet for editing subsidies                         |
+| `src/lib/components/budgets/subsidy-list.svelte`        | Collapsible/inline subsidy list with delete + edit-trigger |
 
 ### Modified files
 
-| Path | Change |
-|------|--------|
-| `src/lib/server/db/schema.ts` | Add `budgetSubsidies` table definition |
-| `src/lib/server/db/test-fixtures.ts` | Add `budget_subsidies` table creation + include in tables option type |
-| `src/lib/server/demo-seed.ts` | Seed 1–2 sample subsidy rows for demo users |
-| `src/routes/(app)/+layout.server.ts` | Load `subsidies` + `subsidyFlowByBudget` for current period |
-| `src/routes/(app)/budgets/+page.server.ts` | Add `subsidize`, `updateSubsidy`, `deleteSubsidy` actions |
-| `src/routes/(app)/budgets/+page.svelte` | Dual progress bar, "Subsidi" button, subsidy list, summary line |
-| `src/routes/(app)/budgets/[id]/+page.svelte` | Effective vs original header, subsidy panel, action triggers |
+| Path                                         | Change                                                                |
+| -------------------------------------------- | --------------------------------------------------------------------- |
+| `src/lib/server/db/schema.ts`                | Add `budgetSubsidies` table definition                                |
+| `src/lib/server/db/test-fixtures.ts`         | Add `budget_subsidies` table creation + include in tables option type |
+| `src/lib/server/demo-seed.ts`                | Seed 1–2 sample subsidy rows for demo users                           |
+| `src/routes/(app)/+layout.server.ts`         | Load `subsidies` + `subsidyFlowByBudget` for current period           |
+| `src/routes/(app)/budgets/+page.server.ts`   | Add `subsidize`, `updateSubsidy`, `deleteSubsidy` actions             |
+| `src/routes/(app)/budgets/+page.svelte`      | Dual progress bar, "Subsidi" button, subsidy list, summary line       |
+| `src/routes/(app)/budgets/[id]/+page.svelte` | Effective vs original header, subsidy panel, action triggers          |
 
 ---
 
 ## Task 1: Schema + Migration
 
 **Files:**
+
 - Modify: `src/lib/server/db/schema.ts:97` (after the `budgets` definition, before `userPreferences`)
 - Create: `drizzle/0009_add_budget_subsidies.sql`
 
@@ -134,6 +135,7 @@ git commit -m "feat(db): add budget_subsidies table"
 ## Task 2: Test fixtures support
 
 **Files:**
+
 - Modify: `src/lib/server/db/test-fixtures.ts`
 
 - [ ] **Step 1: Add `budget_subsidies` table SQL constant**
@@ -181,7 +183,7 @@ export function createTestDb(opts: {
 Also enable foreign key enforcement for cascade tests — add this line right after `const db = drizzle(...)`:
 
 ```ts
-	sqlite.pragma('foreign_keys = ON');
+sqlite.pragma('foreign_keys = ON');
 ```
 
 - [ ] **Step 3: Run existing tests to confirm no regression**
@@ -201,6 +203,7 @@ git commit -m "test: add budget_subsidies table to test fixtures"
 ## Task 3: Validation schemas (TDD)
 
 **Files:**
+
 - Create: `src/lib/validation/subsidy.ts`
 - Create: `src/lib/validation/subsidy.test.ts`
 
@@ -210,11 +213,7 @@ Create `src/lib/validation/subsidy.test.ts`:
 
 ```ts
 import { describe, expect, it } from 'vitest';
-import {
-	subsidyCreateSchema,
-	subsidyUpdateSchema,
-	subsidyIdSchema
-} from './subsidy';
+import { subsidyCreateSchema, subsidyUpdateSchema, subsidyIdSchema } from './subsidy';
 
 describe('subsidyCreateSchema', () => {
 	const valid = {
@@ -228,9 +227,7 @@ describe('subsidyCreateSchema', () => {
 	});
 
 	it('accepts optional note', () => {
-		expect(
-			subsidyCreateSchema.safeParse({ ...valid, note: 'hello' }).success
-		).toBe(true);
+		expect(subsidyCreateSchema.safeParse({ ...valid, note: 'hello' }).success).toBe(true);
 	});
 
 	it('rejects fromBudgetId === toBudgetId', () => {
@@ -242,25 +239,16 @@ describe('subsidyCreateSchema', () => {
 	});
 
 	it('rejects amountCents <= 0', () => {
-		expect(
-			subsidyCreateSchema.safeParse({ ...valid, amountCents: 0 }).success
-		).toBe(false);
-		expect(
-			subsidyCreateSchema.safeParse({ ...valid, amountCents: -1 }).success
-		).toBe(false);
+		expect(subsidyCreateSchema.safeParse({ ...valid, amountCents: 0 }).success).toBe(false);
+		expect(subsidyCreateSchema.safeParse({ ...valid, amountCents: -1 }).success).toBe(false);
 	});
 
 	it('rejects non-integer amountCents', () => {
-		expect(
-			subsidyCreateSchema.safeParse({ ...valid, amountCents: 10.5 }).success
-		).toBe(false);
+		expect(subsidyCreateSchema.safeParse({ ...valid, amountCents: 10.5 }).success).toBe(false);
 	});
 
 	it('rejects note > 200 chars', () => {
-		expect(
-			subsidyCreateSchema.safeParse({ ...valid, note: 'x'.repeat(201) })
-				.success
-		).toBe(false);
+		expect(subsidyCreateSchema.safeParse({ ...valid, note: 'x'.repeat(201) }).success).toBe(false);
 	});
 
 	it('coerces string amountCents to number', () => {
@@ -271,22 +259,17 @@ describe('subsidyCreateSchema', () => {
 
 describe('subsidyUpdateSchema', () => {
 	it('requires id', () => {
-		expect(
-			subsidyUpdateSchema.safeParse({ amountCents: 100 }).success
-		).toBe(false);
+		expect(subsidyUpdateSchema.safeParse({ amountCents: 100 }).success).toBe(false);
 	});
 
 	it('accepts id + amountCents', () => {
-		expect(
-			subsidyUpdateSchema.safeParse({ id: 's1', amountCents: 100 }).success
-		).toBe(true);
+		expect(subsidyUpdateSchema.safeParse({ id: 's1', amountCents: 100 }).success).toBe(true);
 	});
 
 	it('accepts optional note', () => {
-		expect(
-			subsidyUpdateSchema.safeParse({ id: 's1', amountCents: 100, note: 'x' })
-				.success
-		).toBe(true);
+		expect(subsidyUpdateSchema.safeParse({ id: 's1', amountCents: 100, note: 'x' }).success).toBe(
+			true
+		);
 	});
 });
 
@@ -353,6 +336,7 @@ git commit -m "feat(validation): add subsidy schemas"
 ## Task 4: `effectiveLimit` helper (TDD)
 
 **Files:**
+
 - Create: `src/lib/utils/budget.ts`
 - Create: `src/lib/utils/budget.test.ts`
 
@@ -384,21 +368,15 @@ describe('effectiveLimit', () => {
 
 describe('sourceRemaining', () => {
 	it('returns positive when limit > spent + out', () => {
-		expect(
-			sourceRemaining({ limitCents: 1000, spentCents: 300, subsidyOutCents: 200 })
-		).toBe(500);
+		expect(sourceRemaining({ limitCents: 1000, spentCents: 300, subsidyOutCents: 200 })).toBe(500);
 	});
 
 	it('returns 0 when fully used', () => {
-		expect(
-			sourceRemaining({ limitCents: 1000, spentCents: 800, subsidyOutCents: 200 })
-		).toBe(0);
+		expect(sourceRemaining({ limitCents: 1000, spentCents: 800, subsidyOutCents: 200 })).toBe(0);
 	});
 
 	it('returns negative when over-committed', () => {
-		expect(
-			sourceRemaining({ limitCents: 1000, spentCents: 900, subsidyOutCents: 200 })
-		).toBe(-100);
+		expect(sourceRemaining({ limitCents: 1000, spentCents: 900, subsidyOutCents: 200 })).toBe(-100);
 	});
 });
 ```
@@ -445,6 +423,7 @@ git commit -m "feat(utils): add effectiveLimit and sourceRemaining helpers"
 ## Task 5: `computeSubsidyFlows` aggregator (TDD)
 
 **Files:**
+
 - Create: `src/lib/server/repositories/budget-effective.ts`
 - Create: `src/lib/server/repositories/budget-effective.test.ts`
 
@@ -556,12 +535,7 @@ export async function computeSubsidyFlows(
 	const rows = await db
 		.select()
 		.from(budgetSubsidies)
-		.where(
-			and(
-				eq(budgetSubsidies.userId, userId),
-				eq(budgetSubsidies.periodMonth, periodMonth)
-			)
-		);
+		.where(and(eq(budgetSubsidies.userId, userId), eq(budgetSubsidies.periodMonth, periodMonth)));
 
 	const map: SubsidyFlowMap = new Map();
 	const bump = (id: string, key: 'in' | 'out', amount: number) => {
@@ -594,6 +568,7 @@ git commit -m "feat(repo): add computeSubsidyFlows"
 ## Task 6: Subsidies repository (TDD)
 
 **Files:**
+
 - Create: `src/lib/server/repositories/subsidies.ts`
 - Create: `src/lib/server/repositories/subsidies.test.ts`
 
@@ -648,9 +623,7 @@ const insertExpense = (
 	userId?: string
 ) => {
 	h.sqlite
-		.prepare(
-			`INSERT INTO transactions VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, NULL, 0)`
-		)
+		.prepare(`INSERT INTO transactions VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, NULL, 0)`)
 		.run(
 			id,
 			userId ?? h.userId,
@@ -919,16 +892,9 @@ Create `src/lib/server/repositories/subsidies.ts`:
 import { and, between, eq, isNotNull, ne, sql } from 'drizzle-orm';
 import { type DrizzleD1Database } from 'drizzle-orm/d1';
 import { type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import {
-	budgets,
-	budgetSubsidies,
-	transactions
-} from '$lib/server/db/schema';
+import { budgets, budgetSubsidies, transactions } from '$lib/server/db/schema';
 import * as schema from '$lib/server/db/schema';
-import type {
-	SubsidyCreateInput,
-	SubsidyUpdateInput
-} from '$lib/validation/subsidy';
+import type { SubsidyCreateInput, SubsidyUpdateInput } from '$lib/validation/subsidy';
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
 
@@ -941,19 +907,14 @@ export async function listSubsidies(
 	filter: { periodMonth?: string }
 ): Promise<SubsidyRow[]> {
 	const conds = [eq(budgetSubsidies.userId, userId)];
-	if (filter.periodMonth)
-		conds.push(eq(budgetSubsidies.periodMonth, filter.periodMonth));
+	if (filter.periodMonth) conds.push(eq(budgetSubsidies.periodMonth, filter.periodMonth));
 	return db
 		.select()
 		.from(budgetSubsidies)
 		.where(and(...conds));
 }
 
-export async function getSubsidy(
-	db: Db,
-	userId: string,
-	id: string
-): Promise<SubsidyRow | null> {
+export async function getSubsidy(db: Db, userId: string, id: string): Promise<SubsidyRow | null> {
 	const [row] = await db
 		.select()
 		.from(budgetSubsidies)
@@ -1007,8 +968,7 @@ async function sumSubsidy(
 	budgetId: string,
 	excludeId?: string
 ): Promise<number> {
-	const col =
-		field === 'fromBudgetId' ? budgetSubsidies.fromBudgetId : budgetSubsidies.toBudgetId;
+	const col = field === 'fromBudgetId' ? budgetSubsidies.fromBudgetId : budgetSubsidies.toBudgetId;
 	const conds = [eq(budgetSubsidies.userId, userId), eq(col, budgetId)];
 	if (excludeId) conds.push(ne(budgetSubsidies.id, excludeId));
 	const rows = await db
@@ -1023,10 +983,8 @@ export async function createSubsidy(
 	userId: string,
 	input: SubsidyCreateInput
 ): Promise<SubsidyRow | RepoError> {
-	if (input.fromBudgetId === input.toBudgetId)
-		return { error: 'Source and target must differ' };
-	if (input.amountCents <= 0)
-		return { error: 'Amount must be positive' };
+	if (input.fromBudgetId === input.toBudgetId) return { error: 'Source and target must differ' };
+	if (input.amountCents <= 0) return { error: 'Amount must be positive' };
 
 	const [from, to] = await Promise.all([
 		getOwnedBudget(db, userId, input.fromBudgetId),
@@ -1034,8 +992,7 @@ export async function createSubsidy(
 	]);
 	if (!from) return { error: 'Source budget not found' };
 	if (!to) return { error: 'Target budget not found' };
-	if (from.periodMonth !== to.periodMonth)
-		return { error: 'Budgets must be in the same period' };
+	if (from.periodMonth !== to.periodMonth) return { error: 'Budgets must be in the same period' };
 
 	const [toSpent, toSubsidyIn, fromSpent, fromSubsidyOut] = await Promise.all([
 		spentForCategory(db, userId, to.categoryId, to.periodMonth),
@@ -1051,8 +1008,7 @@ export async function createSubsidy(
 	if (sourceSlack <= 0) return { error: 'Source has no remaining allocation' };
 
 	const cap = Math.min(targetOverage, sourceSlack);
-	if (input.amountCents > cap)
-		return { error: `Amount exceeds cap (${cap})` };
+	if (input.amountCents > cap) return { error: `Amount exceeds cap (${cap})` };
 
 	const [row] = await db
 		.insert(budgetSubsidies)
@@ -1097,9 +1053,7 @@ export async function updateSubsidy(
 			note: input.note ?? null,
 			updatedAt: Date.now()
 		})
-		.where(
-			and(eq(budgetSubsidies.userId, userId), eq(budgetSubsidies.id, input.id))
-		)
+		.where(and(eq(budgetSubsidies.userId, userId), eq(budgetSubsidies.id, input.id)))
 		.returning();
 	return row ?? { error: 'Subsidy not found' };
 }
@@ -1139,6 +1093,7 @@ git commit -m "feat(repo): add subsidy CRUD with business-rule validation"
 ## Task 7: Layout server load — expose subsidy data
 
 **Files:**
+
 - Modify: `src/routes/(app)/+layout.server.ts`
 
 - [ ] **Step 1: Add load + map**
@@ -1183,8 +1138,9 @@ const [
 3. Convert the flow map to a record for the client:
 
 ```ts
-const subsidyFlowByBudget: Record<string, { in: number; out: number }> =
-	Object.fromEntries(subsidyFlows.entries());
+const subsidyFlowByBudget: Record<string, { in: number; out: number }> = Object.fromEntries(
+	subsidyFlows.entries()
+);
 ```
 
 4. Add both to the returned object (alongside `budgets`, `spentByCategory`, etc.):
@@ -1211,6 +1167,7 @@ git commit -m "feat(load): hoist per-period subsidies into layout data"
 ## Task 8: Server actions — subsidize / update / delete
 
 **Files:**
+
 - Modify: `src/routes/(app)/budgets/+page.server.ts`
 
 - [ ] **Step 1: Add imports**
@@ -1222,17 +1179,9 @@ import { fail } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth/guards';
 import { getDb } from '$lib/server/db';
 import { createBudget, updateBudget, deleteBudget } from '$lib/server/repositories/budgets';
-import {
-	createSubsidy,
-	updateSubsidy,
-	deleteSubsidy
-} from '$lib/server/repositories/subsidies';
+import { createSubsidy, updateSubsidy, deleteSubsidy } from '$lib/server/repositories/subsidies';
 import { budgetCreateSchema, budgetUpdateSchema, budgetIdSchema } from '$lib/validation/budget';
-import {
-	subsidyCreateSchema,
-	subsidyUpdateSchema,
-	subsidyIdSchema
-} from '$lib/validation/subsidy';
+import { subsidyCreateSchema, subsidyUpdateSchema, subsidyIdSchema } from '$lib/validation/subsidy';
 import { purgeUserCache, allUserCacheNames } from '$lib/server/cf-cache';
 import { getCurrentCycle } from '$lib/utils/cycle';
 import { getPreferences } from '$lib/server/repositories/preferences';
@@ -1312,6 +1261,7 @@ git commit -m "feat(budgets): add subsidize/updateSubsidy/deleteSubsidy actions"
 ## Task 9: Budgets list — dual progress bar
 
 **Files:**
+
 - Modify: `src/routes/(app)/budgets/+page.svelte`
 
 - [ ] **Step 1: Import effective-limit helper**
@@ -1319,7 +1269,7 @@ git commit -m "feat(budgets): add subsidize/updateSubsidy/deleteSubsidy actions"
 In `src/routes/(app)/budgets/+page.svelte`, add to the imports block (after the `formatCentsAsCurrency` import around line 27):
 
 ```ts
-	import { effectiveLimit, sourceRemaining } from '$lib/utils/budget.js';
+import { effectiveLimit, sourceRemaining } from '$lib/utils/budget.js';
 ```
 
 - [ ] **Step 2: Derive flow + effective state**
@@ -1327,11 +1277,9 @@ In `src/routes/(app)/budgets/+page.svelte`, add to the imports block (after the 
 In the `<script>` block, after the existing `categoryById` derived (line 44), add:
 
 ```ts
-	const flowOf = (budgetId: string) =>
-		data.subsidyFlowByBudget[budgetId] ?? { in: 0, out: 0 };
+const flowOf = (budgetId: string) => data.subsidyFlowByBudget[budgetId] ?? { in: 0, out: 0 };
 
-	const effLimitOf = (budget: BudgetRow) =>
-		effectiveLimit(budget.limitCents, flowOf(budget.id));
+const effLimitOf = (budget: BudgetRow) => effectiveLimit(budget.limitCents, flowOf(budget.id));
 ```
 
 - [ ] **Step 3: Replace the in-card progress bar block**
@@ -1339,71 +1287,76 @@ In the `<script>` block, after the existing `categoryById` derived (line 44), ad
 Find the `<Card.Content class="relative z-10">` block (around line 293). Replace its full body (the existing `<div class="mb-2 ...">` through the closing `<p>`) with:
 
 ```svelte
-				<Card.Content class="relative z-10">
-					{@const flow = flowOf(budget.id)}
-					{@const effLimit = effectiveLimit(budget.limitCents, flow)}
-					{@const stillOver = spent > effLimit}
-					{@const coveredByEff = over && !stillOver}
-					{@const effPct = effLimit === 0 ? 0 : Math.min(100, Math.round((spent / effLimit) * 100))}
-					<div class="mb-2 flex items-baseline justify-between text-sm tabular-nums">
-						<span class={stillOver ? 'text-expense font-medium' : ''}>
-							{formatCents(spent)}
-						</span>
-						<span class="text-muted-foreground">
-							of {formatCents(budget.limitCents)}
-							{#if flow.in > 0 || flow.out > 0}
-								<span class="text-xs">(eff {formatCents(effLimit)})</span>
-							{/if}
-						</span>
-					</div>
-					<div class="bg-muted relative h-2 overflow-hidden rounded-full">
-						{#if stillOver}
-							<div class="absolute inset-y-0 left-0 h-full bg-amber-500" style="width: 100%"></div>
-							{@const overPct = Math.min(100, Math.round(((spent - effLimit) / Math.max(1, effLimit)) * 100))}
-							<div
-								class="absolute inset-y-0 right-0 h-full bg-rose-500 transition-all"
-								style="width: {overPct}%"
-							></div>
-						{:else if coveredByEff}
-							<div class="h-full bg-emerald-500 transition-all" style="width: 100%"></div>
-						{:else}
-							<div
-								class="h-full transition-all {effPct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
-								style="width: {effPct}%"
-							></div>
-						{/if}
-						{#if flow.in > 0 || flow.out > 0}
-							{@const markerPct = effLimit === 0 ? 0 : Math.min(100, Math.round((budget.limitCents / effLimit) * 100))}
-							<div
-								class="absolute inset-y-0 w-px bg-foreground/40"
-								style="left: {markerPct}%"
-								aria-hidden="true"
-							></div>
-						{/if}
-					</div>
-					<p class="text-muted-foreground mt-2 text-xs">
-						{effPct}% used{#if stillOver}
-							· over by {formatCents(spent - effLimit)}{:else if coveredByEff}
-							· ditutupi subsidi
-						{/if}
-					</p>
-					{#if flow.in > 0}
-						<p class="text-muted-foreground mt-1 text-xs">
-							↓ disubsidi {formatCents(flow.in)}
-						</p>
-					{/if}
-					{#if flow.out > 0}
-						<p class="text-muted-foreground mt-1 text-xs">
-							↑ subsidi keluar {formatCents(flow.out)}
-						</p>
-					{/if}
-				</Card.Content>
+<Card.Content class="relative z-10">
+	{@const flow = flowOf(budget.id)}
+	{@const effLimit = effectiveLimit(budget.limitCents, flow)}
+	{@const stillOver = spent > effLimit}
+	{@const coveredByEff = over && !stillOver}
+	{@const effPct = effLimit === 0 ? 0 : Math.min(100, Math.round((spent / effLimit) * 100))}
+	<div class="mb-2 flex items-baseline justify-between text-sm tabular-nums">
+		<span class={stillOver ? 'text-expense font-medium' : ''}>
+			{formatCents(spent)}
+		</span>
+		<span class="text-muted-foreground">
+			of {formatCents(budget.limitCents)}
+			{#if flow.in > 0 || flow.out > 0}
+				<span class="text-xs">(eff {formatCents(effLimit)})</span>
+			{/if}
+		</span>
+	</div>
+	<div class="bg-muted relative h-2 overflow-hidden rounded-full">
+		{#if stillOver}
+			<div class="absolute inset-y-0 left-0 h-full bg-amber-500" style="width: 100%"></div>
+			{@const overPct = Math.min(
+				100,
+				Math.round(((spent - effLimit) / Math.max(1, effLimit)) * 100)
+			)}
+			<div
+				class="absolute inset-y-0 right-0 h-full bg-rose-500 transition-all"
+				style="width: {overPct}%"
+			></div>
+		{:else if coveredByEff}
+			<div class="h-full bg-emerald-500 transition-all" style="width: 100%"></div>
+		{:else}
+			<div
+				class="h-full transition-all {effPct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
+				style="width: {effPct}%"
+			></div>
+		{/if}
+		{#if flow.in > 0 || flow.out > 0}
+			{@const markerPct =
+				effLimit === 0 ? 0 : Math.min(100, Math.round((budget.limitCents / effLimit) * 100))}
+			<div
+				class="bg-foreground/40 absolute inset-y-0 w-px"
+				style="left: {markerPct}%"
+				aria-hidden="true"
+			></div>
+		{/if}
+	</div>
+	<p class="text-muted-foreground mt-2 text-xs">
+		{effPct}% used{#if stillOver}
+			· over by {formatCents(spent - effLimit)}{:else if coveredByEff}
+			· ditutupi subsidi
+		{/if}
+	</p>
+	{#if flow.in > 0}
+		<p class="text-muted-foreground mt-1 text-xs">
+			↓ disubsidi {formatCents(flow.in)}
+		</p>
+	{/if}
+	{#if flow.out > 0}
+		<p class="text-muted-foreground mt-1 text-xs">
+			↑ subsidi keluar {formatCents(flow.out)}
+		</p>
+	{/if}
+</Card.Content>
 ```
 
 - [ ] **Step 4: Start the dev server and verify visually**
 
 Run: `npm run dev`
 Open browser, navigate to `/budgets` while signed in to an account that has at least one overspent budget. Verify:
+
 - Cards still render.
 - Overspent cards with no subsidy still show the amber+rose bar.
 - No console errors.
@@ -1422,6 +1375,7 @@ git commit -m "feat(budgets-ui): dual progress bar with effective limit marker"
 ## Task 10: Subsidy create form + "Subsidi" button
 
 **Files:**
+
 - Create: `src/lib/components/budgets/subsidy-create-form.svelte`
 - Modify: `src/routes/(app)/budgets/+page.svelte`
 
@@ -1475,9 +1429,7 @@ Create `src/lib/components/budgets/subsidy-create-form.svelte`:
 
 	const selectedSource = $derived(eligibleSources.find((s) => s.budgetId === sourceId));
 	const maxAmount = $derived(
-		selectedSource
-			? Math.min(remainingGap, selectedSource.sourceRemainingCents)
-			: remainingGap
+		selectedSource ? Math.min(remainingGap, selectedSource.sourceRemainingCents) : remainingGap
 	);
 
 	type Icon = PickerItem['icon'];
@@ -1511,7 +1463,7 @@ Create `src/lib/components/budgets/subsidy-create-form.svelte`:
 	class="space-y-4 p-4"
 >
 	<input type="hidden" name="toBudgetId" value={targetBudgetId} />
-	<div class="rounded-lg bg-muted/40 p-3 text-sm">
+	<div class="bg-muted/40 rounded-lg p-3 text-sm">
 		<div class="font-medium">{targetCategoryName}</div>
 		<div class="text-muted-foreground mt-1 text-xs">
 			Kekurangan: {formatCentsAsCurrency(targetOverageCents, 'IDR')}
@@ -1527,9 +1479,7 @@ Create `src/lib/components/budgets/subsidy-create-form.svelte`:
 	<div class="space-y-1">
 		<Label>Sumber</Label>
 		{#if sourceItems.length === 0}
-			<p class="text-muted-foreground text-sm">
-				Tidak ada budget dengan sisa alokasi.
-			</p>
+			<p class="text-muted-foreground text-sm">Tidak ada budget dengan sisa alokasi.</p>
 		{:else}
 			<PickerSheet
 				items={sourceItems}
@@ -1575,7 +1525,7 @@ Create `src/lib/components/budgets/subsidy-create-form.svelte`:
 			Cancel
 		</Button>
 		<SubmitButton
-			pending={pending}
+			{pending}
 			disabled={!sourceId || amountCents <= 0 || amountCents > maxAmount}
 			class="h-12 flex-1 rounded-full !bg-white text-base font-semibold !text-neutral-900 hover:!bg-white/90 md:h-10 md:text-sm"
 		>
@@ -1590,37 +1540,37 @@ Create `src/lib/components/budgets/subsidy-create-form.svelte`:
 In `src/routes/(app)/budgets/+page.svelte` `<script>` block, after the existing `editCategoryId` state (around line 87) add:
 
 ```ts
-	import SubsidyCreateForm from '$lib/components/budgets/subsidy-create-form.svelte';
+import SubsidyCreateForm from '$lib/components/budgets/subsidy-create-form.svelte';
 
-	let subsidyOpen = $state(false);
-	let subsidyTarget = $state<BudgetRow | null>(null);
+let subsidyOpen = $state(false);
+let subsidyTarget = $state<BudgetRow | null>(null);
 
-	const eligibleSourcesFor = (target: BudgetRow) => {
-		return data.budgets
-			.filter((b) => b.id !== target.id && b.periodMonth === target.periodMonth)
-			.map((b) => {
-				const spentB = data.spentByCategory[b.categoryId] ?? 0;
-				const out = (data.subsidyFlowByBudget[b.id]?.out) ?? 0;
-				const remaining = sourceRemaining({
-					limitCents: b.limitCents,
-					spentCents: spentB,
-					subsidyOutCents: out
-				});
-				const cat = categoryById.get(b.categoryId);
-				return {
-					budgetId: b.id,
-					categoryName: cat?.name ?? 'Unknown',
-					categoryIcon: cat?.icon ?? null,
-					sourceRemainingCents: remaining
-				};
-			})
-			.filter((s) => s.sourceRemainingCents > 0);
-	};
+const eligibleSourcesFor = (target: BudgetRow) => {
+	return data.budgets
+		.filter((b) => b.id !== target.id && b.periodMonth === target.periodMonth)
+		.map((b) => {
+			const spentB = data.spentByCategory[b.categoryId] ?? 0;
+			const out = data.subsidyFlowByBudget[b.id]?.out ?? 0;
+			const remaining = sourceRemaining({
+				limitCents: b.limitCents,
+				spentCents: spentB,
+				subsidyOutCents: out
+			});
+			const cat = categoryById.get(b.categoryId);
+			return {
+				budgetId: b.id,
+				categoryName: cat?.name ?? 'Unknown',
+				categoryIcon: cat?.icon ?? null,
+				sourceRemainingCents: remaining
+			};
+		})
+		.filter((s) => s.sourceRemainingCents > 0);
+};
 
-	const openSubsidy = (b: BudgetRow) => {
-		subsidyTarget = b;
-		subsidyOpen = true;
-	};
+const openSubsidy = (b: BudgetRow) => {
+	subsidyTarget = b;
+	subsidyOpen = true;
+};
 ```
 
 (The import line goes near the top of the script — group with other component imports.)
@@ -1630,23 +1580,23 @@ In `src/routes/(app)/budgets/+page.svelte` `<script>` block, after the existing 
 Inside the `<Card.Content>` block (the one edited in Task 9), after the closing of the existing label section but still inside `<Card.Content>`, append:
 
 ```svelte
-					{#if stillOver}
-						{@const sources = eligibleSourcesFor(budget)}
-						<Button
-							type="button"
-							variant="outline"
-							size="sm"
-							class="mt-3 w-full"
-							disabled={sources.length === 0}
-							onclick={(e) => {
-								e.preventDefault();
-								e.stopPropagation();
-								openSubsidy(budget);
-							}}
-						>
-							Subsidi dari budget lain
-						</Button>
-					{/if}
+{#if stillOver}
+	{@const sources = eligibleSourcesFor(budget)}
+	<Button
+		type="button"
+		variant="outline"
+		size="sm"
+		class="mt-3 w-full"
+		disabled={sources.length === 0}
+		onclick={(e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			openSubsidy(budget);
+		}}
+	>
+		Subsidi dari budget lain
+	</Button>
+{/if}
 ```
 
 - [ ] **Step 4: Render the dialog/sheet at the bottom**
@@ -1684,7 +1634,9 @@ After the existing Edit dialog/sheet block (around line 522), append:
 			side="bottom"
 			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
 		>
-			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Subsidi budget</Sheet.Title></Sheet.Header>
+			<Sheet.Header class="p-4 pb-2 text-left"
+				><Sheet.Title>Subsidi budget</Sheet.Title></Sheet.Header
+			>
 			<div class="flex-1 overflow-y-auto">{@render subsidyForm()}</div>
 		</Sheet.Content>
 	</Sheet.Root>
@@ -1695,6 +1647,7 @@ After the existing Edit dialog/sheet block (around line 522), append:
 
 Run: `npm run dev`
 Steps:
+
 1. Sign in to a user with at least one overspent budget and another budget with slack.
 2. Click "Subsidi dari budget lain" on the overspent card.
 3. Pick a source, enter an amount within the cap, submit.
@@ -1713,6 +1666,7 @@ git commit -m "feat(budgets-ui): add subsidy create flow"
 ## Task 11: Subsidy list (inline edit + delete)
 
 **Files:**
+
 - Create: `src/lib/components/budgets/subsidy-edit-form.svelte`
 - Create: `src/lib/components/budgets/subsidy-list.svelte`
 - Modify: `src/routes/(app)/budgets/+page.svelte`
@@ -1777,11 +1731,9 @@ Create `src/lib/components/budgets/subsidy-edit-form.svelte`:
 	class="space-y-4 p-4"
 >
 	<input type="hidden" name="id" value={subsidyId} />
-	<div class="rounded-lg bg-muted/40 p-3 text-sm">
+	<div class="bg-muted/40 rounded-lg p-3 text-sm">
 		<div class="font-medium">{fromName} → {toName}</div>
-		<div class="text-muted-foreground mt-1 text-xs">
-			From/to tidak bisa diubah.
-		</div>
+		<div class="text-muted-foreground mt-1 text-xs">From/to tidak bisa diubah.</div>
 	</div>
 
 	<div class="space-y-1">
@@ -1815,7 +1767,7 @@ Create `src/lib/components/budgets/subsidy-edit-form.svelte`:
 			Cancel
 		</Button>
 		<SubmitButton
-			pending={pending}
+			{pending}
 			disabled={amountCents <= 0 || amountCents > maxAmount}
 			class="h-12 flex-1 rounded-full !bg-white text-base font-semibold !text-neutral-900 hover:!bg-white/90 md:h-10 md:text-sm"
 		>
@@ -1876,8 +1828,10 @@ Create `src/lib/components/budgets/subsidy-list.svelte`:
 				{#each entries as e (e.id)}
 					<li class="flex items-center justify-between gap-2">
 						<span class="truncate">
-							{e.direction === 'in' ? '↓' : '↑'} {formatCentsAsCurrency(e.amountCents, 'IDR')}
-							{e.direction === 'in' ? 'dari' : 'ke'} {e.counterpartName}
+							{e.direction === 'in' ? '↓' : '↑'}
+							{formatCentsAsCurrency(e.amountCents, 'IDR')}
+							{e.direction === 'in' ? 'dari' : 'ke'}
+							{e.counterpartName}
 						</span>
 						<span class="flex shrink-0 items-center gap-1">
 							<Button
@@ -1909,7 +1863,7 @@ Create `src/lib/components/budgets/subsidy-list.svelte`:
 								onclick={(ev) => ev.stopPropagation()}
 							>
 								<input type="hidden" name="id" value={e.id} />
-								<Button type="submit" variant="ghost" size="icon" class="size-7 text-destructive">
+								<Button type="submit" variant="ghost" size="icon" class="text-destructive size-7">
 									<Trash2 class="size-3" />
 								</Button>
 							</form>
@@ -1927,68 +1881,68 @@ Create `src/lib/components/budgets/subsidy-list.svelte`:
 In `src/routes/(app)/budgets/+page.svelte` `<script>`, add the import and new state:
 
 ```ts
-	import SubsidyList from '$lib/components/budgets/subsidy-list.svelte';
-	import SubsidyEditForm from '$lib/components/budgets/subsidy-edit-form.svelte';
+import SubsidyList from '$lib/components/budgets/subsidy-list.svelte';
+import SubsidyEditForm from '$lib/components/budgets/subsidy-edit-form.svelte';
 
-	type SubsidyRow = (typeof data.subsidies)[number];
+type SubsidyRow = (typeof data.subsidies)[number];
 
-	let subsidyEditOpen = $state(false);
-	let subsidyEditTarget = $state<SubsidyRow | null>(null);
+let subsidyEditOpen = $state(false);
+let subsidyEditTarget = $state<SubsidyRow | null>(null);
 
-	const budgetById = $derived(new Map(data.budgets.map((b) => [b.id, b])));
+const budgetById = $derived(new Map(data.budgets.map((b) => [b.id, b])));
 
-	const subsidiesByBudget = $derived(() => {
-		const inMap = new Map<string, SubsidyRow[]>();
-		const outMap = new Map<string, SubsidyRow[]>();
-		for (const s of data.subsidies) {
-			const inArr = inMap.get(s.toBudgetId) ?? [];
-			inArr.push(s);
-			inMap.set(s.toBudgetId, inArr);
-			const outArr = outMap.get(s.fromBudgetId) ?? [];
-			outArr.push(s);
-			outMap.set(s.fromBudgetId, outArr);
-		}
-		return { inMap, outMap };
-	});
+const subsidiesByBudget = $derived(() => {
+	const inMap = new Map<string, SubsidyRow[]>();
+	const outMap = new Map<string, SubsidyRow[]>();
+	for (const s of data.subsidies) {
+		const inArr = inMap.get(s.toBudgetId) ?? [];
+		inArr.push(s);
+		inMap.set(s.toBudgetId, inArr);
+		const outArr = outMap.get(s.fromBudgetId) ?? [];
+		outArr.push(s);
+		outMap.set(s.fromBudgetId, outArr);
+	}
+	return { inMap, outMap };
+});
 
-	const entriesForBudget = (budgetId: string) => {
-		const { inMap, outMap } = subsidiesByBudget();
-		const entries: {
-			id: string;
-			direction: 'in' | 'out';
-			counterpartName: string;
-			amountCents: number;
-			note: string | null;
-		}[] = [];
-		for (const s of inMap.get(budgetId) ?? []) {
-			const fromBudget = budgetById.get(s.fromBudgetId);
-			const cat = fromBudget ? categoryById.get(fromBudget.categoryId) : null;
-			entries.push({
-				id: s.id,
-				direction: 'in',
-				counterpartName: cat?.name ?? 'Unknown',
-				amountCents: s.amountCents,
-				note: s.note
-			});
-		}
-		for (const s of outMap.get(budgetId) ?? []) {
-			const toBudget = budgetById.get(s.toBudgetId);
-			const cat = toBudget ? categoryById.get(toBudget.categoryId) : null;
-			entries.push({
-				id: s.id,
-				direction: 'out',
-				counterpartName: cat?.name ?? 'Unknown',
-				amountCents: s.amountCents,
-				note: s.note
-			});
-		}
-		return entries;
-	};
+const entriesForBudget = (budgetId: string) => {
+	const { inMap, outMap } = subsidiesByBudget();
+	const entries: {
+		id: string;
+		direction: 'in' | 'out';
+		counterpartName: string;
+		amountCents: number;
+		note: string | null;
+	}[] = [];
+	for (const s of inMap.get(budgetId) ?? []) {
+		const fromBudget = budgetById.get(s.fromBudgetId);
+		const cat = fromBudget ? categoryById.get(fromBudget.categoryId) : null;
+		entries.push({
+			id: s.id,
+			direction: 'in',
+			counterpartName: cat?.name ?? 'Unknown',
+			amountCents: s.amountCents,
+			note: s.note
+		});
+	}
+	for (const s of outMap.get(budgetId) ?? []) {
+		const toBudget = budgetById.get(s.toBudgetId);
+		const cat = toBudget ? categoryById.get(toBudget.categoryId) : null;
+		entries.push({
+			id: s.id,
+			direction: 'out',
+			counterpartName: cat?.name ?? 'Unknown',
+			amountCents: s.amountCents,
+			note: s.note
+		});
+	}
+	return entries;
+};
 
-	const openSubsidyEdit = (subsidyId: string) => {
-		subsidyEditTarget = data.subsidies.find((s) => s.id === subsidyId) ?? null;
-		subsidyEditOpen = subsidyEditTarget !== null;
-	};
+const openSubsidyEdit = (subsidyId: string) => {
+	subsidyEditTarget = data.subsidies.find((s) => s.id === subsidyId) ?? null;
+	subsidyEditOpen = subsidyEditTarget !== null;
+};
 ```
 
 - [ ] **Step 4: Render the list inside each card**
@@ -1996,10 +1950,7 @@ In `src/routes/(app)/budgets/+page.svelte` `<script>`, add the import and new st
 Inside `<Card.Content>` (after the "Subsidi" button block from Task 10), add:
 
 ```svelte
-					<SubsidyList
-						entries={entriesForBudget(budget.id)}
-						onEdit={openSubsidyEdit}
-					/>
+<SubsidyList entries={entriesForBudget(budget.id)} onEdit={openSubsidyEdit} />
 ```
 
 - [ ] **Step 5: Add the edit dialog/sheet**
@@ -2042,7 +1993,8 @@ After the subsidy create dialog/sheet block, append:
 			side="bottom"
 			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
 		>
-			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Edit subsidi</Sheet.Title></Sheet.Header>
+			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Edit subsidi</Sheet.Title></Sheet.Header
+			>
 			<div class="flex-1 overflow-y-auto">{@render subsidyEditFormSnippet()}</div>
 		</Sheet.Content>
 	</Sheet.Root>
@@ -2053,6 +2005,7 @@ After the subsidy create dialog/sheet block, append:
 
 Run: `npm run dev`
 Steps:
+
 1. Open a budget card that has a subsidy.
 2. Expand the "N subsidi aktif" panel.
 3. Click the pencil; edit amount; submit; confirm toast + updated bar.
@@ -2070,6 +2023,7 @@ git commit -m "feat(budgets-ui): list, edit, delete subsidies inline"
 ## Task 12: Summary line for subsidies
 
 **Files:**
+
 - Modify: `src/routes/(app)/budgets/+page.svelte`
 
 - [ ] **Step 1: Add summary line under "Spent vs Budget" card**
@@ -2077,12 +2031,12 @@ git commit -m "feat(budgets-ui): list, edit, delete subsidies inline"
 Find the "Spent vs Budget" card block (around line 161). Inside it, after the `<div class="text-muted-foreground flex justify-between text-xs tabular-nums">` row, append:
 
 ```svelte
-		{#if data.subsidies.length > 0}
-			{@const totalSubsidy = data.subsidies.reduce((s, x) => s + x.amountCents, 0)}
-			<div class="text-muted-foreground mt-2 text-xs">
-				Subsidi aktif: {data.subsidies.length} record, total {formatCents(totalSubsidy)} dipindahkan.
-			</div>
-		{/if}
+{#if data.subsidies.length > 0}
+	{@const totalSubsidy = data.subsidies.reduce((s, x) => s + x.amountCents, 0)}
+	<div class="text-muted-foreground mt-2 text-xs">
+		Subsidi aktif: {data.subsidies.length} record, total {formatCents(totalSubsidy)} dipindahkan.
+	</div>
+{/if}
 ```
 
 - [ ] **Step 2: Type check + visual verify**
@@ -2104,6 +2058,7 @@ git commit -m "feat(budgets-ui): show subsidy summary line"
 ## Task 13: Budget detail page — subsidy panel
 
 **Files:**
+
 - Modify: `src/routes/(app)/budgets/[id]/+page.svelte`
 
 - [ ] **Step 1: Import helpers + components**
@@ -2111,13 +2066,13 @@ git commit -m "feat(budgets-ui): show subsidy summary line"
 In `src/routes/(app)/budgets/[id]/+page.svelte` `<script>` block, add to the import section:
 
 ```ts
-	import { effectiveLimit, sourceRemaining } from '$lib/utils/budget.js';
-	import SubsidyList from '$lib/components/budgets/subsidy-list.svelte';
-	import SubsidyCreateForm from '$lib/components/budgets/subsidy-create-form.svelte';
-	import SubsidyEditForm from '$lib/components/budgets/subsidy-edit-form.svelte';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import * as Sheet from '$lib/components/ui/sheet';
-	import { MediaQuery } from 'svelte/reactivity';
+import { effectiveLimit, sourceRemaining } from '$lib/utils/budget.js';
+import SubsidyList from '$lib/components/budgets/subsidy-list.svelte';
+import SubsidyCreateForm from '$lib/components/budgets/subsidy-create-form.svelte';
+import SubsidyEditForm from '$lib/components/budgets/subsidy-edit-form.svelte';
+import * as Dialog from '$lib/components/ui/dialog';
+import * as Sheet from '$lib/components/ui/sheet';
+import { MediaQuery } from 'svelte/reactivity';
 ```
 
 - [ ] **Step 2: Derive effective state + subsidy entries**
@@ -2125,96 +2080,94 @@ In `src/routes/(app)/budgets/[id]/+page.svelte` `<script>` block, add to the imp
 After the existing `over` / `remainingCents` derived lines (around line 62), add:
 
 ```ts
-	const isDesktop = new MediaQuery('(min-width: 768px)');
+const isDesktop = new MediaQuery('(min-width: 768px)');
 
-	type SubsidyRow = (typeof data.subsidies)[number];
+type SubsidyRow = (typeof data.subsidies)[number];
 
-	const budgetById = $derived(new Map(data.budgets.map((b) => [b.id, b])));
-	const allCategoriesById = $derived(
-		new Map(data.allCategories.map((c) => [c.id, c]))
-	);
+const budgetById = $derived(new Map(data.budgets.map((b) => [b.id, b])));
+const allCategoriesById = $derived(new Map(data.allCategories.map((c) => [c.id, c])));
 
-	const flow = $derived(
-		budget ? (data.subsidyFlowByBudget[budget.id] ?? { in: 0, out: 0 }) : { in: 0, out: 0 }
-	);
-	const effLimit = $derived(budget ? effectiveLimit(budget.limitCents, flow) : 0);
-	const effPct = $derived(
-		effLimit > 0 ? Math.min(100, Math.round((spentCents / effLimit) * 100)) : 0
-	);
-	const stillOver = $derived(spentCents > effLimit);
-	const coveredByEff = $derived(over && !stillOver);
+const flow = $derived(
+	budget ? (data.subsidyFlowByBudget[budget.id] ?? { in: 0, out: 0 }) : { in: 0, out: 0 }
+);
+const effLimit = $derived(budget ? effectiveLimit(budget.limitCents, flow) : 0);
+const effPct = $derived(
+	effLimit > 0 ? Math.min(100, Math.round((spentCents / effLimit) * 100)) : 0
+);
+const stillOver = $derived(spentCents > effLimit);
+const coveredByEff = $derived(over && !stillOver);
 
-	const subsidiesIn = $derived(
-		budget ? data.subsidies.filter((s) => s.toBudgetId === budget.id) : []
-	);
-	const subsidiesOut = $derived(
-		budget ? data.subsidies.filter((s) => s.fromBudgetId === budget.id) : []
-	);
+const subsidiesIn = $derived(
+	budget ? data.subsidies.filter((s) => s.toBudgetId === budget.id) : []
+);
+const subsidiesOut = $derived(
+	budget ? data.subsidies.filter((s) => s.fromBudgetId === budget.id) : []
+);
 
-	const eligibleSources = $derived.by(() => {
-		if (!budget) return [];
-		return data.budgets
-			.filter((b) => b.id !== budget.id && b.periodMonth === budget.periodMonth)
-			.map((b) => {
-				const spentB = data.spentByCategory[b.categoryId] ?? 0;
-				const out = data.subsidyFlowByBudget[b.id]?.out ?? 0;
-				const remaining = sourceRemaining({
-					limitCents: b.limitCents,
-					spentCents: spentB,
-					subsidyOutCents: out
-				});
-				const cat = allCategoriesById.get(b.categoryId);
-				return {
-					budgetId: b.id,
-					categoryName: cat?.name ?? 'Unknown',
-					categoryIcon: cat?.icon ?? null,
-					sourceRemainingCents: remaining
-				};
-			})
-			.filter((s) => s.sourceRemainingCents > 0);
-	});
-
-	let subsidyOpen = $state(false);
-	let subsidyEditOpen = $state(false);
-	let subsidyEditTarget = $state<SubsidyRow | null>(null);
-
-	const openSubsidyEdit = (id: string) => {
-		subsidyEditTarget = data.subsidies.find((s) => s.id === id) ?? null;
-		subsidyEditOpen = subsidyEditTarget !== null;
-	};
-
-	const entries = $derived.by(() => {
-		const list: {
-			id: string;
-			direction: 'in' | 'out';
-			counterpartName: string;
-			amountCents: number;
-			note: string | null;
-		}[] = [];
-		for (const s of subsidiesIn) {
-			const fromB = budgetById.get(s.fromBudgetId);
-			const cat = fromB ? allCategoriesById.get(fromB.categoryId) : null;
-			list.push({
-				id: s.id,
-				direction: 'in',
-				counterpartName: cat?.name ?? 'Unknown',
-				amountCents: s.amountCents,
-				note: s.note
+const eligibleSources = $derived.by(() => {
+	if (!budget) return [];
+	return data.budgets
+		.filter((b) => b.id !== budget.id && b.periodMonth === budget.periodMonth)
+		.map((b) => {
+			const spentB = data.spentByCategory[b.categoryId] ?? 0;
+			const out = data.subsidyFlowByBudget[b.id]?.out ?? 0;
+			const remaining = sourceRemaining({
+				limitCents: b.limitCents,
+				spentCents: spentB,
+				subsidyOutCents: out
 			});
-		}
-		for (const s of subsidiesOut) {
-			const toB = budgetById.get(s.toBudgetId);
-			const cat = toB ? allCategoriesById.get(toB.categoryId) : null;
-			list.push({
-				id: s.id,
-				direction: 'out',
-				counterpartName: cat?.name ?? 'Unknown',
-				amountCents: s.amountCents,
-				note: s.note
-			});
-		}
-		return list;
-	});
+			const cat = allCategoriesById.get(b.categoryId);
+			return {
+				budgetId: b.id,
+				categoryName: cat?.name ?? 'Unknown',
+				categoryIcon: cat?.icon ?? null,
+				sourceRemainingCents: remaining
+			};
+		})
+		.filter((s) => s.sourceRemainingCents > 0);
+});
+
+let subsidyOpen = $state(false);
+let subsidyEditOpen = $state(false);
+let subsidyEditTarget = $state<SubsidyRow | null>(null);
+
+const openSubsidyEdit = (id: string) => {
+	subsidyEditTarget = data.subsidies.find((s) => s.id === id) ?? null;
+	subsidyEditOpen = subsidyEditTarget !== null;
+};
+
+const entries = $derived.by(() => {
+	const list: {
+		id: string;
+		direction: 'in' | 'out';
+		counterpartName: string;
+		amountCents: number;
+		note: string | null;
+	}[] = [];
+	for (const s of subsidiesIn) {
+		const fromB = budgetById.get(s.fromBudgetId);
+		const cat = fromB ? allCategoriesById.get(fromB.categoryId) : null;
+		list.push({
+			id: s.id,
+			direction: 'in',
+			counterpartName: cat?.name ?? 'Unknown',
+			amountCents: s.amountCents,
+			note: s.note
+		});
+	}
+	for (const s of subsidiesOut) {
+		const toB = budgetById.get(s.toBudgetId);
+		const cat = toB ? allCategoriesById.get(toB.categoryId) : null;
+		list.push({
+			id: s.id,
+			direction: 'out',
+			counterpartName: cat?.name ?? 'Unknown',
+			amountCents: s.amountCents,
+			note: s.note
+		});
+	}
+	return list;
+});
 ```
 
 - [ ] **Step 3: Update the existing progress card to show effective**
@@ -2222,59 +2175,78 @@ After the existing `over` / `remainingCents` derived lines (around line 62), add
 Replace the "Budget progress" block (around lines 169–215) with:
 
 ```svelte
-	<div
-		class="mb-6 rounded-xl border bg-gradient-to-br {stillOver ? 'from-rose-500/10' : coveredByEff ? 'from-emerald-500/10' : effPct >= 80 ? 'from-amber-500/10' : 'from-emerald-500/10'} via-card to-card p-4"
-	>
-		<div class="mb-3 flex items-baseline justify-between">
-			<span class="text-sm font-semibold">Spent this cycle</span>
-			<span class="text-sm font-semibold tabular-nums {stillOver ? 'text-expense' : ''}">
-				{effPct}%
-			</span>
+<div
+	class="mb-6 rounded-xl border bg-gradient-to-br {stillOver
+		? 'from-rose-500/10'
+		: coveredByEff
+			? 'from-emerald-500/10'
+			: effPct >= 80
+				? 'from-amber-500/10'
+				: 'from-emerald-500/10'} via-card to-card p-4"
+>
+	<div class="mb-3 flex items-baseline justify-between">
+		<span class="text-sm font-semibold">Spent this cycle</span>
+		<span class="text-sm font-semibold tabular-nums {stillOver ? 'text-expense' : ''}">
+			{effPct}%
+		</span>
+	</div>
+	<div class="bg-muted relative mb-3 h-2.5 overflow-hidden rounded-full">
+		{#if stillOver}
+			<div
+				class="absolute inset-y-0 left-0 h-full rounded-full bg-amber-500"
+				style="width: 100%"
+			></div>
+			{@const overPct = Math.min(
+				100,
+				Math.round(((spentCents - effLimit) / Math.max(1, effLimit)) * 100)
+			)}
+			<div
+				class="absolute inset-y-0 right-0 h-full rounded-full bg-rose-500 transition-all"
+				style="width: {overPct}%"
+			></div>
+		{:else if coveredByEff}
+			<div class="h-full rounded-full bg-emerald-500 transition-all" style="width: 100%"></div>
+		{:else}
+			<div
+				class="h-full rounded-full transition-all {effPct >= 80
+					? 'bg-amber-500'
+					: 'bg-emerald-500'}"
+				style="width: {effPct}%"
+			></div>
+		{/if}
+	</div>
+	<div class="grid grid-cols-3 gap-3 text-xs">
+		<div>
+			<div class="text-muted-foreground tracking-wider uppercase">Spent</div>
+			<div class="mt-1 font-semibold tabular-nums {stillOver ? 'text-expense' : ''}">
+				{formatCentsAsCurrency(spentCents, currency)}
+			</div>
 		</div>
-		<div class="bg-muted relative mb-3 h-2.5 overflow-hidden rounded-full">
-			{#if stillOver}
-				<div class="absolute inset-y-0 left-0 h-full rounded-full bg-amber-500" style="width: 100%"></div>
-				{@const overPct = Math.min(100, Math.round(((spentCents - effLimit) / Math.max(1, effLimit)) * 100))}
-				<div class="absolute inset-y-0 right-0 h-full rounded-full bg-rose-500 transition-all" style="width: {overPct}%"></div>
-			{:else if coveredByEff}
-				<div class="h-full rounded-full bg-emerald-500 transition-all" style="width: 100%"></div>
-			{:else}
-				<div
-					class="h-full rounded-full transition-all {effPct >= 80 ? 'bg-amber-500' : 'bg-emerald-500'}"
-					style="width: {effPct}%"
-				></div>
+		<div>
+			<div class="text-muted-foreground tracking-wider uppercase">Limit</div>
+			<div class="mt-1 font-semibold tabular-nums">
+				{formatCentsAsCurrency(limitCents, currency)}
+			</div>
+			{#if flow.in > 0 || flow.out > 0}
+				<div class="text-muted-foreground text-[10px]">
+					eff {formatCentsAsCurrency(effLimit, currency)}
+				</div>
 			{/if}
 		</div>
-		<div class="grid grid-cols-3 gap-3 text-xs">
-			<div>
-				<div class="text-muted-foreground uppercase tracking-wider">Spent</div>
-				<div class="mt-1 font-semibold tabular-nums {stillOver ? 'text-expense' : ''}">
-					{formatCentsAsCurrency(spentCents, currency)}
-				</div>
+		<div>
+			<div class="text-muted-foreground tracking-wider uppercase">
+				{stillOver ? 'Over by' : 'Left'}
 			</div>
-			<div>
-				<div class="text-muted-foreground uppercase tracking-wider">Limit</div>
-				<div class="mt-1 font-semibold tabular-nums">
-					{formatCentsAsCurrency(limitCents, currency)}
-				</div>
-				{#if flow.in > 0 || flow.out > 0}
-					<div class="text-muted-foreground text-[10px]">
-						eff {formatCentsAsCurrency(effLimit, currency)}
-					</div>
+			<div class="mt-1 font-semibold tabular-nums {stillOver ? 'text-expense' : 'text-income'}">
+				{#if stillOver}
+					−{formatCentsAsCurrency(spentCents - effLimit, currency)}
+				{:else}
+					{formatCentsAsCurrency(Math.max(0, effLimit - spentCents), currency)}
 				{/if}
-			</div>
-			<div>
-				<div class="text-muted-foreground uppercase tracking-wider">{stillOver ? 'Over by' : 'Left'}</div>
-				<div class="mt-1 font-semibold tabular-nums {stillOver ? 'text-expense' : 'text-income'}">
-					{#if stillOver}
-						−{formatCentsAsCurrency(spentCents - effLimit, currency)}
-					{:else}
-						{formatCentsAsCurrency(Math.max(0, effLimit - spentCents), currency)}
-					{/if}
-				</div>
 			</div>
 		</div>
 	</div>
+</div>
 ```
 
 - [ ] **Step 4: Add subsidy panel between progress and transactions list**
@@ -2283,7 +2255,7 @@ After the closing `{/if}` of the "Budget progress" block (so right before `<div 
 
 ```svelte
 {#if budget}
-	<div class="mb-6 rounded-xl border bg-card p-4">
+	<div class="bg-card mb-6 rounded-xl border p-4">
 		<div class="mb-3 flex items-center justify-between">
 			<h2 class="text-sm font-semibold">Subsidi</h2>
 			{#if stillOver}
@@ -2321,7 +2293,7 @@ After the existing `<AddTransactionSheet ... />` at the bottom (around line 307)
 			targetCategoryName={cat?.name ?? 'Unknown'}
 			targetOverageCents={Math.max(0, overage)}
 			alreadyCoveredCents={flow.in}
-			eligibleSources={eligibleSources}
+			{eligibleSources}
 			onClose={() => (subsidyOpen = false)}
 		/>
 	{/if}
@@ -2368,7 +2340,9 @@ After the existing `<AddTransactionSheet ... />` at the bottom (around line 307)
 			side="bottom"
 			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
 		>
-			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Subsidi budget</Sheet.Title></Sheet.Header>
+			<Sheet.Header class="p-4 pb-2 text-left"
+				><Sheet.Title>Subsidi budget</Sheet.Title></Sheet.Header
+			>
 			<div class="flex-1 overflow-y-auto">{@render subsidyCreateSnippet()}</div>
 		</Sheet.Content>
 	</Sheet.Root>
@@ -2377,7 +2351,8 @@ After the existing `<AddTransactionSheet ... />` at the bottom (around line 307)
 			side="bottom"
 			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
 		>
-			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Edit subsidi</Sheet.Title></Sheet.Header>
+			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Edit subsidi</Sheet.Title></Sheet.Header
+			>
 			<div class="flex-1 overflow-y-auto">{@render subsidyEditSnippet()}</div>
 		</Sheet.Content>
 	</Sheet.Root>
@@ -2390,6 +2365,7 @@ Run: `npm run check`
 Expected: PASS.
 
 Run `npm run dev`, navigate to a budget detail page, verify:
+
 - Effective limit shows under Limit when subsidy exists.
 - "+ Subsidi dari budget lain" button only renders when this budget is still overspent.
 - Subsidy panel lists in/out entries with edit + delete.
@@ -2407,6 +2383,7 @@ git commit -m "feat(budget-detail): subsidy panel + effective limit display"
 ## Task 14: Demo seed sample subsidy
 
 **Files:**
+
 - Modify: `src/lib/server/demo-seed.ts`
 
 - [ ] **Step 1: Inspect the seed file**
@@ -2414,6 +2391,7 @@ git commit -m "feat(budget-detail): subsidy panel + effective limit display"
 Run: `npm run dev` (or just open the file in editor).
 
 Read `src/lib/server/demo-seed.ts` end-to-end to find:
+
 - Where budgets are seeded (look for `INSERT INTO budgets` or `createBudget`).
 - Where transactions are seeded.
 
@@ -2430,8 +2408,8 @@ const now = Date.now();
 await db.insert(budgetSubsidies).values({
 	userId: user.id,
 	periodMonth: currentPeriodMonth, // use whatever variable holds the seeded period
-	fromBudgetId: transportBudgetId,  // use the seeded budget id for the source
-	toBudgetId: foodBudgetId,         // overspent target
+	fromBudgetId: transportBudgetId, // use the seeded budget id for the source
+	toBudgetId: foodBudgetId, // overspent target
 	amountCents: 200_000,
 	note: 'Demo subsidi: makan akhir bulan',
 	createdAt: now,
@@ -2444,6 +2422,7 @@ Match the import path / `await` / `id` patterns used by surrounding seed inserts
 - [ ] **Step 3: Test demo seed**
 
 Reset/recreate a demo user (whichever path the project uses — likely sign-up flow or a script). Sign in. Navigate to `/budgets`. Confirm:
+
 - One card shows "↓ disubsidi …".
 - The matching source card shows "↑ subsidi keluar …".
 - The summary line under "Spent vs Budget" says "Subsidi aktif: 1 record".
@@ -2492,6 +2471,7 @@ Expected: clean.
 ## Out of Scope (Reminder)
 
 These items from the spec are intentionally not implemented:
+
 - Auto-distribution rules
 - Multi-source-in-one-form UI
 - Cross-period subsidies

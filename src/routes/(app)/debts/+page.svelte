@@ -82,10 +82,10 @@
 		{ value: 'lent', label: 'They owe' }
 	];
 
-	const debtsInTab = $derived(data.debts.filter((d) => (d.direction ?? 'borrowed') === directionTab));
-	const hasLentDebts = $derived(
-		data.debts.some((d) => (d.direction ?? 'borrowed') === 'lent')
+	const debtsInTab = $derived(
+		data.debts.filter((d) => (d.direction ?? 'borrowed') === directionTab)
 	);
+	const hasLentDebts = $derived(data.debts.some((d) => (d.direction ?? 'borrowed') === 'lent'));
 
 	const arrearsDebts = $derived(debtsInTab.filter((d) => d.status === 'in_arrears'));
 	const activeDebtsRaw = $derived(debtsInTab.filter((d) => d.status === 'active'));
@@ -216,9 +216,7 @@
 					<div>
 						<div class="text-muted-foreground tracking-wider uppercase">DTI ratio</div>
 						<div
-							class="mt-1 font-semibold tabular-nums {dtiState === 'unsafe'
-								? 'text-expense'
-								: ''}"
+							class="mt-1 font-semibold tabular-nums {dtiState === 'unsafe' ? 'text-expense' : ''}"
 						>
 							{dti}% {dtiState === 'safe' ? '✓' : dtiState === 'moderate' ? '·' : '⚠'}
 						</div>
@@ -227,7 +225,7 @@
 			</div>
 		{/if}
 		{#if directionTab === 'borrowed' && aggregateFreeAtMs}
-			<div class="mt-3 text-xs text-muted-foreground">
+			<div class="text-muted-foreground mt-3 text-xs">
 				Debt-free by
 				<span class="text-foreground font-medium">
 					{new Date(aggregateFreeAtMs).toLocaleDateString('en-US', {
@@ -243,9 +241,7 @@
 
 {#if activeDebtsRaw.length > 1}
 	<div class="mb-4 flex items-center justify-between gap-2">
-		<div class="text-muted-foreground text-xs">
-			Payoff strategy
-		</div>
+		<div class="text-muted-foreground text-xs">Payoff strategy</div>
 		<SegmentedControl options={strategyOptions} bind:value={strategy} ariaLabel="Strategy" />
 	</div>
 {/if}
@@ -267,16 +263,16 @@
 		{@const paid = paidPercent(debt.principalCents, debt.currentBalanceCents)}
 		{@const aprHigh = debt.interestRatePct > 2000}
 		{@const isTopPriority = debt.id === topPriorityDebtId && activeDebtsRaw.length > 1}
-		<Card.Root class="relative {isTopPriority ? 'border-primary/50 ring-1 ring-primary/30' : ''}">
+		<Card.Root class="relative {isTopPriority ? 'border-primary/50 ring-primary/30 ring-1' : ''}">
 			<a
 				href="/debts/{debt.id}"
-				class="absolute inset-0 rounded-[inherit] z-0"
+				class="absolute inset-0 z-0 rounded-[inherit]"
 				aria-label="View {debt.name}"
 			></a>
 			<Card.Header class="flex flex-row items-start justify-between gap-3">
 				<div class="flex min-w-0 flex-1 items-center gap-3">
 					<div
-						class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
+						class="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-lg"
 					>
 						<Icon class="size-5" />
 					</div>
@@ -284,13 +280,16 @@
 						<div class="flex items-center gap-2">
 							<Card.Title class="truncate">{debt.name}</Card.Title>
 							{#if isTopPriority}
-								<span class="bg-primary/15 text-primary inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider">
+								<span
+									class="bg-primary/15 text-primary inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium tracking-wider uppercase"
+								>
 									Pay first
 								</span>
 							{/if}
 						</div>
 						<Card.Description>
-							{typeLabels[debt.type]}{#if debt.lender} · {debt.lender}{/if}
+							{typeLabels[debt.type]}{#if debt.lender}
+								· {debt.lender}{/if}
 						</Card.Description>
 					</div>
 				</div>
@@ -376,8 +375,10 @@
 				</div>
 				<p class="text-muted-foreground mt-2 text-xs">
 					{paid}% paid · APR {formatApr(debt.interestRatePct)}
-					{#if debt.dueDay} · Due day {debt.dueDay}{/if}
-					{#if debt.minimumPaymentCents > 0} · Min {formatCents(debt.minimumPaymentCents)}{/if}
+					{#if debt.dueDay}
+						· Due day {debt.dueDay}{/if}
+					{#if debt.minimumPaymentCents > 0}
+						· Min {formatCents(debt.minimumPaymentCents)}{/if}
 				</p>
 				<Button
 					type="button"
@@ -490,9 +491,7 @@
 			side="bottom"
 			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
 		>
-			<Sheet.Header class="p-4 pb-2 text-left"
-				><Sheet.Title>Add debt</Sheet.Title></Sheet.Header
-			>
+			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Add debt</Sheet.Title></Sheet.Header>
 			<div class="flex-1 overflow-y-auto">{@render createForm()}</div>
 		</Sheet.Content>
 	</Sheet.Root>
@@ -501,9 +500,7 @@
 			side="bottom"
 			class="flex max-h-[calc(90dvh-var(--keyboard-h,0px))] flex-col p-0"
 		>
-			<Sheet.Header class="p-4 pb-2 text-left"
-				><Sheet.Title>Edit debt</Sheet.Title></Sheet.Header
-			>
+			<Sheet.Header class="p-4 pb-2 text-left"><Sheet.Title>Edit debt</Sheet.Title></Sheet.Header>
 			<div class="flex-1 overflow-y-auto">{@render editForm()}</div>
 		</Sheet.Content>
 	</Sheet.Root>
