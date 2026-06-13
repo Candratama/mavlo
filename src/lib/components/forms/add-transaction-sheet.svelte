@@ -22,10 +22,11 @@
 		Tag
 	} from 'lucide-svelte';
 	import { invalidateAll } from '$app/navigation';
-	import { setLastUsed } from '$lib/utils/last-used.js';
+	import { setLastUsed, getLastUsed } from '$lib/utils/last-used.js';
 	import { notify } from '$lib/utils/toast.js';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { getIconByName } from '$lib/utils/category-icons.js';
+	import { formatYmdInTimezone } from '$lib/utils/cycle.js';
 	import { MediaQuery } from 'svelte/reactivity';
 	import { page } from '$app/state';
 
@@ -82,7 +83,8 @@
 		onSuccess
 	}: Props = $props();
 
-	const todayYmd = new Date().toISOString().slice(0, 10);
+	const userTimezone = $derived(page.data.timezone ?? 'Asia/Jakarta');
+	const todayYmd = $derived(formatYmdInTimezone(new Date(), userTimezone));
 
 	function initialState() {
 		if (mode === 'edit' && editTarget) {
@@ -92,16 +94,22 @@
 				transferToAccountId: editTarget.transferToAccountId ?? '',
 				categoryId: editTarget.categoryId ?? '',
 				debtId: editTarget.debtId ?? '',
-				occurredAt: new Date(editTarget.occurredAt).toISOString().slice(0, 10),
+				occurredAt: formatYmdInTimezone(new Date(editTarget.occurredAt), userTimezone),
 				note: editTarget.note ?? ''
 			};
 		}
 		const resolvedKind = debtTarget ? 'expense' : defaultKind;
 		const validSources =
 			resolvedKind === 'transfer' ? accounts : accounts.filter((a) => a.type !== 'savings');
-		const resolvedAccountId = validSources.some((a) => a.id === defaultAccountId)
-			? (defaultAccountId ?? '')
-			: (validSources[0]?.id ?? '');
+		// Prefer explicit context account, then the account used in the last
+		// transaction, then the first valid source.
+		const lastUsedAccountId = getLastUsed().accountId;
+		const preferredAccountId = validSources.some((a) => a.id === defaultAccountId)
+			? defaultAccountId
+			: validSources.some((a) => a.id === lastUsedAccountId)
+				? lastUsedAccountId
+				: undefined;
+		const resolvedAccountId = preferredAccountId ?? validSources[0]?.id ?? '';
 		return {
 			kind: resolvedKind,
 			accountId: resolvedAccountId,
@@ -540,7 +548,7 @@
 {/snippet}
 
 {#if isDesktop.current}
-	 5<Dialog.Root bind:open>
+	<Dialog.Root bind:open>
 		<Dialog.Content>
 			<Dialog.Header>
 				<Dialog.Title>{mode === 'create' ? 'New transaction' : 'Edit transaction'}</Dialog.Title>
