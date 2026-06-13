@@ -14,7 +14,7 @@
 		amountCents: number;
 	}
 
-	let { data }: { data: Row[]; currency?: string } = $props();
+	let { data }: { data: Row[] } = $props();
 
 	const formatMonth = (period: string) => {
 		const [y, m] = period.split('-');

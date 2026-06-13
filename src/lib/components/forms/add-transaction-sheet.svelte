@@ -29,6 +29,15 @@
 	import { formatYmdInTimezone } from '$lib/utils/cycle.js';
 	import { MediaQuery } from 'svelte/reactivity';
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
+
+	type DebtRow = {
+		id: string;
+		name: string;
+		status: string;
+		direction?: 'borrowed' | 'lent';
+		minimumPaymentCents: number;
+	};
 
 	type Account = {
 		id: string;
@@ -139,12 +148,12 @@
 		debtTarget ? debtTarget.minimumPaymentCents : (editTarget?.amountCents ?? null)
 	);
 
-	const activeDebts = $derived((page.data.debts ?? []).filter((d: any) => d.status === 'active'));
+	const activeDebts = $derived((page.data.debts ?? []).filter((d: DebtRow) => d.status === 'active'));
 	const borrowedDebts = $derived(
-		activeDebts.filter((d: any) => (d.direction ?? 'borrowed') === 'borrowed')
+		activeDebts.filter((d: DebtRow) => (d.direction ?? 'borrowed') === 'borrowed')
 	);
-	const lentDebts = $derived(activeDebts.filter((d: any) => d.direction === 'lent'));
-	const pickedDebt = $derived(activeDebts.find((d: any) => d.id === debtId));
+	const lentDebts = $derived(activeDebts.filter((d: DebtRow) => d.direction === 'lent'));
+	const pickedDebt = $derived(activeDebts.find((d: DebtRow) => d.id === debtId));
 	// Map 'debt' UI mode to underlying kind based on sub-action.
 	//   repay (I owe → pay) → expense
 	//   collect (they owe → receive) → income
@@ -178,7 +187,7 @@
 		const i = initialState();
 		uiKind = debtTarget ? 'debt' : i.kind;
 		if (debtTarget) {
-			const td = activeDebts.find((d: any) => d.id === debtTarget.id);
+			const td = activeDebts.find((d: DebtRow) => d.id === debtTarget.id);
 			debtSubAction = td?.direction === 'lent' ? 'collect' : 'repay';
 		}
 		accountId = i.accountId;
@@ -198,7 +207,7 @@
 	// When a debt is picked, prefill amount if currently empty/0
 	$effect(() => {
 		if (!debtId) return;
-		const picked = activeDebts.find((d: any) => d.id === debtId);
+		const picked = activeDebts.find((d: DebtRow) => d.id === debtId);
 		if (!picked) return;
 		if (!amountCents || amountCents === 0) {
 			amountCents = picked.minimumPaymentCents;
@@ -292,7 +301,7 @@
 	const debtPool = $derived(debtSubAction === 'collect' ? lentDebts : borrowedDebts);
 	const debtItems = $derived<PickerItem[]>([
 		{ value: '', label: 'None', icon: CreditCard as unknown as Icon },
-		...debtPool.map((d: any) => ({
+		...debtPool.map((d: DebtRow) => ({
 			value: d.id,
 			label: d.name,
 			icon: CreditCard as unknown as Icon
@@ -301,7 +310,7 @@
 	// Reset debtId if it no longer matches the current pool when sub-action flips.
 	$effect(() => {
 		if (uiKind !== 'debt') return;
-		if (debtId && !debtPool.some((d: any) => d.id === debtId)) {
+		if (debtId && !debtPool.some((d: DebtRow) => d.id === debtId)) {
 			debtId = '';
 		}
 	});
@@ -493,7 +502,7 @@
 					</button>
 				</div>
 				<div class="text-muted-foreground mt-1 text-xs">
-					Need a new debt? <a href="/debts" class="text-primary underline">Add it on Debts page</a>
+					Need a new debt? <a href={resolve('/debts')} class="text-primary underline">Add it on Debts page</a>
 					to also borrow or lend.
 				</div>
 			</div>
@@ -516,7 +525,7 @@
 				<input type="hidden" name="debtId" value="" />
 				<p class="text-muted-foreground text-xs">
 					No {debtSubAction === 'collect' ? 'lent' : 'borrowed'} debts.
-					<a href="/debts" class="text-primary underline">Add one</a>.
+					<a href={resolve('/debts')} class="text-primary underline">Add one</a>.
 				</p>
 			{/if}
 		{:else}

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import { invalidateAll } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -358,7 +359,7 @@
 		{@const denom = budget.limitCents + flow.in}
 		<Card.Root class="relative">
 			<a
-				href="/budgets/{budget.id}"
+				href={resolve(`/budgets/${budget.id}`)}
 				class="absolute inset-0 z-0 rounded-[inherit]"
 				aria-label="View {cat?.name ?? 'budget'} transactions"
 			></a>

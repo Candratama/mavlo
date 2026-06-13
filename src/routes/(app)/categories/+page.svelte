@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import { invalidateAll } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -286,7 +287,7 @@
 							</div>
 							<div class="min-w-0 flex-1">
 								<a
-									href="/categories/{category.id}"
+									href={resolve(`/categories/${category.id}`)}
 									class="block truncate font-medium hover:underline"
 								>
 									{category.name}
@@ -370,7 +371,7 @@
 						{/if}
 					</div>
 					<div class="min-w-0 flex-1">
-						<a href="/categories/{category.id}" class="block truncate font-medium hover:underline"
+						<a href={resolve(`/categories/${category.id}`)} class="block truncate font-medium hover:underline"
 							>{category.name}</a
 						>
 						<div class="text-muted-foreground mt-1 flex items-center gap-2 text-xs">

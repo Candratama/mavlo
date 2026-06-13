@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
@@ -205,7 +206,7 @@
 					: ''}"
 			>
 				<a
-					href="/accounts/{account.id}"
+					href={resolve(`/accounts/${account.id}`)}
 					class="absolute inset-0 rounded-2xl"
 					aria-label="View {account.name} transactions"
 				></a>
@@ -301,7 +302,7 @@
 					: ''}"
 			>
 				<a
-					href="/accounts/{account.id}"
+					href={resolve(`/accounts/${account.id}`)}
 					class="absolute inset-0 rounded-2xl"
 					aria-label="View {account.name} transactions"
 				></a>

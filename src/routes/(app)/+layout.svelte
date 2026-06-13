@@ -142,7 +142,7 @@
 
 	$effect(() => {
 		// Close popup when route changes to a non-sub-route page.
-		page.url.pathname;
+		void page.url.pathname;
 		if (!isOtherActive) otherOpen = false;
 	});
 	const limelightActive = $derived.by(() => {
@@ -324,7 +324,7 @@
 				>
 					{#each otherNav as item (item.href)}
 						<a
-							href={item.href}
+							href={resolve(item.href)}
 							onclick={() => (otherOpen = false)}
 							aria-label={item.label}
 							class="flex size-11 items-center justify-center rounded-full transition-opacity hover:opacity-100 {isActive(

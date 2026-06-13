@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import { invalidateAll } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
@@ -265,7 +266,7 @@
 		{@const isTopPriority = debt.id === topPriorityDebtId && activeDebtsRaw.length > 1}
 		<Card.Root class="relative {isTopPriority ? 'border-primary/50 ring-primary/30 ring-1' : ''}">
 			<a
-				href="/debts/{debt.id}"
+				href={resolve(`/debts/${debt.id}`)}
 				class="absolute inset-0 z-0 rounded-[inherit]"
 				aria-label="View {debt.name}"
 			></a>
@@ -428,7 +429,6 @@
 		{#if showPaidOff}
 			<div class="mt-3 grid gap-4 md:grid-cols-2">
 				{#each paidOffDebts as debt (debt.id)}
-					{@const Icon = typeIcons[debt.type] ?? Wallet}
 					<Card.Root class="opacity-60">
 						<Card.Header class="flex flex-row items-center gap-3">
 							<div
