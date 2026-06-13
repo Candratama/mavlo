@@ -112,9 +112,11 @@
 </svelte:head>
 
 <div class="mb-6">
-	<Button variant="ghost" size="sm" class="mb-3 -ml-2" href="/accounts">
-		<ArrowLeft class="mr-1 size-4" /> Accounts
-	</Button>
+	<div class="mb-3">
+		<Button variant="ghost" size="sm" class="-ml-2" href="/accounts">
+			<ArrowLeft class="mr-1 size-4" /> Accounts
+		</Button>
+	</div>
 
 	{#if account}
 		{@const IconComp = typeIcons[account.type as keyof typeof typeIcons] ?? Wallet}
@@ -159,6 +161,16 @@
 					</span>
 				</div>
 			</div>
+
+			<Button
+				variant="ghost"
+				size="icon"
+				href="/accounts?edit={account.id}"
+				aria-label="Edit account"
+				class="text-muted-foreground hover:text-foreground absolute right-3 bottom-3 z-10 size-9"
+			>
+				<Pencil class="size-4" />
+			</Button>
 		</div>
 	{/if}
 </div>

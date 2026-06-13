@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
-	import { invalidateAll } from '$app/navigation';
+	import { invalidateAll, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -112,6 +112,18 @@
 	};
 
 	const visibleAccounts = $derived(includeArchived ? data.allAccounts : data.accounts);
+
+	// Open the edit dialog when arriving with ?edit=<id> (e.g. from account detail),
+	// then strip the param so it doesn't reopen on invalidate.
+	$effect(() => {
+		const editId = page.url.searchParams.get('edit');
+		if (!editId) return;
+		const target = data.allAccounts.find((a) => a.id === editId);
+		if (target) openEdit(target);
+		const url = new URL(page.url.href);
+		url.searchParams.delete('edit');
+		replaceState(resolve(url.pathname + url.search), {});
+	});
 </script>
 
 <svelte:head><title>Accounts — Mavlo</title></svelte:head>
