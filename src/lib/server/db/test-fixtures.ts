@@ -6,9 +6,12 @@ const usersTableSql = `
 	CREATE TABLE users (
 		id TEXT PRIMARY KEY,
 		name TEXT NOT NULL,
+		username TEXT UNIQUE,
 		email TEXT NOT NULL UNIQUE,
 		email_verified INTEGER DEFAULT 0 NOT NULL,
 		image TEXT,
+		onboarded_at INTEGER,
+		is_demo INTEGER DEFAULT 0 NOT NULL,
 		created_at INTEGER NOT NULL,
 		updated_at INTEGER NOT NULL
 	)
@@ -116,6 +119,19 @@ const debtsTableSql = `
 	)
 `;
 
+const apiKeysTableSql = `
+	CREATE TABLE api_keys (
+		id TEXT NOT NULL PRIMARY KEY,
+		user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		name TEXT NOT NULL,
+		key_hash TEXT NOT NULL,
+		prefix TEXT NOT NULL,
+		last_used_at INTEGER,
+		created_at INTEGER NOT NULL,
+		revoked_at INTEGER
+	)
+`;
+
 export interface TestDbHandle {
 	db: BetterSQLite3Database<typeof schema>;
 	userId: string;
@@ -124,7 +140,15 @@ export interface TestDbHandle {
 }
 
 export function createTestDb(opts: {
-	tables: ('accounts' | 'categories' | 'transactions' | 'budgets' | 'budget_subsidies' | 'debts')[];
+	tables: (
+		| 'accounts'
+		| 'categories'
+		| 'transactions'
+		| 'budgets'
+		| 'budget_subsidies'
+		| 'debts'
+		| 'api_keys'
+	)[];
 }): TestDbHandle {
 	const sqlite = new Database(':memory:');
 	const db = drizzle(sqlite, { schema });
@@ -137,15 +161,16 @@ export function createTestDb(opts: {
 	if (opts.tables.includes('transactions')) sqlite.prepare(transactionsTableSql).run();
 	if (opts.tables.includes('budgets')) sqlite.prepare(budgetsTableSql).run();
 	if (opts.tables.includes('budget_subsidies')) sqlite.prepare(budgetSubsidiesTableSql).run();
+	if (opts.tables.includes('api_keys')) sqlite.prepare(apiKeysTableSql).run();
 
 	const now = Date.now();
 	const userId = 'user_test_1';
 	const otherUserId = 'user_test_2';
 	sqlite
-		.prepare('INSERT INTO users VALUES (?, ?, ?, 0, NULL, ?, ?)')
+		.prepare('INSERT INTO users VALUES (?, ?, NULL, ?, 0, NULL, NULL, 0, ?, ?)')
 		.run(userId, 'A', 'a@b.co', now, now);
 	sqlite
-		.prepare('INSERT INTO users VALUES (?, ?, ?, 0, NULL, ?, ?)')
+		.prepare('INSERT INTO users VALUES (?, ?, NULL, ?, 0, NULL, NULL, 0, ?, ?)')
 		.run(otherUserId, 'B', 'b@b.co', now, now);
 
 	return { db, userId, otherUserId, sqlite };
