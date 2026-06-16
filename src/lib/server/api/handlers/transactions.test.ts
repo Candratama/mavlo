@@ -6,7 +6,9 @@ import { listTx, createTx, getTx, updateTx, deleteTx } from './transactions';
 let h: TestDbHandle;
 
 beforeEach(() => {
-	h = createTestDb({ tables: ['accounts', 'categories', 'transactions', 'budgets', 'budget_subsidies', 'debts'] });
+	h = createTestDb({
+		tables: ['accounts', 'categories', 'transactions', 'budgets', 'budget_subsidies', 'debts']
+	});
 	const now = Date.now();
 	h.sqlite
 		.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
@@ -43,36 +45,61 @@ describe('transactions handler', () => {
 
 	it('updateTx updates and returns the row', async () => {
 		const created = await createTx(h.db, h.userId, {
-			accountId: 'acc1', amountCents: 1000, kind: 'expense', occurredAt: Date.now()
+			accountId: 'acc1',
+			amountCents: 1000,
+			kind: 'expense',
+			occurredAt: Date.now()
 		});
 		const updated = await updateTx(h.db, h.userId, created.id, {
-			accountId: 'acc1', amountCents: 2000, kind: 'expense', occurredAt: Date.now()
+			accountId: 'acc1',
+			amountCents: 2000,
+			kind: 'expense',
+			occurredAt: Date.now()
 		});
 		expect(updated.amountCents).toBe(2000);
 	});
 
 	it('updateTx throws 404 for another user', async () => {
 		const created = await createTx(h.db, h.userId, {
-			accountId: 'acc1', amountCents: 1000, kind: 'expense', occurredAt: Date.now()
+			accountId: 'acc1',
+			amountCents: 1000,
+			kind: 'expense',
+			occurredAt: Date.now()
 		});
 		await expect(
 			updateTx(h.db, h.otherUserId, created.id, {
-				accountId: 'acc1', amountCents: 2000, kind: 'expense', occurredAt: Date.now()
+				accountId: 'acc1',
+				amountCents: 2000,
+				kind: 'expense',
+				occurredAt: Date.now()
 			})
 		).rejects.toMatchObject({ status: 404 });
 	});
 
 	it('deleteTx throws 404 when missing, succeeds when present', async () => {
 		const created = await createTx(h.db, h.userId, {
-			accountId: 'acc1', amountCents: 1000, kind: 'expense', occurredAt: Date.now()
+			accountId: 'acc1',
+			amountCents: 1000,
+			kind: 'expense',
+			occurredAt: Date.now()
 		});
 		await expect(deleteTx(h.db, h.otherUserId, created.id)).rejects.toMatchObject({ status: 404 });
 		await expect(deleteTx(h.db, h.userId, created.id)).resolves.toBeUndefined();
 	});
 
 	it('listTx applies kind filter from query string', async () => {
-		await createTx(h.db, h.userId, { accountId: 'acc1', amountCents: 1, kind: 'income', occurredAt: Date.now() });
-		await createTx(h.db, h.userId, { accountId: 'acc1', amountCents: 2, kind: 'expense', occurredAt: Date.now() });
+		await createTx(h.db, h.userId, {
+			accountId: 'acc1',
+			amountCents: 1,
+			kind: 'income',
+			occurredAt: Date.now()
+		});
+		await createTx(h.db, h.userId, {
+			accountId: 'acc1',
+			amountCents: 2,
+			kind: 'expense',
+			occurredAt: Date.now()
+		});
 		expect(await listTx(h.db, h.userId, url('?kind=income'))).toHaveLength(1);
 	});
 

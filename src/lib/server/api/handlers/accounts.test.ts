@@ -14,7 +14,11 @@ function url(qs = ''): URL {
 
 describe('accounts handler', () => {
 	it('createAcc + listAcc round-trips', async () => {
-		const created = await createAcc(h.db, h.userId, { name: 'Bank', type: 'bank', currency: 'IDR' });
+		const created = await createAcc(h.db, h.userId, {
+			name: 'Bank',
+			type: 'bank',
+			currency: 'IDR'
+		});
 		expect(created.name).toBe('Bank');
 		expect(await listAcc(h.db, h.userId, url())).toHaveLength(1);
 	});
