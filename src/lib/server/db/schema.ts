@@ -180,4 +180,19 @@ export const userPreferences = sqliteTable('user_preferences', {
 	updatedAt: epochMsNow('updated_at')
 });
 
+export const apiKeys = sqliteTable(
+	'api_keys',
+	{
+		id: cuid().primaryKey(),
+		userId: userIdFk(),
+		name: text('name').notNull(),
+		keyHash: text('key_hash').notNull(),
+		prefix: text('prefix').notNull(),
+		lastUsedAt: integer('last_used_at', { mode: 'number' }),
+		createdAt: epochMsNow('created_at'),
+		revokedAt: integer('revoked_at', { mode: 'number' })
+	},
+	(t) => [index('api_keys_hash_idx').on(t.keyHash), index('api_keys_user_idx').on(t.userId)]
+);
+
 export * from './auth.schema';
