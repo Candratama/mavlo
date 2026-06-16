@@ -7,15 +7,6 @@ import { generateApiKey, hashApiKey } from '$lib/server/api/keys-crypto';
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
 
-const publicColumns = {
-	id: apiKeys.id,
-	name: apiKeys.name,
-	prefix: apiKeys.prefix,
-	lastUsedAt: apiKeys.lastUsedAt,
-	createdAt: apiKeys.createdAt,
-	revokedAt: apiKeys.revokedAt
-};
-
 export async function createApiKey(db: Db, userId: string, name: string) {
 	const { plaintext, prefix } = generateApiKey();
 	const keyHash = await hashApiKey(plaintext);
@@ -24,11 +15,19 @@ export async function createApiKey(db: Db, userId: string, name: string) {
 }
 
 export async function listApiKeys(db: Db, userId: string) {
-	return db
-		.select(publicColumns)
+	const rows = await db
+		.select()
 		.from(apiKeys)
 		.where(eq(apiKeys.userId, userId))
 		.orderBy(desc(apiKeys.createdAt));
+	return rows.map((r) => ({
+		id: r.id,
+		name: r.name,
+		prefix: r.prefix,
+		lastUsedAt: r.lastUsedAt,
+		createdAt: r.createdAt,
+		revokedAt: r.revokedAt
+	}));
 }
 
 export async function revokeApiKey(db: Db, userId: string, id: string) {
@@ -46,6 +45,6 @@ export async function authenticateApiKey(db: Db, plaintext: string): Promise<str
 		.update(apiKeys)
 		.set({ lastUsedAt: Date.now() })
 		.where(and(eq(apiKeys.keyHash, keyHash), isNull(apiKeys.revokedAt)))
-		.returning({ userId: apiKeys.userId });
+		.returning();
 	return row?.userId ?? null;
 }
