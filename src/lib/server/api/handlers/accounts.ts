@@ -29,7 +29,10 @@ export async function getAcc(db: Db, userId: string, id: string) {
 }
 
 export async function updateAcc(db: Db, userId: string, id: string, body: unknown) {
-	const parsed = accountUpdateSchema.safeParse({ ...(body as object), id });
+	const parsed = accountUpdateSchema.safeParse({
+		...(typeof body === 'object' && body !== null ? body : {}),
+		id
+	});
 	if (!parsed.success) throw new ApiError(400, 'validation', firstIssue(parsed.error));
 	const row = await repo.updateAccount(db, userId, parsed.data);
 	if (!row) throw new ApiError(404, 'not_found', 'Account not found');

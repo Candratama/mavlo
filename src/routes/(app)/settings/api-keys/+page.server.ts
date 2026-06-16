@@ -17,6 +17,8 @@ export const actions: Actions = {
 		const fd = await event.request.formData();
 		const name = String(fd.get('name') ?? '').trim();
 		if (!name) return fail(400, { action: 'create', message: 'Name required' });
+		if (name.length > 100)
+			return fail(400, { action: 'create', message: 'Name too long (max 100)' });
 		const { plaintext } = await createApiKey(db, user.id, name);
 		return { success: true, action: 'create', plaintext };
 	},

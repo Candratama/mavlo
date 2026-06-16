@@ -45,7 +45,7 @@
 			}
 		}}
 >
-	<Input name="name" bind:value={newName} placeholder="Key name (e.g. Zapier)" required />
+	<Input name="name" bind:value={newName} placeholder="Key name (e.g. Zapier)" maxlength={100} required />
 	<Button type="submit">Generate</Button>
 </form>
 

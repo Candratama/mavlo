@@ -29,7 +29,10 @@ export async function getCat(db: Db, userId: string, id: string) {
 }
 
 export async function updateCat(db: Db, userId: string, id: string, body: unknown) {
-	const parsed = categoryUpdateSchema.safeParse({ ...(body as object), id });
+	const parsed = categoryUpdateSchema.safeParse({
+		...(typeof body === 'object' && body !== null ? body : {}),
+		id
+	});
 	if (!parsed.success) throw new ApiError(400, 'validation', firstIssue(parsed.error));
 	const row = await repo.updateCategory(db, userId, parsed.data);
 	if (!row) throw new ApiError(404, 'not_found', 'Category not found');

@@ -9,22 +9,23 @@ beforeEach(() => {
 });
 
 describe('api-keys repository', () => {
-	it('createApiKey returns plaintext once and stores a row (no plaintext leak in list)', async () => {
-		const { row, plaintext } = await createApiKey(h.db, h.userId, 'My Key');
-		expect(plaintext.startsWith('mavlo_sk_')).toBe(true);
-		expect(row.name).toBe('My Key');
+	it('createApiKey returns plaintext once and a public key with no keyHash', async () => {
+		const result = await createApiKey(h.db, h.userId, 'My Key');
+		expect(result.plaintext.startsWith('mavlo_sk_')).toBe(true);
+		expect(result.key.name).toBe('My Key');
+		expect(result.key).not.toHaveProperty('keyHash');
 		const keys = await listApiKeys(h.db, h.userId);
 		expect(keys).toHaveLength(1);
 		expect(keys[0]).not.toHaveProperty('keyHash');
-		expect(keys[0].prefix).toBe(plaintext.slice(0, 16));
+		expect(keys[0].prefix).toBe(result.plaintext.slice(0, 16));
 	});
 
 	it('authenticateApiKey resolves the owning userId for a valid key and touches lastUsedAt', async () => {
-		const { row, plaintext } = await createApiKey(h.db, h.userId, 'k');
+		const { key, plaintext } = await createApiKey(h.db, h.userId, 'k');
 		expect(await authenticateApiKey(h.db, plaintext)).toBe(h.userId);
 		const stored = h.sqlite
 			.prepare('SELECT last_used_at FROM api_keys WHERE id = ?')
-			.get(row.id) as { last_used_at: number | null };
+			.get(key.id) as { last_used_at: number | null };
 		expect(stored.last_used_at).not.toBeNull();
 	});
 
@@ -33,15 +34,21 @@ describe('api-keys repository', () => {
 	});
 
 	it('authenticateApiKey returns null for a revoked key', async () => {
-		const { row, plaintext } = await createApiKey(h.db, h.userId, 'k');
-		await revokeApiKey(h.db, h.userId, row.id);
+		const { key, plaintext } = await createApiKey(h.db, h.userId, 'k');
+		await revokeApiKey(h.db, h.userId, key.id);
+		expect(await authenticateApiKey(h.db, plaintext)).toBeNull();
+	});
+
+	it('authenticateApiKey returns null for a demo user', async () => {
+		const { plaintext } = await createApiKey(h.db, h.userId, 'k');
+		h.sqlite.prepare('UPDATE users SET is_demo = 1 WHERE id = ?').run(h.userId);
 		expect(await authenticateApiKey(h.db, plaintext)).toBeNull();
 	});
 
 	it('revokeApiKey is scoped to the owner', async () => {
-		const { row } = await createApiKey(h.db, h.userId, 'k');
-		expect(await revokeApiKey(h.db, h.otherUserId, row.id)).toBeNull();
-		expect(await revokeApiKey(h.db, h.userId, row.id)).not.toBeNull();
+		const { key } = await createApiKey(h.db, h.userId, 'k');
+		expect(await revokeApiKey(h.db, h.otherUserId, key.id)).toBeNull();
+		expect(await revokeApiKey(h.db, h.userId, key.id)).not.toBeNull();
 	});
 
 	it('listApiKeys returns only the owner keys', async () => {

@@ -6,9 +6,12 @@ const usersTableSql = `
 	CREATE TABLE users (
 		id TEXT PRIMARY KEY,
 		name TEXT NOT NULL,
+		username TEXT UNIQUE,
 		email TEXT NOT NULL UNIQUE,
 		email_verified INTEGER DEFAULT 0 NOT NULL,
 		image TEXT,
+		onboarded_at INTEGER,
+		is_demo INTEGER DEFAULT 0 NOT NULL,
 		created_at INTEGER NOT NULL,
 		updated_at INTEGER NOT NULL
 	)
@@ -164,10 +167,10 @@ export function createTestDb(opts: {
 	const userId = 'user_test_1';
 	const otherUserId = 'user_test_2';
 	sqlite
-		.prepare('INSERT INTO users VALUES (?, ?, ?, 0, NULL, ?, ?)')
+		.prepare('INSERT INTO users VALUES (?, ?, NULL, ?, 0, NULL, NULL, 0, ?, ?)')
 		.run(userId, 'A', 'a@b.co', now, now);
 	sqlite
-		.prepare('INSERT INTO users VALUES (?, ?, ?, 0, NULL, ?, ?)')
+		.prepare('INSERT INTO users VALUES (?, ?, NULL, ?, 0, NULL, NULL, 0, ?, ?)')
 		.run(otherUserId, 'B', 'b@b.co', now, now);
 
 	return { db, userId, otherUserId, sqlite };

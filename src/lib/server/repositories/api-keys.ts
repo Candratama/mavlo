@@ -1,17 +1,30 @@
 import { and, desc, eq, isNull } from 'drizzle-orm';
 import { type DrizzleD1Database } from 'drizzle-orm/d1';
 import { type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { apiKeys } from '$lib/server/db/schema';
+import { apiKeys, users } from '$lib/server/db/schema';
 import * as schema from '$lib/server/db/schema';
 import { generateApiKey, hashApiKey } from '$lib/server/api/keys-crypto';
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
 
+type ApiKeyRow = typeof apiKeys.$inferSelect;
+
+function toPublicKey(row: ApiKeyRow) {
+	return {
+		id: row.id,
+		name: row.name,
+		prefix: row.prefix,
+		lastUsedAt: row.lastUsedAt,
+		createdAt: row.createdAt,
+		revokedAt: row.revokedAt
+	};
+}
+
 export async function createApiKey(db: Db, userId: string, name: string) {
 	const { plaintext, prefix } = generateApiKey();
 	const keyHash = await hashApiKey(plaintext);
 	const [row] = await db.insert(apiKeys).values({ userId, name, keyHash, prefix }).returning();
-	return { row, plaintext };
+	return { key: toPublicKey(row), plaintext };
 }
 
 export async function listApiKeys(db: Db, userId: string) {
@@ -20,14 +33,7 @@ export async function listApiKeys(db: Db, userId: string) {
 		.from(apiKeys)
 		.where(eq(apiKeys.userId, userId))
 		.orderBy(desc(apiKeys.createdAt));
-	return rows.map((r) => ({
-		id: r.id,
-		name: r.name,
-		prefix: r.prefix,
-		lastUsedAt: r.lastUsedAt,
-		createdAt: r.createdAt,
-		revokedAt: r.revokedAt
-	}));
+	return rows.map(toPublicKey);
 }
 
 export async function revokeApiKey(db: Db, userId: string, id: string) {
@@ -46,5 +52,8 @@ export async function authenticateApiKey(db: Db, plaintext: string): Promise<str
 		.set({ lastUsedAt: Date.now() })
 		.where(and(eq(apiKeys.keyHash, keyHash), isNull(apiKeys.revokedAt)))
 		.returning();
-	return row?.userId ?? null;
+	if (!row) return null;
+	const [user] = await db.select().from(users).where(eq(users.id, row.userId));
+	if (!user || user.isDemo) return null;
+	return row.userId;
 }

@@ -34,7 +34,10 @@ export async function getTx(db: Db, userId: string, id: string) {
 }
 
 export async function updateTx(db: Db, userId: string, id: string, body: unknown) {
-	const parsed = transactionUpdateSchema.safeParse({ ...(body as object), id });
+	const parsed = transactionUpdateSchema.safeParse({
+		...(typeof body === 'object' && body !== null ? body : {}),
+		id
+	});
 	if (!parsed.success) throw new ApiError(400, 'validation', firstIssue(parsed.error));
 	const row = await repo.updateTransaction(db, userId, parsed.data);
 	if (!row) throw new ApiError(404, 'not_found', 'Transaction not found');
