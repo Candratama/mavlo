@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text, index } from 'drizzle-orm/sqlite-core';
+import { integer, sqliteTable, text, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
 import { createId } from '@paralleldrive/cuid2';
 import { users } from './auth.schema';
 
@@ -192,7 +192,7 @@ export const apiKeys = sqliteTable(
 		createdAt: epochMsNow('created_at'),
 		revokedAt: integer('revoked_at', { mode: 'number' })
 	},
-	(t) => [index('api_keys_hash_idx').on(t.keyHash), index('api_keys_user_idx').on(t.userId)]
+	(t) => [uniqueIndex('api_keys_hash_idx').on(t.keyHash), index('api_keys_user_idx').on(t.userId)]
 );
 
 export * from './auth.schema';
