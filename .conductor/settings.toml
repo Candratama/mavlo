@@ -1,0 +1,30 @@
+"$schema" = "https://conductor.build/schemas/settings.repo.schema.json"
+
+# Copy gitignored local secrets/config into each new workspace.
+# Default is ".env*"; ".dev.vars" holds Wrangler dev secrets (BETTER_AUTH_SECRET, BREVO_API_KEY).
+file_include_globs = ".env*\n.dev.vars\n"
+
+[scripts]
+# SvelteKit on Cloudflare Workers, npm (package-lock.json). `prepare` runs svelte-kit sync on install.
+# Then (local workspaces only) seed the per-workspace local D1 from production:
+#   - `d1 export --remote` is read-only on prod (safe); the dump includes schema + data.
+#   - seed-local-d1.mjs loads it in one better-sqlite3 transaction with FK off, because
+#     `wrangler d1 execute --file` enforces foreign keys per statement and rolls back.
+#   - needs wrangler auth (`wrangler login` or CLOUDFLARE_API_TOKEN); `|| true` keeps setup from
+#     failing when offline/unauthed. NOTE: copies real production data (incl. PII) into each worktree.
+setup = """
+npm install
+if [ "$CONDUCTOR_IS_LOCAL" = "1" ]; then
+  # Wipe this workspace's local D1, materialize an empty store, then load the prod dump.
+  # Throwaway per-worktree state only — never touches prod. Idempotent across re-runs.
+  rm -rf .wrangler/state/v3/d1
+  yes | npx wrangler d1 export mavlo --remote --output=.conductor/prod-seed.sql \\
+    && npx wrangler d1 execute mavlo --local --command "SELECT 1;" > /dev/null \\
+    && node scripts/seed-local-d1.mjs || true
+fi
+"""
+# `npm run dev` applies local D1 migrations then starts Vite; extra args pass to `vite dev`.
+# Local D1 state lives in per-workspace .wrangler/, so workspaces don't share a database.
+run = "npm run dev -- --port $CONDUCTOR_PORT"
+# Each workspace gets its own port + its own local .wrangler state -> safe to run in parallel.
+run_mode = "concurrent"
