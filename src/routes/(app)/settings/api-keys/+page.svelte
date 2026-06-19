@@ -96,6 +96,25 @@
 						<Trash2 class="text-destructive size-4" />
 					</Button>
 				</form>
+			{:else}
+				<form
+					method="POST"
+					action="?/delete"
+					use:enhance={() =>
+						async ({ result }) => {
+							if (result.type === 'success') {
+								await invalidateAll();
+								notify.success('Key deleted');
+							} else if (result.type === 'failure') {
+								notify.error('Could not delete key');
+							}
+						}}
+				>
+					<input type="hidden" name="id" value={key.id} />
+					<Button type="submit" variant="ghost" size="icon" aria-label="Delete key">
+						<Trash2 class="text-destructive size-4" />
+					</Button>
+				</form>
 			{/if}
 		</li>
 	{:else}

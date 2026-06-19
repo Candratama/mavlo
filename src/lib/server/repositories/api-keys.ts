@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull } from 'drizzle-orm';
+import { and, desc, eq, isNotNull, isNull } from 'drizzle-orm';
 import { type DrizzleD1Database } from 'drizzle-orm/d1';
 import { type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { apiKeys, users } from '$lib/server/db/schema';
@@ -41,6 +41,14 @@ export async function revokeApiKey(db: Db, userId: string, id: string) {
 		.update(apiKeys)
 		.set({ revokedAt: Date.now() })
 		.where(and(eq(apiKeys.userId, userId), eq(apiKeys.id, id), isNull(apiKeys.revokedAt)))
+		.returning();
+	return row ?? null;
+}
+
+export async function deleteApiKey(db: Db, userId: string, id: string) {
+	const [row] = await db
+		.delete(apiKeys)
+		.where(and(eq(apiKeys.userId, userId), eq(apiKeys.id, id), isNotNull(apiKeys.revokedAt)))
 		.returning();
 	return row ?? null;
 }
