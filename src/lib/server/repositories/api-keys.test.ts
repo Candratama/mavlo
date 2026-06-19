@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createTestDb, type TestDbHandle } from '$lib/server/db/test-fixtures';
-import { createApiKey, listApiKeys, revokeApiKey, authenticateApiKey } from './api-keys';
+import {
+	createApiKey,
+	listApiKeys,
+	revokeApiKey,
+	deleteApiKey,
+	authenticateApiKey
+} from './api-keys';
 
 let h: TestDbHandle;
 
@@ -49,6 +55,26 @@ describe('api-keys repository', () => {
 		const { key } = await createApiKey(h.db, h.userId, 'k');
 		expect(await revokeApiKey(h.db, h.otherUserId, key.id)).toBeNull();
 		expect(await revokeApiKey(h.db, h.userId, key.id)).not.toBeNull();
+	});
+
+	it('deleteApiKey fully removes a revoked key', async () => {
+		const { key } = await createApiKey(h.db, h.userId, 'k');
+		await revokeApiKey(h.db, h.userId, key.id);
+		expect(await deleteApiKey(h.db, h.userId, key.id)).not.toBeNull();
+		expect(await listApiKeys(h.db, h.userId)).toHaveLength(0);
+	});
+
+	it('deleteApiKey does not remove an active (non-revoked) key', async () => {
+		const { key } = await createApiKey(h.db, h.userId, 'k');
+		expect(await deleteApiKey(h.db, h.userId, key.id)).toBeNull();
+		expect(await listApiKeys(h.db, h.userId)).toHaveLength(1);
+	});
+
+	it('deleteApiKey is scoped to the owner', async () => {
+		const { key } = await createApiKey(h.db, h.userId, 'k');
+		await revokeApiKey(h.db, h.userId, key.id);
+		expect(await deleteApiKey(h.db, h.otherUserId, key.id)).toBeNull();
+		expect(await deleteApiKey(h.db, h.userId, key.id)).not.toBeNull();
 	});
 
 	it('listApiKeys returns only the owner keys', async () => {

@@ -1,7 +1,12 @@
 import { fail } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth/guards';
 import { getDb } from '$lib/server/db';
-import { createApiKey, listApiKeys, revokeApiKey } from '$lib/server/repositories/api-keys';
+import {
+	createApiKey,
+	deleteApiKey,
+	listApiKeys,
+	revokeApiKey
+} from '$lib/server/repositories/api-keys';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async (event) => {
@@ -32,5 +37,16 @@ export const actions: Actions = {
 		const revoked = await revokeApiKey(db, user.id, id);
 		if (!revoked) return fail(404, { action: 'revoke', message: 'Key not found' });
 		return { success: true, action: 'revoke' };
+	},
+
+	delete: async (event) => {
+		const user = requireUser(event);
+		const db = getDb(event.platform!.env.DB);
+		const fd = await event.request.formData();
+		const id = String(fd.get('id') ?? '');
+		if (!id) return fail(400, { action: 'delete', message: 'Id required' });
+		const deleted = await deleteApiKey(db, user.id, id);
+		if (!deleted) return fail(404, { action: 'delete', message: 'Key not found' });
+		return { success: true, action: 'delete' };
 	}
 };
