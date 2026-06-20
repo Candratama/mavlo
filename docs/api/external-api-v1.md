@@ -179,6 +179,7 @@ curl "https://<domain>/api/v1/transactions?kind=income&accountId=acc_1&fromMs=17
   "type": "bank",
   "currency": "IDR",
   "initialBalanceCents": 0,
+  "currentBalanceCents": 125000,
   "color": "#3b82f6",
   "icon": null,
   "archived": false,
@@ -186,6 +187,8 @@ curl "https://<domain>/api/v1/transactions?kind=income&accountId=acc_1&fromMs=17
   "updatedAt": 1718496000000
 }
 ```
+
+`currentBalanceCents` (response-only, integer cents) is the **live balance**: `initialBalanceCents` + incoming income/transfers − outgoing expense/transfers, in the account's currency. Read-only — never sent on create/update. Sum it across the list to get total net worth.
 
 ### Fields (create / update body)
 

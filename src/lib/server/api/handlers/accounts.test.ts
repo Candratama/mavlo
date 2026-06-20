@@ -5,7 +5,7 @@ import { listAcc, createAcc, getAcc, updateAcc, deleteAcc } from './accounts';
 let h: TestDbHandle;
 
 beforeEach(() => {
-	h = createTestDb({ tables: ['accounts'] });
+	h = createTestDb({ tables: ['accounts', 'categories', 'transactions'] });
 });
 
 function url(qs = ''): URL {
@@ -21,6 +21,22 @@ describe('accounts handler', () => {
 		});
 		expect(created.name).toBe('Bank');
 		expect(await listAcc(h.db, h.userId, url())).toHaveLength(1);
+	});
+
+	it('createAcc/getAcc/listAcc expose currentBalanceCents (initial when no transactions)', async () => {
+		const created = await createAcc(h.db, h.userId, {
+			name: 'Wallet',
+			type: 'cash',
+			currency: 'IDR',
+			initialBalanceCents: 5000
+		});
+		expect(created.currentBalanceCents).toBe(5000);
+
+		const fetched = await getAcc(h.db, h.userId, created.id);
+		expect(fetched.currentBalanceCents).toBe(5000);
+
+		const [listed] = await listAcc(h.db, h.userId, url());
+		expect(listed.currentBalanceCents).toBe(5000);
 	});
 
 	it('createAcc throws 400 on invalid body', async () => {
