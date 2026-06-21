@@ -1,6 +1,6 @@
 # Mavlo External API v1
 
-HTTP/JSON API for reading and writing your Mavlo finance data (transactions, accounts, categories) from outside the app. Designed to be consumed by scripts, automations, and AI agents.
+HTTP/JSON API for reading and writing your Mavlo finance data (transactions, accounts, categories, budgets) from outside the app. Designed to be consumed by scripts, automations, and AI agents.
 
 > **For AI agents:** This document is the complete contract. Everything you need — auth, conventions, every endpoint, every field, every error — is below. No other docs required.
 
@@ -270,6 +270,57 @@ curl -X POST https://<domain>/api/v1/categories \
   -H "Authorization: Bearer mavlo_sk_..." \
   -H "Content-Type: application/json" \
   -d '{"name":"Salary","kind":"income"}'
+```
+
+---
+
+## Resource: Budgets
+
+A spending limit for one category in one month (`YYYY-MM`).
+
+### Object shape (response)
+```json
+{
+  "id": "bdg_1",
+  "userId": "usr_xyz",
+  "categoryId": "cat_food",
+  "periodMonth": "2026-06",
+  "limitCents": 50000,
+  "carryoverDeficitCents": 0,
+  "carryoverFromPeriod": null,
+  "createdAt": 1718496000000,
+  "updatedAt": 1718496000000
+}
+```
+
+### Fields (create / update body)
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `categoryId` | string | **yes** | Category the budget applies to. |
+| `periodMonth` | string | **yes** | `YYYY-MM` (e.g. `"2026-06"`). |
+| `limitCents` | int > 0 | **yes** | Positive integer cents. |
+
+`carryoverDeficitCents` / `carryoverFromPeriod` are response-only (managed by the app); never sent on create/update.
+
+### Endpoints
+
+| Method | Path | Action |
+|---|---|---|
+| GET | `/budgets` | List |
+| POST | `/budgets` | Create → 201 |
+| GET | `/budgets/{id}` | Get one |
+| PATCH | `/budgets/{id}` | Update |
+| DELETE | `/budgets/{id}` | Delete → 204 |
+
+**List filter:** `?periodMonth=YYYY-MM` to return only that month's budgets (default: all).
+
+### Example
+```bash
+curl -X POST https://<domain>/api/v1/budgets \
+  -H "Authorization: Bearer mavlo_sk_..." \
+  -H "Content-Type: application/json" \
+  -d '{"categoryId":"cat_food","periodMonth":"2026-06","limitCents":50000}'
 ```
 
 ---
