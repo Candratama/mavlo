@@ -8,7 +8,8 @@ export const budgetCreateSchema = z.object({
 	limitCents: z.coerce.number().int().positive('Limit must be positive')
 });
 
-export const budgetUpdateSchema = budgetCreateSchema.extend({
+// PATCH is a partial update: every body field is optional, only `id` is required.
+export const budgetUpdateSchema = budgetCreateSchema.partial().extend({
 	id: z.string().min(1, 'Id required')
 });
 

@@ -1,4 +1,4 @@
-import { and, between, eq } from 'drizzle-orm';
+import { and, between, eq, or } from 'drizzle-orm';
 import { type DrizzleD1Database } from 'drizzle-orm/d1';
 import { type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { accounts, transactions } from '$lib/server/db/schema';
@@ -67,6 +67,40 @@ export async function computeAccountPeriodSummary(
  * Computed via JS fold over all user transactions (handles transfer's dual-account effect cleanly).
  * For typical personal-finance scale (<10k rows/user) the load-all cost is negligible.
  */
+/**
+ * Returns the live balance for a single account, scanning only transactions that touch it
+ * (as source or transfer target) rather than loading the user's entire transaction history.
+ * Use this for single-account reads; use computeAccountBalances for the full list.
+ */
+export async function computeAccountBalance(
+	db: Db,
+	userId: string,
+	account: { id: string; initialBalanceCents: number }
+): Promise<number> {
+	const rows = await db
+		.select()
+		.from(transactions)
+		.where(
+			and(
+				eq(transactions.userId, userId),
+				or(eq(transactions.accountId, account.id), eq(transactions.transferToAccountId, account.id))
+			)
+		);
+
+	let balance = account.initialBalanceCents;
+	for (const t of rows) {
+		if (t.accountId === account.id) {
+			if (t.kind === 'income') balance += t.amountCents;
+			else if (t.kind === 'expense') balance -= t.amountCents;
+			else if (t.kind === 'transfer') balance -= t.amountCents; // outgoing
+		}
+		if (t.kind === 'transfer' && t.transferToAccountId === account.id) {
+			balance += t.amountCents; // incoming
+		}
+	}
+	return balance;
+}
+
 export async function computeAccountBalances(db: Db, userId: string): Promise<Map<string, number>> {
 	const ownedAccounts = await db.select().from(accounts).where(eq(accounts.userId, userId));
 	const ownTransactions = await db

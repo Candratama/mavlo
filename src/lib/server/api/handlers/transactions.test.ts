@@ -43,6 +43,29 @@ describe('transactions handler', () => {
 		await expect(getTx(h.db, h.userId, 'nope')).rejects.toMatchObject({ status: 404 });
 	});
 
+	it('createTx throws 400 for an account the user does not own', async () => {
+		await expect(
+			createTx(h.db, h.userId, {
+				accountId: 'acc-not-mine',
+				amountCents: 1000,
+				kind: 'expense',
+				occurredAt: Date.now()
+			})
+		).rejects.toMatchObject({ status: 400, code: 'validation' });
+	});
+
+	it('createTx throws 400 for a category the user does not own', async () => {
+		await expect(
+			createTx(h.db, h.userId, {
+				accountId: 'acc1',
+				categoryId: 'cat-not-mine',
+				amountCents: 1000,
+				kind: 'expense',
+				occurredAt: Date.now()
+			})
+		).rejects.toMatchObject({ status: 400, code: 'validation' });
+	});
+
 	it('updateTx updates and returns the row', async () => {
 		const created = await createTx(h.db, h.userId, {
 			accountId: 'acc1',

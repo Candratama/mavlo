@@ -17,6 +17,22 @@ export async function listBudgets(db: Db, userId: string, filter: { periodMonth?
 		.orderBy(asc(budgets.categoryId));
 }
 
+/** Returns the budget for a given category + month, if one exists (uniqueness check). */
+export async function findBudget(db: Db, userId: string, categoryId: string, periodMonth: string) {
+	const [row] = await db
+		.select()
+		.from(budgets)
+		.where(
+			and(
+				eq(budgets.userId, userId),
+				eq(budgets.categoryId, categoryId),
+				eq(budgets.periodMonth, periodMonth)
+			)
+		)
+		.limit(1);
+	return row ?? null;
+}
+
 export async function getBudget(db: Db, userId: string, id: string) {
 	const [row] = await db
 		.select()
@@ -40,14 +56,14 @@ export async function createBudget(db: Db, userId: string, input: BudgetCreateIn
 }
 
 export async function updateBudget(db: Db, userId: string, input: BudgetUpdateInput) {
+	// Partial update: only overwrite the fields actually supplied.
+	const patch: Partial<typeof budgets.$inferInsert> = { updatedAt: Date.now() };
+	if (input.categoryId !== undefined) patch.categoryId = input.categoryId;
+	if (input.periodMonth !== undefined) patch.periodMonth = input.periodMonth;
+	if (input.limitCents !== undefined) patch.limitCents = input.limitCents;
 	const [row] = await db
 		.update(budgets)
-		.set({
-			categoryId: input.categoryId,
-			periodMonth: input.periodMonth,
-			limitCents: input.limitCents,
-			updatedAt: Date.now()
-		})
+		.set(patch)
 		.where(and(eq(budgets.userId, userId), eq(budgets.id, input.id)))
 		.returning();
 	return row ?? null;

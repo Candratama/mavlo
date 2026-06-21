@@ -303,6 +303,8 @@ A spending limit for one category in one month (`YYYY-MM`).
 
 `carryoverDeficitCents` / `carryoverFromPeriod` are response-only (managed by the app); never sent on create/update.
 
+`categoryId` must reference one of your own categories, else `400 validation`. Only one budget may exist per `(category, month)`: a duplicate create — or an update that collides with another budget — returns `409 conflict`. Unlike the other resources, **`PATCH /budgets/{id}` is a partial update** — send only the fields you want to change.
+
 ### Endpoints
 
 | Method | Path | Action |
@@ -328,7 +330,8 @@ curl -X POST https://<domain>/api/v1/budgets \
 ## Notes for agents
 
 - **Always send `Content-Type: application/json`** on POST/PATCH or the body won't parse.
-- **PATCH replaces the whole resource** with the validated body (same required fields as create). Send the full object, not a partial diff.
+- **PATCH replaces the whole resource** for accounts, categories, and transactions (same required fields as create) — send the full object, not a partial diff. **Budgets are the exception:** `PATCH /budgets/{id}` accepts a partial body.
+- Referenced ids must be yours: pointing a transaction or budget at another user's account/category/debt returns `400 validation`.
 - On `400`, read `error.message` — it names the first failing field/rule.
 - A `404` can mean the resource doesn't exist *or* belongs to another user; the API never reveals which.
 - To record money correctly: multiply major units by 100. 10.50 → `1050`.

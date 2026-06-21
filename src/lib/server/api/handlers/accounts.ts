@@ -3,7 +3,7 @@ import { type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '$lib/server/db/schema';
 import { accountCreateSchema, accountUpdateSchema } from '$lib/validation/account';
 import * as repo from '$lib/server/repositories/accounts';
-import { computeAccountBalances } from '$lib/server/repositories/balances';
+import { computeAccountBalance, computeAccountBalances } from '$lib/server/repositories/balances';
 import { ApiError } from '../errors';
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
@@ -38,8 +38,7 @@ export async function createAcc(db: Db, userId: string, body: unknown) {
 export async function getAcc(db: Db, userId: string, id: string) {
 	const row = await repo.getAccount(db, userId, id);
 	if (!row) throw new ApiError(404, 'not_found', 'Account not found');
-	const balances = await computeAccountBalances(db, userId);
-	return withBalance(row, balances.get(row.id) ?? row.initialBalanceCents);
+	return withBalance(row, await computeAccountBalance(db, userId, row));
 }
 
 export async function updateAcc(db: Db, userId: string, id: string, body: unknown) {
@@ -50,8 +49,7 @@ export async function updateAcc(db: Db, userId: string, id: string, body: unknow
 	if (!parsed.success) throw new ApiError(400, 'validation', firstIssue(parsed.error));
 	const row = await repo.updateAccount(db, userId, parsed.data);
 	if (!row) throw new ApiError(404, 'not_found', 'Account not found');
-	const balances = await computeAccountBalances(db, userId);
-	return withBalance(row, balances.get(row.id) ?? row.initialBalanceCents);
+	return withBalance(row, await computeAccountBalance(db, userId, row));
 }
 
 export async function deleteAcc(db: Db, userId: string, id: string): Promise<void> {

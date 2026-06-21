@@ -40,6 +40,35 @@ describe('budgets handler', () => {
 		).rejects.toMatchObject({ status: 400, code: 'validation' });
 	});
 
+	it('createBud throws 400 for a category the user does not own', async () => {
+		await expect(
+			createBud(h.db, h.userId, {
+				categoryId: 'cat-not-mine',
+				periodMonth: '2026-06',
+				limitCents: 1
+			})
+		).rejects.toMatchObject({ status: 400, code: 'validation' });
+	});
+
+	it('createBud throws 409 when a budget already exists for the category and month', async () => {
+		await createBud(h.db, h.userId, { categoryId, periodMonth: '2026-06', limitCents: 50000 });
+		await expect(
+			createBud(h.db, h.userId, { categoryId, periodMonth: '2026-06', limitCents: 60000 })
+		).rejects.toMatchObject({ status: 409, code: 'conflict' });
+	});
+
+	it('updateBud applies a partial body (limitCents only) and keeps other fields', async () => {
+		const b = await createBud(h.db, h.userId, {
+			categoryId,
+			periodMonth: '2026-06',
+			limitCents: 50000
+		});
+		const updated = await updateBud(h.db, h.userId, b.id, { limitCents: 80000 });
+		expect(updated.limitCents).toBe(80000);
+		expect(updated.categoryId).toBe(categoryId);
+		expect(updated.periodMonth).toBe('2026-06');
+	});
+
 	it('getBud throws 404 for missing id', async () => {
 		await expect(getBud(h.db, h.userId, 'nope')).rejects.toMatchObject({ status: 404 });
 	});

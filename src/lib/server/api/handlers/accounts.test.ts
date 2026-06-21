@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createTestDb, type TestDbHandle } from '$lib/server/db/test-fixtures';
+import { createTransaction } from '$lib/server/repositories/transactions';
 import { listAcc, createAcc, getAcc, updateAcc, deleteAcc } from './accounts';
 
 let h: TestDbHandle;
@@ -37,6 +38,30 @@ describe('accounts handler', () => {
 
 		const [listed] = await listAcc(h.db, h.userId, url());
 		expect(listed.currentBalanceCents).toBe(5000);
+	});
+
+	it('currentBalanceCents reflects income and expense transactions', async () => {
+		const acc = await createAcc(h.db, h.userId, {
+			name: 'Wallet',
+			type: 'cash',
+			currency: 'IDR',
+			initialBalanceCents: 10000
+		});
+		const now = Date.now();
+		await createTransaction(h.db, h.userId, {
+			accountId: acc.id,
+			amountCents: 3000,
+			kind: 'income',
+			occurredAt: now
+		});
+		await createTransaction(h.db, h.userId, {
+			accountId: acc.id,
+			amountCents: 1500,
+			kind: 'expense',
+			occurredAt: now
+		});
+		// 10000 + 3000 - 1500
+		expect((await getAcc(h.db, h.userId, acc.id)).currentBalanceCents).toBe(11500);
 	});
 
 	it('createAcc throws 400 on invalid body', async () => {
