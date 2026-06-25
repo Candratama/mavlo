@@ -96,11 +96,13 @@
 	];
 
 	let visibleCategories = $state<CategoryRow[]>(cats.filter((c) => c.kind === viewKind));
-	const expenseCategories = $derived(cats.filter((c) => c.kind === 'expense'));
-	const incomeCategories = $derived(cats.filter((c) => c.kind === 'income'));
+	let expenseCategories = $state<CategoryRow[]>(cats.filter((c) => c.kind === 'expense'));
+	let incomeCategories = $state<CategoryRow[]>(cats.filter((c) => c.kind === 'income'));
 
 	$effect(() => {
 		visibleCategories = cats.filter((c) => c.kind === viewKind);
+		expenseCategories = cats.filter((c) => c.kind === 'expense');
+		incomeCategories = cats.filter((c) => c.kind === 'income');
 	});
 
 	async function persistOrder(ids: string[]) {
