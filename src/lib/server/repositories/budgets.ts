@@ -54,22 +54,24 @@ export async function updateBudget(db: Db, userId: string, input: BudgetUpdateIn
 }
 
 export async function clearBudgetCarryover(db: Db, userId: string, id: string) {
+	// Stamp carryoverFromPeriod with the PREVIOUS period (prevPeriodMonth of the
+	// current cycle). The layout stale check is `carryoverFromPeriod !== prevPeriod`
+	// so matching prevPeriod makes it evaluate to false — no re-apply on next load.
+	// The action resolves prevPeriod server-side before calling this function.
+	// We derive it here from the budget's own periodMonth to keep the repo self-contained.
 	const [existing] = await db
 		.select()
 		.from(budgets)
 		.where(and(eq(budgets.userId, userId), eq(budgets.id, id)))
 		.limit(1);
 	if (!existing) return null;
-	// Set carryoverFromPeriod to the budget's own period so the layout stale
-	// check (carryoverFromPeriod !== prevPeriod) treats it as already processed
-	// and doesn't immediately re-apply a deficit on the next request.
+	const [yStr, mStr] = existing.periodMonth.split('-');
+	const y = Number(yStr);
+	const m = Number(mStr);
+	const prev = m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`;
 	const [row] = await db
 		.update(budgets)
-		.set({
-			carryoverDeficitCents: 0,
-			carryoverFromPeriod: existing.periodMonth,
-			updatedAt: Date.now()
-		})
+		.set({ carryoverDeficitCents: 0, carryoverFromPeriod: prev, updatedAt: Date.now() })
 		.where(and(eq(budgets.userId, userId), eq(budgets.id, id)))
 		.returning();
 	return row ?? null;
