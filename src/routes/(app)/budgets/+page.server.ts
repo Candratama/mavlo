@@ -1,7 +1,12 @@
 import { fail } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth/guards';
 import { getDb } from '$lib/server/db';
-import { createBudget, updateBudget, deleteBudget } from '$lib/server/repositories/budgets';
+import {
+	createBudget,
+	updateBudget,
+	deleteBudget,
+	clearBudgetCarryover
+} from '$lib/server/repositories/budgets';
 import { ensureDebtPaymentCategory } from '$lib/server/repositories/categories';
 import { createSubsidy, updateSubsidy, deleteSubsidy } from '$lib/server/repositories/subsidies';
 import { budgetCreateSchema, budgetUpdateSchema, budgetIdSchema } from '$lib/validation/budget';
@@ -129,6 +134,17 @@ export const actions: Actions = {
 		if (!deleted) return fail(404, { action: 'deleteSubsidy', message: 'Subsidy not found' });
 		await purgeUserCaches(event, user.id);
 		return { success: true, action: 'deleteSubsidy' };
+	},
+	clearCarryover: async (event) => {
+		const user = requireUser(event);
+		const db = getDb(event.platform!.env.DB);
+		const fd = await event.request.formData();
+		const parsed = budgetIdSchema.safeParse(formObject(fd));
+		if (!parsed.success) return fail(400, { action: 'clearCarryover', message: 'Invalid id' });
+		const updated = await clearBudgetCarryover(db, user.id, parsed.data.id);
+		if (!updated) return fail(404, { action: 'clearCarryover', message: 'Budget not found' });
+		await purgeUserCaches(event, user.id);
+		return { success: true, action: 'clearCarryover' };
 	},
 	setDebtBudget: async (event) => {
 		const user = requireUser(event);

@@ -63,7 +63,8 @@
 		{ value: 'other', label: 'Other', icon: toIcon(Wallet) }
 	];
 
-	// State
+	// State — editable local copies of `initial` prop
+	const _initial = $derived(initial);
 	let direction = $state<'borrowed' | 'lent'>(initial?.direction ?? 'borrowed');
 	let name = $state(initial?.name ?? '');
 	let type = $state<DebtType>(initial?.type ?? (direction === 'lent' ? 'informal' : 'credit_card'));
@@ -83,6 +84,23 @@
 	);
 	let accountId = $state(initial?.accountId ?? '');
 	let note = $state(initial?.note ?? '');
+
+	$effect(() => {
+		const i = _initial;
+		direction = i?.direction ?? 'borrowed';
+		name = i?.name ?? '';
+		type = i?.type ?? (direction === 'lent' ? 'informal' : 'credit_card');
+		lender = i?.lender ?? '';
+		principalCents = i?.principalCents ?? null;
+		currentBalanceCents = i?.currentBalanceCents ?? null;
+		aprDisplay = i ? formatApr(i.interestRatePct).replace('%', '') : '';
+		minimumPaymentCents = i?.minimumPaymentCents ?? null;
+		dueDay = i?.dueDay ?? null;
+		startDateStr = i ? new Date(i.startDate).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10);
+		maturityDateStr = i?.maturityDate ? new Date(i.maturityDate).toISOString().slice(0, 10) : '';
+		accountId = i?.accountId ?? '';
+		note = i?.note ?? '';
+	});
 	let pending = $state(false);
 
 	// Funding toggle (create mode only): "I just received this money"

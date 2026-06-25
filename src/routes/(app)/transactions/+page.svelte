@@ -76,6 +76,12 @@
 	let editTarget = $state<TxRow | null>(null);
 
 	let filterOpen = $state(false);
+	const fFromDerived = $derived(filterFromUrl.from);
+	const fToDerived = $derived(filterFromUrl.to);
+	const fAccountDerived = $derived(filterFromUrl.accountId);
+	const fCategoryDerived = $derived(filterFromUrl.categoryId);
+	const fKindDerived = $derived(filterFromUrl.kind);
+
 	let fFrom = $state(filterFromUrl.from);
 	let fTo = $state(filterFromUrl.to);
 	let fAccount = $state(filterFromUrl.accountId);
@@ -83,12 +89,11 @@
 	let fKind = $state(filterFromUrl.kind);
 
 	$effect(() => {
-		const f = filterFromUrl;
-		fFrom = f.from;
-		fTo = f.to;
-		fAccount = f.accountId;
-		fCategory = f.categoryId;
-		fKind = f.kind;
+		fFrom = fFromDerived;
+		fTo = fToDerived;
+		fAccount = fAccountDerived;
+		fCategory = fCategoryDerived;
+		fKind = fKindDerived;
 	});
 
 	const accountById = $derived(new Map(data.accounts.map((a) => [a.id, a])));

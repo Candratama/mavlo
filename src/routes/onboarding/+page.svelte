@@ -41,7 +41,9 @@
 	let initialBalanceCents = $state<number | null>(0);
 
 	const allCategoryNames = $derived(data.defaultCategories.map((c) => c.name));
+	const _defaultCategories = $derived(data.defaultCategories);
 	let selectedCategories = $state<string[]>(data.defaultCategories.map((c) => c.name));
+	$effect(() => { selectedCategories = _defaultCategories.map((c) => c.name); });
 
 	function toggleCategory(name: string) {
 		selectedCategories = selectedCategories.includes(name)

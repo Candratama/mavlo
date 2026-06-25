@@ -25,6 +25,7 @@
 	import SubsidyCreateForm from '$lib/components/budgets/subsidy-create-form.svelte';
 	import SubsidyEditForm from '$lib/components/budgets/subsidy-edit-form.svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import * as Sheet from '$lib/components/ui/sheet';
 	import { MediaQuery } from 'svelte/reactivity';
 
@@ -117,6 +118,7 @@
 
 	let subsidyOpen = $state(false);
 	let subsidyEditOpen = $state(false);
+	let clearCarryoverOpen = $state(false);
 	let subsidyEditTarget = $state<SubsidyRow | null>(null);
 
 	const openSubsidyEdit = (id: string) => {
@@ -385,11 +387,14 @@
 			</div>
 		</div>
 		{#if carryover > 0}
-			<div class="mt-3 text-xs text-amber-500">
-				⤴ Carryover deficit from {budget?.carryoverFromPeriod}: {formatCentsAsCurrency(
-					carryover,
-					currency
-				)}
+			<div class="mt-3 flex items-center gap-1 text-xs text-amber-500">
+				⤴ Carryover deficit from {budget?.carryoverFromPeriod}: {formatCentsAsCurrency(carryover, currency)}
+				<button
+					type="button"
+					class="ml-1 rounded-full p-0.5 hover:bg-amber-100"
+					onclick={() => { clearCarryoverOpen = true; }}
+					aria-label="Hapus carryover"
+				>×</button>
 			</div>
 		{/if}
 	</div>
@@ -610,3 +615,35 @@
 		</Sheet.Content>
 	</Sheet.Root>
 {/if}
+
+<AlertDialog.Root bind:open={clearCarryoverOpen}>
+	<AlertDialog.Portal>
+		<AlertDialog.Overlay />
+		<AlertDialog.Content>
+			<AlertDialog.Header>
+				<AlertDialog.Title>Hapus Carryover?</AlertDialog.Title>
+				<AlertDialog.Description>
+					Defisit <strong>{formatCentsAsCurrency(carryover, currency)}</strong>
+					dari period <strong>{budget?.carryoverFromPeriod ?? ''}</strong> tidak akan
+					diperhitungkan di bulan ini. Transaksi tidak terpengaruh.
+				</AlertDialog.Description>
+			</AlertDialog.Header>
+			<AlertDialog.Footer>
+				<AlertDialog.Cancel>Batal</AlertDialog.Cancel>
+				<form method="POST" action="?/clearCarryover" use:enhance={() => {
+					return async ({ result }) => {
+						if (result.type === 'failure') {
+							notify.error((result.data as { message?: string })?.message ?? 'Failed to clear carryover');
+							return;
+						}
+						clearCarryoverOpen = false;
+						await invalidateAll();
+					};
+				}}>
+					<input type="hidden" name="id" value={budgetId} />
+					<AlertDialog.Action type="submit">Hapus Carryover</AlertDialog.Action>
+				</form>
+			</AlertDialog.Footer>
+		</AlertDialog.Content>
+	</AlertDialog.Portal>
+</AlertDialog.Root>

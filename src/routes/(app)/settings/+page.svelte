@@ -154,6 +154,15 @@
 	];
 
 	let selectedMonthStartDay = $state<number>(prefs.monthStartDay ?? 1);
+
+	$effect(() => {
+		selectedCurrency = prefs.currency ?? 'IDR';
+		selectedTimezone = prefs.timezone ?? 'Asia/Jakarta';
+		selectedTheme = prefs.theme as Theme;
+		selectedWeekStart = String(prefs.weekStartsOn ?? 1);
+		selectedMonthStartDay = prefs.monthStartDay ?? 1;
+		prefsInitialized = false;
+	});
 	const cycleDays = Array.from({ length: 31 }, (_, i) => i + 1);
 
 	$effect(() => {

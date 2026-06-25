@@ -130,6 +130,9 @@
 		};
 	}
 
+	const _debtTarget = $derived(debtTarget);
+	const _editTarget = $derived(editTarget);
+
 	let uiKind = $state<'income' | 'expense' | 'transfer' | 'debt'>(
 		debtTarget ? 'debt' : initialState().kind
 	);
@@ -147,6 +150,14 @@
 	let amountCents = $state<number | null>(
 		debtTarget ? debtTarget.minimumPaymentCents : (editTarget?.amountCents ?? null)
 	);
+
+	$effect(() => {
+		const dt = _debtTarget;
+		const et = _editTarget;
+		uiKind = dt ? 'debt' : initialState().kind;
+		debtId = dt?.id ?? '';
+		amountCents = dt ? dt.minimumPaymentCents : (et?.amountCents ?? null);
+	});
 
 	const activeDebts = $derived((page.data.debts ?? []).filter((d: DebtRow) => d.status === 'active'));
 	const borrowedDebts = $derived(

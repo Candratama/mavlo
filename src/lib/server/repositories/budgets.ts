@@ -53,6 +53,28 @@ export async function updateBudget(db: Db, userId: string, input: BudgetUpdateIn
 	return row ?? null;
 }
 
+export async function clearBudgetCarryover(db: Db, userId: string, id: string) {
+	const [existing] = await db
+		.select()
+		.from(budgets)
+		.where(and(eq(budgets.userId, userId), eq(budgets.id, id)))
+		.limit(1);
+	if (!existing) return null;
+	// Set carryoverFromPeriod to the budget's own period so the layout stale
+	// check (carryoverFromPeriod !== prevPeriod) treats it as already processed
+	// and doesn't immediately re-apply a deficit on the next request.
+	const [row] = await db
+		.update(budgets)
+		.set({
+			carryoverDeficitCents: 0,
+			carryoverFromPeriod: existing.periodMonth,
+			updatedAt: Date.now()
+		})
+		.where(and(eq(budgets.userId, userId), eq(budgets.id, id)))
+		.returning();
+	return row ?? null;
+}
+
 export async function deleteBudget(db: Db, userId: string, id: string) {
 	const [row] = await db
 		.delete(budgets)

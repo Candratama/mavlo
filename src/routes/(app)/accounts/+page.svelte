@@ -122,7 +122,7 @@
 		if (target) openEdit(target);
 		const url = new URL(page.url.href);
 		url.searchParams.delete('edit');
-		replaceState(resolve(url.pathname + url.search), {});
+			replaceState(url.pathname + url.search as `/${string}`, {});
 	});
 </script>
 

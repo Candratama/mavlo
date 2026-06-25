@@ -27,7 +27,9 @@
 		onClose: () => void;
 	} = $props();
 
+	const _currentAmountCents = $derived(currentAmountCents);
 	let amountCents = $state(currentAmountCents);
+	$effect(() => { amountCents = _currentAmountCents; });
 	let pending = $state(false);
 
 	const maxAmount = $derived(sourceRemainingExclSelfCents);
