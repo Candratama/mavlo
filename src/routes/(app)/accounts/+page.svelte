@@ -98,8 +98,16 @@
 
 	const formatBalance = (cents: number, currency: string) => formatCentsAsCurrency(cents, currency);
 
-	const totalBalance = $derived(data.accounts.reduce((sum, a) => sum + a.balanceCents, 0));
-	const defaultCurrency = $derived(data.accounts[0]?.currency ?? 'IDR');
+	// Group totals per currency — summing mixed currencies raw would be meaningless.
+	const totalsByCurrency = $derived.by(() => {
+		const totals: Record<string, number> = {};
+		for (const a of data.accounts) {
+			totals[a.currency] = (totals[a.currency] ?? 0) + a.balanceCents;
+		}
+		return Object.entries(totals).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+	});
+	const primaryTotal = $derived(totalsByCurrency[0] ?? ['IDR', 0]);
+	const otherTotals = $derived(totalsByCurrency.slice(1));
 
 	const openEdit = (a: AccountRow) => {
 		editTarget = a;
@@ -120,9 +128,10 @@
 		if (!editId) return;
 		const target = data.allAccounts.find((a) => a.id === editId);
 		if (target) openEdit(target);
+		else notify.error('Account not found');
 		const url = new URL(page.url.href);
 		url.searchParams.delete('edit');
-			replaceState(url.pathname + url.search as `/${string}`, {});
+		replaceState((url.pathname + url.search) as `/${string}`, {});
 	});
 </script>
 
@@ -141,14 +150,24 @@
 	class="via-background to-background relative mb-6 overflow-hidden rounded-2xl border bg-gradient-to-br from-emerald-500/15 p-5 text-center sm:p-6"
 >
 	<p class="text-muted-foreground text-xs tracking-wider uppercase">
-		Total Balance <span class="text-foreground/70">({defaultCurrency})</span>
+		Total Balance <span class="text-foreground/70">({primaryTotal[0]})</span>
 	</p>
 	<p class="mt-1 text-3xl font-semibold tracking-tight tabular-nums sm:text-4xl">
-		{formatBalance(totalBalance, defaultCurrency)}
+		{formatBalance(primaryTotal[1], primaryTotal[0])}
 	</p>
+	{#if otherTotals.length > 0}
+		<p class="text-muted-foreground mt-1 text-xs tabular-nums">
+			{#each otherTotals as [cur, cents], i (cur)}{i > 0 ? ' · ' : '+ '}{formatBalance(
+					cents,
+					cur
+				)}{/each}
+		</p>
+	{/if}
 	<p class="text-muted-foreground mt-2 text-[10px]">
 		Across {data.accounts.length}
-		{data.accounts.length === 1 ? 'account' : 'accounts'}
+		{data.accounts.length === 1 ? 'account' : 'accounts'}{otherTotals.length > 0
+			? ' · mixed currencies'
+			: ''}
 	</p>
 </div>
 

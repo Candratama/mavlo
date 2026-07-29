@@ -47,6 +47,9 @@ export const categories = sqliteTable(
 			.default('variable'),
 		color: text('color'),
 		icon: text('icon'),
+		// Stable identifier for app-managed categories (e.g. 'debt_payment') so
+		// system features keep working after the user renames the category.
+		systemKey: text('system_key'),
 		archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
 		sortOrder: integer('sort_order', { mode: 'number' }).notNull().default(0),
 		createdAt: epochMsNow('created_at'),

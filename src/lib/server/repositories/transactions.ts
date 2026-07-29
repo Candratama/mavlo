@@ -41,12 +41,12 @@ async function applyDebtPayment(
 	if (!debt) return;
 	if (!txReducesDebtBalance(debt.direction, txKind)) return;
 	const newBalance = Math.max(0, debt.currentBalanceCents - deltaCents);
-	const newStatus =
-		newBalance === 0 && debt.status === 'active'
-			? 'paid_off'
-			: newBalance > 0 && debt.status === 'paid_off'
-				? 'active'
-				: debt.status;
+	// Any fully-paid debt becomes paid_off (including in_arrears); a pay-down
+	// on an in_arrears debt clears it back to active, as the UI promises.
+	let newStatus = debt.status;
+	if (newBalance === 0) newStatus = 'paid_off';
+	else if (debt.status === 'paid_off') newStatus = 'active';
+	else if (debt.status === 'in_arrears' && deltaCents > 0) newStatus = 'active';
 	await db
 		.update(debts)
 		.set({ currentBalanceCents: newBalance, status: newStatus, updatedAt: Date.now() })

@@ -28,6 +28,9 @@ vite.config.ts.timestamp-*
 # DB dumps
 *.sql
 remote-*.sql
+# ...but Drizzle migrations must be committed — the blanket *.sql rule already
+# silently dropped migration 0014 once (D1 ended up missing expense_type).
+!drizzle/*.sql
 
 # Claude Code
 .claude/

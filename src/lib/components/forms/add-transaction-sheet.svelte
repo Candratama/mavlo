@@ -27,6 +27,7 @@
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { getIconByName } from '$lib/utils/category-icons.js';
 	import { formatYmdInTimezone } from '$lib/utils/cycle.js';
+	import { SYSTEM_CATEGORY_KEYS } from '$lib/utils/system-categories.js';
 	import { MediaQuery } from 'svelte/reactivity';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
@@ -51,6 +52,7 @@
 		name: string;
 		kind: 'income' | 'expense';
 		icon?: string | null;
+		systemKey?: string | null;
 	};
 	type EditTarget = {
 		id: string;
@@ -159,7 +161,9 @@
 		amountCents = dt ? dt.minimumPaymentCents : (et?.amountCents ?? null);
 	});
 
-	const activeDebts = $derived((page.data.debts ?? []).filter((d: DebtRow) => d.status === 'active'));
+	const activeDebts = $derived(
+		(page.data.debts ?? []).filter((d: DebtRow) => d.status === 'active')
+	);
 	const borrowedDebts = $derived(
 		activeDebts.filter((d: DebtRow) => (d.direction ?? 'borrowed') === 'borrowed')
 	);
@@ -225,11 +229,17 @@
 		}
 	});
 
+	// Resolve system categories by systemKey (survives renames); fall back to
+	// the legacy name match for rows created before system_key existed.
 	const debtPaymentCategory = $derived(
-		categories.find((c) => c.name === 'Debt Payment' && c.kind === 'expense')
+		categories.find(
+			(c) => c.systemKey === SYSTEM_CATEGORY_KEYS.debtPayment && c.kind === 'expense'
+		) ?? categories.find((c) => c.name === 'Debt Payment' && c.kind === 'expense')
 	);
 	const loanCollectedCategory = $derived(
-		categories.find((c) => c.name === 'Loan Collected' && c.kind === 'income')
+		categories.find(
+			(c) => c.systemKey === SYSTEM_CATEGORY_KEYS.loanCollected && c.kind === 'income'
+		) ?? categories.find((c) => c.name === 'Loan Collected' && c.kind === 'income')
 	);
 
 	// When a debt is linked, force category to the correct auto-category based
@@ -513,7 +523,9 @@
 					</button>
 				</div>
 				<div class="text-muted-foreground mt-1 text-xs">
-					Need a new debt? <a href={resolve('/debts')} class="text-primary underline">Add it on Debts page</a>
+					Need a new debt? <a href={resolve('/debts')} class="text-primary underline"
+						>Add it on Debts page</a
+					>
 					to also borrow or lend.
 				</div>
 			</div>

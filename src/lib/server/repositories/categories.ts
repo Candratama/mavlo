@@ -3,6 +3,7 @@ import { type DrizzleD1Database } from 'drizzle-orm/d1';
 import { type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { categories } from '$lib/server/db/schema';
 import * as schema from '$lib/server/db/schema';
+import { SYSTEM_CATEGORY_KEYS } from '$lib/utils/system-categories';
 import type { CategoryCreateInput, CategoryUpdateInput } from '$lib/validation/category';
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
@@ -84,156 +85,171 @@ export async function deleteCategory(db: Db, userId: string, id: string) {
 	return row ?? null;
 }
 
+// Per-kind sortOrder offsets keep expense and income ranges disjoint, so a
+// combined picker (ordered by sortOrder) never interleaves the two kinds.
+const KIND_SORT_OFFSET: Record<'expense' | 'income', number> = {
+	expense: 0,
+	income: 100_000
+};
+
 export async function reorderCategories(
 	db: Db,
 	userId: string,
 	orderedIds: string[]
 ): Promise<void> {
+	// Renumber the user's ENTIRE category set, not just the ids sent. The client
+	// sends one kind (and usually only non-archived rows); categories left out
+	// (other kind, archived) keep their relative order after the sent ones so no
+	// two categories end up sharing a sortOrder.
+	const all = await db
+		.select()
+		.from(categories)
+		.where(eq(categories.userId, userId))
+		.orderBy(asc(categories.sortOrder), asc(categories.name));
+	const byId = new Map(all.map((c) => [c.id, c]));
+	const sentKind = orderedIds.map((id) => byId.get(id)?.kind).find(Boolean);
+	if (!sentKind) return;
+	const sent = orderedIds
+		.map((id) => byId.get(id))
+		.filter((c): c is (typeof all)[number] => !!c && c.kind === sentKind);
+	const sentIds = new Set(sent.map((c) => c.id));
+
+	const updates: { id: string; sortOrder: number }[] = [];
+	for (const kind of ['expense', 'income'] as const) {
+		const rest = all.filter((c) => c.kind === kind && !sentIds.has(c.id));
+		const ordered = kind === sentKind ? [...sent, ...rest] : rest;
+		ordered.forEach((c, idx) => {
+			const sortOrder = KIND_SORT_OFFSET[kind] + idx;
+			if (c.sortOrder !== sortOrder) updates.push({ id: c.id, sortOrder });
+		});
+	}
 	await Promise.all(
-		orderedIds.map((id, idx) =>
+		updates.map((u) =>
 			db
 				.update(categories)
-				.set({ sortOrder: idx, updatedAt: Date.now() })
-				.where(and(eq(categories.userId, userId), eq(categories.id, id)))
+				.set({ sortOrder: u.sortOrder, updatedAt: Date.now() })
+				.where(and(eq(categories.userId, userId), eq(categories.id, u.id)))
 		)
 	);
 }
 
-const DEBT_PAYMENT_CATEGORY_NAME = 'Debt Payment';
+interface SystemCategorySpec {
+	key: string;
+	name: string;
+	kind: 'income' | 'expense';
+	expenseType?: 'fixed' | 'variable';
+	icon?: string;
+	color?: string;
+}
+
+async function ensureSystemCategory(
+	db: Db,
+	userId: string,
+	spec: SystemCategorySpec
+): Promise<string> {
+	// Match kind as well as key: if the user flipped the category's kind via the
+	// edit form, reusing it would attach expense features (budgets, debt
+	// payments) to an income category — create a fresh correct-kind one instead.
+	const [byKey] = await db
+		.select()
+		.from(categories)
+		.where(
+			and(
+				eq(categories.userId, userId),
+				eq(categories.systemKey, spec.key),
+				eq(categories.kind, spec.kind)
+			)
+		)
+		.limit(1);
+	if (byKey) return byKey.id;
+	// Legacy rows created before system_key existed: adopt by original name and
+	// stamp the key so future renames keep working.
+	const [legacy] = await db
+		.select()
+		.from(categories)
+		.where(
+			and(
+				eq(categories.userId, userId),
+				eq(categories.name, spec.name),
+				eq(categories.kind, spec.kind)
+			)
+		)
+		.limit(1);
+	if (legacy) {
+		await db
+			.update(categories)
+			.set({ systemKey: spec.key, updatedAt: Date.now() })
+			.where(and(eq(categories.userId, userId), eq(categories.id, legacy.id)));
+		return legacy.id;
+	}
+	const [created] = await db
+		.insert(categories)
+		.values({
+			userId,
+			name: spec.name,
+			kind: spec.kind,
+			expenseType: spec.expenseType ?? 'variable',
+			icon: spec.icon ?? null,
+			color: spec.color ?? null,
+			systemKey: spec.key
+		})
+		.returning();
+	return created.id;
+}
 
 export async function ensureDebtPaymentCategory(db: Db, userId: string): Promise<string> {
-	const [existing] = await db
-		.select()
-		.from(categories)
-		.where(and(eq(categories.userId, userId), eq(categories.name, DEBT_PAYMENT_CATEGORY_NAME)))
-		.limit(1);
-	if (existing) return existing.id;
-	const [created] = await db
-		.insert(categories)
-		.values({
-			userId,
-			name: DEBT_PAYMENT_CATEGORY_NAME,
-			kind: 'expense',
-			expenseType: 'fixed',
-			icon: 'wallet'
-		})
-		.returning();
-	return created.id;
+	return ensureSystemCategory(db, userId, {
+		key: SYSTEM_CATEGORY_KEYS.debtPayment,
+		name: 'Debt Payment',
+		kind: 'expense',
+		expenseType: 'fixed',
+		icon: 'wallet'
+	});
 }
-
-const MONEY_LENT_OUT_CATEGORY_NAME = 'Money Lent Out';
 
 export async function ensureMoneyLentOutCategory(db: Db, userId: string): Promise<string> {
-	const [existing] = await db
-		.select()
-		.from(categories)
-		.where(
-			and(
-				eq(categories.userId, userId),
-				eq(categories.name, MONEY_LENT_OUT_CATEGORY_NAME),
-				eq(categories.kind, 'expense')
-			)
-		)
-		.limit(1);
-	if (existing) return existing.id;
-	const [created] = await db
-		.insert(categories)
-		.values({
-			userId,
-			name: MONEY_LENT_OUT_CATEGORY_NAME,
-			kind: 'expense',
-			icon: 'arrow-up-right',
-			color: '#f59e0b'
-		})
-		.returning();
-	return created.id;
+	return ensureSystemCategory(db, userId, {
+		key: SYSTEM_CATEGORY_KEYS.moneyLentOut,
+		name: 'Money Lent Out',
+		kind: 'expense',
+		icon: 'arrow-up-right',
+		color: '#f59e0b'
+	});
 }
-
-const LOAN_COLLECTED_CATEGORY_NAME = 'Loan Collected';
 
 export async function ensureLoanCollectedCategory(db: Db, userId: string): Promise<string> {
-	const [existing] = await db
-		.select()
-		.from(categories)
-		.where(
-			and(
-				eq(categories.userId, userId),
-				eq(categories.name, LOAN_COLLECTED_CATEGORY_NAME),
-				eq(categories.kind, 'income')
-			)
-		)
-		.limit(1);
-	if (existing) return existing.id;
-	const [created] = await db
-		.insert(categories)
-		.values({
-			userId,
-			name: LOAN_COLLECTED_CATEGORY_NAME,
-			kind: 'income',
-			icon: 'arrow-down-left',
-			color: '#10b981'
-		})
-		.returning();
-	return created.id;
+	return ensureSystemCategory(db, userId, {
+		key: SYSTEM_CATEGORY_KEYS.loanCollected,
+		name: 'Loan Collected',
+		kind: 'income',
+		icon: 'arrow-down-left',
+		color: '#10b981'
+	});
 }
-
-const LOAN_PROCEEDS_CATEGORY_NAME = 'Loan Proceeds';
 
 export async function ensureLoanProceedsCategory(db: Db, userId: string): Promise<string> {
-	const [existing] = await db
-		.select()
-		.from(categories)
-		.where(
-			and(
-				eq(categories.userId, userId),
-				eq(categories.name, LOAN_PROCEEDS_CATEGORY_NAME),
-				eq(categories.kind, 'income')
-			)
-		)
-		.limit(1);
-	if (existing) return existing.id;
-	const [created] = await db
-		.insert(categories)
-		.values({
-			userId,
-			name: LOAN_PROCEEDS_CATEGORY_NAME,
-			kind: 'income',
-			icon: 'banknote',
-			color: '#10b981'
-		})
-		.returning();
-	return created.id;
+	return ensureSystemCategory(db, userId, {
+		key: SYSTEM_CATEGORY_KEYS.loanProceeds,
+		name: 'Loan Proceeds',
+		kind: 'income',
+		icon: 'banknote',
+		color: '#10b981'
+	});
 }
-
-const ADJUSTMENT_NAME = 'Balance Adjustment';
 
 export async function getOrCreateAdjustmentCategory(
 	db: Db,
 	userId: string,
 	kind: 'income' | 'expense'
 ): Promise<string> {
-	const [existing] = await db
-		.select()
-		.from(categories)
-		.where(
-			and(
-				eq(categories.userId, userId),
-				eq(categories.name, ADJUSTMENT_NAME),
-				eq(categories.kind, kind)
-			)
-		)
-		.limit(1);
-	if (existing) return existing.id;
-
-	const [created] = await db
-		.insert(categories)
-		.values({
-			userId,
-			name: ADJUSTMENT_NAME,
-			kind,
-			color: kind === 'income' ? '#10b981' : '#f43f5e',
-			icon: kind === 'income' ? 'trending-up' : 'trending-down'
-		})
-		.returning();
-	return created.id;
+	return ensureSystemCategory(db, userId, {
+		key:
+			kind === 'income'
+				? SYSTEM_CATEGORY_KEYS.adjustmentIncome
+				: SYSTEM_CATEGORY_KEYS.adjustmentExpense,
+		name: 'Balance Adjustment',
+		kind,
+		color: kind === 'income' ? '#10b981' : '#f43f5e',
+		icon: kind === 'income' ? 'trending-up' : 'trending-down'
+	});
 }

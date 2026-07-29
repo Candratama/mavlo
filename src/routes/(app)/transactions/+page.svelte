@@ -59,12 +59,18 @@
 	const filteredTransactions = $derived.by(() => {
 		const f = filterFromUrl;
 		const cycle = data.cycle;
-		const fromMs = f.from ? ymdToMs(f.from) : cycle.startMs;
-		const toMs = (f.to ? ymdToMs(f.to) : null) ?? cycle.endMs;
-		const toMsInclusive = (toMs ?? cycle.endMs) + (f.to ? dayMs - 1 : 0);
+		const fromMs = f.from ? ymdToMs(f.from) : null;
+		const toDayMs = f.to ? ymdToMs(f.to) : null;
+		// No explicit dates → current cycle. With an explicit from/to, the unset
+		// side stays open-ended instead of clamping to the cycle (cycle.endMs is
+		// exclusive, hence the -1).
+		const hasDateFilter = fromMs !== null || toDayMs !== null;
+		const effFromMs = fromMs ?? (hasDateFilter ? -Infinity : cycle.startMs);
+		const effToMs =
+			toDayMs !== null ? toDayMs + dayMs - 1 : hasDateFilter ? Infinity : cycle.endMs - 1;
 		return data.transactions.filter((t) => {
-			if (fromMs !== null && t.occurredAt < fromMs) return false;
-			if (t.occurredAt > toMsInclusive) return false;
+			if (t.occurredAt < effFromMs) return false;
+			if (t.occurredAt > effToMs) return false;
 			if (f.accountId && t.accountId !== f.accountId) return false;
 			if (f.categoryId && t.categoryId !== f.categoryId) return false;
 			if (f.kind && t.kind !== f.kind) return false;
@@ -94,6 +100,31 @@
 		fAccount = fAccountDerived;
 		fCategory = fCategoryDerived;
 		fKind = fKindDerived;
+	});
+
+	// Auto-apply: whenever a filter control changes, sync the URL immediately.
+	// Declared after the URL→state sync effect so external navigations (chips,
+	// back button) settle the local state first and this effect no-ops.
+	$effect(() => {
+		const desired = new SvelteURLSearchParams();
+		if (fFrom) desired.set('from', fFrom);
+		if (fTo) desired.set('to', fTo);
+		if (fAccount) desired.set('account', fAccount);
+		if (fCategory) desired.set('category', fCategory);
+		if (fKind) desired.set('kind', fKind);
+		const current = new SvelteURLSearchParams();
+		if (filterFromUrl.from) current.set('from', filterFromUrl.from);
+		if (filterFromUrl.to) current.set('to', filterFromUrl.to);
+		if (filterFromUrl.accountId) current.set('account', filterFromUrl.accountId);
+		if (filterFromUrl.categoryId) current.set('category', filterFromUrl.categoryId);
+		if (filterFromUrl.kind) current.set('kind', filterFromUrl.kind);
+		if (desired.toString() === current.toString()) return;
+		const qs = desired.toString();
+		goto(resolve(qs ? `/transactions?${qs}` : '/transactions'), {
+			keepFocus: true,
+			noScroll: true,
+			replaceState: true
+		});
 	});
 
 	const accountById = $derived(new Map(data.accounts.map((a) => [a.id, a])));
@@ -147,22 +178,9 @@
 		goto(resolve(qs ? `/transactions?${qs}` : '/transactions'), { keepFocus: true });
 	}
 
-	function applyFilters() {
-		const params = new SvelteURLSearchParams();
-		if (fFrom) params.set('from', fFrom);
-		if (fTo) params.set('to', fTo);
-		if (fAccount) params.set('account', fAccount);
-		if (fCategory) params.set('category', fCategory);
-		if (fKind) params.set('kind', fKind);
-		filterOpen = false;
-		const qs = params.toString();
-		goto(resolve(qs ? `/transactions?${qs}` : '/transactions'));
-	}
-
 	function resetFilters() {
+		// The auto-apply effect picks this up and navigates to /transactions.
 		fFrom = fTo = fAccount = fCategory = fKind = '';
-		filterOpen = false;
-		goto(resolve('/transactions'));
 	}
 
 	const accountItems = $derived<PickerItem[]>([
@@ -307,28 +325,22 @@
 <!-- Desktop filter form -->
 <Card.Root class="mb-6 hidden md:block">
 	<Card.Content class="p-4">
-		<form method="GET" class="space-y-3">
+		<!-- Filters auto-apply on change; no submit button needed. -->
+		<div class="space-y-3">
 			<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
 				<div class="space-y-1">
 					<Label for="filter-from">From</Label>
-					<DatePicker
-						id="filter-from"
-						name="from"
-						bind:value={fFrom}
-						placeholder="From"
-						title="From date"
-					/>
+					<DatePicker id="filter-from" bind:value={fFrom} placeholder="From" title="From date" />
 				</div>
 				<div class="space-y-1">
 					<Label for="filter-to">To</Label>
-					<DatePicker id="filter-to" name="to" bind:value={fTo} placeholder="To" title="To date" />
+					<DatePicker id="filter-to" bind:value={fTo} placeholder="To" title="To date" />
 				</div>
 				<div class="space-y-1">
 					<Label>Account</Label>
 					<PickerSheet
 						items={accountItems}
 						bind:value={fAccount}
-						name="account"
 						placeholder="All"
 						title="Account"
 					/>
@@ -338,7 +350,6 @@
 					<PickerSheet
 						groups={categoryItems}
 						bind:value={fCategory}
-						name="category"
 						placeholder="All"
 						title="Category"
 						searchable
@@ -348,11 +359,10 @@
 			<div class="flex flex-col items-stretch gap-3 sm:flex-row sm:items-end">
 				<div class="flex-1 space-y-1">
 					<Label>Kind</Label>
-					<SegmentedControl options={filterKindOptions} bind:value={fKind} name="kind" />
+					<SegmentedControl options={filterKindOptions} bind:value={fKind} />
 				</div>
-				<Button type="submit" class="sm:w-auto">Apply</Button>
 			</div>
-		</form>
+		</div>
 	</Card.Content>
 </Card.Root>
 
@@ -400,8 +410,8 @@
 			</div>
 		</div>
 		<div class="flex gap-2 border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-			<Button class="flex-1" onclick={resetFilters}>Reset</Button>
-			<Button class="flex-1" onclick={applyFilters}>Apply</Button>
+			<Button variant="outline" class="flex-1" onclick={resetFilters}>Reset</Button>
+			<Button class="flex-1" onclick={() => (filterOpen = false)}>Done</Button>
 		</div>
 	</Sheet.Content>
 </Sheet.Root>

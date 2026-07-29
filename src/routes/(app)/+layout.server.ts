@@ -30,6 +30,7 @@ import { computeDebtTotals } from '$lib/server/repositories/debt-stats';
 import {
 	getCurrentCycle,
 	getCycleForPeriod,
+	getZonedYearMonthDay,
 	formatCycleLabel,
 	prevPeriodMonth
 } from '$lib/utils/cycle';
@@ -154,9 +155,11 @@ export const load: LayoutServerLoad = async (event) => {
 	//   2. Stamp interestAppliedFromPeriod = current period
 	// For each active debt with dueDay set, current cycle day > dueDay, and no
 	// payment recorded in current cycle → flip status to 'in_arrears'.
+	// Interest accrues on outstanding balances, including debts in arrears —
+	// a debt doesn't stop charging interest just because payment is late.
 	const debtsNeedingInterest = debtList.filter(
 		(d) =>
-			d.status === 'active' &&
+			(d.status === 'active' || d.status === 'in_arrears') &&
 			d.interestRatePct > 0 &&
 			d.currentBalanceCents > 0 &&
 			d.interestAppliedFromPeriod !== cycle.periodMonth
@@ -178,16 +181,19 @@ export const load: LayoutServerLoad = async (event) => {
 	}
 
 	// Late-payment detection. Only checks debts with dueDay set, in active status.
-	const nowZ = new Date(Date.now());
-	const dayOfMonth = nowZ.getUTCDate();
+	// Day-of-month in the user's timezone — UTC would flip the arrears status a
+	// day early/late for non-UTC users (e.g. WIB).
+	const { d: dayOfMonth } = getZonedYearMonthDay(new Date(), timezone);
 	for (const d of debtList) {
 		if (d.status !== 'active' || !d.dueDay) continue;
 		if (dayOfMonth <= d.dueDay) continue;
-		// Check if any payment in current cycle
+		// Check if any balance-reducing payment in current cycle
+		// (expense pays down borrowed debt; income collects lent debt).
+		const paymentKind = d.direction === 'lent' ? 'income' : 'expense';
 		const cycleHasPayment = transactions.some(
 			(t) =>
 				(t as { debtId?: string | null }).debtId === d.id &&
-				t.kind === 'expense' &&
+				t.kind === paymentKind &&
 				t.occurredAt >= cycleFromMs &&
 				t.occurredAt < cycle.end.getTime()
 		);

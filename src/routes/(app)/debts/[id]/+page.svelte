@@ -71,7 +71,10 @@
 			: 0
 	);
 
-	const currency = $derived(data.accounts[0]?.currency ?? 'IDR');
+	// Debt amounts are stored in the app's base currency (IDR), matching /debts.
+	// Using the first account's currency here would mislabel debt figures when
+	// the user has foreign-currency accounts.
+	const currency = 'IDR';
 
 	const payments = $derived(
 		debt
@@ -160,7 +163,7 @@
 		class="mb-6 w-full"
 		onclick={() =>
 			openAddTransaction({
-				defaultKind: 'expense',
+				defaultKind: debt.direction === 'lent' ? 'income' : 'expense',
 				debtTarget: {
 					id: debt.id,
 					name: debt.name,
@@ -168,7 +171,7 @@
 				}
 			})}
 	>
-		Record payment
+		{debt.direction === 'lent' ? 'Collect' : 'Record payment'}
 	</Button>
 
 	{#if projection}
@@ -289,8 +292,17 @@
 							· {tx.note}{/if}
 					</div>
 				</div>
-				<span class="text-expense text-sm font-semibold tabular-nums">
-					−{formatCentsAsCurrency(tx.amountCents, acc?.currency ?? currency)}
+				<span
+					class="{tx.kind === 'income'
+						? 'text-income'
+						: tx.kind === 'expense'
+							? 'text-expense'
+							: 'text-transfer'} text-sm font-semibold tabular-nums"
+				>
+					{tx.kind === 'income' ? '+' : tx.kind === 'expense' ? '−' : ''}{formatCentsAsCurrency(
+						tx.amountCents,
+						acc?.currency ?? currency
+					)}
 				</span>
 			</div>
 		{:else}

@@ -61,4 +61,29 @@ describe('ensureDebtPaymentCategory', () => {
 		const id2 = await ensureDebtPaymentCategory(h.db, h.otherUserId);
 		expect(id1).not.toBe(id2);
 	});
+
+	it('survives rename — resolves by systemKey, no duplicate created', async () => {
+		const id1 = await ensureDebtPaymentCategory(h.db, h.userId);
+		await updateCategory(h.db, h.userId, { id: id1, name: 'Cicilan', kind: 'expense' });
+		const id2 = await ensureDebtPaymentCategory(h.db, h.userId);
+		expect(id2).toBe(id1);
+		expect(await listCategories(h.db, h.userId, { includeArchived: true })).toHaveLength(1);
+	});
+
+	it('kind-flipped system category is not reused — fresh expense category created', async () => {
+		const id1 = await ensureDebtPaymentCategory(h.db, h.userId);
+		await updateCategory(h.db, h.userId, { id: id1, name: 'Debt Income', kind: 'income' });
+		const id2 = await ensureDebtPaymentCategory(h.db, h.userId);
+		expect(id2).not.toBe(id1);
+		const fresh = await getCategory(h.db, h.userId, id2);
+		expect(fresh?.kind).toBe('expense');
+	});
+
+	it('adopts legacy name-matched category and stamps systemKey', async () => {
+		const legacy = await createCategory(h.db, h.userId, { name: 'Debt Payment', kind: 'expense' });
+		const id = await ensureDebtPaymentCategory(h.db, h.userId);
+		expect(id).toBe(legacy.id);
+		const adopted = await getCategory(h.db, h.userId, legacy.id);
+		expect(adopted?.systemKey).toBe('debt_payment');
+	});
 });

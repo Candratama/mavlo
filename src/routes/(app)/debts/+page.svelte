@@ -89,7 +89,9 @@
 	const hasLentDebts = $derived(data.debts.some((d) => (d.direction ?? 'borrowed') === 'lent'));
 
 	const arrearsDebts = $derived(debtsInTab.filter((d) => d.status === 'in_arrears'));
-	const activeDebtsRaw = $derived(debtsInTab.filter((d) => d.status === 'active'));
+	// Outstanding debts (active + past due) — past-due debts must stay in the
+	// grid so they remain payable/editable, not just named in the banner.
+	const activeDebtsRaw = $derived(debtsInTab.filter((d) => d.status !== 'paid_off'));
 	const paidOffDebts = $derived(debtsInTab.filter((d) => d.status === 'paid_off'));
 
 	const priorityOrder = $derived(prioritizedDebtIds(activeDebtsRaw, strategy));
@@ -97,7 +99,13 @@
 		const idx = new Map(priorityOrder.map((id, i) => [id, i]));
 		return [...activeDebtsRaw].sort((a, b) => (idx.get(a.id) ?? 0) - (idx.get(b.id) ?? 0));
 	});
-	const topPriorityDebtId = $derived(priorityOrder[0] ?? null);
+	// "Pay first" only makes sense for a debt with an outstanding balance.
+	const topPriorityDebtId = $derived.by(() => {
+		const id = priorityOrder[0] ?? null;
+		if (!id) return null;
+		const debt = activeDebtsRaw.find((d) => d.id === id);
+		return debt && debt.currentBalanceCents > 0 ? id : null;
+	});
 
 	const dti = $derived(dtiRatio(data.debtTotals.totalMinPaymentCents, data.monthIncomeCents));
 	const dtiState = $derived(dtiStatus(dti));
@@ -280,6 +288,13 @@
 					<div class="min-w-0">
 						<div class="flex items-center gap-2">
 							<Card.Title class="truncate">{debt.name}</Card.Title>
+							{#if debt.status === 'in_arrears'}
+								<span
+									class="inline-flex items-center rounded-full bg-rose-500/15 px-2 py-0.5 text-[10px] font-medium tracking-wider text-rose-500 uppercase"
+								>
+									Past due
+								</span>
+							{/if}
 							{#if isTopPriority}
 								<span
 									class="bg-primary/15 text-primary inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium tracking-wider uppercase"

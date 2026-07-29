@@ -47,17 +47,20 @@ export type PriorityStrategy = 'avalanche' | 'snowball';
  * Return debt IDs sorted by priority under the chosen strategy.
  * Avalanche = highest APR first (minimizes interest paid).
  * Snowball = smallest balance first (psychological wins).
+ * Debts with no outstanding balance can't be "paid first" — they always sort
+ * last, so a zero-balance debt never wins the top-priority slot.
  */
 export function prioritizedDebtIds<
 	T extends { id: string; interestRatePct: number; currentBalanceCents: number }
 >(debts: T[], strategy: PriorityStrategy): string[] {
-	const copy = [...debts];
+	const outstanding = debts.filter((d) => d.currentBalanceCents > 0);
+	const settled = debts.filter((d) => d.currentBalanceCents <= 0);
 	if (strategy === 'avalanche') {
-		copy.sort((a, b) => b.interestRatePct - a.interestRatePct);
+		outstanding.sort((a, b) => b.interestRatePct - a.interestRatePct);
 	} else {
-		copy.sort((a, b) => a.currentBalanceCents - b.currentBalanceCents);
+		outstanding.sort((a, b) => a.currentBalanceCents - b.currentBalanceCents);
 	}
-	return copy.map((d) => d.id);
+	return [...outstanding.map((d) => d.id), ...settled.map((d) => d.id)];
 }
 
 export type PayoffProjection = {

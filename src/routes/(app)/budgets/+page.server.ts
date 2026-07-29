@@ -5,16 +5,73 @@ import {
 	createBudget,
 	updateBudget,
 	deleteBudget,
-	clearBudgetCarryover
+	clearBudgetCarryover,
+	listBudgets
 } from '$lib/server/repositories/budgets';
-import { ensureDebtPaymentCategory } from '$lib/server/repositories/categories';
-import { createSubsidy, updateSubsidy, deleteSubsidy } from '$lib/server/repositories/subsidies';
+import { ensureDebtPaymentCategory, listCategories } from '$lib/server/repositories/categories';
+import {
+	createSubsidy,
+	updateSubsidy,
+	deleteSubsidy,
+	listSubsidies
+} from '$lib/server/repositories/subsidies';
+import { computeBudgetSpent } from '$lib/server/repositories/budget-spent';
+import { computeSubsidyFlows } from '$lib/server/repositories/budget-effective';
 import { budgetCreateSchema, budgetUpdateSchema, budgetIdSchema } from '$lib/validation/budget';
 import { subsidyCreateSchema, subsidyUpdateSchema, subsidyIdSchema } from '$lib/validation/subsidy';
 import { purgeUserCache, allUserCacheNames } from '$lib/server/cf-cache';
-import { getCurrentCycle } from '$lib/utils/cycle';
+import { getCurrentCycle, getCycleForPeriod } from '$lib/utils/cycle';
 import { getPreferences } from '$lib/server/repositories/preferences';
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
+
+// The layout loader only carries current-cycle budget data. When the user
+// filters by `?period=`, this load supplies the viewed period's data instead;
+// the page falls back to layout data when `periodView` is null.
+export const load: PageServerLoad = async (event) => {
+	const period = event.url.searchParams.get('period');
+	if (!period || !/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) return { periodView: null };
+	const user = requireUser(event);
+	const db = getDb(event.platform!.env.DB);
+	const prefs = await getPreferences(db, user.id);
+	const monthStartDay = prefs?.monthStartDay ?? 1;
+	const timezone = prefs?.timezone ?? 'Asia/Jakarta';
+	if (period === getCurrentCycle(new Date(), monthStartDay, timezone).periodMonth) {
+		return { periodView: null };
+	}
+	const cycle = getCycleForPeriod(period, monthStartDay, timezone);
+	const [budgets, budgetSpent, subsidies, subsidyFlows, categories] = await Promise.all([
+		listBudgets(db, user.id, { periodMonth: period }),
+		computeBudgetSpent(db, user.id, cycle.start.getTime(), cycle.end.getTime() - 1),
+		listSubsidies(db, user.id, { periodMonth: period }),
+		computeSubsidyFlows(db, user.id, period),
+		listCategories(db, user.id, { includeArchived: false })
+	]);
+	const budgetedCategoryIds = new Set(budgets.map((b) => b.categoryId));
+	const unbudgetedCategories = categories
+		.filter((c) => c.kind === 'expense' && !budgetedCategoryIds.has(c.id))
+		.map((c) => ({
+			categoryId: c.id,
+			categoryName: c.name,
+			categoryIcon: c.icon,
+			categoryColor: c.color,
+			spentCents: budgetSpent.get(c.id) ?? 0
+		}))
+		.filter((c) => c.spentCents > 0)
+		.sort((a, b) => b.spentCents - a.spentCents);
+	return {
+		periodView: {
+			periodMonth: period,
+			budgets,
+			spentByCategory: Object.fromEntries(budgetSpent.entries()) as Record<string, number>,
+			subsidies,
+			subsidyFlowByBudget: Object.fromEntries(subsidyFlows.entries()) as Record<
+				string,
+				{ in: number; out: number }
+			>,
+			unbudgetedCategories
+		}
+	};
+};
 
 const formObject = (fd: FormData) => Object.fromEntries(fd.entries());
 

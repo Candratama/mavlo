@@ -15,6 +15,7 @@
 		Tag
 	} from 'lucide-svelte';
 	import { SvelteMap } from 'svelte/reactivity';
+	import { formatYmdInTimezone } from '$lib/utils/cycle.js';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { getIconByName } from '$lib/utils/category-icons.js';
 	import { notify } from '$lib/utils/toast.js';
@@ -46,24 +47,24 @@
 	);
 
 	const currency = $derived(data.accounts[0]?.currency ?? 'IDR');
+	const timezone = $derived(data.timezone ?? 'Asia/Jakarta');
 
 	type DayGroup = { key: string; dateLabel: string; netCents: number; items: TxRow[] };
 
 	const groupedByDay = $derived.by<DayGroup[]>(() => {
 		const byDay = new SvelteMap<string, DayGroup>();
 		for (const tx of categoryTransactions) {
-			const key = new Date(tx.occurredAt).toISOString().slice(0, 10);
+			const key = formatYmdInTimezone(new Date(tx.occurredAt), timezone);
 			let g = byDay.get(key);
 			if (!g) {
-				const date = new Date(`${key}T00:00:00.000Z`);
 				g = {
 					key,
-					dateLabel: date.toLocaleDateString('en-US', {
+					dateLabel: new Date(tx.occurredAt).toLocaleDateString('en-US', {
 						weekday: 'long',
 						month: 'long',
 						day: 'numeric',
 						year: 'numeric',
-						timeZone: 'UTC'
+						timeZone: timezone
 					}),
 					netCents: 0,
 					items: []

@@ -27,6 +27,7 @@
 	} from 'lucide-svelte';
 	import { getIconByName } from '$lib/utils/category-icons.js';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
+	import { SYSTEM_CATEGORY_KEYS } from '$lib/utils/system-categories.js';
 	import { effectiveLimit, sourceRemaining } from '$lib/utils/budget.js';
 	import { notify } from '$lib/utils/toast.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
@@ -41,6 +42,18 @@
 
 	type BudgetRow = (typeof data.budgets)[number];
 
+	// `?period=` filter: when viewing a non-current period the page load returns
+	// periodView; otherwise fall back to the layout's current-cycle data.
+	const periodView = $derived(data.periodView);
+	const budgets = $derived(periodView?.budgets ?? data.budgets);
+	const spentByCategory = $derived(periodView?.spentByCategory ?? data.spentByCategory);
+	const subsidies = $derived(periodView?.subsidies ?? data.subsidies);
+	const subsidyFlowByBudget = $derived(periodView?.subsidyFlowByBudget ?? data.subsidyFlowByBudget);
+	const unbudgetedCategories = $derived(
+		periodView?.unbudgetedCategories ?? data.unbudgetedCategories
+	);
+	const periodMonth = $derived(periodView?.periodMonth ?? data.periodMonth);
+
 	let createOpen = $state(false);
 	let editOpen = $state(false);
 	let editTarget = $state<BudgetRow | null>(null);
@@ -48,9 +61,9 @@
 	let editPending = $state(false);
 	let clearCarryoverTarget = $state<BudgetRow | null>(null);
 
-	const categoryById = $derived(new Map(data.categories.map((c) => [c.id, c])));
+	const categoryById = $derived(new Map(data.allCategories.map((c) => [c.id, c])));
 
-	const flowOf = (budgetId: string) => data.subsidyFlowByBudget[budgetId] ?? { in: 0, out: 0 };
+	const flowOf = (budgetId: string) => subsidyFlowByBudget[budgetId] ?? { in: 0, out: 0 };
 
 	const formatCents = (cents: number) => formatCentsAsCurrency(cents, 'IDR');
 
@@ -62,16 +75,12 @@
 	const remainingFor = (b: (typeof data.budgets)[0]) => {
 		const flow = flowOf(b.id);
 		const carryover = b.carryoverDeficitCents ?? 0;
-		return (
-			b.limitCents + flow.in - (data.spentByCategory[b.categoryId] ?? 0) - flow.out - carryover
-		);
+		return b.limitCents + flow.in - (spentByCategory[b.categoryId] ?? 0) - flow.out - carryover;
 	};
-	const sortedBudgets = $derived(
-		[...data.budgets].sort((a, b) => remainingFor(b) - remainingFor(a))
-	);
-	const totalAllocated = $derived(data.budgets.reduce((s, b) => s + b.limitCents, 0));
+	const sortedBudgets = $derived([...budgets].sort((a, b) => remainingFor(b) - remainingFor(a)));
+	const totalAllocated = $derived(budgets.reduce((s, b) => s + b.limitCents, 0));
 	const totalSpent = $derived(
-		data.budgets.reduce((s, b) => s + (data.spentByCategory[b.categoryId] ?? 0), 0)
+		budgets.reduce((s, b) => s + (spentByCategory[b.categoryId] ?? 0), 0)
 	);
 
 	const alloc = $derived(data.allocation);
@@ -94,16 +103,20 @@
 	let createCategoryId = $state('');
 	let editCategoryId = $state('');
 
-	// Debt budget suggestion: when active debts exist but no budget covers them.
+	// Debt budget suggestion: when outstanding debts exist but no budget covers them.
+	// Resolve the system category by systemKey (survives renames); fall back to
+	// the legacy name match for rows created before system_key existed.
 	const debtPaymentCategory = $derived(
-		data.categories.find((c) => c.name === 'Debt Payment' && c.kind === 'expense')
+		data.allCategories.find(
+			(c) => c.systemKey === SYSTEM_CATEGORY_KEYS.debtPayment && c.kind === 'expense'
+		) ?? data.allCategories.find((c) => c.name === 'Debt Payment' && c.kind === 'expense')
 	);
-	const activeDebts = $derived(data.debts.filter((d) => d.status === 'active'));
+	const activeDebts = $derived(data.debts.filter((d) => d.status !== 'paid_off'));
 	const totalMinPayments = $derived(activeDebts.reduce((s, d) => s + d.minimumPaymentCents, 0));
 	const debtBudgetExists = $derived(
 		debtPaymentCategory
-			? data.budgets.some(
-					(b) => b.categoryId === debtPaymentCategory.id && b.periodMonth === data.periodMonth
+			? budgets.some(
+					(b) => b.categoryId === debtPaymentCategory.id && b.periodMonth === periodMonth
 				)
 			: false
 	);
@@ -115,11 +128,11 @@
 	let subsidyTarget = $state<BudgetRow | null>(null);
 
 	const eligibleSourcesFor = (target: BudgetRow) => {
-		return data.budgets
+		return budgets
 			.filter((b) => b.id !== target.id && b.periodMonth === target.periodMonth)
 			.map((b) => {
-				const spentB = data.spentByCategory[b.categoryId] ?? 0;
-				const out = data.subsidyFlowByBudget[b.id]?.out ?? 0;
+				const spentB = spentByCategory[b.categoryId] ?? 0;
+				const out = subsidyFlowByBudget[b.id]?.out ?? 0;
 				const carryover = b.carryoverDeficitCents ?? 0;
 				const remaining = sourceRemaining({
 					limitCents: b.limitCents - carryover,
@@ -147,12 +160,12 @@
 	let subsidyEditOpen = $state(false);
 	let subsidyEditTarget = $state<SubsidyRow | null>(null);
 
-	const budgetById = $derived(new Map(data.budgets.map((b) => [b.id, b])));
+	const budgetById = $derived(new Map(budgets.map((b) => [b.id, b])));
 
 	const subsidiesByBudget = $derived.by(() => {
 		const inMap: Record<string, SubsidyRow[]> = {};
 		const outMap: Record<string, SubsidyRow[]> = {};
-		for (const s of data.subsidies) {
+		for (const s of subsidies) {
 			(inMap[s.toBudgetId] ??= []).push(s);
 			(outMap[s.fromBudgetId] ??= []).push(s);
 		}
@@ -194,7 +207,7 @@
 	};
 
 	const openSubsidyEdit = (subsidyId: string) => {
-		subsidyEditTarget = data.subsidies.find((s) => s.id === subsidyId) ?? null;
+		subsidyEditTarget = subsidies.find((s) => s.id === subsidyId) ?? null;
 		subsidyEditOpen = subsidyEditTarget !== null;
 	};
 
@@ -306,11 +319,12 @@
 		<span>{formatCents(totalSpent)}</span>
 		<span>{formatCents(totalAllocated)}</span>
 	</div>
-	{#if data.subsidies.length > 0}
-		{@const totalSubsidy = data.subsidies.reduce((s, x) => s + x.amountCents, 0)}
+	{#if subsidies.length > 0}
+		{@const totalSubsidy = subsidies.reduce((s, x) => s + x.amountCents, 0)}
 		<div class="text-muted-foreground mt-2 text-xs">
-			Active subsidies: {data.subsidies.length} record{data.subsidies.length === 1 ? '' : 's'},
-			total {formatCents(totalSubsidy)} transferred.
+			Active subsidies: {subsidies.length} record{subsidies.length === 1 ? '' : 's'}, total {formatCents(
+				totalSubsidy
+			)} transferred.
 		</div>
 	{/if}
 </div>
@@ -320,12 +334,12 @@
 	<label
 		class="border-input bg-background relative inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-sm"
 	>
-		{data.periodMonth}
+		{periodMonth}
 		<input
 			type="month"
 			name="period"
-			value={data.periodMonth}
-			onchange={(e) => (e.currentTarget.form as HTMLFormElement).submit()}
+			value={periodMonth}
+			onchange={(e) => e.currentTarget.form?.requestSubmit()}
 			class="absolute inset-0 cursor-pointer opacity-0"
 		/>
 	</label>
@@ -342,9 +356,14 @@
 		<form method="GET" class="flex items-end gap-3">
 			<div class="max-w-xs flex-1 space-y-1">
 				<Label for="filter-period">Period</Label>
-				<Input id="filter-period" type="month" name="period" value={data.periodMonth} />
+				<Input
+					id="filter-period"
+					type="month"
+					name="period"
+					value={periodMonth}
+					onchange={(e) => e.currentTarget.form?.requestSubmit()}
+				/>
 			</div>
-			<Button type="submit">Apply</Button>
 		</form>
 	</Card.Content>
 </Card.Root>
@@ -352,7 +371,7 @@
 <div class="grid gap-4 md:grid-cols-2">
 	{#each sortedBudgets as budget (budget.id)}
 		{@const cat = categoryById.get(budget.categoryId)}
-		{@const spent = data.spentByCategory[budget.categoryId] ?? 0}
+		{@const spent = spentByCategory[budget.categoryId] ?? 0}
 		{@const over = spent > budget.limitCents}
 		{@const IconComp = getIconByName(cat?.icon) ?? Tag}
 		{@const tint = cat?.color ?? '#8b5cf6'}
@@ -547,9 +566,13 @@
 						<button
 							type="button"
 							class="ml-1 rounded-full p-0.5 hover:bg-amber-100"
-							onclick={(e) => { e.preventDefault(); e.stopPropagation(); clearCarryoverTarget = budget; }}
-							aria-label="Hapus carryover"
-						>×</button>
+							onclick={(e) => {
+								e.preventDefault();
+								e.stopPropagation();
+								clearCarryoverTarget = budget;
+							}}
+							aria-label="Hapus carryover">×</button
+						>
 					</p>
 				{/if}
 				{#if stillOver}
@@ -576,7 +599,7 @@
 		<div class="md:col-span-2">
 			<EmptyState
 				icon={Target}
-				title="No budgets for {data.periodMonth}"
+				title="No budgets for {periodMonth}"
 				description="Set a monthly limit per expense category to track your spending."
 			>
 				<Button onclick={() => (createOpen = true)}>Add budget</Button>
@@ -615,7 +638,7 @@
 				}}
 		>
 			<input type="hidden" name="limitCents" value={totalMinPayments} />
-			<input type="hidden" name="periodMonth" value={data.periodMonth} />
+			<input type="hidden" name="periodMonth" value={periodMonth} />
 			<Button type="submit" variant="outline" class="w-full">
 				Set {formatCents(totalMinPayments)}/month for Debt Payment
 			</Button>
@@ -623,14 +646,14 @@
 	</div>
 {/if}
 
-{#if data.unbudgetedCategories.length > 0}
-	{@const totalUnbudgeted = data.unbudgetedCategories.reduce((s, c) => s + c.spentCents, 0)}
+{#if unbudgetedCategories.length > 0}
+	{@const totalUnbudgeted = unbudgetedCategories.reduce((s, c) => s + c.spentCents, 0)}
 	<div class="mt-8">
 		<div class="mb-3 flex items-baseline justify-between">
 			<h2 class="text-sm font-semibold">Unbudgeted spending</h2>
 			<span class="text-muted-foreground text-xs tabular-nums">
-				{data.unbudgetedCategories.length}
-				{data.unbudgetedCategories.length === 1 ? 'category' : 'categories'} · {formatCents(
+				{unbudgetedCategories.length}
+				{unbudgetedCategories.length === 1 ? 'category' : 'categories'} · {formatCents(
 					totalUnbudgeted
 				)}
 			</span>
@@ -639,7 +662,7 @@
 			You spent on these without a budget. Set one to track future spending.
 		</p>
 		<div class="grid gap-4 md:grid-cols-2">
-			{#each data.unbudgetedCategories as cat (cat.categoryId)}
+			{#each unbudgetedCategories as cat (cat.categoryId)}
 				{@const Icon = getIconByName(cat.categoryIcon) ?? Tag}
 				{@const tint = cat.categoryColor ?? '#94a3b8'}
 				<Card.Root class="border-dashed">
@@ -714,13 +737,7 @@
 		<div class="grid grid-cols-2 gap-3">
 			<div class="space-y-1">
 				<Label for="budget-c-period">Period</Label>
-				<Input
-					id="budget-c-period"
-					type="month"
-					name="periodMonth"
-					required
-					value={data.periodMonth}
-				/>
+				<Input id="budget-c-period" type="month" name="periodMonth" required value={periodMonth} />
 			</div>
 			<div class="space-y-1">
 				<Label for="budget-c-limit">Limit</Label>
@@ -870,7 +887,7 @@
 {#snippet subsidyForm()}
 	{#if subsidyTarget}
 		{@const flow = flowOf(subsidyTarget.id)}
-		{@const spent = data.spentByCategory[subsidyTarget.categoryId] ?? 0}
+		{@const spent = spentByCategory[subsidyTarget.categoryId] ?? 0}
 		{@const overage = spent - subsidyTarget.limitCents}
 		{@const cat = categoryById.get(subsidyTarget.categoryId)}
 		<SubsidyCreateForm
@@ -911,8 +928,8 @@
 		{@const toBudget = budgetById.get(subsidyEditTarget.toBudgetId)}
 		{@const fromCat = fromBudget ? categoryById.get(fromBudget.categoryId) : null}
 		{@const toCat = toBudget ? categoryById.get(toBudget.categoryId) : null}
-		{@const fromSpent = fromBudget ? (data.spentByCategory[fromBudget.categoryId] ?? 0) : 0}
-		{@const fromFlowOut = fromBudget ? (data.subsidyFlowByBudget[fromBudget.id]?.out ?? 0) : 0}
+		{@const fromSpent = fromBudget ? (spentByCategory[fromBudget.categoryId] ?? 0) : 0}
+		{@const fromFlowOut = fromBudget ? (subsidyFlowByBudget[fromBudget.id]?.out ?? 0) : 0}
 		{@const remainingExclSelf =
 			(fromBudget?.limitCents ?? 0) - fromSpent - fromFlowOut + subsidyEditTarget.amountCents}
 		{#key subsidyEditTarget.id}
@@ -929,7 +946,12 @@
 	{/if}
 {/snippet}
 
-<AlertDialog.Root open={clearCarryoverTarget !== null} onOpenChange={(o) => { if (!o) clearCarryoverTarget = null; }}>
+<AlertDialog.Root
+	open={clearCarryoverTarget !== null}
+	onOpenChange={(o) => {
+		if (!o) clearCarryoverTarget = null;
+	}}
+>
 	<AlertDialog.Portal>
 		<AlertDialog.Overlay />
 		<AlertDialog.Content>
@@ -937,22 +959,28 @@
 				<AlertDialog.Title>Hapus Carryover?</AlertDialog.Title>
 				<AlertDialog.Description>
 					Defisit <strong>{formatCents(clearCarryoverTarget?.carryoverDeficitCents ?? 0)}</strong>
-					dari period <strong>{clearCarryoverTarget?.carryoverFromPeriod ?? ''}</strong> tidak akan
-					diperhitungkan di bulan ini. Transaksi tidak terpengaruh.
+					dari period <strong>{clearCarryoverTarget?.carryoverFromPeriod ?? ''}</strong> tidak akan diperhitungkan
+					di bulan ini. Transaksi tidak terpengaruh.
 				</AlertDialog.Description>
 			</AlertDialog.Header>
 			<AlertDialog.Footer>
 				<AlertDialog.Cancel>Batal</AlertDialog.Cancel>
-				<form method="POST" action="?/clearCarryover" use:enhance={() => {
-					return async ({ result }) => {
-						if (result.type === 'failure') {
-							notify.error((result.data as { message?: string })?.message ?? 'Failed to clear carryover');
-							return;
-						}
-						clearCarryoverTarget = null;
-						await invalidateAll();
-					};
-				}}>
+				<form
+					method="POST"
+					action="?/clearCarryover"
+					use:enhance={() => {
+						return async ({ result }) => {
+							if (result.type === 'failure') {
+								notify.error(
+									(result.data as { message?: string })?.message ?? 'Failed to clear carryover'
+								);
+								return;
+							}
+							clearCarryoverTarget = null;
+							await invalidateAll();
+						};
+					}}
+				>
 					<input type="hidden" name="id" value={clearCarryoverTarget?.id ?? ''} />
 					<AlertDialog.Action type="submit">Hapus Carryover</AlertDialog.Action>
 				</form>

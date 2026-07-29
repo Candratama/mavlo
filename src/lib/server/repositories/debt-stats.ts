@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, ne } from 'drizzle-orm';
 import { type DrizzleD1Database } from 'drizzle-orm/d1';
 import { type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { debts } from '$lib/server/db/schema';
@@ -28,10 +28,11 @@ export async function computeDebtTotals(
 	userId: string,
 	nowMs: number = Date.now()
 ): Promise<DebtTotals> {
+	// Outstanding = active + in_arrears; a past-due debt is still owed.
 	const rows = await db
 		.select()
 		.from(debts)
-		.where(and(eq(debts.userId, userId), eq(debts.status, 'active')));
+		.where(and(eq(debts.userId, userId), ne(debts.status, 'paid_off')));
 
 	let totalBalanceCents = 0;
 	let totalMinPaymentCents = 0;

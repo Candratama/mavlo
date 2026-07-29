@@ -15,6 +15,7 @@
 		CheckCircle2
 	} from 'lucide-svelte';
 	import { SvelteMap } from 'svelte/reactivity';
+	import { getCycleForPeriod, formatYmdInTimezone } from '$lib/utils/cycle.js';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { getIconByName } from '$lib/utils/category-icons.js';
 	import { notify } from '$lib/utils/toast.js';
@@ -34,25 +35,37 @@
 	type TxRow = (typeof data.transactions)[number];
 
 	const budgetId = $derived(page.params.id);
-	const budget = $derived(data.budgets.find((b) => b.id === budgetId));
+	// budgetView is set when this budget belongs to a non-current period; the
+	// layout only carries current-cycle data.
+	const budgetView = $derived(data.budgetView);
+	const budget = $derived(budgetView?.budget ?? data.budgets.find((b) => b.id === budgetId));
+	const periodBudgets = $derived(budgetView?.budgets ?? data.budgets);
+	const spentByCategory = $derived(budgetView?.spentByCategory ?? data.spentByCategory);
+	const subsidies = $derived(budgetView?.subsidies ?? data.subsidies);
+	const subsidyFlowByBudget = $derived(budgetView?.subsidyFlowByBudget ?? data.subsidyFlowByBudget);
 	const category = $derived(
 		budget ? data.allCategories.find((c) => c.id === budget.categoryId) : undefined
 	);
 	const tint = $derived(category?.color ?? '#8b5cf6');
 
+	const timezone = $derived(data.timezone ?? 'Asia/Jakarta');
 	const accountById = $derived(new Map(data.allAccounts.map((a) => [a.id, a])));
 	const categoryById = $derived(new Map(data.allCategories.map((c) => [c.id, c])));
 
-	// Transactions within the budget's cycle period that match the budget's category
+	// Transactions within the budget's own cycle period (not necessarily the
+	// current cycle) that match the budget's category. Cycle end is exclusive.
+	const budgetCycle = $derived(
+		budget ? getCycleForPeriod(budget.periodMonth, data.monthStartDay ?? 1, timezone) : null
+	);
 	const budgetTransactions = $derived(
-		budget
+		budget && budgetCycle
 			? data.transactions
 					.filter(
 						(t) =>
 							t.categoryId === budget.categoryId &&
 							t.kind === 'expense' &&
-							t.occurredAt >= data.cycle.startMs &&
-							t.occurredAt <= data.cycle.endMs
+							t.occurredAt >= budgetCycle.start.getTime() &&
+							t.occurredAt < budgetCycle.end.getTime()
 					)
 					.sort((a, b) => b.occurredAt - a.occurredAt)
 			: []
@@ -66,11 +79,11 @@
 
 	type SubsidyRow = (typeof data.subsidies)[number];
 
-	const budgetById = $derived(new Map(data.budgets.map((b) => [b.id, b])));
+	const budgetById = $derived(new Map(periodBudgets.map((b) => [b.id, b])));
 	const allCategoriesById = $derived(new Map(data.allCategories.map((c) => [c.id, c])));
 
 	const flow = $derived(
-		budget ? (data.subsidyFlowByBudget[budget.id] ?? { in: 0, out: 0 }) : { in: 0, out: 0 }
+		budget ? (subsidyFlowByBudget[budget.id] ?? { in: 0, out: 0 }) : { in: 0, out: 0 }
 	);
 	const carryover = $derived(budget?.carryoverDeficitCents ?? 0);
 	const effLimit = $derived(budget ? effectiveLimit(budget.limitCents, flow) - carryover : 0);
@@ -85,20 +98,18 @@
 			: Math.min(100, Math.round(((spentCents + flow.out + carryover) / denom) * 100))
 	);
 
-	const subsidiesIn = $derived(
-		budget ? data.subsidies.filter((s) => s.toBudgetId === budget.id) : []
-	);
+	const subsidiesIn = $derived(budget ? subsidies.filter((s) => s.toBudgetId === budget.id) : []);
 	const subsidiesOut = $derived(
-		budget ? data.subsidies.filter((s) => s.fromBudgetId === budget.id) : []
+		budget ? subsidies.filter((s) => s.fromBudgetId === budget.id) : []
 	);
 
 	const eligibleSources = $derived.by(() => {
 		if (!budget) return [];
-		return data.budgets
+		return periodBudgets
 			.filter((b) => b.id !== budget.id && b.periodMonth === budget.periodMonth)
 			.map((b) => {
-				const spentB = data.spentByCategory[b.categoryId] ?? 0;
-				const out = data.subsidyFlowByBudget[b.id]?.out ?? 0;
+				const spentB = spentByCategory[b.categoryId] ?? 0;
+				const out = subsidyFlowByBudget[b.id]?.out ?? 0;
 				const carryover = b.carryoverDeficitCents ?? 0;
 				const remaining = sourceRemaining({
 					limitCents: b.limitCents - carryover,
@@ -122,7 +133,7 @@
 	let subsidyEditTarget = $state<SubsidyRow | null>(null);
 
 	const openSubsidyEdit = (id: string) => {
-		subsidyEditTarget = data.subsidies.find((s) => s.id === id) ?? null;
+		subsidyEditTarget = subsidies.find((s) => s.id === id) ?? null;
 		subsidyEditOpen = subsidyEditTarget !== null;
 	};
 
@@ -166,18 +177,17 @@
 	const groupedByDay = $derived.by<DayGroup[]>(() => {
 		const byDay = new SvelteMap<string, DayGroup>();
 		for (const tx of budgetTransactions) {
-			const key = new Date(tx.occurredAt).toISOString().slice(0, 10);
+			const key = formatYmdInTimezone(new Date(tx.occurredAt), timezone);
 			let g = byDay.get(key);
 			if (!g) {
-				const date = new Date(`${key}T00:00:00.000Z`);
 				g = {
 					key,
-					dateLabel: date.toLocaleDateString('en-US', {
+					dateLabel: new Date(tx.occurredAt).toLocaleDateString('en-US', {
 						weekday: 'long',
 						month: 'long',
 						day: 'numeric',
 						year: 'numeric',
-						timeZone: 'UTC'
+						timeZone: timezone
 					}),
 					totalCents: 0,
 					items: []
@@ -388,13 +398,18 @@
 		</div>
 		{#if carryover > 0}
 			<div class="mt-3 flex items-center gap-1 text-xs text-amber-500">
-				⤴ Carryover deficit from {budget?.carryoverFromPeriod}: {formatCentsAsCurrency(carryover, currency)}
+				⤴ Carryover deficit from {budget?.carryoverFromPeriod}: {formatCentsAsCurrency(
+					carryover,
+					currency
+				)}
 				<button
 					type="button"
 					class="ml-1 rounded-full p-0.5 hover:bg-amber-100"
-					onclick={() => { clearCarryoverOpen = true; }}
-					aria-label="Hapus carryover"
-				>×</button>
+					onclick={() => {
+						clearCarryoverOpen = true;
+					}}
+					aria-label="Hapus carryover">×</button
+				>
 			</div>
 		{/if}
 	</div>
@@ -561,8 +576,8 @@
 		{@const toBudget = budgetById.get(subsidyEditTarget.toBudgetId)}
 		{@const fromCat = fromBudget ? allCategoriesById.get(fromBudget.categoryId) : null}
 		{@const toCat = toBudget ? allCategoriesById.get(toBudget.categoryId) : null}
-		{@const fromSpent = fromBudget ? (data.spentByCategory[fromBudget.categoryId] ?? 0) : 0}
-		{@const fromFlowOut = fromBudget ? (data.subsidyFlowByBudget[fromBudget.id]?.out ?? 0) : 0}
+		{@const fromSpent = fromBudget ? (spentByCategory[fromBudget.categoryId] ?? 0) : 0}
+		{@const fromFlowOut = fromBudget ? (subsidyFlowByBudget[fromBudget.id]?.out ?? 0) : 0}
 		{@const remainingExclSelf =
 			(fromBudget?.limitCents ?? 0) - fromSpent - fromFlowOut + subsidyEditTarget.amountCents}
 		{#key subsidyEditTarget.id}
@@ -624,22 +639,28 @@
 				<AlertDialog.Title>Hapus Carryover?</AlertDialog.Title>
 				<AlertDialog.Description>
 					Defisit <strong>{formatCentsAsCurrency(carryover, currency)}</strong>
-					dari period <strong>{budget?.carryoverFromPeriod ?? ''}</strong> tidak akan
-					diperhitungkan di bulan ini. Transaksi tidak terpengaruh.
+					dari period <strong>{budget?.carryoverFromPeriod ?? ''}</strong> tidak akan diperhitungkan di
+					bulan ini. Transaksi tidak terpengaruh.
 				</AlertDialog.Description>
 			</AlertDialog.Header>
 			<AlertDialog.Footer>
 				<AlertDialog.Cancel>Batal</AlertDialog.Cancel>
-				<form method="POST" action="?/clearCarryover" use:enhance={() => {
-					return async ({ result }) => {
-						if (result.type === 'failure') {
-							notify.error((result.data as { message?: string })?.message ?? 'Failed to clear carryover');
-							return;
-						}
-						clearCarryoverOpen = false;
-						await invalidateAll();
-					};
-				}}>
+				<form
+					method="POST"
+					action="?/clearCarryover"
+					use:enhance={() => {
+						return async ({ result }) => {
+							if (result.type === 'failure') {
+								notify.error(
+									(result.data as { message?: string })?.message ?? 'Failed to clear carryover'
+								);
+								return;
+							}
+							clearCarryoverOpen = false;
+							await invalidateAll();
+						};
+					}}
+				>
 					<input type="hidden" name="id" value={budgetId} />
 					<AlertDialog.Action type="submit">Hapus Carryover</AlertDialog.Action>
 				</form>

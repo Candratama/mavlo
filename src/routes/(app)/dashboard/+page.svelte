@@ -16,11 +16,17 @@
 			import('$lib/components/charts/SpendingByCategoryChart.svelte'),
 			import('$lib/components/charts/DailySpendingChart.svelte'),
 			import('$lib/components/charts/IncomeExpenseChart.svelte')
-		]).then(([s, d, i]) => {
-			cachedCategoryChart = s.default as Component;
-			cachedDailyChart = d.default as Component;
-			cachedTrendChart = i.default as Component;
-		});
+		])
+			.then(([s, d, i]) => {
+				cachedCategoryChart = s.default as Component;
+				cachedDailyChart = d.default as Component;
+				cachedTrendChart = i.default as Component;
+			})
+			.catch((err) => {
+				// Reset the memo so the next mount retries instead of caching the failure.
+				chartLoadPromise = null;
+				throw err;
+			});
 		return chartLoadPromise;
 	}
 </script>
@@ -33,7 +39,7 @@
 	import { ArrowRight, ArrowLeftRight, ArrowUp, ArrowDown, Tag, Eye, EyeOff } from 'lucide-svelte';
 	import SegmentedControl from '$lib/components/ui/segmented-control.svelte';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
-	import { formatCycleLabel } from '$lib/utils/cycle.js';
+	import { formatYmdInTimezone } from '$lib/utils/cycle.js';
 	import { dtiRatio, dtiStatus } from '$lib/utils/debt.js';
 	import { getIconByName, type IconComponent } from '$lib/utils/category-icons.js';
 	import EmptyState from '$lib/components/empty-state.svelte';
@@ -42,23 +48,30 @@
 
 	let { data } = $props();
 
-	const cycleLabel = $derived.by(() => {
-		if (!data.cycle) return null;
-		return formatCycleLabel(
-			{
-				start: new Date(data.cycle.startMs),
-				end: new Date(data.cycle.endMs),
-				periodMonth: data.cycle.periodMonth
-			},
-			data.monthStartDay,
-			data.preferences.locale
-		);
+	// Server-formatted label so client and server agree on the locale fallback.
+	const cycleLabel = $derived(data.cycle ? data.periodLabel : null);
+
+	// Reactive clock so the progress bar doesn't freeze at its mount-time value
+	// in long-lived PWA sessions.
+	let nowMs = $state(Date.now());
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		const tick = () => (nowMs = Date.now());
+		const interval = window.setInterval(tick, 60_000);
+		const onVisible = () => {
+			if (!document.hidden) tick();
+		};
+		document.addEventListener('visibilitychange', onVisible);
+		return () => {
+			window.clearInterval(interval);
+			document.removeEventListener('visibilitychange', onVisible);
+		};
 	});
 
 	const cycleProgress = $derived.by(() => {
 		if (!data.cycle) return 0;
 		const total = data.cycle.endMs - data.cycle.startMs;
-		const elapsed = Date.now() - data.cycle.startMs;
+		const elapsed = nowMs - data.cycle.startMs;
 		return Math.min(100, Math.max(0, Math.round((elapsed / total) * 100)));
 	});
 
@@ -89,7 +102,8 @@
 
 	const maskedAmount = '••••••';
 
-	const formatDate = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+	const formatDate = (ms: number) =>
+		formatYmdInTimezone(new Date(ms), data.timezone ?? 'Asia/Jakarta');
 
 	let chartTab = $state<'category' | 'daily' | 'trend'>('category');
 	const chartTabOptions = [
@@ -104,11 +118,15 @@
 
 	onMount(() => {
 		if (SpendingByCategoryChart && DailySpendingChart && IncomeExpenseChart) return;
-		void loadCharts().then(() => {
-			SpendingByCategoryChart = cachedCategoryChart;
-			DailySpendingChart = cachedDailyChart;
-			IncomeExpenseChart = cachedTrendChart;
-		});
+		void loadCharts()
+			.then(() => {
+				SpendingByCategoryChart = cachedCategoryChart;
+				DailySpendingChart = cachedDailyChart;
+				IncomeExpenseChart = cachedTrendChart;
+			})
+			.catch(() => {
+				// Charts stay hidden this visit; loadCharts already reset its memo for retry.
+			});
 	});
 
 	$effect(() => {
@@ -233,7 +251,7 @@
 	</a>
 {/if}
 
-{#if data.debts?.some((d: { status: string }) => d.status === 'active')}
+{#if data.debts?.some((d: { status: string }) => d.status !== 'paid_off')}
 	{@const dti = dtiRatio(data.debtTotals?.totalMinPaymentCents ?? 0, data.monthIncomeCents)}
 	{@const dtiState = dtiStatus(dti)}
 	{@const nextPayment = data.debtTotals?.upcomingPayments?.[0]}
@@ -334,7 +352,7 @@
 					<SpendingByCategoryChart data={data.spendingByCategory} currency={data.displayCurrency} />
 				{:else if chartTab === 'daily' && DailySpendingChart}
 					<DailySpendingChart data={data.dailySpending} currency={data.displayCurrency} />
-				{:else if IncomeExpenseChart}
+				{:else if chartTab === 'trend' && IncomeExpenseChart}
 					<IncomeExpenseChart data={data.monthlyIncomeExpense} currency={data.displayCurrency} />
 				{/if}
 			</Card.Content>

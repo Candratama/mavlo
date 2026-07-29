@@ -18,22 +18,22 @@ beforeEach(() => {
 		.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
 		.run('acc1', h.userId, 'Cash', 'cash', 'IDR', 0, now, now);
 	h.sqlite
-		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
+		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, ?, NULL, NULL, NULL, 0, 0, ?, ?)')
 		.run('cat-food', h.userId, 'Food', 'expense', 'variable', now, now);
 	h.sqlite
-		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
+		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, ?, NULL, NULL, NULL, 0, 0, ?, ?)')
 		.run('cat-transport', h.userId, 'Transport', 'expense', 'variable', now, now);
 	h.sqlite
-		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
+		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, ?, NULL, NULL, NULL, 0, 0, ?, ?)')
 		.run('cat-rent', h.userId, 'Home Rent', 'expense', 'fixed', now, now);
 	h.sqlite
-		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
+		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, ?, NULL, NULL, NULL, 0, 0, ?, ?)')
 		.run('cat-salary', h.userId, 'Salary', 'income', 'variable', now, now);
 	h.sqlite
-		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
+		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, ?, NULL, NULL, NULL, 0, 0, ?, ?)')
 		.run('cat-loan', h.userId, 'Loan Proceeds', 'income', 'variable', now, now);
 	h.sqlite
-		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)')
+		.prepare('INSERT INTO categories VALUES (?, ?, ?, ?, ?, NULL, NULL, NULL, 0, 0, ?, ?)')
 		.run('cat-adjust', h.userId, 'Balance Adjustment', 'income', 'variable', now, now);
 });
 

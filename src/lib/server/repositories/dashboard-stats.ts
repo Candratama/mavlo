@@ -4,6 +4,7 @@ import { type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { categories, transactions } from '$lib/server/db/schema';
 import * as schema from '$lib/server/db/schema';
 import { getCycleForPeriod, getZonedYearMonthDay } from '$lib/utils/cycle';
+import { SYSTEM_CATEGORY_KEYS } from '$lib/utils/system-categories';
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
 
@@ -211,7 +212,19 @@ export interface FinancialHealthSummary {
 	topLeaks: FinancialHealthTopLeak[];
 }
 
+// Income that isn't "real" income (loan proceeds, balance adjustments).
+// Resolved by systemKey so renames don't break the exclusion; the name set is
+// a legacy fallback for rows created before system_key existed.
+const excludedIncomeSystemKeys = new Set<string>([
+	SYSTEM_CATEGORY_KEYS.loanProceeds,
+	SYSTEM_CATEGORY_KEYS.adjustmentIncome
+]);
 const excludedIncomeCategoryNames = new Set(['Loan Proceeds', 'Balance Adjustment']);
+
+const isExcludedIncomeCategory = (category: { systemKey: string | null; name: string }): boolean =>
+	category.systemKey
+		? excludedIncomeSystemKeys.has(category.systemKey)
+		: excludedIncomeCategoryNames.has(category.name);
 
 const statusForFinancialHealth = (
 	realIncomeCents: number,
@@ -260,7 +273,7 @@ export async function computeFinancialHealth(
 		const category = tx.categoryId ? categoryById.get(tx.categoryId) : undefined;
 		if (tx.kind === 'income') {
 			grossIncomeCents += tx.amountCents;
-			if (category && excludedIncomeCategoryNames.has(category.name)) {
+			if (category && isExcludedIncomeCategory(category)) {
 				excludedIncomeCents += tx.amountCents;
 			}
 			continue;

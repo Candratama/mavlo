@@ -42,6 +42,7 @@ const categoriesTableSql = `
 			expense_type TEXT NOT NULL DEFAULT 'variable',
 		color TEXT,
 		icon TEXT,
+		system_key TEXT,
 		archived INTEGER NOT NULL DEFAULT 0,
 		sort_order INTEGER NOT NULL DEFAULT 0,
 		created_at INTEGER NOT NULL,

@@ -111,7 +111,11 @@
 		const res = await fetch('?/reorder', { method: 'POST', body: fd });
 		if (!res.ok) {
 			notify.error('Could not save order');
+			return;
 		}
+		// Sync `data` with the persisted order — otherwise the next invalidation
+		// (e.g. archive from a row menu) snaps the lists back to the stale order.
+		await invalidateAll();
 	}
 
 	let dndDisabled = $state(true);
@@ -371,8 +375,9 @@
 						{/if}
 					</div>
 					<div class="min-w-0 flex-1">
-						<a href={resolve(`/categories/${category.id}`)} class="block truncate font-medium hover:underline"
-							>{category.name}</a
+						<a
+							href={resolve(`/categories/${category.id}`)}
+							class="block truncate font-medium hover:underline">{category.name}</a
 						>
 						<div class="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
 							<span class="capitalize">{category.kind}</span>
@@ -388,8 +393,8 @@
 		<li>
 			<EmptyState
 				icon={Tag}
-				title="No categories yet"
-				description="Add your first category to classify income and expenses."
+				title="No {viewKind} categories yet"
+				description="Add your first {viewKind} category to classify your transactions."
 			>
 				<Button onclick={() => (createOpen = true)}>Add category</Button>
 			</EmptyState>

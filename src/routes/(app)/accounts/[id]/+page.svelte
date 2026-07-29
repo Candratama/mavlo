@@ -22,6 +22,7 @@
 		Lock
 	} from 'lucide-svelte';
 	import { SvelteMap } from 'svelte/reactivity';
+	import { formatYmdInTimezone } from '$lib/utils/cycle.js';
 	import { formatCentsAsCurrency } from '$lib/utils/money.js';
 	import { getIconByName } from '$lib/utils/category-icons.js';
 	import { notify } from '$lib/utils/toast.js';
@@ -55,36 +56,31 @@
 
 	const color = $derived(account?.color || '#3b82f6');
 
-	const totalIncome = $derived(
-		accountTransactions
-			.filter((t) => t.kind === 'income' && t.accountId === accountId)
-			.reduce((s, t) => s + t.amountCents, 0)
-	);
-	const totalExpense = $derived(
-		accountTransactions
-			.filter((t) => t.kind === 'expense' && t.accountId === accountId)
-			.reduce((s, t) => s + t.amountCents, 0)
-	);
+	// Current-cycle totals from the layout loader (computeAccountPeriodSummary),
+	// so these match the cards on /accounts: transfers count as expense on the
+	// source account and income on the target account.
+	const totalIncome = $derived(account?.periodIncomeCents ?? 0);
+	const totalExpense = $derived(account?.periodExpenseCents ?? 0);
 
 	const currency = $derived(account?.currency ?? 'IDR');
+	const timezone = $derived(data.timezone ?? 'Asia/Jakarta');
 
 	type DayGroup = { key: string; dateLabel: string; netCents: number; items: TxRow[] };
 
 	const groupedByDay = $derived.by<DayGroup[]>(() => {
 		const byDay = new SvelteMap<string, DayGroup>();
 		for (const tx of accountTransactions) {
-			const key = new Date(tx.occurredAt).toISOString().slice(0, 10);
+			const key = formatYmdInTimezone(new Date(tx.occurredAt), timezone);
 			let g = byDay.get(key);
 			if (!g) {
-				const date = new Date(`${key}T00:00:00.000Z`);
 				g = {
 					key,
-					dateLabel: date.toLocaleDateString('en-US', {
+					dateLabel: new Date(tx.occurredAt).toLocaleDateString('en-US', {
 						weekday: 'long',
 						month: 'long',
 						day: 'numeric',
 						year: 'numeric',
-						timeZone: 'UTC'
+						timeZone: timezone
 					}),
 					netCents: 0,
 					items: []
@@ -94,6 +90,10 @@
 			g.items.push(tx);
 			if (tx.kind === 'income' && tx.accountId === accountId) g.netCents += tx.amountCents;
 			else if (tx.kind === 'expense' && tx.accountId === accountId) g.netCents -= tx.amountCents;
+			else if (tx.kind === 'transfer') {
+				if (tx.accountId === accountId) g.netCents -= tx.amountCents;
+				if (tx.transferToAccountId === accountId) g.netCents += tx.amountCents;
+			}
 		}
 		return Array.from(byDay.values()).sort((a, b) => b.key.localeCompare(a.key));
 	});
@@ -165,7 +165,7 @@
 			<Button
 				variant="ghost"
 				size="icon"
-				href="/accounts?edit={account.id}"
+				href="/accounts?edit={account.id}{account.archived ? '&archived=1' : ''}"
 				aria-label="Edit account"
 				class="text-muted-foreground hover:text-foreground absolute right-3 bottom-3 z-10 size-9"
 			>
@@ -258,9 +258,11 @@
 										? 'text-income'
 										: 'text-transfer'}"
 							>
-								{tx.kind === 'expense' ? '−' : isIncoming ? '+' : ''}{formatCentsAsCurrency(
+								{tx.kind === 'expense' || (tx.kind === 'transfer' && !isIncoming)
+									? '−'
+									: '+'}{formatCentsAsCurrency(
 									tx.amountCents,
-									acc?.currency ?? currency
+									tx.kind === 'transfer' ? currency : (acc?.currency ?? currency)
 								)}
 							</span>
 							<DropdownMenu.Root>
@@ -327,7 +329,7 @@
 <AddTransactionSheet
 	bind:open={editOpen}
 	mode="edit"
-	accounts={data.accounts}
+	accounts={data.allAccounts}
 	categories={data.categories}
 	editTarget={editTarget
 		? {
