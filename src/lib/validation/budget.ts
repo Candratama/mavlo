@@ -16,5 +16,10 @@ export const budgetIdSchema = z.object({
 	id: z.string().min(1, 'Id required')
 });
 
+export const budgetListFilterSchema = z.object({
+	periodMonth: z.string().regex(periodMonthRegex, 'Period must be YYYY-MM').optional()
+});
+
 export type BudgetCreateInput = z.infer<typeof budgetCreateSchema>;
 export type BudgetUpdateInput = z.infer<typeof budgetUpdateSchema>;
+export type BudgetListFilter = z.infer<typeof budgetListFilterSchema>;

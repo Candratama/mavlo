@@ -274,6 +274,59 @@ curl -X POST https://<domain>/api/v1/categories \
 
 ---
 
+## Resource: Budgets
+
+A budget caps spending for one category in one calendar month.
+
+### Object shape (response)
+```json
+{
+  "id": "bgt_abc",
+  "userId": "usr_xyz",
+  "categoryId": "cat_food",
+  "periodMonth": "2026-10",
+  "limitCents": 500000,
+  "carryoverDeficitCents": 0,
+  "carryoverFromPeriod": null,
+  "createdAt": 1718496000000,
+  "updatedAt": 1718496000000
+}
+```
+
+### Fields (create / update body)
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `categoryId` | string | **yes** | Must reference an existing category. |
+| `periodMonth` | string | **yes** | `YYYY-MM` format. |
+| `limitCents` | int > 0 | **yes** | Positive integer cents. |
+
+`carryoverDeficitCents` and `carryoverFromPeriod` are managed by the app (rollover of last month's overspend) and cannot be set through the API.
+
+The API does not reject a second budget for the same category + period; the web UI prevents this by only offering unbudgeted categories, so check `GET /budgets?periodMonth=YYYY-MM` first if you want one budget per category per month.
+
+### Endpoints
+
+| Method | Path | Action |
+|---|---|---|
+| GET | `/budgets` | List |
+| POST | `/budgets` | Create → 201 |
+| GET | `/budgets/{id}` | Get one |
+| PATCH | `/budgets/{id}` | Update |
+| DELETE | `/budgets/{id}` | Delete → 204 |
+
+**List filter:** `?periodMonth=YYYY-MM` (e.g. `?periodMonth=2026-10`).
+
+### Example
+```bash
+curl -X POST https://<domain>/api/v1/budgets \
+  -H "Authorization: Bearer mavlo_sk_..." \
+  -H "Content-Type: application/json" \
+  -d '{"categoryId":"cat_food","periodMonth":"2026-10","limitCents":500000}'
+```
+
+---
+
 ## Notes for agents
 
 - **Always send `Content-Type: application/json`** on POST/PATCH or the body won't parse.
