@@ -1,6 +1,6 @@
 # Mavlo External API v1
 
-HTTP/JSON API for reading and writing your Mavlo finance data (transactions, accounts, categories) from outside the app. Designed to be consumed by scripts, automations, and AI agents.
+HTTP/JSON API for reading and writing your Mavlo finance data (transactions, accounts, categories, budgets) from outside the app. Designed to be consumed by scripts, automations, and AI agents.
 
 > **For AI agents:** This document is the complete contract. Everything you need — auth, conventions, every endpoint, every field, every error — is below. No other docs required.
 
@@ -84,6 +84,7 @@ Keys are created in the app UI (session-authenticated, **not** via this API):
 | 400 | `validation` | Body/query failed validation. `message` = first problem. |
 | 401 | `unauthorized` | Missing / malformed / revoked key |
 | 404 | `not_found` | Resource missing or owned by another user |
+| 409 | `conflict` | Would create a duplicate (e.g. a second budget for the same category + period) |
 | 500 | `server` | Unexpected server error |
 
 ---
@@ -113,13 +114,25 @@ Keys are created in the app UI (session-authenticated, **not** via this API):
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `accountId` | string | **yes** | Source account. |
+| `accountId` | string | **yes** | Source account. Must be one of your accounts. |
 | `amountCents` | int > 0 | **yes** | Positive integer cents. |
 | `kind` | enum | **yes** | `income` \| `expense` \| `transfer` |
 | `occurredAt` | int > 0 | **yes** | Epoch ms. |
-| `categoryId` | string | no | Omit or `""` for none. |
-| `transferToAccountId` | string | conditional | **Required when `kind=transfer`**, must differ from `accountId`. Ignored (stripped) for income/expense. |
-| `debtId` | string | no | Link to a debt. |
+| `categoryId` | string | no | Omit or `""` for none. Must be one of your categories. |
+| `transferToAccountId` | string | conditional | **Required when `kind=transfer`**, must differ from `accountId` and be one of your accounts. Ignored (stripped) for income/expense. |
+| `debtId` | string | no | Link to one of your debts. |
+
+Any referenced id (`accountId`, `transferToAccountId`, `categoryId`, `debtId`) that doesn't exist or belongs to another user → `400 validation` (e.g. `"Account not found"`), and nothing is written.
+
+The API enforces the same rules as the app. Each violation → `400 validation` with this `message`, and nothing is written:
+
+| Rule | `message` |
+|---|---|
+| `accountId` must be one of your accounts | `Source account not found` |
+| A `savings` account can only send transfers, not `income` / `expense` | `Savings accounts only support transfers, not income/expense` |
+| An `expense` or `transfer` can't exceed the source account's current balance (on update, the transaction's old amount is credited back first) | `Insufficient balance in source account` |
+
+When `debtId` is set and `categoryId` is omitted, the matching system category is filled in automatically: debt payment for an `expense` on a borrowed debt, loan collected for an `income` on a lent debt.
 | `note` | string | no | Max 200 chars. |
 
 ### Endpoints
@@ -276,7 +289,9 @@ curl -X POST https://<domain>/api/v1/categories \
 
 ## Resource: Budgets
 
-A budget caps spending for one category in one calendar month.
+A budget caps spending for one expense category in one budget cycle. There is at most one budget per category per cycle.
+
+**Cycles are not calendar months.** `periodMonth` names the cycle that *starts* in that month on the user's month-start day (Settings → month start day, in the user's timezone). With a start day of 25, `2026-10` covers Oct 25 – Nov 24. It equals the calendar month only when the start day is 1. Every budget response includes the exact bounds (`periodStart`, `periodEnd`), so use those instead of computing dates yourself.
 
 ### Object shape (response)
 ```json
@@ -289,21 +304,36 @@ A budget caps spending for one category in one calendar month.
   "carryoverDeficitCents": 0,
   "carryoverFromPeriod": null,
   "createdAt": 1718496000000,
-  "updatedAt": 1718496000000
+  "updatedAt": 1718496000000,
+  "periodStart": 1790787600000,
+  "periodEnd": 1793466000000,
+  "spentCents": 320000,
+  "subsidyInCents": 0,
+  "subsidyOutCents": 0,
+  "remainingCents": 180000
 }
 ```
+
+Computed fields (read-only, calculated on every request the same way the app does):
+
+| Field | Meaning |
+|---|---|
+| `periodStart` / `periodEnd` | Cycle bounds in epoch ms. `periodStart` is inclusive, `periodEnd` is exclusive. |
+| `spentCents` | Sum of `expense` transactions in this category with `periodStart <= occurredAt < periodEnd`. |
+| `subsidyInCents` / `subsidyOutCents` | Allocation moved into / out of this budget from other budgets in the same cycle. |
+| `remainingCents` | `limitCents + subsidyInCents - subsidyOutCents - carryoverDeficitCents - spentCents`. Negative means overspent. |
 
 ### Fields (create / update body)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `categoryId` | string | **yes** | Must reference an existing category. |
+| `categoryId` | string | **yes** | One of your **expense** categories. Missing, another user's, or an income category → `400 validation`. |
 | `periodMonth` | string | **yes** | `YYYY-MM` format. |
 | `limitCents` | int > 0 | **yes** | Positive integer cents. |
 
-`carryoverDeficitCents` and `carryoverFromPeriod` are managed by the app (rollover of last month's overspend) and cannot be set through the API.
+`carryoverDeficitCents` and `carryoverFromPeriod` are managed by the app (rollover of last cycle's overspend) and cannot be set through the API. They are recalculated when the app loads the **current** cycle, so a budget created through the API, or a cycle nobody has opened in the app yet, can show `0` / `null` or a stale value until then.
 
-The API does not reject a second budget for the same category + period; the web UI prevents this by only offering unbudgeted categories, so check `GET /budgets?periodMonth=YYYY-MM` first if you want one budget per category per month.
+A second budget for the same category + period (on create, or a PATCH that moves a budget onto one that already exists) → `409 conflict`. This makes a retried POST safe: on `409`, fetch `GET /budgets?periodMonth=YYYY-MM` and use the existing budget.
 
 ### Endpoints
 
@@ -315,7 +345,7 @@ The API does not reject a second budget for the same category + period; the web 
 | PATCH | `/budgets/{id}` | Update |
 | DELETE | `/budgets/{id}` | Delete → 204 |
 
-**List filter:** `?periodMonth=YYYY-MM` (e.g. `?periodMonth=2026-10`).
+**List filter:** `?periodMonth=YYYY-MM` (e.g. `?periodMonth=2026-10`). An empty value (`?periodMonth=`) is ignored.
 
 ### Example
 ```bash
@@ -332,6 +362,7 @@ curl -X POST https://<domain>/api/v1/budgets \
 - **Always send `Content-Type: application/json`** on POST/PATCH or the body won't parse.
 - **PATCH replaces the whole resource** with the validated body (same required fields as create). Send the full object, not a partial diff.
 - On `400`, read `error.message` — it names the first failing field/rule.
+- On `409`, the thing you tried to create already exists; look it up instead of retrying.
 - A `404` can mean the resource doesn't exist *or* belongs to another user; the API never reveals which.
 - To record money correctly: multiply major units by 100. 10.50 → `1050`.
 - To build a date filter: convert dates to epoch milliseconds (`Date.parse(...)` or `new Date(...).getTime()`).

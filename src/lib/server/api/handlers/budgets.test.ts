@@ -1,11 +1,21 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createTestDb, type TestDbHandle } from '$lib/server/db/test-fixtures';
+import { toErrorResponse } from '../respond';
 import { listBgt, createBgt, getBgt, updateBgt, deleteBgt } from './budgets';
 
 let h: TestDbHandle;
 
 beforeEach(() => {
-	h = createTestDb({ tables: ['categories', 'budgets'] });
+	h = createTestDb({
+		tables: [
+			'accounts',
+			'categories',
+			'transactions',
+			'budgets',
+			'budget_subsidies',
+			'user_preferences'
+		]
+	});
 	const now = Date.now();
 	h.sqlite
 		.prepare(
@@ -88,5 +98,67 @@ describe('budgets handler', () => {
 		});
 		await deleteBgt(h.db, h.userId, created.id);
 		await expect(getBgt(h.db, h.userId, created.id)).rejects.toMatchObject({ status: 404 });
+	});
+
+	it('maps a foreign category to 400 validation', async () => {
+		const now = Date.now();
+		h.sqlite
+			.prepare(
+				'INSERT INTO categories (id, user_id, name, kind, color, icon, archived, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)'
+			)
+			.run('cat-other', h.otherUserId, 'Theirs', 'expense', now, now);
+		const res = await createBgt(h.db, h.userId, {
+			categoryId: 'cat-other',
+			periodMonth: '2026-10',
+			limitCents: 1000
+		}).catch(toErrorResponse);
+		expect(res).toBeInstanceOf(Response);
+		expect((res as Response).status).toBe(400);
+		expect(await (res as Response).json()).toEqual({
+			error: { code: 'validation', message: 'Category not found' }
+		});
+	});
+
+	it('maps a duplicate (retried POST) to 409 conflict', async () => {
+		const body = { categoryId: 'cat1', periodMonth: '2026-10', limitCents: 1000 };
+		await createBgt(h.db, h.userId, body);
+		const res = (await createBgt(h.db, h.userId, body).catch(toErrorResponse)) as Response;
+		expect(res.status).toBe(409);
+		expect(await res.json()).toMatchObject({ error: { code: 'conflict' } });
+	});
+
+	it('listBgt ignores an empty periodMonth', async () => {
+		await createBgt(h.db, h.userId, { categoryId: 'cat1', periodMonth: '2026-10', limitCents: 1 });
+		expect(await listBgt(h.db, h.userId, url('?periodMonth='))).toHaveLength(1);
+	});
+
+	it("reports spending inside the user's cycle, not the calendar month", async () => {
+		const now = Date.now();
+		h.sqlite
+			.prepare(
+				'INSERT INTO user_preferences (user_id, timezone, month_start_day, created_at, updated_at) VALUES (?, ?, ?, ?, ?)'
+			)
+			.run(h.userId, 'UTC', 25, now, now);
+		h.sqlite
+			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
+			.run('acc1', h.userId, 'Cash', 'cash', 'IDR', 0, now, now);
+		const tx = h.sqlite.prepare(
+			"INSERT INTO transactions (id, user_id, account_id, kind, category_id, amount_cents, occurred_at, created_at, updated_at) VALUES (?, ?, 'acc1', 'expense', 'cat1', ?, ?, ?, ?)"
+		);
+		// Cycle 2026-10 with start day 25 = [Oct 25, Nov 25) UTC.
+		tx.run('t-in-1', h.userId, 30000, Date.UTC(2026, 9, 26), now, now);
+		tx.run('t-in-2', h.userId, 20000, Date.UTC(2026, 10, 24), now, now);
+		tx.run('t-before', h.userId, 99999, Date.UTC(2026, 9, 10), now, now);
+		tx.run('t-after', h.userId, 99999, Date.UTC(2026, 10, 25), now, now);
+
+		const b = await createBgt(h.db, h.userId, {
+			categoryId: 'cat1',
+			periodMonth: '2026-10',
+			limitCents: 100000
+		});
+		expect(b.periodStart).toBe(Date.UTC(2026, 9, 25));
+		expect(b.periodEnd).toBe(Date.UTC(2026, 10, 25));
+		expect(b.spentCents).toBe(50000);
+		expect(b.remainingCents).toBe(50000);
 	});
 });

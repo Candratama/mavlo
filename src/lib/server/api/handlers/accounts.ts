@@ -1,17 +1,10 @@
-import { type DrizzleD1Database } from 'drizzle-orm/d1';
-import { type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import * as schema from '$lib/server/db/schema';
 import { accountCreateSchema, accountUpdateSchema } from '$lib/validation/account';
 import * as repo from '$lib/server/repositories/accounts';
 import { computeAccountBalances } from '$lib/server/repositories/balances';
 import { ApiError } from '../errors';
+import { type Db, firstIssue } from './shared';
 
-type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
 type Account = NonNullable<Awaited<ReturnType<typeof repo.getAccount>>>;
-
-function firstIssue(err: { issues: { message: string }[] }): string {
-	return err.issues[0]?.message ?? 'Invalid input';
-}
 
 /** Attach the live balance (initial + transactions) so agents don't have to compute it. */
 function withBalance<T extends Account>(row: T, balanceCents: number) {

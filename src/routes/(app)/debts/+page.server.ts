@@ -16,6 +16,7 @@ import { debtCreateSchema, debtUpdateSchema, debtIdSchema } from '$lib/validatio
 import { purgeUserCache, allUserCacheNames } from '$lib/server/cf-cache';
 import { getCurrentCycle } from '$lib/utils/cycle';
 import { getPreferences } from '$lib/server/repositories/preferences';
+import { getAccount } from '$lib/server/repositories/accounts';
 import type { Actions } from './$types';
 
 const formObject = (fd: FormData) => Object.fromEntries(fd.entries());
@@ -44,6 +45,11 @@ export const actions: Actions = {
 				action: 'create',
 				message: parsed.error.issues[0]?.message ?? 'Invalid input'
 			});
+		}
+		// Check the funding account before creating the debt, so a bad id can't
+		// leave a debt behind without its funding transaction.
+		if (funded && fundedAccountId && !(await getAccount(db, user.id, fundedAccountId))) {
+			return fail(400, { action: 'create', message: 'Funding account not found' });
 		}
 		const result = await createDebt(db, user.id, parsed.data);
 		if ('error' in result) return fail(400, { action: 'create', message: result.error });

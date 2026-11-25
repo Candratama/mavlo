@@ -7,13 +7,7 @@ import {
 	deleteTransaction,
 	getTransaction
 } from '$lib/server/repositories/transactions';
-import { getAccount } from '$lib/server/repositories/accounts';
-import { computeAccountBalances } from '$lib/server/repositories/balances';
-import {
-	ensureDebtPaymentCategory,
-	ensureLoanCollectedCategory
-} from '$lib/server/repositories/categories';
-import { getDebt } from '$lib/server/repositories/debts';
+import { applyTransactionRules } from '$lib/server/repositories/transaction-rules';
 import {
 	transactionCreateSchema,
 	transactionUpdateSchema,
@@ -22,6 +16,7 @@ import {
 import { purgeUserCache, allUserCacheNames } from '$lib/server/cf-cache';
 import { getCurrentCycle, ymdToZonedDayStartMs } from '$lib/utils/cycle';
 import { getPreferences } from '$lib/server/repositories/preferences';
+import { RepoValidationError } from '$lib/server/repositories/errors';
 import type { Actions } from './$types';
 
 async function purgeUserCaches(event: Parameters<Actions[string]>[0], userId: string) {
@@ -61,42 +56,14 @@ export const actions: Actions = {
 				message: parsed.error.issues[0]?.message ?? 'Invalid input'
 			});
 		}
-		const sourceAccount = await getAccount(db, user.id, parsed.data.accountId);
-		if (!sourceAccount) {
-			return fail(400, { action: 'create', message: 'Source account not found' });
+		let created;
+		try {
+			const input = await applyTransactionRules(db, user.id, parsed.data);
+			created = await createTransaction(db, user.id, input);
+		} catch (err) {
+			if (!(err instanceof RepoValidationError)) throw err;
+			return fail(400, { action: 'create', message: err.message });
 		}
-		if (
-			sourceAccount.type === 'savings' &&
-			(parsed.data.kind === 'income' || parsed.data.kind === 'expense')
-		) {
-			return fail(400, {
-				action: 'create',
-				message: 'Savings accounts only support transfers, not income/expense'
-			});
-		}
-		if (parsed.data.kind === 'expense' || parsed.data.kind === 'transfer') {
-			const balances = await computeAccountBalances(db, user.id);
-			const sourceBalance = balances.get(parsed.data.accountId) ?? 0;
-			if (parsed.data.amountCents > sourceBalance) {
-				return fail(400, {
-					action: 'create',
-					message: 'Insufficient balance in source account'
-				});
-			}
-		}
-		// If linked to a debt and category not set, force the auto-category that
-		// matches the debt direction.
-		if (parsed.data.debtId && !parsed.data.categoryId) {
-			const linkedDebt = await getDebt(db, user.id, parsed.data.debtId);
-			if (linkedDebt) {
-				if (linkedDebt.direction === 'lent' && parsed.data.kind === 'income') {
-					parsed.data.categoryId = await ensureLoanCollectedCategory(db, user.id);
-				} else if (linkedDebt.direction === 'borrowed' && parsed.data.kind === 'expense') {
-					parsed.data.categoryId = await ensureDebtPaymentCategory(db, user.id);
-				}
-			}
-		}
-		const created = await createTransaction(db, user.id, parsed.data);
 		await purgeUserCaches(event, user.id);
 		return { success: true, action: 'create', transaction: created };
 	},
@@ -117,42 +84,14 @@ export const actions: Actions = {
 				message: parsed.error.issues[0]?.message ?? 'Invalid input'
 			});
 		}
-		const sourceAccount = await getAccount(db, user.id, parsed.data.accountId);
-		if (!sourceAccount) {
-			return fail(400, { action: 'update', message: 'Source account not found' });
+		let updated;
+		try {
+			const input = await applyTransactionRules(db, user.id, parsed.data, parsed.data.id);
+			updated = await updateTransaction(db, user.id, input);
+		} catch (err) {
+			if (!(err instanceof RepoValidationError)) throw err;
+			return fail(400, { action: 'update', message: err.message });
 		}
-		if (
-			sourceAccount.type === 'savings' &&
-			(parsed.data.kind === 'income' || parsed.data.kind === 'expense')
-		) {
-			return fail(400, {
-				action: 'update',
-				message: 'Savings accounts only support transfers, not income/expense'
-			});
-		}
-		if (parsed.data.kind === 'expense' || parsed.data.kind === 'transfer') {
-			const balances = await computeAccountBalances(db, user.id);
-			const old = await getTransaction(db, user.id, parsed.data.id);
-			let available = balances.get(parsed.data.accountId) ?? 0;
-			if (old && old.accountId === parsed.data.accountId) {
-				if (old.kind === 'expense' || old.kind === 'transfer') available += old.amountCents;
-				else if (old.kind === 'income') available -= old.amountCents;
-			}
-			if (parsed.data.amountCents > available) {
-				return fail(400, { action: 'update', message: 'Insufficient balance in source account' });
-			}
-		}
-		if (parsed.data.debtId && !parsed.data.categoryId) {
-			const linkedDebt = await getDebt(db, user.id, parsed.data.debtId);
-			if (linkedDebt) {
-				if (linkedDebt.direction === 'lent' && parsed.data.kind === 'income') {
-					parsed.data.categoryId = await ensureLoanCollectedCategory(db, user.id);
-				} else if (linkedDebt.direction === 'borrowed' && parsed.data.kind === 'expense') {
-					parsed.data.categoryId = await ensureDebtPaymentCategory(db, user.id);
-				}
-			}
-		}
-		const updated = await updateTransaction(db, user.id, parsed.data);
 		if (!updated) return fail(404, { action: 'update', message: 'Transaction not found' });
 		await purgeUserCaches(event, user.id);
 		return { success: true, action: 'update', transaction: updated };
