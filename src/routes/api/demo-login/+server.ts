@@ -27,6 +27,11 @@ const handler: RequestHandler = async (event) => {
 	if (!platformEnv) {
 		return new Response('platform.env unavailable', { status: 500 });
 	}
+	// Checked before any writes so a misconfigured deploy doesn't leave demo users behind.
+	const authSecret = env.BETTER_AUTH_SECRET;
+	if (!authSecret) {
+		return new Response('BETTER_AUTH_SECRET not configured', { status: 500 });
+	}
 
 	const db = getDb(platformEnv.DB);
 	const userId = createId();
@@ -60,7 +65,7 @@ const handler: RequestHandler = async (event) => {
 		return new Response('Demo session creation failed', { status: 500 });
 	}
 
-	const signed = await signCookieValue(session.token, env.BETTER_AUTH_SECRET);
+	const signed = await signCookieValue(session.token, authSecret);
 	const isProd = (env.ORIGIN ?? '').startsWith('https://');
 	const cookieName = isProd ? `__Secure-${BASE_COOKIE_NAME}` : BASE_COOKIE_NAME;
 	const maxAge = Math.max(

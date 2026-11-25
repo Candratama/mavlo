@@ -22,6 +22,7 @@ import { subsidyCreateSchema, subsidyUpdateSchema, subsidyIdSchema } from '$lib/
 import { purgeUserCache, allUserCacheNames } from '$lib/server/cf-cache';
 import { getCurrentCycle, getCycleForPeriod } from '$lib/utils/cycle';
 import { getPreferences } from '$lib/server/repositories/preferences';
+import { RepoValidationError } from '$lib/server/repositories/errors';
 import type { Actions, PageServerLoad } from './$types';
 
 // The layout loader only carries current-cycle budget data. When the user
@@ -75,6 +76,12 @@ export const load: PageServerLoad = async (event) => {
 
 const formObject = (fd: FormData) => Object.fromEntries(fd.entries());
 
+/** Turn a rejected budget write (foreign/non-expense category, duplicate) into a form failure. */
+function repoFail(err: unknown, action: string) {
+	if (!(err instanceof RepoValidationError)) throw err;
+	return fail(err.conflict ? 409 : 400, { action, message: err.message });
+}
+
 async function purgeUserCaches(event: Parameters<Actions[string]>[0], userId: string) {
 	const db = getDb(event.platform!.env.DB);
 	const prefs = await getPreferences(db, userId);
@@ -110,7 +117,11 @@ export const actions: Actions = {
 				message: parsed.error.issues[0]?.message ?? 'Invalid input'
 			});
 		}
-		await createBudget(db, user.id, parsed.data);
+		try {
+			await createBudget(db, user.id, parsed.data);
+		} catch (err) {
+			return repoFail(err, 'create');
+		}
 		await purgeUserCaches(event, user.id);
 		return { success: true, action: 'create' };
 	},
@@ -125,7 +136,12 @@ export const actions: Actions = {
 				message: parsed.error.issues[0]?.message ?? 'Invalid input'
 			});
 		}
-		const updated = await updateBudget(db, user.id, parsed.data);
+		let updated;
+		try {
+			updated = await updateBudget(db, user.id, parsed.data);
+		} catch (err) {
+			return repoFail(err, 'update');
+		}
 		if (!updated) return fail(404, { action: 'update', message: 'Budget not found' });
 		await purgeUserCaches(event, user.id);
 		return { success: true, action: 'update' };
@@ -216,7 +232,11 @@ export const actions: Actions = {
 			return fail(400, { action: 'setDebtBudget', message: 'Invalid period' });
 		}
 		const categoryId = await ensureDebtPaymentCategory(db, user.id);
-		await createBudget(db, user.id, { categoryId, periodMonth, limitCents });
+		try {
+			await createBudget(db, user.id, { categoryId, periodMonth, limitCents });
+		} catch (err) {
+			return repoFail(err, 'setDebtBudget');
+		}
 		await purgeUserCaches(event, user.id);
 		return { success: true, action: 'setDebtBudget' };
 	}

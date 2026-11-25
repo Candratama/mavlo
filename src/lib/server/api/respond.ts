@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { ApiError } from './errors';
+import { RepoValidationError } from '$lib/server/repositories/errors';
 
 export function ok(data: unknown, status = 200): Response {
 	return json({ data }, { status });
@@ -16,6 +17,10 @@ export function noContent(): Response {
 export function toErrorResponse(err: unknown): Response {
 	if (err instanceof ApiError) {
 		return json({ error: { code: err.code, message: err.message } }, { status: err.status });
+	}
+	if (err instanceof RepoValidationError) {
+		const [status, code] = err.conflict ? [409, 'conflict'] : [400, 'validation'];
+		return json({ error: { code, message: err.message } }, { status });
 	}
 	console.error('Unhandled API error', err);
 	return json({ error: { code: 'server', message: 'Internal error' } }, { status: 500 });

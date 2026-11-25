@@ -221,12 +221,75 @@ describe('createTransaction debt hook', () => {
 		expect(after?.status).toBe('paid_off');
 	});
 
-	it('does not change debt when debtId belongs to another user', async () => {
+	it('rejects a debtId that belongs to another user and leaves that debt untouched', async () => {
 		const d = await createDebt(h.db, h.otherUserId, baseDebt());
 		if ('error' in d) throw new Error(d.error);
-		await createTransaction(h.db, h.userId, expenseInput({ debtId: d.id }));
+		await expect(createTransaction(h.db, h.userId, expenseInput({ debtId: d.id }))).rejects.toThrow(
+			'Debt not found'
+		);
 		const after = await getDebt(h.db, h.otherUserId, d.id);
 		expect(after?.currentBalanceCents).toBe(5_000_000);
+		expect(await listTransactions(h.db, h.userId, {})).toHaveLength(0);
+	});
+});
+
+describe('transaction reference ownership', () => {
+	const base = {
+		accountId: 'acc1',
+		amountCents: 1000,
+		kind: 'expense' as const,
+		occurredAt: 1_700_000_000_000
+	};
+
+	beforeEach(() => {
+		const now = Date.now();
+		h.sqlite
+			.prepare(
+				'INSERT INTO categories (id, user_id, name, kind, color, icon, archived, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, NULL, NULL, 0, 0, ?, ?)'
+			)
+			.run('cat-other', h.otherUserId, 'Theirs', 'expense', now, now);
+	});
+
+	it("rejects another user's account", async () => {
+		await expect(
+			createTransaction(h.db, h.userId, { ...base, accountId: 'acc-other' })
+		).rejects.toThrow('Account not found');
+	});
+
+	it("rejects another user's transfer destination", async () => {
+		await expect(
+			createTransaction(h.db, h.userId, {
+				...base,
+				kind: 'transfer',
+				transferToAccountId: 'acc-other'
+			})
+		).rejects.toThrow('Destination account not found');
+	});
+
+	it("rejects another user's category", async () => {
+		await expect(
+			createTransaction(h.db, h.userId, { ...base, categoryId: 'cat-other' })
+		).rejects.toThrow('Category not found');
+	});
+
+	it('rejects an id that does not exist instead of hitting the foreign key', async () => {
+		await expect(
+			createTransaction(h.db, h.userId, { ...base, categoryId: 'nope' })
+		).rejects.toThrow('Category not found');
+	});
+
+	it("rejects an update that points at another user's category and keeps the row", async () => {
+		const tx = await createTransaction(h.db, h.userId, { ...base, categoryId: 'cat1' });
+		await expect(
+			updateTransaction(h.db, h.userId, { ...base, id: tx.id, categoryId: 'cat-other' })
+		).rejects.toThrow('Category not found');
+		expect((await getTransaction(h.db, h.userId, tx.id))?.categoryId).toBe('cat1');
+	});
+
+	it('returns null (not a validation error) when updating a missing transaction', async () => {
+		expect(
+			await updateTransaction(h.db, h.userId, { ...base, id: 'nope', categoryId: 'cat-other' })
+		).toBeNull();
 	});
 });
 

@@ -1,15 +1,7 @@
-import { type DrizzleD1Database } from 'drizzle-orm/d1';
-import { type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import * as schema from '$lib/server/db/schema';
 import { categoryCreateSchema, categoryUpdateSchema } from '$lib/validation/category';
 import * as repo from '$lib/server/repositories/categories';
 import { ApiError } from '../errors';
-
-type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
-
-function firstIssue(err: { issues: { message: string }[] }): string {
-	return err.issues[0]?.message ?? 'Invalid input';
-}
+import { type Db, firstIssue } from './shared';
 
 export async function listCat(db: Db, userId: string, url: URL) {
 	const includeArchived = url.searchParams.get('includeArchived') === 'true';

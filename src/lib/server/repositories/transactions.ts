@@ -1,15 +1,64 @@
 import { and, between, desc, eq, type SQL } from 'drizzle-orm';
 import { type DrizzleD1Database } from 'drizzle-orm/d1';
 import { type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { transactions, debts } from '$lib/server/db/schema';
+import { transactions, debts, accounts, categories } from '$lib/server/db/schema';
 import * as schema from '$lib/server/db/schema';
 import type {
 	TransactionCreateInput,
 	TransactionUpdateInput,
 	TransactionListFilter
 } from '$lib/validation/transaction';
+import { RepoValidationError } from './errors';
 
 type Db = DrizzleD1Database<typeof schema> | BetterSQLite3Database<typeof schema>;
+
+type TxRefs = {
+	accountId: string;
+	transferToAccountId?: string;
+	categoryId?: string;
+	debtId?: string;
+};
+
+/** Every id a transaction points at must belong to the same user. Throws RepoValidationError. */
+async function assertTxRefsOwned(db: Db, userId: string, refs: TxRefs): Promise<void> {
+	const ownedAccount = async (id: string | undefined) =>
+		!id ||
+		(
+			await db
+				.select()
+				.from(accounts)
+				.where(and(eq(accounts.userId, userId), eq(accounts.id, id)))
+				.limit(1)
+		).length > 0;
+	const ownedCategory = async (id: string | undefined) =>
+		!id ||
+		(
+			await db
+				.select()
+				.from(categories)
+				.where(and(eq(categories.userId, userId), eq(categories.id, id)))
+				.limit(1)
+		).length > 0;
+	const ownedDebt = async (id: string | undefined) =>
+		!id ||
+		(
+			await db
+				.select()
+				.from(debts)
+				.where(and(eq(debts.userId, userId), eq(debts.id, id)))
+				.limit(1)
+		).length > 0;
+	const [acc, toAcc, cat, debt] = await Promise.all([
+		ownedAccount(refs.accountId),
+		ownedAccount(refs.transferToAccountId),
+		ownedCategory(refs.categoryId),
+		ownedDebt(refs.debtId)
+	]);
+	if (!acc) throw new RepoValidationError('Account not found');
+	if (!toAcc) throw new RepoValidationError('Destination account not found');
+	if (!cat) throw new RepoValidationError('Category not found');
+	if (!debt) throw new RepoValidationError('Debt not found');
+}
 
 /**
  * Returns true when this tx kind should reduce the given debt's balance:
@@ -79,6 +128,7 @@ export async function getTransaction(db: Db, userId: string, id: string) {
 }
 
 export async function createTransaction(db: Db, userId: string, input: TransactionCreateInput) {
+	await assertTxRefsOwned(db, userId, input);
 	const [row] = await db
 		.insert(transactions)
 		.values({
@@ -99,8 +149,11 @@ export async function createTransaction(db: Db, userId: string, input: Transacti
 	return row;
 }
 
+/** Returns null when the transaction doesn't exist (or isn't the user's). */
 export async function updateTransaction(db: Db, userId: string, input: TransactionUpdateInput) {
 	const existing = await getTransaction(db, userId, input.id);
+	if (!existing) return null;
+	await assertTxRefsOwned(db, userId, input);
 	const [row] = await db
 		.update(transactions)
 		.set({
@@ -118,7 +171,7 @@ export async function updateTransaction(db: Db, userId: string, input: Transacti
 		.returning();
 	if (!row) return null;
 	// Reverse old debt effect
-	if (existing && existing.debtId) {
+	if (existing.debtId) {
 		await applyDebtPayment(db, userId, existing.debtId, existing.kind, -existing.amountCents);
 	}
 	// Apply new debt effect

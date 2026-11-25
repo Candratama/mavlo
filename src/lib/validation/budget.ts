@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 const periodMonthRegex = /^\d{4}-(0[1-9]|1[0-2])$/;
+const emptyToUndefined = z.literal('').transform(() => undefined);
 
 export const budgetCreateSchema = z.object({
 	categoryId: z.string().min(1, 'Category required'),
@@ -17,7 +18,11 @@ export const budgetIdSchema = z.object({
 });
 
 export const budgetListFilterSchema = z.object({
-	periodMonth: z.string().regex(periodMonthRegex, 'Period must be YYYY-MM').optional()
+	periodMonth: z
+		.string()
+		.regex(periodMonthRegex, 'Period must be YYYY-MM')
+		.optional()
+		.or(emptyToUndefined)
 });
 
 export type BudgetCreateInput = z.infer<typeof budgetCreateSchema>;

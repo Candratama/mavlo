@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createTestDb, type TestDbHandle } from '$lib/server/db/test-fixtures';
 import { ApiError } from '../errors';
+import { toErrorResponse } from '../respond';
 import { listTx, createTx, getTx, updateTx, deleteTx } from './transactions';
 
 let h: TestDbHandle;
@@ -12,7 +13,7 @@ beforeEach(() => {
 	const now = Date.now();
 	h.sqlite
 		.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
-		.run('acc1', h.userId, 'Cash', 'cash', 'IDR', 0, now, now);
+		.run('acc1', h.userId, 'Cash', 'cash', 'IDR', 1_000_000, now, now);
 });
 
 function url(qs = ''): URL {
@@ -105,5 +106,23 @@ describe('transactions handler', () => {
 
 	it('ApiError is the thrown type', async () => {
 		await expect(getTx(h.db, h.userId, 'nope')).rejects.toBeInstanceOf(ApiError);
+	});
+
+	it("maps another user's account to 400 validation instead of writing it", async () => {
+		const now = Date.now();
+		h.sqlite
+			.prepare('INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, 0, ?, ?)')
+			.run('acc-other', h.otherUserId, 'Theirs', 'cash', 'IDR', 0, now, now);
+		const res = (await createTx(h.db, h.userId, {
+			accountId: 'acc-other',
+			amountCents: 5000,
+			kind: 'expense',
+			occurredAt: now
+		}).catch(toErrorResponse)) as Response;
+		expect(res.status).toBe(400);
+		expect(await res.json()).toEqual({
+			error: { code: 'validation', message: 'Source account not found' }
+		});
+		expect(await listTx(h.db, h.userId, url())).toHaveLength(0);
 	});
 });

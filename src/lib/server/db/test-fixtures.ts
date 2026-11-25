@@ -133,6 +133,20 @@ const apiKeysTableSql = `
 	)
 `;
 
+const userPreferencesTableSql = `
+	CREATE TABLE user_preferences (
+		user_id TEXT NOT NULL PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+		currency TEXT NOT NULL DEFAULT 'IDR',
+		locale TEXT NOT NULL DEFAULT 'id-ID',
+		timezone TEXT NOT NULL DEFAULT 'Asia/Jakarta',
+		theme TEXT NOT NULL DEFAULT 'system',
+		week_starts_on INTEGER NOT NULL DEFAULT 1,
+		month_start_day INTEGER NOT NULL DEFAULT 1,
+		created_at INTEGER NOT NULL,
+		updated_at INTEGER NOT NULL
+	)
+`;
+
 export interface TestDbHandle {
 	db: BetterSQLite3Database<typeof schema>;
 	userId: string;
@@ -149,6 +163,7 @@ export function createTestDb(opts: {
 		| 'budget_subsidies'
 		| 'debts'
 		| 'api_keys'
+		| 'user_preferences'
 	)[];
 }): TestDbHandle {
 	const sqlite = new Database(':memory:');
@@ -163,6 +178,7 @@ export function createTestDb(opts: {
 	if (opts.tables.includes('budgets')) sqlite.prepare(budgetsTableSql).run();
 	if (opts.tables.includes('budget_subsidies')) sqlite.prepare(budgetSubsidiesTableSql).run();
 	if (opts.tables.includes('api_keys')) sqlite.prepare(apiKeysTableSql).run();
+	if (opts.tables.includes('user_preferences')) sqlite.prepare(userPreferencesTableSql).run();
 
 	const now = Date.now();
 	const userId = 'user_test_1';

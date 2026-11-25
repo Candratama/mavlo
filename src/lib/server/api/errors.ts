@@ -1,4 +1,4 @@
-export type ApiErrorCode = 'unauthorized' | 'not_found' | 'validation' | 'server';
+export type ApiErrorCode = 'unauthorized' | 'not_found' | 'validation' | 'conflict' | 'server';
 
 export class ApiError extends Error {
 	constructor(
